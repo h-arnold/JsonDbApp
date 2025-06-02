@@ -7,17 +7,6 @@
  */
 class GASDBLogger {
   
-  // Log levels
-  static LOG_LEVELS = {
-    ERROR: 0,
-    WARN: 1,
-    INFO: 2,
-    DEBUG: 3
-  };
-  
-  // Current log level - can be configured
-  static currentLevel = GASDBLogger.LOG_LEVELS.INFO;
-  
   /**
    * Set the current logging level
    * @param {number} level - The log level from LOG_LEVELS
@@ -218,8 +207,19 @@ class GASDBLogger {
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      GASDBLogger.error(`Operation failed: ${operation} (${duration}ms)`, { ...context, error: error.message });
+      const errorContext = Object.assign({}, context, { error: error.message });
+      GASDBLogger.error(`Operation failed: ${operation} (${duration}ms)`, errorContext);
       throw error;
     }
   }
 }
+
+// Initialize static properties after class declaration
+GASDBLogger.LOG_LEVELS = {
+  ERROR: 0,
+  WARN: 1,
+  INFO: 2,
+  DEBUG: 3
+};
+
+GASDBLogger.currentLevel = GASDBLogger.LOG_LEVELS.INFO;

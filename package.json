@@ -8,6 +8,9 @@
   },
   "scripts": {
     "test": "echo \"Run tests using Google Apps Script editor - call testSection1() function\"",
+    "test:gas": "./test-runner.sh",
+    "test:validate": "./test-runner.sh --validate",
+    "test:logs": "./test-runner.sh --logs-only",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",

@@ -40,11 +40,11 @@ class TestResults {
   }
   
   getPassed() {
-    return this.results.filter(r => r.passed);
+    return this.results.filter(function(r) { return r.passed; });
   }
   
   getFailed() {
-    return this.results.filter(r => !r.passed);
+    return this.results.filter(function(r) { return !r.passed; });
   }
   
   getPassRate() {

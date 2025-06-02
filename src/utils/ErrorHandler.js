@@ -143,22 +143,6 @@ class ConfigurationError extends GASDBError {
 class ErrorHandler {
   
   /**
-   * Error types map for easy access
-   */
-  static ErrorTypes = {
-    GASDB_ERROR: GASDBError,
-    DOCUMENT_NOT_FOUND: DocumentNotFoundError,
-    DUPLICATE_KEY: DuplicateKeyError,
-    INVALID_QUERY: InvalidQueryError,
-    LOCK_TIMEOUT: LockTimeoutError,
-    FILE_IO_ERROR: FileIOError,
-    CONFLICT_ERROR: ConflictError,
-    MASTER_INDEX_ERROR: MasterIndexError,
-    COLLECTION_NOT_FOUND: CollectionNotFoundError,
-    CONFIGURATION_ERROR: ConfigurationError
-  };
-  
-  /**
    * Create a new error of the specified type
    * @param {string} errorType - The error type name
    * @param {...any} args - Arguments to pass to the error constructor
@@ -314,3 +298,17 @@ class ErrorHandler {
     return info;
   }
 }
+
+// Initialize static properties after class declaration
+ErrorHandler.ErrorTypes = {
+  GASDB_ERROR: GASDBError,
+  DOCUMENT_NOT_FOUND: DocumentNotFoundError,
+  DUPLICATE_KEY: DuplicateKeyError,
+  INVALID_QUERY: InvalidQueryError,
+  LOCK_TIMEOUT: LockTimeoutError,
+  FILE_IO_ERROR: FileIOError,
+  CONFLICT_ERROR: ConflictError,
+  MASTER_INDEX_ERROR: MasterIndexError,
+  COLLECTION_NOT_FOUND: CollectionNotFoundError,
+  CONFIGURATION_ERROR: ConfigurationError
+};
