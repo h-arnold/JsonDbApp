@@ -56,10 +56,23 @@ check_clasp_setup() {
         exit 1
     fi
     
+    # Check if clasp is authenticated and project is configured
     if ! clasp status &> /dev/null; then
         print_error "clasp is not authenticated or project not configured"
-        print_info "Please run: clasp login"
-        print_info "And ensure clasp.json contains valid scriptId"
+        print_info "Authentication required. Please run the following commands:"
+        print_info "1. clasp login"
+        print_info "2. clasp login --user <your-email> --use-project-scopes --creds .gas-testing.json"
+        print_info "Then ensure clasp.json contains valid scriptId"
+        
+        # Check if we can detect which step is needed
+        if clasp whoami &> /dev/null; then
+            print_warning "Basic authentication exists but project-specific auth may be needed"
+            print_info "Try running: clasp login --user <your-email> --use-project-scopes --creds .gas-testing.json"
+        else
+            print_warning "No authentication detected"
+            print_info "Start with: clasp login"
+        fi
+        
         exit 1
     fi
     

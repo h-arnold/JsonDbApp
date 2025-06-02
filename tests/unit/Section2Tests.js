@@ -16,7 +16,7 @@
 function testMasterIndexFunctionality() {
   const suite = new TestSuite('MasterIndex Functionality');
   
-  suite.test('should initialise master index with default configuration', () => {
+  suite.addTest('should initialise master index with default configuration', function() {
     // Arrange
     const masterIndex = new MasterIndex();
     
@@ -27,7 +27,7 @@ function testMasterIndexFunctionality() {
     AssertionUtilities.assertTrue(isInitialised, 'Master index should be initialised');
   });
   
-  suite.test('should persist master index to ScriptProperties', () => {
+  suite.addTest('should persist master index to ScriptProperties', function() {
     // Arrange
     const masterIndex = new MasterIndex();
     const testCollection = {
@@ -51,7 +51,7 @@ function testMasterIndexFunctionality() {
     AssertionUtilities.assertEqual(collections.testCollection.documentCount, 5, 'Document count should match');
   });
   
-  suite.test('should load existing master index from ScriptProperties', () => {
+  suite.addTest('should load existing master index from ScriptProperties', () => {
     // Arrange
     const existingData = {
       collections: {
@@ -77,7 +77,7 @@ function testMasterIndexFunctionality() {
     AssertionUtilities.assertEqual(collections.existingCollection.documentCount, 3, 'Should preserve document count');
   });
   
-  suite.test('should update collection metadata correctly', () => {
+  suite.addTest('should update collection metadata correctly', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     masterIndex.addCollection('updateTest', {
@@ -109,7 +109,7 @@ function testMasterIndexFunctionality() {
 function testVirtualLockingMechanism() {
   const suite = new TestSuite('Virtual Locking Mechanism');
   
-  suite.test('should acquire lock for collection successfully', () => {
+  suite.addTest('should acquire lock for collection successfully', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'lockTestCollection';
@@ -123,7 +123,7 @@ function testVirtualLockingMechanism() {
     AssertionUtilities.assertTrue(masterIndex.isLocked(collectionName), 'Collection should be locked');
   });
   
-  suite.test('should prevent multiple locks on same collection', () => {
+  suite.addTest('should prevent multiple locks on same collection', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'conflictTestCollection';
@@ -137,7 +137,7 @@ function testVirtualLockingMechanism() {
     AssertionUtilities.assertFalse(secondLock, 'Second lock should be rejected');
   });
   
-  suite.test('should release lock correctly', () => {
+  suite.addTest('should release lock correctly', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'releaseTestCollection';
@@ -152,7 +152,7 @@ function testVirtualLockingMechanism() {
     AssertionUtilities.assertFalse(masterIndex.isLocked(collectionName), 'Collection should not be locked');
   });
   
-  suite.test('should handle lock timeout correctly', () => {
+  suite.addTest('should handle lock timeout correctly', () => {
     // Arrange
     const masterIndex = new MasterIndex({ lockTimeout: 100 }); // 100ms timeout for testing
     const collectionName = 'timeoutTestCollection';
@@ -174,7 +174,7 @@ function testVirtualLockingMechanism() {
     AssertionUtilities.assertFalse(masterIndex.isLocked(collectionName), 'Expired lock should be cleaned up');
   });
   
-  suite.test('should persist locks to ScriptProperties', () => {
+  suite.addTest('should persist locks to ScriptProperties', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'persistLockTest';
@@ -200,7 +200,7 @@ function testVirtualLockingMechanism() {
 function testConflictDetectionResolution() {
   const suite = new TestSuite('Conflict Detection and Resolution');
   
-  suite.test('should generate unique modification tokens', () => {
+  suite.addTest('should generate unique modification tokens', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     
@@ -214,7 +214,7 @@ function testConflictDetectionResolution() {
     AssertionUtilities.assertTrue(token2.length > 0, 'Token should not be empty');
   });
   
-  suite.test('should detect conflicts using modification tokens', () => {
+  suite.addTest('should detect conflicts using modification tokens', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'conflictDetectionTest';
@@ -238,7 +238,7 @@ function testConflictDetectionResolution() {
     AssertionUtilities.assertTrue(hasConflict, 'Should detect modification conflict');
   });
   
-  suite.test('should resolve conflicts with last-write-wins strategy', () => {
+  suite.addTest('should resolve conflicts with last-write-wins strategy', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'conflictResolutionTest';
@@ -263,7 +263,7 @@ function testConflictDetectionResolution() {
     AssertionUtilities.assertNotEqual(resolution.data.modificationToken, originalToken, 'Should generate new token');
   });
   
-  suite.test('should track modification history for debugging', () => {
+  suite.addTest('should track modification history for debugging', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'historyTest';
@@ -280,7 +280,7 @@ function testConflictDetectionResolution() {
     AssertionUtilities.assertTrue(history.length >= 2, 'Should track multiple modifications');
   });
   
-  suite.test('should validate modification token format', () => {
+  suite.addTest('should validate modification token format', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     
@@ -305,7 +305,7 @@ function testConflictDetectionResolution() {
 function testMasterIndexIntegration() {
   const suite = new TestSuite('MasterIndex Integration');
   
-  suite.test('should coordinate locking and conflict detection', () => {
+  suite.addTest('should coordinate locking and conflict detection', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'integrationTest';
@@ -327,7 +327,7 @@ function testMasterIndexIntegration() {
     AssertionUtilities.assertFalse(masterIndex.hasConflict(collectionName, token), 'Should not have conflict with same token');
   });
   
-  suite.test('should handle complete operation lifecycle', () => {
+  suite.addTest('should handle complete operation lifecycle', () => {
     // Arrange
     const masterIndex = new MasterIndex();
     const collectionName = 'lifecycleTest';

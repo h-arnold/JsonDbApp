@@ -68,7 +68,7 @@ methodName(param) {
 function testClassNameMethod() {
   const suite = new TestSuite('ClassName.methodName');
   
-  suite.test('should behaviour when condition', () => {
+  suite.addTest('should behaviour when condition', () => {
     // Arrange
     // Act
     // Assert
