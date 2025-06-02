@@ -99,12 +99,61 @@ push_code() {
     fi
 }
 
+# Function to deploy code as API executable
+deploy_code() {
+    print_info "Deploying code as API executable..."
+    
+    # Deploy the latest version
+    if clasp deploy 2>&1 | tee -a "$LOG_FILE"; then
+        print_success "Code deployed successfully"
+        return 0
+    else
+        print_warning "Failed to create new deployment, attempting to update existing deployment..."
+        
+        # Try to get existing deployment and update it
+        local deployment_id=$(clasp deployments 2>/dev/null | grep -o '@[0-9]\+' | head -1 | cut -c2-)
+        
+        if [ -n "$deployment_id" ]; then
+            print_info "Found existing deployment ID: $deployment_id, updating..."
+            if clasp deploy --deploymentId "$deployment_id" 2>&1 | tee -a "$LOG_FILE"; then
+                print_success "Existing deployment updated successfully"
+                return 0
+            else
+                print_error "Failed to update existing deployment"
+                return 1
+            fi
+        else
+            print_error "No existing deployment found and failed to create new one"
+            return 1
+        fi
+    fi
+}
+
 # Function to run tests remotely
 run_tests() {
-    print_info "Executing tests remotely..."
+    local section=${1:-"all"}
     
-    # Run the main test function and capture output
-    local test_output=$(clasp run testSection1 2>&1 | tee -a "$LOG_FILE")
+    case $section in
+        "1"|"section1")
+            print_info "Executing Section 1 tests remotely..."
+            local test_output=$(clasp run testSection1 2>&1 | tee -a "$LOG_FILE")
+            ;;
+        "2"|"section2")
+            print_info "Executing Section 2 tests remotely..."
+            local test_output=$(clasp run testSection2 2>&1 | tee -a "$LOG_FILE")
+            ;;
+        "all"|*)
+            print_info "Executing all tests remotely..."
+            # Run Section 1 first
+            print_info "Running Section 1 tests..."
+            local test_output1=$(clasp run testSection1 2>&1 | tee -a "$LOG_FILE")
+            
+            # Then run Section 2
+            print_info "Running Section 2 tests..."
+            local test_output2=$(clasp run testSection2 2>&1 | tee -a "$LOG_FILE")
+            ;;
+    esac
+    
     local exit_code=$?
     
     # Check if tests actually ran by looking for test results in logs
@@ -124,10 +173,29 @@ run_tests() {
 
 # Function to run validation tests
 run_validation() {
-    print_info "Running environment validation..."
+    local section=${1:-"all"}
     
-    # Run validation and capture output
-    local validation_output=$(clasp run validateSection1Setup 2>&1 | tee -a "$LOG_FILE")
+    case $section in
+        "1"|"section1")
+            print_info "Running Section 1 environment validation..."
+            local validation_output=$(clasp run validateSection1Setup 2>&1 | tee -a "$LOG_FILE")
+            ;;
+        "2"|"section2") 
+            print_info "Running Section 2 environment validation..."
+            local validation_output=$(clasp run validateSection2Setup 2>&1 | tee -a "$LOG_FILE")
+            ;;
+        "all"|*)
+            print_info "Running full environment validation..."
+            # Run Section 1 validation first
+            print_info "Validating Section 1 setup..."
+            local validation_output1=$(clasp run validateSection1Setup 2>&1 | tee -a "$LOG_FILE")
+            
+            # Then run Section 2 validation
+            print_info "Validating Section 2 setup..."
+            local validation_output2=$(clasp run validateSection2Setup 2>&1 | tee -a "$LOG_FILE")
+            ;;
+    esac
+    
     local exit_code=$?
     
     # Check if validation actually ran by looking for validation results in logs
@@ -177,20 +245,28 @@ retrieve_logs() {
 # Function to show help
 show_help() {
     echo -e "\n${BLUE}GAS DB Test Runner${NC}"
-    echo "Usage: $0 [options]"
+    echo "Usage: $0 [options] [section]"
     echo ""
     echo "Options:"
     echo "  -h, --help          Show this help message"
     echo "  -v, --validate      Run validation tests only"
     echo "  -t, --tests         Run full test suite only (skip validation)"
-    echo "  -p, --push-only     Push code only (no test execution)"
+    echo "  -p, --push-only     Push and deploy code only (no test execution)"
     echo "  -l, --logs-only     Retrieve logs only (no push or execution)"
     echo "  -q, --quiet         Minimal output (errors only)"
     echo "  --no-logs           Skip log retrieval"
     echo ""
+    echo "Sections:"
+    echo "  1, section1         Run Section 1 tests only (Infrastructure)"
+    echo "  2, section2         Run Section 2 tests only (ScriptProperties Master Index)"
+    echo "  all                 Run all sections (default)"
+    echo ""
     echo "Examples:"
-    echo "  $0                  # Full workflow: push, test, retrieve logs"
-    echo "  $0 --validate       # Quick validation check"
+    echo "  $0                  # Full workflow: push, deploy, test all sections, retrieve logs"
+    echo "  $0 --validate       # Quick validation check for all sections"
+    echo "  $0 --validate 2     # Quick validation check for Section 2 only"
+    echo "  $0 --tests 1        # Run Section 1 tests only"
+    echo "  $0 --tests 2        # Run Section 2 tests only"
     echo "  $0 --push-only      # Deploy code without running tests"
     echo "  $0 --logs-only      # Get latest execution logs"
     echo ""
@@ -212,6 +288,7 @@ PUSH_ONLY=false
 LOGS_ONLY=false
 QUIET=false
 NO_LOGS=false
+SECTION="all"
 
 while [[ $# -gt 0 ]]; do
     case $1 in
@@ -241,6 +318,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --no-logs)
             NO_LOGS=true
+            shift
+            ;;
+        1|section1|2|section2|all)
+            SECTION=$1
             shift
             ;;
         *)
@@ -283,22 +364,28 @@ main() {
             exit 1
         fi
         
+        # Deploy the code as API executable
+        if ! deploy_code; then
+            print_error "Code deployment failed, aborting"
+            exit 1
+        fi
+        
         if [ "$PUSH_ONLY" = true ]; then
-            print_success "Code push completed successfully"
+            print_success "Code push and deployment completed successfully"
             exit 0
         fi
     fi
     
     # Run validation if requested or in full mode
     if [ "$VALIDATE_ONLY" = true ] || ([ "$TESTS_ONLY" != true ] && [ "$PUSH_ONLY" != true ]); then
-        print_header "Running Environment Validation"
-        run_validation
+        print_header "Running Environment Validation - Section $SECTION"
+        run_validation "$SECTION"
     fi
     
     # Run tests if requested or in full mode
     if [ "$TESTS_ONLY" = true ] || ([ "$VALIDATE_ONLY" != true ] && [ "$PUSH_ONLY" != true ]); then
-        print_header "Running Test Suite"
-        run_tests
+        print_header "Running Test Suite - Section $SECTION"
+        run_tests "$SECTION"
     fi
     
     # Retrieve logs unless disabled
