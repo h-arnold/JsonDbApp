@@ -18,7 +18,7 @@ This document covers the implementation of Section 1 of the GAS DB project, whic
 - **TestResult/TestResults**: Result tracking and reporting
 
 ### ✅ Core Utility Classes
-- **Logger**: Multi-level logging with component-specific loggers
+- **GASDBLogger**: Multi-level logging with component-specific loggers
 - **ErrorHandler**: Standardized error types and validation utilities
 - **IdGenerator**: Multiple ID generation strategies (UUID, timestamp, ObjectId, etc.)
 
@@ -124,7 +124,7 @@ npm run logs     # View execution logs
 - Test runner functionality validation
 
 ### Utility Class Tests
-- **Logger Tests**: Level management, component loggers, message formatting
+- **GASDBLogger Tests**: Level management, component loggers, message formatting
 - **ErrorHandler Tests**: Error type creation, validation functions, error handling
 - **IdGenerator Tests**: UUID generation, format validation, custom generators
 
@@ -135,10 +135,10 @@ npm run logs     # View execution logs
 
 ## Component Details
 
-### Logger Class
+### GASDBLogger Class
 - **Log Levels**: ERROR, WARN, INFO, DEBUG
 - **Features**: Component-specific loggers, operation timing, formatted output
-- **Usage**: `Logger.info("message", context)`
+- **Usage**: `GASDBLogger.info("message", context)`
 
 ### ErrorHandler Class
 - **Error Types**: DocumentNotFoundError, DuplicateKeyError, InvalidQueryError, etc.
@@ -176,7 +176,7 @@ Section 1 provides the foundation for implementing Section 2: ScriptProperties M
 ## Notes for Future Development
 
 - **Error Handling**: All custom errors extend GASDBError and include context information
-- **Logging**: Use component-specific loggers for better debugging (`Logger.createComponentLogger()`)
+- **Logging**: Use component-specific loggers for better debugging (`GASDBLogger.createComponentLogger()`)
 - **Testing**: Follow the established pattern of creating test suites with comprehensive assertions
 - **ID Generation**: Default to UUID generation, but custom generators are available for specific needs
 
@@ -187,7 +187,7 @@ Section 1 provides the foundation for implementing Section 2: ScriptProperties M
 1. **Drive API Access Denied**: Ensure the appsscript.json includes the Drive API service
 2. **Clasp Push Fails**: Check that you're logged in with `clasp login`
 3. **Test Functions Not Found**: Ensure all files are pushed in the correct order
-4. **Logger Not Working**: Check that the log level is set appropriately
+4. **GASDBLogger Not Working**: Check that the log level is set appropriately
 
 ### Getting Help
 

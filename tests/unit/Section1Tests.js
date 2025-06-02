@@ -10,7 +10,7 @@ function runEnvironmentTests() {
   suite.addTest('testClaspConfiguration', function() {
     // Test that clasp.json exists and has required properties
     AssertionUtilities.assertTrue(typeof GlobalTestRunner !== 'undefined', 'TestRunner should be available');
-    AssertionUtilities.assertTrue(typeof Logger !== 'undefined', 'Logger should be available');
+    AssertionUtilities.assertTrue(typeof GASDBLogger !== 'undefined', 'GASDBLogger should be available');
     AssertionUtilities.assertTrue(typeof ErrorHandler !== 'undefined', 'ErrorHandler should be available');
   });
   
@@ -37,7 +37,7 @@ function runEnvironmentTests() {
 
 /**
  * Utility Class Tests - Section 1
- * Tests for Logger, ErrorHandler, and IdGenerator classes
+ * Tests for GASDBLogger, ErrorHandler, and IdGenerator classes
  */
 
 function runUtilityClassTests() {
@@ -46,28 +46,28 @@ function runUtilityClassTests() {
   // Logger functionality tests
   suite.addTest('testLoggerBasicFunctionality', function() {
     // Test that Logger methods exist
-    AssertionUtilities.assertEquals('function', typeof Logger.error, 'Logger should have error method');
-    AssertionUtilities.assertEquals('function', typeof Logger.warn, 'Logger should have warn method');
-    AssertionUtilities.assertEquals('function', typeof Logger.info, 'Logger should have info method');
-    AssertionUtilities.assertEquals('function', typeof Logger.debug, 'Logger should have debug method');
+    AssertionUtilities.assertEquals('function', typeof GASDBLogger.error, 'GASDBLogger should have error method');
+    AssertionUtilities.assertEquals('function', typeof GASDBLogger.warn, 'GASDBLogger should have warn method');
+    AssertionUtilities.assertEquals('function', typeof GASDBLogger.info, 'GASDBLogger should have info method');
+    AssertionUtilities.assertEquals('function', typeof GASDBLogger.debug, 'GASDBLogger should have debug method');
   });
   
   suite.addTest('testLoggerLevels', function() {
     // Test log level setting
-    const originalLevel = Logger.getLevel();
+    const originalLevel = GASDBLogger.getLevel();
     
-    Logger.setLevel(Logger.LOG_LEVELS.ERROR);
-    AssertionUtilities.assertEquals(Logger.LOG_LEVELS.ERROR, Logger.getLevel(), 'Should set ERROR level');
+    GASDBLogger.setLevel(GASDBLogger.LOG_LEVELS.ERROR);
+    AssertionUtilities.assertEquals(GASDBLogger.LOG_LEVELS.ERROR, GASDBLogger.getLevel(), 'Should set ERROR level');
     
-    Logger.setLevelByName('DEBUG');
-    AssertionUtilities.assertEquals(Logger.LOG_LEVELS.DEBUG, Logger.getLevel(), 'Should set DEBUG level by name');
+    GASDBLogger.setLevelByName('DEBUG');
+    AssertionUtilities.assertEquals(GASDBLogger.LOG_LEVELS.DEBUG, GASDBLogger.getLevel(), 'Should set DEBUG level by name');
     
     // Restore original level
-    Logger.setLevel(originalLevel);
+    GASDBLogger.setLevel(originalLevel);
   });
   
   suite.addTest('testLoggerComponentLogger', function() {
-    const componentLogger = Logger.createComponentLogger('TestComponent');
+    const componentLogger = GASDBLogger.createComponentLogger('TestComponent');
     AssertionUtilities.assertEquals('function', typeof componentLogger.error, 'Component logger should have error method');
     AssertionUtilities.assertEquals('function', typeof componentLogger.info, 'Component logger should have info method');
   });
@@ -204,7 +204,7 @@ function runTestFrameworkTests() {
  * Main test runner for Section 1
  */
 function runSection1Tests() {
-  Logger.info('Running Section 1 Tests: Project Setup and Basic Infrastructure');
+  GASDBLogger.info('Running Section 1 Tests: Project Setup and Basic Infrastructure');
   
   const testRunner = new TestRunner();
   
@@ -217,8 +217,8 @@ function runSection1Tests() {
   const results = testRunner.runAllTests();
   
   // Log summary
-  Logger.info('Section 1 Test Results:');
-  Logger.info(results.getSummary());
+  GASDBLogger.info('Section 1 Test Results:');
+  GASDBLogger.info(results.getSummary());
   
   // Return results for further processing
   return results;

@@ -11,15 +11,15 @@
  */
 function testSection1() {
   try {
-    Logger.info('='.repeat(50));
-    Logger.info('Starting Section 1 Test Execution');
-    Logger.info('='.repeat(50));
+    GASDBLogger.info('='.repeat(50));
+    GASDBLogger.info('Starting Section 1 Test Execution');
+    GASDBLogger.info('='.repeat(50));
     
     const results = runSection1Tests();
     
-    Logger.info('='.repeat(50));
-    Logger.info('Section 1 Test Execution Complete');
-    Logger.info('='.repeat(50));
+    GASDBLogger.info('='.repeat(50));
+    GASDBLogger.info('Section 1 Test Execution Complete');
+    GASDBLogger.info('='.repeat(50));
     
     // Return results for programmatic access
     return {
@@ -33,7 +33,7 @@ function testSection1() {
     };
     
   } catch (error) {
-    Logger.error('Failed to execute Section 1 tests', { error: error.message, stack: error.stack });
+    GASDBLogger.error('Failed to execute Section 1 tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }
@@ -44,7 +44,7 @@ function testSection1() {
  */
 function testSection1Suite(suiteName) {
   try {
-    Logger.info(`Running specific test suite: ${suiteName}`);
+    GASDBLogger.info(`Running specific test suite: ${suiteName}`);
     
     const testRunner = new TestRunner();
     
@@ -71,7 +71,7 @@ function testSection1Suite(suiteName) {
     };
     
   } catch (error) {
-    Logger.error(`Failed to execute test suite ${suiteName}`, { error: error.message });
+    GASDBLogger.error(`Failed to execute test suite ${suiteName}`, { error: error.message });
     throw error;
   }
 }
@@ -82,16 +82,16 @@ function testSection1Suite(suiteName) {
  */
 function validateSection1Setup() {
   try {
-    Logger.info('Running Section 1 setup validation...');
+    GASDBLogger.info('Running Section 1 setup validation...');
     
     const validations = [];
     
-    // Check Logger
+    // Check GASDBLogger
     try {
-      Logger.info('Testing Logger functionality');
-      validations.push({ component: 'Logger', status: 'PASS', message: 'Logger working correctly' });
+      GASDBLogger.info('Testing GASDBLogger functionality');
+      validations.push({ component: 'GASDBLogger', status: 'PASS', message: 'GASDBLogger working correctly' });
     } catch (error) {
-      validations.push({ component: 'Logger', status: 'FAIL', message: error.message });
+      validations.push({ component: 'GASDBLogger', status: 'FAIL', message: error.message });
     }
     
     // Check ErrorHandler
@@ -142,15 +142,15 @@ function validateSection1Setup() {
     }
     
     // Log results
-    Logger.info('Validation Results:');
+    GASDBLogger.info('Validation Results:');
     validations.forEach(validation => {
-      Logger.info(`${validation.component}: ${validation.status} - ${validation.message}`);
+      GASDBLogger.info(`${validation.component}: ${validation.status} - ${validation.message}`);
     });
     
     const allPassed = validations.every(v => v.status === 'PASS');
     const summary = `${validations.filter(v => v.status === 'PASS').length}/${validations.length} components validated successfully`;
     
-    Logger.info(`Overall validation: ${allPassed ? 'PASS' : 'FAIL'} - ${summary}`);
+    GASDBLogger.info(`Overall validation: ${allPassed ? 'PASS' : 'FAIL'} - ${summary}`);
     
     return {
       success: allPassed,
@@ -159,7 +159,7 @@ function validateSection1Setup() {
     };
     
   } catch (error) {
-    Logger.error('Validation failed', { error: error.message });
+    GASDBLogger.error('Validation failed', { error: error.message });
     throw error;
   }
 }
@@ -170,14 +170,14 @@ function validateSection1Setup() {
  */
 function initializeTestEnvironment() {
   try {
-    Logger.info('Initializing test environment for GAS DB');
-    Logger.info(`Logger level: ${Logger.getLevelName()}`);
-    Logger.info(`Test runner available: ${typeof GlobalTestRunner !== 'undefined'}`);
+    GASDBLogger.info('Initializing test environment for GAS DB');
+    GASDBLogger.info(`Logger level: ${GASDBLogger.getLevelName()}`);
+    GASDBLogger.info(`Test runner available: ${typeof GlobalTestRunner !== 'undefined'}`);
     
     // Set appropriate log level for testing
-    Logger.setLevel(Logger.LOG_LEVELS.INFO);
+    GASDBLogger.setLevel(GASDBLogger.LOG_LEVELS.INFO);
     
-    Logger.info('Test environment initialized successfully');
+    GASDBLogger.info('Test environment initialized successfully');
     return true;
     
   } catch (error) {
@@ -213,6 +213,6 @@ Usage:
 4. Use specific suite functions for targeted testing
   `;
   
-  Logger.info(helpText);
+  GASDBLogger.info(helpText);
   return helpText;
 }

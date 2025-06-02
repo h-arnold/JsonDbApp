@@ -127,7 +127,7 @@ class TestSuite {
       try {
         this.beforeAll();
       } catch (error) {
-        Logger.error(`BeforeAll failed for suite ${this.name}: ${error.message}`);
+        GASDBLogger.error(`BeforeAll failed for suite ${this.name}: ${error.message}`);
         // Create a failed result for beforeAll
         results.push(new TestResult(this.name, 'beforeAll', false, error, 0));
         return results;
@@ -144,7 +144,7 @@ class TestSuite {
       try {
         this.afterAll();
       } catch (error) {
-        Logger.error(`AfterAll failed for suite ${this.name}: ${error.message}`);
+        GASDBLogger.error(`AfterAll failed for suite ${this.name}: ${error.message}`);
         results.push(new TestResult(this.name, 'afterAll', false, error, 0));
       }
     }
@@ -217,7 +217,7 @@ class TestRunner {
     
     try {
       for (const [suiteName, suite] of this.testSuites) {
-        Logger.info(`Running test suite: ${suiteName}`);
+        GASDBLogger.info(`Running test suite: ${suiteName}`);
         const suiteResults = suite.runTests();
         suiteResults.forEach(result => this.results.addResult(result));
       }
@@ -239,7 +239,7 @@ class TestRunner {
     this.setupEnvironment();
     
     try {
-      Logger.info(`Running test suite: ${name}`);
+      GASDBLogger.info(`Running test suite: ${name}`);
       const suiteResults = suite.runTests();
       suiteResults.forEach(result => this.results.addResult(result));
     } finally {
@@ -259,7 +259,7 @@ class TestRunner {
     this.setupEnvironment();
     
     try {
-      Logger.info(`Running test: ${suiteName}.${testName}`);
+      GASDBLogger.info(`Running test: ${suiteName}.${testName}`);
       const result = suite.runTest(testName);
       this.results = new TestResults();
       this.results.addResult(result);
@@ -274,17 +274,17 @@ class TestRunner {
   setupEnvironment() {
     // Setup any global test environment here
     // For now, just log that we're starting
-    Logger.info('Setting up test environment');
+    GASDBLogger.info('Setting up test environment');
   }
   
   teardownEnvironment() {
     // Cleanup any global test environment here
     // For now, just log that we're done
-    Logger.info('Tearing down test environment');
+    GASDBLogger.info('Tearing down test environment');
   }
   
   logResults(results) {
-    Logger.info('\n' + results.getDetailedReport());
+    GASDBLogger.info('\n' + results.getDetailedReport());
   }
 }
 

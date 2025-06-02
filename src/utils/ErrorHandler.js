@@ -2,7 +2,16 @@
  * ErrorHandler - Provides standardized error handling for GAS DB
  * 
  * This class defines standard error types and provides utilities for
- * error handling, validation, and error context management.
+ * error handling, validation, and    if (error instanceof GASDBError) {
+      errorInfo.errorCode = error.code;
+      errorInfo.errorContext = error.context;
+    }
+    
+    GASDBLogger.error(`Error in ${context}: ${error.message}`, errorInfo);
+    
+    if (rethrow) {
+      throw error;
+    }text management.
  */
 
 /**
@@ -181,7 +190,7 @@ class ErrorHandler {
       errorInfo.errorContext = error.context;
     }
     
-    Logger.error(`Error in ${context}: ${error.message}`, errorInfo);
+    GASDBLogger.error(`Error in ${context}: ${error.message}`, errorInfo);
     
     if (rethrow) {
       throw error;

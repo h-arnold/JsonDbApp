@@ -133,7 +133,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |            FileOperations                |
 +------------------------------------------+
-| - logger: Logger                         |
+| - logger: GASDBLogger                    |
 +------------------------------------------+
 | + readFile(fileId): Object               |
 | + writeFile(fileId, data): void          |
@@ -213,11 +213,11 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 ```
 
-### Logger Class Diagram
+### GASDBLogger Class Diagram
 
 ```
 +------------------------------------------+
-|                Logger                    |
+|              GASDBLogger                 |
 +------------------------------------------+
 | - logLevel: String                       |
 | - apiCallCounter: Map<String, Number>    |
@@ -320,7 +320,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
                         | uses
                         v
                 +---------------------------+
-                |          Logger           |
+                |        GASDBLogger        |
                 +---------------------------+
 ```
 

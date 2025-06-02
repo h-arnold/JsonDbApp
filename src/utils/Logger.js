@@ -1,11 +1,11 @@
 /**
- * Logger - Provides standardized logging functionality for GAS DB
+ * GASDBLogger - Provides standardized logging functionality for GAS DB
  * 
  * This class provides different log levels and formats messages consistently
  * across the entire library. Designed to work with Google Apps Script's
  * console logging capabilities.
  */
-class Logger {
+class GASDBLogger {
   
   // Log levels
   static LOG_LEVELS = {
@@ -16,15 +16,15 @@ class Logger {
   };
   
   // Current log level - can be configured
-  static currentLevel = Logger.LOG_LEVELS.INFO;
+  static currentLevel = GASDBLogger.LOG_LEVELS.INFO;
   
   /**
    * Set the current logging level
    * @param {number} level - The log level from LOG_LEVELS
    */
   static setLevel(level) {
-    if (Object.values(Logger.LOG_LEVELS).includes(level)) {
-      Logger.currentLevel = level;
+    if (Object.values(GASDBLogger.LOG_LEVELS).includes(level)) {
+      GASDBLogger.currentLevel = level;
     } else {
       throw new Error(`Invalid log level: ${level}`);
     }
@@ -35,9 +35,9 @@ class Logger {
    * @param {string} levelName - The log level name (ERROR, WARN, INFO, DEBUG)
    */
   static setLevelByName(levelName) {
-    const level = Logger.LOG_LEVELS[levelName.toUpperCase()];
+    const level = GASDBLogger.LOG_LEVELS[levelName.toUpperCase()];
     if (level !== undefined) {
-      Logger.currentLevel = level;
+      GASDBLogger.currentLevel = level;
     } else {
       throw new Error(`Invalid log level name: ${levelName}`);
     }
@@ -48,7 +48,7 @@ class Logger {
    * @returns {number} The current log level
    */
   static getLevel() {
-    return Logger.currentLevel;
+    return GASDBLogger.currentLevel;
   }
   
   /**
@@ -56,8 +56,8 @@ class Logger {
    * @returns {string} The current log level name
    */
   static getLevelName() {
-    for (const [name, level] of Object.entries(Logger.LOG_LEVELS)) {
-      if (level === Logger.currentLevel) {
+    for (const [name, level] of Object.entries(GASDBLogger.LOG_LEVELS)) {
+      if (level === GASDBLogger.currentLevel) {
         return name;
       }
     }
@@ -88,8 +88,8 @@ class Logger {
    * @param {Object} context - Optional context object
    */
   static error(message, context = null) {
-    if (Logger.currentLevel >= Logger.LOG_LEVELS.ERROR) {
-      const formatted = Logger.formatMessage('ERROR', message, context);
+    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.ERROR) {
+      const formatted = GASDBLogger.formatMessage('ERROR', message, context);
       console.error(formatted);
     }
   }
@@ -100,8 +100,8 @@ class Logger {
    * @param {Object} context - Optional context object
    */
   static warn(message, context = null) {
-    if (Logger.currentLevel >= Logger.LOG_LEVELS.WARN) {
-      const formatted = Logger.formatMessage('WARN', message, context);
+    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.WARN) {
+      const formatted = GASDBLogger.formatMessage('WARN', message, context);
       console.warn(formatted);
     }
   }
@@ -112,8 +112,8 @@ class Logger {
    * @param {Object} context - Optional context object
    */
   static info(message, context = null) {
-    if (Logger.currentLevel >= Logger.LOG_LEVELS.INFO) {
-      const formatted = Logger.formatMessage('INFO', message, context);
+    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.INFO) {
+      const formatted = GASDBLogger.formatMessage('INFO', message, context);
       console.log(formatted);
     }
   }
@@ -124,8 +124,8 @@ class Logger {
    * @param {Object} context - Optional context object
    */
   static debug(message, context = null) {
-    if (Logger.currentLevel >= Logger.LOG_LEVELS.DEBUG) {
-      const formatted = Logger.formatMessage('DEBUG', message, context);
+    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.DEBUG) {
+      const formatted = GASDBLogger.formatMessage('DEBUG', message, context);
       console.log(formatted);
     }
   }
@@ -137,9 +137,9 @@ class Logger {
    * @param {Object} context - Optional context object
    */
   static log(level, message, context = null) {
-    const levelValue = Logger.LOG_LEVELS[level.toUpperCase()];
-    if (levelValue !== undefined && Logger.currentLevel >= levelValue) {
-      const formatted = Logger.formatMessage(level.toUpperCase(), message, context);
+    const levelValue = GASDBLogger.LOG_LEVELS[level.toUpperCase()];
+    if (levelValue !== undefined && GASDBLogger.currentLevel >= levelValue) {
+      const formatted = GASDBLogger.formatMessage(level.toUpperCase(), message, context);
       
       // Use appropriate console method based on level
       switch (level.toUpperCase()) {
@@ -163,16 +163,16 @@ class Logger {
   static createComponentLogger(component) {
     return {
       error: (message, context = null) => {
-        Logger.error(`[${component}] ${message}`, context);
+        GASDBLogger.error(`[${component}] ${message}`, context);
       },
       warn: (message, context = null) => {
-        Logger.warn(`[${component}] ${message}`, context);
+        GASDBLogger.warn(`[${component}] ${message}`, context);
       },
       info: (message, context = null) => {
-        Logger.info(`[${component}] ${message}`, context);
+        GASDBLogger.info(`[${component}] ${message}`, context);
       },
       debug: (message, context = null) => {
-        Logger.debug(`[${component}] ${message}`, context);
+        GASDBLogger.debug(`[${component}] ${message}`, context);
       }
     };
   }
@@ -183,7 +183,7 @@ class Logger {
    * @param {Object} context - Optional context object
    */
   static startOperation(operation, context = null) {
-    Logger.debug(`Starting operation: ${operation}`, context);
+    GASDBLogger.debug(`Starting operation: ${operation}`, context);
   }
   
   /**
@@ -197,7 +197,7 @@ class Logger {
     if (duration !== null) {
       message += ` (${duration}ms)`;
     }
-    Logger.debug(message, context);
+    GASDBLogger.debug(message, context);
   }
   
   /**
@@ -209,16 +209,16 @@ class Logger {
    */
   static timeOperation(operation, fn, context = null) {
     const startTime = Date.now();
-    Logger.startOperation(operation, context);
+    GASDBLogger.startOperation(operation, context);
     
     try {
       const result = fn();
       const duration = Date.now() - startTime;
-      Logger.endOperation(operation, duration, context);
+      GASDBLogger.endOperation(operation, duration, context);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
-      Logger.error(`Operation failed: ${operation} (${duration}ms)`, { ...context, error: error.message });
+      GASDBLogger.error(`Operation failed: ${operation} (${duration}ms)`, { ...context, error: error.message });
       throw error;
     }
   }
