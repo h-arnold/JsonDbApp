@@ -1,0 +1,22 @@
+{
+  "name": "gas-db",
+  "version": "1.0.0",
+  "description": "A document database implemented in Google App Script using the Google Drive API. Recommended for masochists.",
+  "main": "index.js",
+  "directories": {
+    "doc": "docs"
+  },
+  "scripts": {
+    "test": "echo \"Run tests using Google Apps Script editor - call testSection1() function\"",
+    "push": "clasp push",
+    "pull": "clasp pull",
+    "deploy": "clasp deploy",
+    "logs": "clasp logs"
+  },
+  "keywords": ["google-apps-script", "database", "nosql", "document-database"],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@google/clasp": "^2.4.2"
+  }
+}

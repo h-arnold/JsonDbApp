@@ -1,0 +1,13 @@
+{
+  "scriptId": "",
+  "rootDir": ".",
+  "filePushOrder": [
+    "src/utils/Logger.js",
+    "src/utils/ErrorHandler.js", 
+    "src/utils/IdGenerator.js",
+    "src/components/testing/AssertionUtilities.js",
+    "src/components/testing/TestRunner.js",
+    "tests/unit/Section1Tests.js",
+    "tests/TestExecution.js"
+  ]
+}
