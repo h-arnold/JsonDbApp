@@ -3,5 +3,7 @@
     "github.copilot.chat.agent.thinkingTool": true,
     "github.copilot.chat.generateTests.codeLens": true,
     "mdb.useSampleDocsInCopilot": true,
-    "githubPullRequests.experimental.chat": true
+    "githubPullRequests.experimental.chat": true,
+    "editor.wordWrap": "on",
+    "github.copilot.chat.edits.newNotebook.enabled": false
 }
