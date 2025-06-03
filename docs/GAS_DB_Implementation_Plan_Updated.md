@@ -195,9 +195,9 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 ### Objectives
 
-- Implement FileService with separated components
+- Implement FileService with Drive API integration
 - Create FileOperations for direct Drive API interactions
-- Implement FileCache for in-memory caching
+- Optimize Drive API calls through intelligent batching and error handling
 
 ### Implementation Steps
 
@@ -205,45 +205,45 @@ The implementation will use Google Apps Script with clasp for testing, and assum
    - Create FileOperations class
    - Implement methods for reading/writing Drive files
    - Implement file creation and deletion
-   - Add logging for Drive API calls
+   - Add logging and retry logic for Drive API calls
 
-2. **FileCache Implementation**
-   - Create FileCache class
-   - Implement cache storage and retrieval
-   - Implement cache invalidation
-   - Implement dirty flag tracking
+2. **FileService Implementation**
+   - Create FileService class as primary interface
+   - Implement optimized read/write operations
+   - Add batch operations where possible
+   - Implement proper error handling and retries
 
-3. **FileService Integration**
-   - Create FileService class to coordinate components
-   - Implement methods that delegate to FileOperations and FileCache
-   - Optimize Drive API calls through caching
+3. **Drive API Optimization**
+   - Minimize API calls through intelligent operations
+   - Implement retry logic for transient failures
+   - Add proper error handling for quota limits
+   - Use Drive API v3 efficiently
 
 ### Test Cases
 
 1. **FileOperations Tests**
-   - Test direct file reading
-   - Test direct file writing
-   - Test file creation
-   - Test file deletion
+   - Test direct file reading and writing
+   - Test file creation and deletion
+   - Test error handling and retries
+   - Test Drive API integration
 
-2. **FileCache Tests**
-   - Test cache storage and retrieval
-   - Test cache invalidation
-   - Test dirty flag management
-   - Test cache hit/miss behavior
+2. **FileService Tests**
+   - Test optimized file operations
+   - Test batch operations where applicable
+   - Test error recovery
+   - Test quota limit handling
 
-3. **FileService Integration Tests**
+3. **Integration Tests**
    - Test coordinated file operations
-   - Test caching behavior
-   - Test optimized writes
-   - Test Drive API call minimization
+   - Test Drive API call optimization
+   - Test component integration
 
 ### Completion Criteria
 
 - All test cases pass
 - FileOperations can perform all required Drive API interactions
-- FileCache properly manages in-memory file content
-- FileService coordinates components to minimize Drive API calls
+- FileService provides optimized interface for file operations
+- Proper error handling and retry logic implemented
 
 ## Section 4: Database and Collection Management
 

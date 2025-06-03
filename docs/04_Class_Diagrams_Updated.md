@@ -116,14 +116,14 @@ This document contains updated class diagrams for the Google Apps Script Databas
 |              FileService                 |
 +------------------------------------------+
 | - fileOps: FileOperations                |
-| - fileCache: FileCache                   |
+| - logger: GASDBLogger                    |
 +------------------------------------------+
 | + readFile(fileId): Object               |
 | + writeFile(fileId, data): void          |
 | + createFile(name, data, folderId): String|
 | + deleteFile(fileId): Boolean            |
-| + getCachedFile(fileId): Object          |
-| + invalidateCache(fileId): void          |
+| + fileExists(fileId): Boolean            |
+| + getFileMetadata(fileId): Object        |
 +------------------------------------------+
 ```
 
@@ -139,24 +139,10 @@ This document contains updated class diagrams for the Google Apps Script Databas
 | + writeFile(fileId, data): void          |
 | + createFile(name, data, folderId): String|
 | + deleteFile(fileId): Boolean            |
-+------------------------------------------+
-```
-
-### FileCache Class Diagram (New)
-
-```
-+------------------------------------------+
-|              FileCache                   |
-+------------------------------------------+
-| - cache: Map<String, Object>             |
-| - dirtyFlags: Map<String, Boolean>       |
-+------------------------------------------+
-| + getFile(fileId): Object                |
-| + setFile(fileId, data): void            |
-| + invalidate(fileId): void               |
-| + isDirty(fileId): Boolean               |
-| + markDirty(fileId): void                |
-| + clearDirty(fileId): void               |
+| + fileExists(fileId): Boolean            |
+| + getFileMetadata(fileId): Object        |
+| - handleDriveApiError(error): void       |
+| - retryOperation(operation, maxRetries): * |
 +------------------------------------------+
 ```
 

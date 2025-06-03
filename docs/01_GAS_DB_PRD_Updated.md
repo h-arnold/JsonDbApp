@@ -203,10 +203,10 @@ When modifying a collection:
 
 6.3.2 File Service Component Separation
 
-- Separate file operations from caching logic
-- FileOperations component handles direct Drive API interactions
-- FileCache component manages in-memory caching of file contents
-- FileService class coordinates these components while providing a unified interface
+- Separate file operations from service coordination
+- FileOperations component handles direct Drive API interactions with retry logic
+- FileService class coordinates file operations while providing a unified interface
+- Optimizes Drive API calls through intelligent batching and error handling
 
 ---
 
