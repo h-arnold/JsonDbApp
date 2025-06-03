@@ -194,8 +194,19 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |             IdGenerator                  |
 +------------------------------------------+
-| + generate(): String                     |
-| - generateTimestampBased(): String       |
+| + generateUUID(): String                 |
+| + generateFallbackUUID(): String         |
+| + generateTimestampId(prefix): String    |
+| + generateShortId(length): String        |
+| + generateAlphanumericId(length): String |
+| + generateNumericId(length): String      |
+| + generateObjectId(): String             |
+| + generateSequentialId(prefix): String   |
+| + generateReadableId(): String           |
+| + isValidUUID(id): Boolean               |
+| + isValidObjectId(id): Boolean           |
+| + getDefaultGenerator(): Function        |
+| + createCustomGenerator(options): Function|
 +------------------------------------------+
 ```
 
@@ -219,15 +230,23 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |              GASDBLogger                 |
 +------------------------------------------+
-| - logLevel: String                       |
-| - apiCallCounter: Map<String, Number>    |
+| + LOG_LEVELS: Object                     |
+| + currentLevel: Number                   |
 +------------------------------------------+
-| + error(message, data): void             |
-| + warn(message, data): void              |
-| + info(message, data): void              |
-| + debug(message, data): void             |
-| + incrementApiCall(type): void           |
-| + getApiCallStats(): Object              |
+| + setLevel(level): void                  |
+| + setLevelByName(levelName): void        |
+| + getLevel(): Number                     |
+| + getLevelName(): String                 |
+| + formatMessage(level, message, context): String |
+| + error(message, context): void          |
+| + warn(message, context): void           |
+| + info(message, context): void           |
+| + debug(message, context): void          |
+| + log(level, message, context): void     |
+| + createComponentLogger(component): Object |
+| + startOperation(operation, context): void |
+| + endOperation(operation, duration, context): void |
+| + timeOperation(operation, fn, context): * |
 +------------------------------------------+
 ```
 
@@ -237,12 +256,53 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |             ErrorHandler                 |
 +------------------------------------------+
-| + throwDocumentNotFound(id): void        |
-| + throwDuplicateKey(id): void            |
-| + throwInvalidQuery(details): void       |
-| + throwLockTimeout(): void               |
-| + throwFileIOError(details): void        |
-| + throwQuotaExceeded(details): void      |
+| + ErrorTypes: Object                     |
++------------------------------------------+
+| + createError(errorType, ...args): Error |
+| + handleError(error, context, rethrow): void |
+| + wrapFunction(fn, context): Function    |
+| + validateRequired(value, name): void    |
+| + validateType(value, expectedType, name): void |
+| + validateNotEmpty(value, name): void    |
+| + validateNotEmptyArray(value, name): void |
+| + validateRange(value, min, max, name): void |
+| + isErrorType(error, errorType): Boolean |
+| + extractErrorInfo(error): Object        |
++------------------------------------------+
+```
+
+### GASDBError Class Diagram
+
+```
++------------------------------------------+
+|              GASDBError                  |
++------------------------------------------+
+| + message: String                        |
+| + code: String                           |
+| + context: Object                        |
+| + timestamp: Date                        |
++------------------------------------------+
+| + constructor(message, code, context): void |
+| + toJSON(): Object                       |
++------------------------------------------+
+```
+
+### Specific Error Classes
+
+```
++------------------------------------------+
+|        DocumentNotFoundError             |
+|        DuplicateKeyError                 |
+|        InvalidQueryError                 |
+|        LockTimeoutError                  |
+|        FileIOError                       |
+|        ConflictError                     |
+|        MasterIndexError                  |
+|        CollectionNotFoundError           |
+|        ConfigurationError                |
++------------------------------------------+
+| All extend GASDBError                    |
+| Each has specific constructor parameters |
 +------------------------------------------+
 ```
 

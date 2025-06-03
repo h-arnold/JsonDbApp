@@ -35,7 +35,22 @@ The foundational infrastructure is complete and ready for database implementatio
 
 ## 🧪 Testing
 
-Run tests in Google Apps Script editor:
+### Automated Testing
+Use the included test automation script for streamlined development:
+
+```bash
+# Run all tests (recommended)
+./test-runner.sh
+
+# Run specific section tests
+./test-runner.sh 1
+
+# Run validation only
+./test-runner.sh --validate
+```
+
+### Manual Testing
+Run tests directly in Google Apps Script editor:
 
 ```javascript
 // Initialize environment
@@ -50,6 +65,19 @@ testSection1();
 // Get help
 showTestHelp();
 ```
+
+## 📚 Documentation
+
+### For Developers
+- [**Developer Documentation**](./docs/developers/README.md) - Complete development guides
+- [**Testing Framework**](./docs/developers/Testing_Framework.md) - How to write and run tests
+- [**Infrastructure Components**](./docs/developers/Infrastructure_Components.md) - Logging, error handling, ID generation
+- [**test-runner.sh Guide**](./docs/developers/test-runner.sh.md) - Automated testing workflow
+
+### Project Documentation
+- [**Project Requirements**](./docs/01_GAS_DB_PRD_Updated.md) - Detailed project specification
+- [**Class Diagrams**](./docs/04_Class_Diagrams_Updated.md) - System architecture diagrams
+- [**Implementation Plan**](./docs/GAS_DB_Implementation_Plan_Updated.md) - Development roadmap
 
 ## 📋 Next Steps: Section 2
 

@@ -210,6 +210,35 @@ When modifying a collection:
 
 ---
 
+6.4 Infrastructure Components
+
+6.4.1 Logging and Monitoring
+
+- **GASDBLogger**: Provides standardized logging across all components
+  - Four log levels: ERROR, WARN, INFO, DEBUG
+  - Component-specific loggers for debugging
+  - Operation timing for performance monitoring
+  - Context-rich logging with JSON serialization
+
+6.4.2 Error Management
+
+- **ErrorHandler**: Centralizes error handling and validation
+  - Standardized error types extending GASDBError base class
+  - Error context preservation for debugging
+  - Validation utilities for input checking
+  - Comprehensive error information extraction
+
+6.4.3 Unique Identifier Generation
+
+- **IdGenerator**: Provides multiple ID generation strategies
+  - UUID generation using Google Apps Script utilities
+  - Timestamp-based IDs with collision avoidance
+  - MongoDB-compatible ObjectId generation
+  - Human-readable IDs for debugging
+  - Format validation for different ID types
+
+---
+
 7. Error Handling
 
 The library will throw standardized errors for common scenarios:

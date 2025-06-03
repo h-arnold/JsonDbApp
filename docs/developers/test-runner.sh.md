@@ -1,5 +1,21 @@
 # `test-runner.sh` Documentation
 
+- [`test-runner.sh` Documentation](#test-runnersh-documentation)
+  - [Features](#features)
+  - [Usage](#usage)
+    - [Options](#options)
+    - [Sections](#sections)
+    - [Examples](#examples)
+  - [Script Structure Overview](#script-structure-overview)
+    - [Key Functions](#key-functions)
+    - [Global Variables \& Flags](#global-variables--flags)
+  - [Prerequisites for `clasp run`](#prerequisites-for-clasp-run)
+  - [Authentication Flow](#authentication-flow)
+  - [Logging](#logging)
+  - [Error Handling](#error-handling)
+  - [Customisation](#customisation)
+
+
 This script automates the process of testing Google Apps Script projects using `clasp`. It handles pushing code, deploying, running tests in sections or all at once, validating environments, and retrieving logs.
 
 ## Features
