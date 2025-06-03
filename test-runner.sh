@@ -47,36 +47,87 @@ print_info() {
     print_status "$BLUE" "ℹ $1"
 }
 
-# Function to check clasp setup
-check_clasp_setup() {
-    print_info "Checking clasp setup..."
+# Function to check clasp installation and basic project setup
+check_clasp_prerequisites() {
+    print_info "Checking clasp prerequisites..."
     
     if ! command -v clasp &> /dev/null; then
         print_error "clasp is not installed. Please install with: npm install -g @google/clasp"
         exit 1
     fi
     
-    # Check if clasp is authenticated and project is configured
-    if ! clasp status &> /dev/null; then
-        print_error "clasp is not authenticated or project not configured"
-        print_info "Authentication required. Please run the following commands:"
-        print_info "1. clasp login"
-        print_info "2. clasp login --user <your-email> --use-project-scopes --creds .gas-testing.json"
-        print_info "Then ensure clasp.json contains valid scriptId"
-        
-        # Check if we can detect which step is needed
-        if clasp whoami &> /dev/null; then
-            print_warning "Basic authentication exists but project-specific auth may be needed"
-            print_info "Try running: clasp login --user <your-email> --use-project-scopes --creds .gas-testing.json"
-        else
-            print_warning "No authentication detected"
-            print_info "Start with: clasp login"
-        fi
-        
+    if [ ! -f ".clasp.json" ]; then
+        print_error ".clasp.json not found. Your project is not configured with clasp."
+        print_info "Please run 'clasp create --title <YourProjectTitle>' or 'clasp clone <scriptId>' to set up your project."
         exit 1
     fi
     
-    print_success "clasp setup verified"
+    print_success "Clasp prerequisites verified (clasp installed, .clasp.json found)."
+}
+
+# Function to login for push/deploy operations
+login_for_push_deploy() {
+    if [ "$LOGIN_FOR_PUSH_DEPLOY_SUCCESSFUL" = true ]; then
+        print_info "Already logged in for push/deploy operations in this session."
+        return 0
+    fi
+
+    print_info "Attempting login for push/deploy operations..."
+    if clasp login --no-localhost; then
+        print_success "Login for push/deploy successful."
+        LOGIN_FOR_PUSH_DEPLOY_SUCCESSFUL=true
+        return 0
+    else
+        print_error "Login for push/deploy failed."
+        print_info "Please ensure you can login with: clasp login --no-localhost"
+        print_info "This login is required to push and deploy code."
+        exit 1
+    fi
+}
+
+# Function to login for run operations (tests/validation)
+login_for_run() {
+    if [ "$LOGIN_FOR_RUN_SUCCESSFUL" = true ]; then
+        print_info "Already logged in for 'clasp run' operations in this session."
+        return 0
+    fi
+
+    print_info "Preparing for 'clasp run' operations..."
+
+    if [ ! -f ".gas-testing.json" ]; then
+        print_error "'.gas-testing.json' not found."
+        print_info "This file is required for 'clasp run' operations (tests, validation)."
+        print_info "It should contain your OAuth Client ID credentials for a 'Desktop Application'."
+        print_info "Typically, you download this as 'client_secret.json' and rename it or point to it."
+        print_info "Refer to 'clasp run' documentation for details on creating this file."
+        exit 1
+    fi
+
+    local user_email_to_use
+    if [ -n "$GAS_USER_EMAIL" ]; then
+        user_email_to_use="$GAS_USER_EMAIL"
+        print_info "Using GAS_USER_EMAIL environment variable: $user_email_to_use"
+    else
+        print_warning "GAS_USER_EMAIL environment variable is not set."
+        read -r -p "Enter your Google account email for 'clasp run' (e.g., user@example.com): " entered_email
+        if [ -z "$entered_email" ]; then
+            print_error "User email is required for 'clasp run' operations."
+            exit 1
+        fi
+        user_email_to_use="$entered_email"
+    fi
+    
+    print_info "Attempting login for 'clasp run' operations (user: $user_email_to_use)..."
+    if clasp login --user "$user_email_to_use" --use-project-scopes --creds .gas-testing.json --no-localhost; then
+        print_success "Login for 'clasp run' operations successful."
+        LOGIN_FOR_RUN_SUCCESSFUL=true
+        return 0
+    else
+        print_error "Login for 'clasp run' operations failed."
+        print_info "Please ensure you can login with: clasp login --user $user_email_to_use --use-project-scopes --creds .gas-testing.json --no-localhost"
+        print_info "This login is required to execute functions remotely via 'clasp run'."
+        exit 1
+    fi
 }
 
 # Function to check if tests ran successfully by examining logs
@@ -301,6 +352,8 @@ PUSH_ONLY=false
 LOGS_ONLY=false
 QUIET=false
 NO_LOGS=false
+LOGIN_FOR_PUSH_DEPLOY_SUCCESSFUL=false
+LOGIN_FOR_RUN_SUCCESSFUL=false
 SECTION="all"
 
 while [[ $# -gt 0 ]]; do
@@ -359,9 +412,9 @@ main() {
     # Initialize log file
     echo "GAS DB Test Execution Log - $TIMESTAMP" > "$LOG_FILE"
     
-    # Check clasp setup unless we're only retrieving logs
+    # Check clasp prerequisites unless we're only retrieving logs
     if [ "$LOGS_ONLY" != true ]; then
-        check_clasp_setup
+        check_clasp_prerequisites
     fi
     
     # Handle logs-only mode
@@ -372,6 +425,7 @@ main() {
     
     # Push code unless in logs-only mode
     if [ "$PUSH_ONLY" = true ] || ([ "$VALIDATE_ONLY" != true ] && [ "$TESTS_ONLY" != true ]); then
+        login_for_push_deploy # Authenticate for push/deploy
         if ! push_code; then
             print_error "Code push failed, aborting"
             exit 1
@@ -391,12 +445,14 @@ main() {
     
     # Run validation if requested or in full mode
     if [ "$VALIDATE_ONLY" = true ] || ([ "$TESTS_ONLY" != true ] && [ "$PUSH_ONLY" != true ]); then
+        login_for_run # Authenticate for running functions
         print_header "Running Environment Validation - Section $SECTION"
         run_validation "$SECTION"
     fi
     
     # Run tests if requested or in full mode
     if [ "$TESTS_ONLY" = true ] || ([ "$VALIDATE_ONLY" != true ] && [ "$PUSH_ONLY" != true ]); then
+        login_for_run # Authenticate for running functions (again, safe if already done)
         print_header "Running Test Suite - Section $SECTION"
         run_tests "$SECTION"
     fi
