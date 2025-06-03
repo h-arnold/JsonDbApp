@@ -2,6 +2,10 @@
 
 This section contains detailed documentation for developers contributing to or working with the GAS DB project.
 
+⚠️ **HEALTH WARNING** ⚠️
+
+These documents have been created by Claude AI and may not be fully accurate or complete. If you notice any discrepancies, please make create an issue or submit a PR with updates.
+
 ## Core Documentation
 
 - [**Testing Framework**](./Testing_Framework.md) - Comprehensive guide to the GAS DB testing infrastructure, including AssertionUtilities and TestRunner classes

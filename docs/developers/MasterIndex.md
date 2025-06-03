@@ -1,10 +1,40 @@
 # MasterIndex Developer Documentation
 
+- [MasterIndex Developer Documentation](#masterindex-developer-documentation)
+  - [Overview](#overview)
+  - [Core Workflow](#core-workflow)
+    - [Collection Access Protocol](#collection-access-protocol)
+    - [Virtual Locking](#virtual-locking)
+    - [Data Structure](#data-structure)
+  - [Constructor](#constructor)
+  - [API Reference](#api-reference)
+    - [Core Methods](#core-methods)
+      - [`addCollection(name, metadata)`](#addcollectionname-metadata)
+      - [`getCollection(name)` / `getCollections()`](#getcollectionname--getcollections)
+      - [`updateCollectionMetadata(name, updates)`](#updatecollectionmetadataname-updates)
+    - [Locking Methods](#locking-methods)
+      - [`acquireLock(collectionName, operationId)`](#acquirelockcollectionname-operationid)
+      - [`releaseLock(collectionName, operationId)`](#releaselockcollectionname-operationid)
+      - [`isLocked(collectionName)`](#islockedcollectionname)
+      - [`cleanupExpiredLocks()`](#cleanupexpiredlocks)
+    - [Conflict Management](#conflict-management)
+      - [`hasConflict(collectionName, expectedToken)`](#hasconflictcollectionname-expectedtoken)
+      - [`resolveConflict(collectionName, newData, strategy)`](#resolveconflictcollectionname-newdata-strategy)
+      - [`generateModificationToken()`](#generatemodificationtoken)
+      - [`validateModificationToken(token)`](#validatemodificationtokentoken)
+  - [Usage Examples](#usage-examples)
+    - [Basic Operations](#basic-operations)
+    - [Locking Pattern](#locking-pattern)
+    - [Conflict Resolution](#conflict-resolution)
+  - [Error Types](#error-types)
+  - [Best Practices](#best-practices)
+
 ## Overview
 
 The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management.
 
 **Key Responsibilities:**
+
 - Cross-instance coordination via ScriptProperties
 - Virtual locking for collection access
 - Conflict detection using modification tokens
@@ -34,6 +64,7 @@ masterIndex.releaseLock('users', operationId);
 ### Virtual Locking
 
 Prevents concurrent modifications across script instances:
+
 - Locks expire automatically (default: 30 seconds)
 - Operation ID required for lock acquisition/release
 - Expired locks are cleaned up automatically
@@ -65,6 +96,7 @@ constructor(config = {})
 ```
 
 **Parameters:**
+
 - `config.masterIndexKey` (String): ScriptProperties key (default: 'GASDB_MASTER_INDEX')
 - `config.lockTimeout` (Number): Lock timeout in ms (default: 30000)
 - `config.version` (Number): Master index version (default: 1)
@@ -76,48 +108,63 @@ constructor(config = {})
 ### Core Methods
 
 #### `addCollection(name, metadata)`
+
 Adds collection to master index.
+
 - `name` (String): Collection name
 - `metadata` (Object): Collection metadata (fileId, documentCount, etc.)
 - **Returns:** Collection data object
 - **Throws:** `CONFIGURATION_ERROR` for invalid name
 
 #### `getCollection(name)` / `getCollections()`
+
 Retrieves collection metadata.
+
 - **Returns:** Collection object or collections map
 
 #### `updateCollectionMetadata(name, updates)`
+
 Updates collection metadata with new modification token.
+
 - `updates` (Object): Metadata changes
 - **Returns:** Updated collection data
 
 ### Locking Methods
 
 #### `acquireLock(collectionName, operationId)`
+
 Acquires virtual lock for collection.
+
 - **Returns:** `true` if successful, `false` if already locked
 
-#### `releaseLock(collectionName, operationId)` 
+#### `releaseLock(collectionName, operationId)`
+
 Releases virtual lock (must match operation ID).
 
 #### `isLocked(collectionName)`
+
 Checks if collection is currently locked.
 
 #### `cleanupExpiredLocks()`
+
 Removes expired locks.
 
 ### Conflict Management
 
 #### `hasConflict(collectionName, expectedToken)`
+
 Checks if collection was modified since token was generated.
 
 #### `resolveConflict(collectionName, newData, strategy)`
+
 Resolves conflicts using specified strategy ('LAST_WRITE_WINS').
 
 #### `generateModificationToken()`
+
 Creates unique modification token.
 
 #### `validateModificationToken(token)`
+
 Validates token format (timestamp-randomstring).
 
 ## Usage Examples
