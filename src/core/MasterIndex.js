@@ -128,8 +128,12 @@ class MasterIndex {
         collection[key] = updates[key];
       });
       
-      // Always update lastModified and generate new modification token
-      collection.lastModified = new Date().toISOString();
+      // Update lastModified only if not explicitly provided in updates
+      if (!updates.hasOwnProperty('lastModified')) {
+        collection.lastModified = new Date().toISOString();
+      }
+      
+      // Generate new modification token if not provided
       if (!updates.modificationToken) {
         collection.modificationToken = this.generateModificationToken();
       }

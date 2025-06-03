@@ -48,7 +48,7 @@ function testMasterIndexFunctionality() {
     
     // Assert
     AssertionUtilities.assertTrue(collections.hasOwnProperty('testCollection'), 'Collection should be persisted');
-    AssertionUtilities.assertEqual(collections.testCollection.documentCount, 5, 'Document count should match');
+    AssertionUtilities.assertEquals(collections.testCollection.documentCount, 5, 'Document count should match');
   });
   
   suite.addTest('should load existing master index from ScriptProperties', () => {
@@ -74,7 +74,7 @@ function testMasterIndexFunctionality() {
     
     // Assert
     AssertionUtilities.assertTrue(collections.hasOwnProperty('existingCollection'), 'Should load existing collection');
-    AssertionUtilities.assertEqual(collections.existingCollection.documentCount, 3, 'Should preserve document count');
+    AssertionUtilities.assertEquals(collections.existingCollection.documentCount, 3, 'Should preserve document count');
   });
   
   suite.addTest('should update collection metadata correctly', () => {
@@ -95,8 +95,8 @@ function testMasterIndexFunctionality() {
     const collection = masterIndex.getCollection('updateTest');
     
     // Assert
-    AssertionUtilities.assertEqual(collection.documentCount, 10, 'Document count should be updated');
-    AssertionUtilities.assertEqual(collection.lastModified, '2025-06-02T10:00:00Z', 'Last modified should be updated');
+    AssertionUtilities.assertEquals(collection.documentCount, 10, 'Document count should be updated');
+    AssertionUtilities.assertEquals(collection.lastModified, '2025-06-02T10:00:00Z', 'Last modified should be updated');
   });
   
   return suite;
@@ -209,7 +209,7 @@ function testConflictDetectionResolution() {
     const token2 = masterIndex.generateModificationToken();
     
     // Assert
-    AssertionUtilities.assertNotEqual(token1, token2, 'Modification tokens should be unique');
+    AssertionUtilities.assertNotEquals(token1, token2, 'Modification tokens should be unique');
     AssertionUtilities.assertTrue(token1.length > 0, 'Token should not be empty');
     AssertionUtilities.assertTrue(token2.length > 0, 'Token should not be empty');
   });
@@ -259,8 +259,8 @@ function testConflictDetectionResolution() {
     
     // Assert
     AssertionUtilities.assertTrue(resolution.success, 'Conflict should be resolved');
-    AssertionUtilities.assertEqual(resolution.data.documentCount, 8, 'Should use new data');
-    AssertionUtilities.assertNotEqual(resolution.data.modificationToken, originalToken, 'Should generate new token');
+    AssertionUtilities.assertEquals(resolution.data.documentCount, 8, 'Should use new data');
+    AssertionUtilities.assertNotEquals(resolution.data.modificationToken, originalToken, 'Should generate new token');
   });
   
   suite.addTest('should track modification history for debugging', () => {
@@ -357,7 +357,7 @@ function testMasterIndexIntegration() {
     AssertionUtilities.assertFalse(masterIndex.isLocked(collectionName), 'Collection should not be locked after release');
     
     const collection = masterIndex.getCollection(collectionName);
-    AssertionUtilities.assertEqual(collection.documentCount, 10, 'Metadata should be updated');
+    AssertionUtilities.assertEquals(collection.documentCount, 10, 'Metadata should be updated');
   });
   
   return suite;
