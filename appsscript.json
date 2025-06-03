@@ -6,7 +6,7 @@
   "runtimeVersion": "V8",
   "oauthScopes": [
     "https://www.googleapis.com/auth/script.storage",
-    "https://www.googleapis.com/auth/drive.readonly"
-
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/script.scriptapp"
   ]
 }
