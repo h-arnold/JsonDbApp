@@ -4,6 +4,11 @@
 
 A synchronous document database for Google Apps Script, using MongoDB-like syntax. Supports CRUD on named collections, each stored as a JSON file in Google Drive. Access is via authenticated Apps Script libraries. Data consistency is managed with a ScriptProperties-based master index.
 
+## Documentation Reference
+
+**Project Documentation**: `/docs/`
+
+
 ## Core Principles
 
 **TDD**: Red-Green-Refactor cycle. Write failing tests first, implement minimal passing code, then refactor.  

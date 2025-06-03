@@ -1,15 +1,12 @@
 /**
- * MasterIndex Class
+ * MasterIndex - ScriptProperties-based master index for cross-instance coordination
  * 
- * Manages the master index stored in ScriptProperties for GAS DB.
- * Provides virtual locking mechanism and conflict detection.
+ * Manages the master index stored in ScriptProperties to coordinate access
+ * to collections across multiple Google Apps Script instances. Provides
+ * virtual locking, conflict detection, and modification tracking.
  * 
- * TDD Green Phase: Functional implementation to make all tests pass.
+ * @class MasterIndex
  */
-
-// Error classes will be accessed via ErrorHandler.ErrorTypes
-// Note: In GAS environment, ErrorHandler is available globally after ErrorHandler.js is loaded
-
 class MasterIndex {
   /**
    * Create a new MasterIndex instance

@@ -15,7 +15,6 @@
   - [Error Handling](#error-handling)
   - [Customisation](#customisation)
 
-
 This script automates the process of testing Google Apps Script projects using `clasp`. It handles pushing code, deploying, running tests in sections or all at once, validating environments, and retrieving logs.
 
 ## Features

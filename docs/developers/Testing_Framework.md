@@ -30,7 +30,6 @@
     - [Common Issues](#common-issues)
     - [Debug Strategies](#debug-strategies)
 
-
 ## Overview
 
 The GAS DB Testing Framework provides a comprehensive testing infrastructure designed specifically for Google Apps Script environments. It includes assertion utilities and a test runner that handles the unique constraints of the GAS platform.
@@ -167,6 +166,7 @@ runner.addTest('should return multiple results', () => {
 #### Test Organization
 
 **File Structure:**
+
 ```
 tests/
 ├── unit/
@@ -182,6 +182,7 @@ tests/
 ```
 
 **Naming Conventions:**
+
 - Test files: `ClassNameTest.js`
 - Test functions: `testClassNameScenario()`
 - Test descriptions: `'should behaviour when condition'`
@@ -189,6 +190,7 @@ tests/
 #### Running Tests
 
 **Individual Test:**
+
 ```javascript
 function runSingleTest() {
   const results = testDatabaseInsert();
@@ -197,6 +199,7 @@ function runSingleTest() {
 ```
 
 **Test Suite:**
+
 ```javascript
 function runAllDatabaseTests() {
   const results = [];
@@ -243,6 +246,7 @@ Test results follow a consistent structure:
 ### Test Design
 
 1. **Follow AAA Pattern:**
+
    ```javascript
    runner.addTest('descriptive name', () => {
      // Arrange - Set up test data
@@ -257,6 +261,7 @@ Test results follow a consistent structure:
    ```
 
 2. **Use Descriptive Names:**
+
    ```javascript
    // Good
    runner.addTest('should create document with valid data', () => {});
@@ -268,6 +273,7 @@ Test results follow a consistent structure:
    ```
 
 3. **Test One Thing:**
+
    ```javascript
    // Good - focused test
    runner.addTest('should generate unique IDs', () => {
@@ -285,6 +291,7 @@ Test results follow a consistent structure:
 ### Error Testing
 
 1. **Test Expected Errors:**
+
    ```javascript
    runner.addTest('should validate required fields', () => {
      const doc = {}; // Missing required fields
@@ -296,6 +303,7 @@ Test results follow a consistent structure:
    ```
 
 2. **Test Error Types:**
+
    ```javascript
    runner.addTest('should throw specific error type', () => {
      try {
@@ -422,6 +430,7 @@ The GAS DB project includes a comprehensive test automation script that handles 
 ```
 
 The script handles:
+
 - Code deployment to Google Apps Script
 - Authentication management for clasp operations
 - Remote test execution via `clasp run`
@@ -513,6 +522,7 @@ function testDatabaseEdgeCases() {
 ### Debug Strategies
 
 1. **Add Logging:**
+
    ```javascript
    runner.addTest('debug test', () => {
      console.log('Input:', input);
@@ -523,6 +533,7 @@ function testDatabaseEdgeCases() {
    ```
 
 2. **Isolate Problems:**
+
    ```javascript
    // Comment out other tests to focus on one
    runner.addTest('isolated test', () => {
@@ -531,6 +542,7 @@ function testDatabaseEdgeCases() {
    ```
 
 3. **Verify Assumptions:**
+
    ```javascript
    runner.addTest('verify assumptions', () => {
      // Test your understanding of the system
