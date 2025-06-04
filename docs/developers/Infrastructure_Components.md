@@ -1,47 +1,47 @@
-# GAS DB Infrastructure Components
+# 1. GAS DB Infrastructure Components
 
-- [GAS DB Infrastructure Components](#gas-db-infrastructure-components)
-  - [Overview](#overview)
-  - [Logger (GASDBLogger)](#logger-gasdblogger)
-    - [Key Features](#key-features)
-    - [Core Methods](#core-methods)
-    - [Usage Examples](#usage-examples)
-    - [Best Practices](#best-practices)
-    - [ErrorHandler](#errorhandler)
-      - [Error Type Hierarchy](#error-type-hierarchy)
-      - [Error Management Methods](#error-management-methods)
-      - [Validation Methods](#validation-methods)
-      - [Usage Examples](#usage-examples-1)
-      - [Best Practices](#best-practices-1)
-    - [IdGenerator](#idgenerator)
-      - [ID Generation Strategies](#id-generation-strategies)
-      - [Validation Methods](#validation-methods-1)
-      - [Custom Generator Creation](#custom-generator-creation)
-      - [Usage Examples](#usage-examples-2)
-      - [Best Practices](#best-practices-2)
-  - [Integration Patterns](#integration-patterns)
-    - [Component Integration](#component-integration)
-    - [Standardized Error Flow](#standardized-error-flow)
-  - [Configuration](#configuration)
-    - [Logger Configuration](#logger-configuration)
-    - [Error Handler Configuration](#error-handler-configuration)
-    - [ID Generator Configuration](#id-generator-configuration)
-  - [Performance Considerations](#performance-considerations)
-  - [Migration and Versioning](#migration-and-versioning)
-    - [Component Dependencies](#component-dependencies)
-    - [Extension Points](#extension-points)
+- [1. GAS DB Infrastructure Components](#1-gas-db-infrastructure-components)
+  - [1.1. Overview](#11-overview)
+  - [1.2. Logger (GASDBLogger)](#12-logger-gasdblogger)
+    - [1.2.0.1. Key Features](#1201-key-features)
+    - [1.2.0.2. Core Methods](#1202-core-methods)
+    - [1.2.0.3. Usage Examples](#1203-usage-examples)
+    - [1.2.0.4. Best Practices](#1204-best-practices)
+    - [1.2.1. ErrorHandler](#121-errorhandler)
+      - [1.2.1.1. Error Type Hierarchy](#1211-error-type-hierarchy)
+      - [1.2.1.2. Error Management Methods](#1212-error-management-methods)
+      - [1.2.1.3. Validation Methods](#1213-validation-methods)
+      - [1.2.1.4. Usage Examples](#1214-usage-examples)
+      - [1.2.1.5. Best Practices](#1215-best-practices)
+    - [1.2.2. IdGenerator](#122-idgenerator)
+      - [1.2.2.1. ID Generation Strategies](#1221-id-generation-strategies)
+      - [1.2.2.2. Validation Methods](#1222-validation-methods)
+      - [1.2.2.3. Custom Generator Creation](#1223-custom-generator-creation)
+      - [1.2.2.4. Usage Examples](#1224-usage-examples)
+      - [1.2.2.5. Best Practices](#1225-best-practices)
+  - [1.3. Integration Patterns](#13-integration-patterns)
+    - [1.3.1. Component Integration](#131-component-integration)
+    - [1.3.2. Standardized Error Flow](#132-standardized-error-flow)
+  - [1.4. Configuration](#14-configuration)
+    - [1.4.1. Logger Configuration](#141-logger-configuration)
+    - [1.4.2. Error Handler Configuration](#142-error-handler-configuration)
+    - [1.4.3. ID Generator Configuration](#143-id-generator-configuration)
+  - [1.5. Performance Considerations](#15-performance-considerations)
+  - [1.6. Migration and Versioning](#16-migration-and-versioning)
+    - [1.6.1. Component Dependencies](#161-component-dependencies)
+    - [1.6.2. Extension Points](#162-extension-points)
 
-## Overview
+## 1.1. Overview
 
 The GAS DB infrastructure provides essential utilities for logging, error management, and ID generation. These components are designed specifically for Google Apps Script environments and support the core database functionality.
 
-## Logger (GASDBLogger)
+## 1.2. Logger (GASDBLogger)
 
 The `GASDBLogger` provides sophisticated logging capabilities with multiple levels, component-specific loggers, and performance tracking.
 
 A comprehensive logging utility providing structured logging with multiple levels and context support for Google Apps Script environments.
 
-#### Key Features
+#### 1.2.0.1. Key Features
 
 - **Four Log Levels:** ERROR (0), WARN (1), INFO (2), DEBUG (3)
 - **Context Support:** Rich logging with JSON serializable context objects
@@ -49,7 +49,7 @@ A comprehensive logging utility providing structured logging with multiple level
 - **Operation Timing:** Built-in performance monitoring capabilities
 - **GAS Compatibility:** Works with console.log, console.warn, console.error
 
-#### Core Methods
+#### 1.2.0.2. Core Methods
 
 | Method | Description |
 |--------|-------------|
@@ -62,7 +62,7 @@ A comprehensive logging utility providing structured logging with multiple level
 | `createComponentLogger(component)` | Create component-specific logger |
 | `timeOperation(name, fn, context)` | Time and log operation execution |
 
-#### Usage Examples
+#### 1.2.0.3. Usage Examples
 
 ```javascript
 // Basic logging
@@ -83,7 +83,7 @@ const result = GASDBLogger.timeOperation('loadCollection', () => {
 }, { collectionId });
 ```
 
-#### Best Practices
+#### 1.2.0.4. Best Practices
 
 1. **Use appropriate log levels:**
    - ERROR: System failures, exceptions
@@ -110,13 +110,13 @@ const result = GASDBLogger.timeOperation('loadCollection', () => {
 
 ---
 
-### ErrorHandler
+### 1.2.1. ErrorHandler
 
 **Location:** `src/utils/ErrorHandler.js`
 
 Provides standardized error handling with custom error types, validation utilities, and error context management.
 
-#### Error Type Hierarchy
+#### 1.2.1.1. Error Type Hierarchy
 
 All errors extend the base `GASDBError` class and include:
 
@@ -136,7 +136,7 @@ All errors extend the base `GASDBError` class and include:
 | `CollectionNotFoundError` | `COLLECTION_NOT_FOUND` | Missing collection references |
 | `ConfigurationError` | `CONFIGURATION_ERROR` | Invalid configuration values |
 
-#### Error Management Methods
+#### 1.2.1.2. Error Management Methods
 
 | Method | Description |
 |--------|-------------|
@@ -146,7 +146,7 @@ All errors extend the base `GASDBError` class and include:
 | `isErrorType(error, errorType)` | Check if error is of specific type |
 | `extractErrorInfo(error)` | Extract error information for logging |
 
-#### Validation Methods
+#### 1.2.1.3. Validation Methods
 
 | Method | Description |
 |--------|-------------|
@@ -156,7 +156,7 @@ All errors extend the base `GASDBError` class and include:
 | `validateNotEmptyArray(value, name)` | Ensure array has elements |
 | `validateRange(value, min, max, name)` | Ensure number is within range |
 
-#### Usage Examples
+#### 1.2.1.4. Usage Examples
 
 ```javascript
 // Create and throw specific errors
@@ -178,7 +178,7 @@ ErrorHandler.validateNotEmpty(documentId, 'documentId');
 const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation');
 ```
 
-#### Best Practices
+#### 1.2.1.5. Best Practices
 
 1. **Use specific error types:**
 
@@ -201,13 +201,13 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
 
 ---
 
-### IdGenerator
+### 1.2.2. IdGenerator
 
 **Location:** `src/utils/IdGenerator.js`
 
 Provides multiple strategies for generating unique identifiers suitable for different use cases in the database system.
 
-#### ID Generation Strategies
+#### 1.2.2.1. ID Generation Strategies
 
 | Method | Output Example | Use Case |
 |--------|----------------|----------|
@@ -220,14 +220,14 @@ Provides multiple strategies for generating unique identifiers suitable for diff
 | `generateSequentialId(prefix)` | `seq_1640995200000_000001` | Ordered sequences |
 | `generateReadableId()` | `quick-cat-123` | Human-friendly IDs |
 
-#### Validation Methods
+#### 1.2.2.2. Validation Methods
 
 | Method | Description |
 |--------|-------------|
 | `isValidUUID(id)` | Check if string is valid UUID format |
 | `isValidObjectId(id)` | Check if string is valid ObjectId format |
 
-#### Custom Generator Creation
+#### 1.2.2.3. Custom Generator Creation
 
 ```javascript
 // Create custom generators for specific needs
@@ -246,7 +246,7 @@ const readableGenerator = IdGenerator.createCustomGenerator({
 });
 ```
 
-#### Usage Examples
+#### 1.2.2.4. Usage Examples
 
 ```javascript
 // Generate document IDs
@@ -268,7 +268,7 @@ if (IdGenerator.isValidUUID(documentId)) {
 }
 ```
 
-#### Best Practices
+#### 1.2.2.5. Best Practices
 
 1. **Use appropriate ID types:**
    - UUIDs for document IDs (default)
@@ -284,9 +284,9 @@ if (IdGenerator.isValidUUID(documentId)) {
    }
    ```
 
-## Integration Patterns
+## 1.3. Integration Patterns
 
-### Component Integration
+### 1.3.1. Component Integration
 
 All infrastructure components are designed to work together seamlessly:
 
@@ -318,7 +318,7 @@ class Database {
 }
 ```
 
-### Standardized Error Flow
+### 1.3.2. Standardized Error Flow
 
 ```javascript
 // Standard error handling pattern across all components
@@ -343,9 +343,9 @@ class Collection {
 }
 ```
 
-## Configuration
+## 1.4. Configuration
 
-### Logger Configuration
+### 1.4.1. Logger Configuration
 
 ```javascript
 // Set global log level
@@ -357,7 +357,7 @@ const dbLogger = GASDBLogger.createComponentLogger('Database');
 const collectionLogger = GASDBLogger.createComponentLogger('Collection');
 ```
 
-### Error Handler Configuration
+### 1.4.2. Error Handler Configuration
 
 ```javascript
 // Error types are pre-configured in ErrorHandler.ErrorTypes
@@ -370,7 +370,7 @@ const customErrorHandler = (error, context) => {
 };
 ```
 
-### ID Generator Configuration
+### 1.4.3. ID Generator Configuration
 
 ```javascript
 // Set up generators for different use cases
@@ -384,24 +384,24 @@ const debugIdGenerator = IdGenerator.createCustomGenerator({
 });
 ```
 
-## Performance Considerations
+## 1.5. Performance Considerations
 
 1. **Logging:** Use appropriate log levels to avoid performance impact in production
 2. **Error Handling:** Error context objects are JSON serialized, avoid large objects
 3. **ID Generation:** UUID generation uses Google Apps Script utilities for optimal performance
 4. **Validation:** Input validation is performed early to fail fast
 
-## Migration and Versioning
+## 1.6. Migration and Versioning
 
 All infrastructure components are designed to be stable and backwards compatible. Future versions will maintain API compatibility while potentially adding new features.
 
-### Component Dependencies
+### 1.6.1. Component Dependencies
 
 - **GASDBLogger:** Self-contained, no dependencies
 - **ErrorHandler:** Uses GASDBLogger for error logging
 - **IdGenerator:** Self-contained, uses Google Apps Script Utilities when available
 
-### Extension Points
+### 1.6.2. Extension Points
 
 These components can be extended for future functionality:
 
