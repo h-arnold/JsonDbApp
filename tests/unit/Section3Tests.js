@@ -112,7 +112,7 @@ function testFileOperationsFunctionality() {
     AssertionUtilities.assertDefined(metadata.modifiedTime, 'Metadata should contain modified time');
   });
   
-  return suite.run();
+  return suite;
 }
 
 /**
@@ -189,7 +189,7 @@ function testFileOperationsErrorHandling() {
     }, 'InvalidFileFormatError', 'Should throw InvalidFileFormatError for malformed JSON');
   });
   
-  return suite.run();
+  return suite;
 }
 
 /**
@@ -286,7 +286,7 @@ function testFileServiceFunctionality() {
     AssertionUtilities.assertDefined(metadata.id, 'Metadata should contain file ID');
   });
   
-  return suite.run();
+  return suite;
 }
 
 /**
@@ -359,7 +359,7 @@ function testFileServiceOptimisation() {
     // In implementation, verify cache was used for second read
   });
   
-  return suite.run();
+  return suite;
 }
 
 /**
@@ -418,7 +418,7 @@ function testFileServiceErrorRecovery() {
     AssertionUtilities.assertTrue(circuitBreakerTriggered, 'Circuit breaker should activate after repeated failures');
   });
   
-  return suite.run();
+  return suite;
 }
 
 /**
@@ -487,7 +487,7 @@ function testFileIntegration() {
     AssertionUtilities.assertEquals(finalData.data, 'second', 'Data consistency should be maintained');
   });
   
-  return suite.run();
+  return suite;
 }
 
 /**
@@ -553,7 +553,39 @@ function testDriveApiEdgeCases() {
     AssertionUtilities.assertEquals(Object.keys(readData).length, 0, 'Empty object should be preserved');
   });
   
-  return suite.run();
+  return suite;
+}
+
+/**
+ * Run all Section 3 tests
+ * This function orchestrates all test suites for Section 3
+ */
+function runSection3Tests() {
+  try {
+    GASDBLogger.info('Starting Section 3 Test Execution - File Service and Drive Integration');
+    
+    const testRunner = new TestRunner();
+    
+    // Add all test suites
+    testRunner.addTestSuite(testFileOperationsFunctionality());
+    testRunner.addTestSuite(testFileOperationsErrorHandling());
+    testRunner.addTestSuite(testFileServiceFunctionality());
+    testRunner.addTestSuite(testFileServiceOptimisation());
+    testRunner.addTestSuite(testFileServiceErrorRecovery());
+    testRunner.addTestSuite(testFileIntegration());
+    testRunner.addTestSuite(testDriveApiEdgeCases());
+    
+    // Run all tests
+    const results = testRunner.runAllTests();
+    
+    GASDBLogger.info('Section 3 Test Execution Complete');
+    
+    return results;
+    
+  } catch (error) {
+    GASDBLogger.error('Failed to execute Section 3 tests', { error: error.message, stack: error.stack });
+    throw error;
+  }
 }
 
 /**
