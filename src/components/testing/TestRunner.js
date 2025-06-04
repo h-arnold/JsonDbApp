@@ -287,6 +287,3 @@ class TestRunner {
     GASDBLogger.info('\n' + results.getDetailedReport());
   }
 }
-
-// Global test runner instance
-var GlobalTestRunner = new TestRunner();

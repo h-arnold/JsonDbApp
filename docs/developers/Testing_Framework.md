@@ -13,6 +13,12 @@
       - [Test Organization](#test-organization)
       - [Running Tests](#running-tests)
       - [Result Format](#result-format)
+    - [UnifiedTestExecution](#unifiedtestexecution)
+      - [Overview of Unified System](#overview-of-unified-system)
+      - [Configuration-Driven Architecture](#configuration-driven-architecture)
+      - [Section-Based Test Execution](#section-based-test-execution)
+      - [Validation System](#validation-system)
+      - [Unified API Methods](#unified-api-methods)
   - [Best Practices](#best-practices)
     - [Test Design](#test-design)
     - [Error Testing](#error-testing)
@@ -32,7 +38,14 @@
 
 ## Overview
 
-The GAS DB Testing Framework provides a comprehensive testing infrastructure designed specifically for Google Apps Script environments. It includes assertion utilities and a test runner that handles the unique constraints of the GAS platform.
+The GAS DB Testing Framework provides a comprehensive testing infrastructure designed specifically for Google Apps Script environments. It includes assertion utilities, a test runner, and a unified execution system that eliminates code duplication and provides streamlined test management.
+
+**Key Features:**
+- **AssertionUtilities**: Complete assertion library for test validation
+- **TestRunner**: Core test execution and result management
+- **UnifiedTestExecution**: Configuration-driven system that eliminates duplicate test execution patterns
+- **Section-Based Organization**: Tests organized into logical sections with integrated validation
+- **Streamlined API**: Simplified interface for running tests and validations
 
 ## Components
 
@@ -241,6 +254,154 @@ Test results follow a consistent structure:
 }
 ```
 
+### UnifiedTestExecution
+
+The `UnifiedTestExecution` class provides a streamlined, configuration-driven approach to test execution that eliminates code duplication and provides consistent test management across all sections.
+
+#### Overview of Unified System
+
+The unified system replaces the previous approach where each test section had nearly identical execution functions with a single, parameterized system:
+
+**Before (Duplicated Approach):**
+```javascript
+// TestExecution.js had separate functions like:
+function testSection1() { /* 50+ lines of duplicate code */ }
+function testSection2() { /* 50+ lines of duplicate code */ }
+function testSection3() { /* 50+ lines of duplicate code */ }
+```
+
+**After (Unified Approach):**
+```javascript
+// Single streamlined call:
+function testSection1() {
+  return UnifiedTestExecution.runSection(1);
+}
+```
+
+**Benefits:**
+- **Eliminated ~450 lines of duplicate code**
+- **Configuration-driven test definitions**
+- **Consistent validation across all sections**
+- **Simplified maintenance and updates**
+- **Unified error handling and reporting**
+
+#### Configuration-Driven Architecture
+
+All test sections are defined in a central configuration object:
+
+```javascript
+const TEST_SECTIONS = {
+  1: {
+    name: 'Section 1',
+    description: 'Project Setup and Basic Infrastructure',
+    runFunction: 'runSection1Tests',
+    suites: {
+      'Environment Tests': 'runEnvironmentTests',
+      'Utility Class Tests': 'runUtilityClassTests',
+      'Test Framework Tests': 'runTestFrameworkTests'
+    },
+    validations: [
+      {
+        component: 'GASDBLogger',
+        test: () => { /* validation logic */ }
+      }
+      // ... more validations
+    ]
+  }
+  // ... more sections
+};
+```
+
+#### Section-Based Test Execution
+
+**Run Complete Section:**
+```javascript
+// Execute all tests for a section
+const results = UnifiedTestExecution.runSection(1);
+console.log(`Tests passed: ${results.passedTests}/${results.totalTests}`);
+```
+
+**Run Specific Test Suite:**
+```javascript
+// Execute a specific test suite within a section
+const results = UnifiedTestExecution.runSuite(1, 'Environment Tests');
+console.log('Suite results:', results.summary);
+```
+
+**Available Sections:**
+- **Section 1**: Project Setup and Basic Infrastructure
+- **Section 2**: ScriptProperties Master Index 
+- **Section 3**: File Service and Drive Integration
+
+#### Validation System
+
+Each section includes built-in validations to verify setup and dependencies:
+
+```javascript
+// Run validation checks for a section
+const validation = UnifiedTestExecution.validateSetup(1);
+
+if (validation.success) {
+  console.log('All components validated successfully');
+} else {
+  console.log('Validation issues:', validation.validations);
+}
+```
+
+**Validation Types:**
+- **Component Availability**: Verify classes and utilities are loaded
+- **API Access**: Check Google Apps Script API permissions
+- **Dependencies**: Ensure required components are properly configured
+- **Test Functions**: Verify all test functions are available
+
+#### Unified API Methods
+
+**Core Methods:**
+
+| Method | Purpose | Example |
+|--------|---------|---------|
+| `runSection(sectionNumber)` | Execute all tests for a section | `runSection(1)` |
+| `runSuite(sectionNumber, suiteName)` | Execute specific test suite | `runSuite(2, 'MasterIndex Functionality')` |
+| `validateSetup(sectionNumber)` | Validate section prerequisites | `validateSetup(3)` |
+| `getAvailableTests()` | List all available sections and suites | `getAvailableTests()` |
+| `initializeEnvironment()` | Perform basic environment checks | `initializeEnvironment()` |
+
+**Discovery Methods:**
+```javascript
+// Get all available test sections and suites
+const available = UnifiedTestExecution.getAvailableTests();
+console.log('Available sections:', Object.keys(available));
+
+// Initialize and check test environment
+const envCheck = UnifiedTestExecution.initializeEnvironment();
+console.log('Environment status:', envCheck.summary);
+```
+
+**Integration with TestExecution.js:**
+
+The main test execution functions now use the unified system:
+
+```javascript
+// /tests/TestExecution.js - Streamlined from 556 to 102 lines
+
+function testSection1() {
+  return UnifiedTestExecution.runSection(1);
+}
+
+function testSection1Validation() {
+  return UnifiedTestExecution.validateSetup(1);
+}
+
+function testSuite(sectionNumber, suiteName) {
+  return UnifiedTestExecution.runSuite(sectionNumber, suiteName);
+}
+
+function getAvailableTests() {
+  return UnifiedTestExecution.getAvailableTests();
+}
+```
+```
+
 ## Best Practices
 
 ### Test Design
@@ -411,143 +572,491 @@ function testErrorHandling() {
 
 ### Automated Test Execution with test-runner.sh
 
-The GAS DB project includes a comprehensive test automation script that handles the complete testing workflow. See the [test-runner.sh documentation](test-runner.sh.md) for full details.
+The GAS DB project includes a comprehensive test automation script that works seamlessly with the unified test execution system. See the [test-runner.sh documentation](test-runner.sh.md) for full details.
 
-**Quick Usage:**
+**Quick Usage with Unified System:**
 
 ```bash
-# Run all tests (push code, deploy, execute, retrieve logs)
+# Run all tests (automatically uses UnifiedTestExecution)
 ./test-runner.sh
 
-# Run only Section 1 tests
+# Run only Section 1 tests via unified system
 ./test-runner.sh 1
 
-# Run validation checks only
+# Run validation checks using unified validation
 ./test-runner.sh --validate
 
-# Run tests for specific section
+# Run tests for specific section through unified API
 ./test-runner.sh --tests 2
 ```
 
-The script handles:
-
-- Code deployment to Google Apps Script
-- Authentication management for clasp operations
-- Remote test execution via `clasp run`
-- Log retrieval and parsing
-- Validation checks
-- Error reporting with colour-coded output
+The script automatically:
+- Uses the `UnifiedTestExecution` system for consistent execution
+- Handles section-based test organization
+- Deploys code changes to Google Apps Script
+- Executes tests via the streamlined API
+- Retrieves and parses unified test results
+- Provides validation through the unified validation system
 
 ### Manual Test Execution in GAS
 
-For manual testing or custom test runners:
+The unified system provides a simplified interface for manual testing:
 
-1. **Add test functions to your GAS project**
-2. **Create a test runner script:**
+**Execute Complete Sections:**
 
 ```javascript
-function runAllTests() {
+// Run all Section 1 tests
+function runSection1Tests() {
+  const results = UnifiedTestExecution.runSection(1);
+  console.log('Section 1 Results:', results.summary);
+  return results;
+}
+
+// Run Section 2 with validation
+function runSection2WithValidation() {
+  const validation = UnifiedTestExecution.validateSetup(2);
+  if (!validation.success) {
+    console.log('Validation failed:', validation.summary);
+    return validation;
+  }
+  
+  return UnifiedTestExecution.runSection(2);
+}
+```
+
+**Execute Specific Test Suites:**
+
+```javascript
+// Run specific test suite from any section
+function runSpecificSuite() {
+  return UnifiedTestExecution.runSuite(3, 'FileOperations Functionality');
+}
+
+// Discover and run available tests
+function exploreAvailableTests() {
+  const available = UnifiedTestExecution.getAvailableTests();
+  console.log('Available test sections:', available);
+  
+  // Run first available suite from Section 1
+  const section1Suites = Object.keys(available['1'].suites);
+  return UnifiedTestExecution.runSuite(1, section1Suites[0]);
+}
+```
+
+**Environment Initialization:**
+
+```javascript
+function initializeTestEnvironment() {
+  // Check basic environment setup
+  const envCheck = UnifiedTestExecution.initializeEnvironment();
+  console.log('Environment check:', envCheck.summary);
+  
+  if (envCheck.success) {
+    // Run validation for all sections
+    for (let section = 1; section <= 3; section++) {
+      const validation = UnifiedTestExecution.validateSetup(section);
+      console.log(`Section ${section} validation:`, validation.summary);
+    }
+  }
+  
+  return envCheck;
+}
+```
+
+### Debugging Tests
+
+The unified system provides enhanced debugging capabilities:
+
+```javascript
+// Debug specific section execution
+function debugSection(sectionNumber) {
+  try {
+    // First validate setup
+    const validation = UnifiedTestExecution.validateSetup(sectionNumber);
+    console.log('Validation results:', validation);
+    
+    if (!validation.success) {
+      console.log('Setup issues detected - check validation details');
+      return validation;
+    }
+    
+    // Run tests with detailed logging
+    const results = UnifiedTestExecution.runSection(sectionNumber);
+    console.log('Test execution results:', results.details);
+    
+    return results;
+  } catch (error) {
+    console.error('Debug execution failed:', error);
+    throw error;
+  }
+}
+
+// Debug specific test suite
+function debugTestSuite(sectionNumber, suiteName) {
+  console.log(`Debugging suite: ${suiteName} in Section ${sectionNumber}`);
+  
+  const available = UnifiedTestExecution.getAvailableTests();
+  const section = available[sectionNumber];
+  
+  if (!section || !section.suites.includes(suiteName)) {
+    console.error('Suite not found. Available suites:', section ? section.suites : 'Section not found');
+    return;
+  }
+  
+  return UnifiedTestExecution.runSuite(sectionNumber, suiteName);
+}
+```
+
+**Environment Debugging:**
+
+```javascript
+// Comprehensive environment check
+function debugEnvironment() {
+  console.log('Starting comprehensive environment debug...');
+  
+  // Basic environment
+  const envCheck = UnifiedTestExecution.initializeEnvironment();
+  console.log('Environment check:', envCheck);
+  
+  // Section-specific validation
+  for (let section = 1; section <= 3; section++) {
+    try {
+      const validation = UnifiedTestExecution.validateSetup(section);
+      console.log(`Section ${section} validation:`, validation);
+    } catch (error) {
+      console.error(`Section ${section} validation failed:`, error.message);
+    }
+  }
+  
+  // Available tests discovery
+  const available = UnifiedTestExecution.getAvailableTests();
+  console.log('Available test structure:', available);
+}
+```
+
+### Performance Considerations
+
+The unified system optimizes performance through several mechanisms:
+
+**Section-Based Execution:**
+- Tests are organized into logical sections to work within GAS execution time limits
+- Each section can be run independently to avoid timeouts
+- The unified system handles section boundaries automatically
+
+```javascript
+// Optimized execution approach
+function runTestsWithinTimeLimits() {
+  const sections = [1, 2, 3];
   const results = [];
   
-  // Add all your test functions
-  results.push(testDatabaseOperations());
-  results.push(testErrorHandling());
-  results.push(testIdGeneration());
-  
-  // Log summary
-  const total = results.reduce((sum, r) => sum + r.totalTests, 0);
-  const passed = results.reduce((sum, r) => sum + r.passedTests, 0);
-  
-  console.log(`Total Tests: ${total}, Passed: ${passed}, Failed: ${total - passed}`);
+  for (const section of sections) {
+    try {
+      // Each section runs within time limits
+      const sectionResult = UnifiedTestExecution.runSection(section);
+      results.push(sectionResult);
+      
+      // Short pause between sections if needed
+      Utilities.sleep(100);
+    } catch (error) {
+      console.error(`Section ${section} failed:`, error.message);
+    }
+  }
   
   return results;
 }
 ```
 
-3. **Run tests manually or via triggers**
+**Efficient Validation:**
+- Validation checks are streamlined and cached where possible
+- Failed validations skip expensive test execution
+- Component checks are optimized for speed
 
-### Debugging Tests
+**Memory Management:**
+- The unified system reuses configuration objects
+- Test results are structured to minimize memory usage
+- Large test suites are broken into manageable chunks
 
-Use `console.log` for debugging:
+**Best Practices for Performance:**
 
-```javascript
-runner.addTest('debug example', () => {
-  const data = processData(input);
-  console.log('Processed data:', data); // Debug output
-  
-  AssertionUtilities.assertNotNull(data);
-});
-```
+1. **Use Section-Based Execution:**
+   ```javascript
+   // Good - respects time limits
+   UnifiedTestExecution.runSection(1);
+   
+   // Avoid - may hit time limits
+   // runAllTestsAtOnce();
+   ```
 
-### Performance Considerations
+2. **Validate Before Testing:**
+   ```javascript
+   // Efficient - skip tests if validation fails
+   const validation = UnifiedTestExecution.validateSetup(2);
+   if (validation.success) {
+     UnifiedTestExecution.runSection(2);
+   }
+   ```
 
-GAS has execution time limits, so structure tests accordingly:
-
-```javascript
-// Break large test suites into smaller functions
-function testDatabaseCore() {
-  // Core functionality tests
-}
-
-function testDatabaseAdvanced() {
-  // Advanced feature tests
-}
-
-function testDatabaseEdgeCases() {
-  // Edge case tests
-}
-```
-
-**Note:** The [test-runner.sh script](test-runner.sh.md) automatically handles section-based test execution to work within GAS time limits.
+3. **Use Targeted Test Execution:**
+   ```javascript
+   // Run specific suites for focused testing
+   UnifiedTestExecution.runSuite(3, 'FileOperations Functionality');
+   ```
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Assertion Failures:**
-   - Check expected vs actual values
-   - Verify test data setup
-   - Review assertion message for clues
+1. **Test Execution Failures:**
 
-2. **Test Timeouts:**
-   - Break large tests into smaller ones
-   - Reduce test data size
-   - Optimise test operations
+   **Issue:** Tests fail with "function not found" errors
+   ```
+   Error: runEnvironmentTests is not defined
+   ```
+   
+   **Solution:** Verify test functions are available and properly named
+   ```javascript
+   // Check available tests
+   const available = UnifiedTestExecution.getAvailableTests();
+   console.log('Available sections:', available);
+   
+   // Validate section setup
+   const validation = UnifiedTestExecution.validateSetup(1);
+   console.log('Section validation:', validation);
+   ```
 
-3. **Mock Object Issues:**
-   - Ensure mocks implement required interface
-   - Verify mock behaviour matches real objects
-   - Check mock method signatures
+2. **Configuration Issues:**
+
+   **Issue:** Section not found or invalid configuration
+   ```
+   Error: Invalid section number: 4
+   ```
+   
+   **Solution:** Use valid section numbers and check configuration
+   ```javascript
+   // Check valid sections
+   const available = UnifiedTestExecution.getAvailableTests();
+   const validSections = Object.keys(available);
+   console.log('Valid sections:', validSections);
+   ```
+
+3. **Validation Failures:**
+
+   **Issue:** Component validation fails unexpectedly
+   ```
+   Component: TestRunner - FAIL: Missing test framework components
+   ```
+   
+   **Solution:** Initialize environment and check dependencies
+   ```javascript
+   // Full environment check
+   const envCheck = UnifiedTestExecution.initializeEnvironment();
+   if (!envCheck.success) {
+     console.log('Environment issues:', envCheck.checks);
+   }
+   ```
+
+4. **Legacy Code Issues:**
+
+   **Issue:** Old test execution patterns fail
+   ```
+   Error: GlobalTestRunner is not defined
+   ```
+   
+   **Solution:** Use the unified system instead of legacy patterns
+   ```javascript
+   // Old approach (no longer supported)
+   // GlobalTestRunner.runTests();
+   
+   // New unified approach
+   UnifiedTestExecution.runSection(1);
+   ```
 
 ### Debug Strategies
 
-1. **Add Logging:**
+1. **Progressive Debugging:**
 
    ```javascript
-   runner.addTest('debug test', () => {
-     console.log('Input:', input);
-     const result = functionUnderTest(input);
-     console.log('Result:', result);
-     AssertionUtilities.assertEquals(expected, result);
-   });
+   // Start with environment check
+   function debugStepByStep() {
+     console.log('Step 1: Environment check');
+     const envCheck = UnifiedTestExecution.initializeEnvironment();
+     
+     if (!envCheck.success) {
+       console.log('Environment issues found:', envCheck.checks);
+       return envCheck;
+     }
+     
+     console.log('Step 2: Validation check');
+     const validation = UnifiedTestExecution.validateSetup(1);
+     
+     if (!validation.success) {
+       console.log('Validation issues:', validation.validations);
+       return validation;
+     }
+     
+     console.log('Step 3: Test execution');
+     return UnifiedTestExecution.runSection(1);
+   }
    ```
 
-2. **Isolate Problems:**
+2. **Configuration Debugging:**
 
    ```javascript
-   // Comment out other tests to focus on one
-   runner.addTest('isolated test', () => {
-     // Single test case
-   });
+   // Inspect test configuration
+   function debugConfiguration() {
+     const available = UnifiedTestExecution.getAvailableTests();
+     
+     Object.entries(available).forEach(([sectionNum, section]) => {
+       console.log(`Section ${sectionNum}:`, section.name);
+       console.log('Available suites:', section.suites);
+       
+       // Test validation for each section
+       try {
+         const validation = UnifiedTestExecution.validateSetup(parseInt(sectionNum));
+         console.log(`Validation status:`, validation.summary);
+       } catch (error) {
+         console.error(`Validation failed:`, error.message);
+       }
+     });
+   }
    ```
 
-3. **Verify Assumptions:**
+3. **Targeted Suite Debugging:**
 
    ```javascript
-   runner.addTest('verify assumptions', () => {
-     // Test your understanding of the system
-     AssertionUtilities.assertTrue(typeof someValue === 'string');
-   });
+   // Debug specific test suite
+   function debugSpecificSuite(sectionNumber, suiteName) {
+     console.log(`Debugging Section ${sectionNumber} - ${suiteName}`);
+     
+     // Check if suite exists
+     const available = UnifiedTestExecution.getAvailableTests();
+     const section = available[sectionNumber];
+     
+     if (!section) {
+       console.error(`Section ${sectionNumber} not found`);
+       return;
+     }
+     
+     if (!section.suites.includes(suiteName)) {
+       console.error(`Suite "${suiteName}" not found in section ${sectionNumber}`);
+       console.log('Available suites:', section.suites);
+       return;
+     }
+     
+     // Run the suite with error handling
+     try {
+       return UnifiedTestExecution.runSuite(sectionNumber, suiteName);
+     } catch (error) {
+       console.error('Suite execution failed:', error.message);
+       console.error('Stack trace:', error.stack);
+       throw error;
+     }
+   }
+   ```
+
+4. **Legacy Migration Debugging:**
+
+   ```javascript
+   // Help identify legacy patterns that need updating
+   function checkForLegacyPatterns() {
+     const legacyPatterns = [
+       'GlobalTestRunner',
+       'testSection1()', // without unified system
+       'testSection2()', // without unified system
+       'testSection3()'  // without unified system
+     ];
+     
+     console.log('Checking for legacy patterns...');
+     
+     // The new patterns should be used instead:
+     console.log('New unified patterns:');
+     console.log('- UnifiedTestExecution.runSection(1)');
+     console.log('- UnifiedTestExecution.validateSetup(1)');
+     console.log('- UnifiedTestExecution.runSuite(1, "Environment Tests")');
+   }
    ```
 
 This testing framework provides a solid foundation for maintaining code quality throughout the GAS DB implementation. Use it consistently to ensure reliable, maintainable code.
+
+## Framework Improvements and Evolution
+
+### Code Duplication Elimination
+
+The testing framework has undergone significant improvements to eliminate code duplication and enhance maintainability:
+
+**Previous State:**
+- `TestExecution.js`: 556 lines with extensive duplication
+- Three nearly identical functions: `testSection1()`, `testSection2()`, `testSection3()`
+- Duplicate validation logic across sections
+- Repetitive error handling and result formatting
+
+**Current State:**
+- `TestExecution.js`: Streamlined to 102 lines (81% reduction)
+- Single unified execution system via `UnifiedTestExecution`
+- Configuration-driven approach eliminates duplication
+- Consistent validation and error handling across all sections
+
+**Specific Improvements:**
+
+1. **Eliminated ~450 lines of duplicate code**
+2. **Unified test execution pattern:**
+   ```javascript
+   // Before: Separate 50+ line functions for each section
+   function testSection1() { /* 50+ lines of duplicate logic */ }
+   function testSection2() { /* 50+ lines of duplicate logic */ }
+   function testSection3() { /* 50+ lines of duplicate logic */ }
+   
+   // After: Single line delegation to unified system
+   function testSection1() { return UnifiedTestExecution.runSection(1); }
+   function testSection2() { return UnifiedTestExecution.runSection(2); }
+   function testSection3() { return UnifiedTestExecution.runSection(3); }
+   ```
+
+3. **Configuration-driven architecture** with `TEST_SECTIONS` object
+4. **Unified validation system** replacing three separate validation functions
+5. **Streamlined API** with consistent method signatures
+
+### Architecture Benefits
+
+**Maintainability:**
+- Single source of truth for test configuration
+- Changes propagate automatically to all sections
+- Easier to add new test sections or modify existing ones
+
+**Consistency:**
+- Uniform error handling across all test executions
+- Consistent result formatting and reporting
+- Standardized validation patterns
+
+**Performance:**
+- Reduced code size improves loading and execution time
+- Optimized section-based execution respects GAS time limits
+- Efficient validation caching and component checks
+
+**Developer Experience:**
+- Simplified API with intuitive method names
+- Better debugging capabilities with detailed error reporting
+- Easy test discovery through `getAvailableTests()`
+
+### Migration from Legacy Patterns
+
+**Legacy Issues Resolved:**
+- Removed `GlobalTestRunner` dependency (now uses local instances)
+- Fixed missing function references (`testSection3Setup`, `testSection3Cleanup`)
+- Eliminated inconsistent test execution patterns
+- Resolved duplicate validation logic
+
+**Migration Guide:**
+```javascript
+// Legacy pattern (no longer supported)
+GlobalTestRunner.addTest(/* ... */);
+
+// Current pattern (recommended)
+const runner = new TestRunner();
+runner.addTest(/* ... */);
+
+// For section-based execution
+UnifiedTestExecution.runSection(sectionNumber);
+```
+
+This enhanced testing framework now provides a robust, maintainable foundation for the GAS DB project with significantly reduced complexity and improved developer experience. The unified approach ensures consistent test execution while eliminating the maintenance burden of duplicate code patterns.

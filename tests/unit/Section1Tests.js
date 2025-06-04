@@ -9,7 +9,7 @@ function runEnvironmentTests() {
   // Test clasp configuration
   suite.addTest('testClaspConfiguration', function() {
     // Test that clasp.json exists and has required properties
-    AssertionUtilities.assertTrue(typeof GlobalTestRunner !== 'undefined', 'TestRunner should be available');
+    AssertionUtilities.assertTrue(typeof TestRunner !== 'undefined', 'TestRunner class should be available');
     AssertionUtilities.assertTrue(typeof GASDBLogger !== 'undefined', 'GASDBLogger should be available');
     AssertionUtilities.assertTrue(typeof ErrorHandler !== 'undefined', 'ErrorHandler should be available');
   });
@@ -27,9 +27,11 @@ function runEnvironmentTests() {
   
   // Test test runner functionality
   suite.addTest('testTestRunnerFunctionality', function() {
-    AssertionUtilities.assertTrue(GlobalTestRunner instanceof TestRunner, 'Global test runner should be a TestRunner instance');
-    AssertionUtilities.assertEquals('function', typeof GlobalTestRunner.addTestSuite, 'TestRunner should have addTestSuite method');
-    AssertionUtilities.assertEquals('function', typeof GlobalTestRunner.runAllTests, 'TestRunner should have runAllTests method');
+    // Create a local TestRunner instance to test functionality
+    const testRunner = new TestRunner();
+    AssertionUtilities.assertTrue(testRunner instanceof TestRunner, 'TestRunner should be instantiable');
+    AssertionUtilities.assertEquals('function', typeof testRunner.addTestSuite, 'TestRunner should have addTestSuite method');
+    AssertionUtilities.assertEquals('function', typeof testRunner.runAllTests, 'TestRunner should have runAllTests method');
   });
   
   return suite;
