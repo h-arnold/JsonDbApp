@@ -143,6 +143,10 @@ run_tests() {
             print_info "Executing Section 2 tests remotely..."
             local test_output=$(clasp run testSection2 2>&1 | tee -a "$LOG_FILE")
             ;;
+        "3"|"section3")
+            print_info "Executing Section 3 tests remotely..."
+            local test_output=$(clasp run testSection3 2>&1 | tee -a "$LOG_FILE")
+            ;;
         "all"|*)
             print_info "Executing all tests remotely..."
             # Run Section 1 first
@@ -152,6 +156,10 @@ run_tests() {
             # Then run Section 2
             print_info "Running Section 2 tests..."
             local test_output2=$(clasp run testSection2 2>&1 | tee -a "$LOG_FILE")
+            
+            # Then run Section 3
+            print_info "Running Section 3 tests..."
+            local test_output3=$(clasp run testSection3 2>&1 | tee -a "$LOG_FILE")
             ;;
     esac
     
@@ -185,6 +193,10 @@ run_validation() {
             print_info "Running Section 2 environment validation..."
             local validation_output=$(clasp run validateSection2Setup 2>&1 | tee -a "$LOG_FILE")
             ;;
+        "3"|"section3")
+            print_info "Running Section 3 environment validation..."
+            local validation_output=$(clasp run validateSection3Setup 2>&1 | tee -a "$LOG_FILE")
+            ;;
         "all"|*)
             print_info "Running full environment validation..."
             # Run Section 1 validation first
@@ -194,6 +206,10 @@ run_validation() {
             # Then run Section 2 validation
             print_info "Validating Section 2 setup..."
             local validation_output2=$(clasp run validateSection2Setup 2>&1 | tee -a "$LOG_FILE")
+            
+            # Then run Section 3 validation
+            print_info "Validating Section 3 setup..."
+            local validation_output3=$(clasp run validateSection3Setup 2>&1 | tee -a "$LOG_FILE")
             ;;
     esac
     
@@ -259,14 +275,17 @@ show_help() {
     echo "Sections:"
     echo "  1, section1         Run Section 1 tests only (Infrastructure)"
     echo "  2, section2         Run Section 2 tests only (ScriptProperties Master Index)"
+    echo "  3, section3         Run Section 3 tests only (File Service and Drive Integration)"
     echo "  all                 Run all sections (default)"
     echo ""
     echo "Examples:"
     echo "  $0                  # Full workflow: test all sections, retrieve logs"
     echo "  $0 --validate       # Quick validation check for all sections"
     echo "  $0 --validate 2     # Quick validation check for Section 2 only"
+    echo "  $0 --validate 3     # Quick validation check for Section 3 only"
     echo "  $0 --tests 1        # Run Section 1 tests only"
     echo "  $0 --tests 2        # Run Section 2 tests only"
+    echo "  $0 --tests 3        # Run Section 3 tests only"
     echo "  $0 --logs-only      # Get latest execution logs"
     echo ""
 }
@@ -315,7 +334,7 @@ while [[ $# -gt 0 ]]; do
             NO_LOGS=true
             shift
             ;;
-        1|section1|2|section2|all)
+        1|section1|2|section2|3|section3|all)
             SECTION=$1
             shift
             ;;
