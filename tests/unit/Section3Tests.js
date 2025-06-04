@@ -299,10 +299,35 @@ function testFileOperationsErrorHandling() {
     const malformedFileId = malformedFile.getId();
     SECTION3_TEST_DATA.createdFileIds.push(malformedFileId); // Track for cleanup
     
-    // Act & Assert
-    AssertionUtilities.assertThrows(function() {
+    // Debug: Let's see what error is actually thrown
+    let actualError = null;
+    let threwError = false;
+    
+    try {
       fileOps.readFile(malformedFileId);
-    }, InvalidFileFormatError, 'Should throw InvalidFileFormatError for malformed JSON');
+    } catch (error) {
+      threwError = true;
+      actualError = error;
+      logger.info('Caught error during malformed JSON test', {
+        errorType: error.constructor.name,
+        errorMessage: error.message,
+        errorCode: error.code || 'NO_CODE',
+        isInvalidFileFormatError: error instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT,
+        errorInstance: typeof error
+      });
+    }
+    
+    // Assert that an error was thrown
+    AssertionUtilities.assertTrue(threwError, 'Should throw an error for malformed JSON');
+    
+    // Check if it's the right type of error
+    if (actualError instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT) {
+      // Success - it's the right error type
+      AssertionUtilities.assertTrue(true, 'Correctly threw InvalidFileFormatError');
+    } else {
+      // Fail with details about what error was actually thrown
+      throw new Error(`Expected InvalidFileFormatError, but got ${actualError.constructor.name}: ${actualError.message}`);
+    }
   });
   
   return suite;

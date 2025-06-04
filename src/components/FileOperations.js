@@ -42,29 +42,33 @@ class FileOperations {
     this._logger.debug('Reading file from Drive', { fileId });
     
     return this._retryOperation(() => {
+      let file, content;
+      
+      // Handle Drive API operations separately from JSON parsing
       try {
-        const file = DriveApp.getFileById(fileId);
-        const content = file.getBlob().getDataAsString();
+        file = DriveApp.getFileById(fileId);
+        content = file.getBlob().getDataAsString();
         
         this._logger.debug('File content retrieved', { 
           fileId, 
           contentLength: content.length 
         });
-        
-        try {
-          const parsedContent = JSON.parse(content);
-          this._logger.debug('File content parsed successfully', { fileId });
-          return parsedContent;
-        } catch (parseError) {
-          this._logger.error('Failed to parse JSON content', { 
-            fileId, 
-            error: parseError.message 
-          });
-          throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
-        }
-        
-      } catch (error) {
-        this._handleDriveApiError(error, 'readFile', fileId);
+      } catch (driveError) {
+        // Only Drive API errors should be handled by _handleDriveApiError
+        this._handleDriveApiError(driveError, 'readFile', fileId);
+      }
+      
+      // Parse JSON - let InvalidFileFormatError bubble up to retry logic
+      try {
+        const parsedContent = JSON.parse(content);
+        this._logger.debug('File content parsed successfully', { fileId });
+        return parsedContent;
+      } catch (parseError) {
+        this._logger.error('Failed to parse JSON content', { 
+          fileId, 
+          error: parseError.message 
+        });
+        throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
       }
     }, `readFile(${fileId})`);
   }
@@ -302,10 +306,10 @@ class FileOperations {
         lastError = error;
         
         // Don't retry on certain error types
-        if (error instanceof FileNotFoundError || 
-            error instanceof PermissionDeniedError ||
-            error instanceof InvalidFileFormatError ||
-            error instanceof InvalidArgumentError) {
+        if (error instanceof ErrorHandler.ErrorTypes.FILE_NOT_FOUND || 
+            error instanceof ErrorHandler.ErrorTypes.PERMISSION_DENIED ||
+            error instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT ||
+            error instanceof ErrorHandler.ErrorTypes.INVALID_ARGUMENT) {
           throw error;
         }
         
