@@ -138,6 +138,56 @@ class ConfigurationError extends GASDBError {
 }
 
 /**
+ * File not found error
+ */
+class FileNotFoundError extends GASDBError {
+  constructor(fileId) {
+    const message = `File not found: ${fileId}`;
+    super(message, 'FILE_NOT_FOUND', { fileId });
+  }
+}
+
+/**
+ * Permission denied error
+ */
+class PermissionDeniedError extends GASDBError {
+  constructor(fileId, operation) {
+    const message = `Permission denied for ${operation} on file: ${fileId}`;
+    super(message, 'PERMISSION_DENIED', { fileId, operation });
+  }
+}
+
+/**
+ * Quota exceeded error
+ */
+class QuotaExceededError extends GASDBError {
+  constructor(operation, quotaType = 'unknown') {
+    const message = `Drive API quota exceeded for ${operation} (${quotaType})`;
+    super(message, 'QUOTA_EXCEEDED', { operation, quotaType });
+  }
+}
+
+/**
+ * Invalid file format error
+ */
+class InvalidFileFormatError extends GASDBError {
+  constructor(fileId, expectedFormat, reason = null) {
+    const message = `Invalid file format for file: ${fileId}. Expected: ${expectedFormat}`;
+    super(message, 'INVALID_FILE_FORMAT', { fileId, expectedFormat, reason });
+  }
+}
+
+/**
+ * Invalid argument error
+ */
+class InvalidArgumentError extends GASDBError {
+  constructor(argumentName, providedValue = null, reason = null) {
+    const message = `Invalid argument: ${argumentName}`;
+    super(message, 'INVALID_ARGUMENT', { argumentName, providedValue, reason });
+  }
+}
+
+/**
  * ErrorHandler - Main error handling utility class
  */
 class ErrorHandler {
@@ -310,5 +360,10 @@ ErrorHandler.ErrorTypes = {
   CONFLICT_ERROR: ConflictError,
   MASTER_INDEX_ERROR: MasterIndexError,
   COLLECTION_NOT_FOUND: CollectionNotFoundError,
-  CONFIGURATION_ERROR: ConfigurationError
+  CONFIGURATION_ERROR: ConfigurationError,
+  FILE_NOT_FOUND: FileNotFoundError,
+  PERMISSION_DENIED: PermissionDeniedError,
+  QUOTA_EXCEEDED: QuotaExceededError,
+  INVALID_FILE_FORMAT: InvalidFileFormatError,
+  INVALID_ARGUMENT: InvalidArgumentError
 };

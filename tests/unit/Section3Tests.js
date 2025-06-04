@@ -19,7 +19,7 @@ function testFileOperationsFunctionality() {
   
   suite.addTest('should read file content from Drive using file ID', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'test-file-id-123';
     const expectedContent = { test: 'data' };
@@ -37,7 +37,7 @@ function testFileOperationsFunctionality() {
   
   suite.addTest('should write data to existing Drive file', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'test-file-id-456';
     const testData = { collection: 'test', documents: [{ _id: '1', name: 'test' }] };
@@ -52,7 +52,7 @@ function testFileOperationsFunctionality() {
   
   suite.addTest('should create new file in specified folder', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const fileName = 'test-collection.json';
     const testData = { documents: {} };
@@ -69,7 +69,7 @@ function testFileOperationsFunctionality() {
   
   suite.addTest('should delete file from Drive', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'test-file-to-delete';
     
@@ -82,7 +82,7 @@ function testFileOperationsFunctionality() {
   
   suite.addTest('should check if file exists in Drive', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const existingFileId = 'existing-file-id';
     const nonExistentFileId = 'non-existent-file-id';
@@ -98,7 +98,7 @@ function testFileOperationsFunctionality() {
   
   suite.addTest('should retrieve file metadata from Drive', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'test-metadata-file-id';
     
@@ -124,7 +124,7 @@ function testFileOperationsErrorHandling() {
   
   suite.addTest('should handle Drive API quota exceeded error with retry', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'quota-error-file-id';
     
@@ -139,7 +139,7 @@ function testFileOperationsErrorHandling() {
   
   suite.addTest('should handle Drive API permission denied error', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const restrictedFileId = 'permission-denied-file-id';
     
@@ -151,7 +151,7 @@ function testFileOperationsErrorHandling() {
   
   suite.addTest('should handle Drive API file not found error', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const missingFileId = 'missing-file-id';
     
@@ -163,7 +163,7 @@ function testFileOperationsErrorHandling() {
   
   suite.addTest('should retry operations on transient failures', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'transient-error-file-id';
     
@@ -179,7 +179,7 @@ function testFileOperationsErrorHandling() {
   
   suite.addTest('should handle malformed JSON in file content', function() {
     // Arrange
-    const logger = new GASDBLogger('FileOperations', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const malformedFileId = 'malformed-json-file-id';
     
@@ -201,7 +201,7 @@ function testFileServiceFunctionality() {
   
   suite.addTest('should initialise with FileOperations dependency', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     
     // Act
@@ -213,7 +213,7 @@ function testFileServiceFunctionality() {
   
   suite.addTest('should read file through optimised interface', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'optimised-read-file-id';
@@ -227,7 +227,7 @@ function testFileServiceFunctionality() {
   
   suite.addTest('should write file through optimised interface', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'optimised-write-file-id';
@@ -242,7 +242,7 @@ function testFileServiceFunctionality() {
   
   suite.addTest('should create file through optimised interface', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const fileName = 'optimised-new-file.json';
@@ -259,7 +259,7 @@ function testFileServiceFunctionality() {
   
   suite.addTest('should check file existence through optimised interface', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'existence-check-file-id';
@@ -273,7 +273,7 @@ function testFileServiceFunctionality() {
   
   suite.addTest('should get file metadata through optimised interface', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'metadata-check-file-id';
@@ -298,7 +298,7 @@ function testFileServiceOptimisation() {
   
   suite.addTest('should batch multiple read operations when possible', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const fileIds = ['batch-file-1', 'batch-file-2', 'batch-file-3'];
@@ -313,7 +313,7 @@ function testFileServiceOptimisation() {
   
   suite.addTest('should optimise metadata retrieval for multiple files', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const fileIds = ['meta-file-1', 'meta-file-2'];
@@ -328,7 +328,7 @@ function testFileServiceOptimisation() {
   
   suite.addTest('should handle mixed success and failure in batch operations', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const fileIds = ['valid-file-1', 'invalid-file-2', 'valid-file-3'];
@@ -344,7 +344,7 @@ function testFileServiceOptimisation() {
   
   suite.addTest('should implement intelligent caching for frequently accessed files', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'cached-file-id';
@@ -371,7 +371,7 @@ function testFileServiceErrorRecovery() {
   
   suite.addTest('should implement exponential backoff for quota limits', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'quota-limit-file-id';
@@ -384,7 +384,7 @@ function testFileServiceErrorRecovery() {
   
   suite.addTest('should gracefully degrade batch operations on partial failures', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const fileIds = ['working-file', 'failing-file', 'another-working-file'];
@@ -399,7 +399,7 @@ function testFileServiceErrorRecovery() {
   
   suite.addTest('should implement circuit breaker pattern for failing operations', function() {
     // Arrange
-    const logger = new GASDBLogger('FileService', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const problematicFileId = 'circuit-breaker-file-id';
@@ -430,7 +430,7 @@ function testFileIntegration() {
   
   suite.addTest('should coordinate operations between FileOperations and FileService', function() {
     // Arrange
-    const logger = new GASDBLogger('Integration', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('Integration');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileName = 'integration-test.json';
@@ -452,7 +452,7 @@ function testFileIntegration() {
   
   suite.addTest('should minimise Drive API calls through intelligent coordination', function() {
     // Arrange
-    const logger = new GASDBLogger('Integration', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('Integration');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const fileIds = ['api-optimisation-1', 'api-optimisation-2', 'api-optimisation-3'];
@@ -470,7 +470,7 @@ function testFileIntegration() {
   
   suite.addTest('should maintain consistency during concurrent file operations', function() {
     // Arrange
-    const logger = new GASDBLogger('Integration', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('Integration');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const testFileId = 'concurrent-operations-file';
@@ -499,7 +499,7 @@ function testDriveApiEdgeCases() {
   
   suite.addTest('should handle very large file content gracefully', function() {
     // Arrange
-    const logger = new GASDBLogger('EdgeCases', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('EdgeCases');
     const fileOps = new FileOperations(logger);
     const largeData = { 
       content: new Array(1000).fill('large content chunk').join(' '),
@@ -518,7 +518,7 @@ function testDriveApiEdgeCases() {
   
   suite.addTest('should handle special characters in file names and content', function() {
     // Arrange
-    const logger = new GASDBLogger('EdgeCases', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('EdgeCases');
     const fileOps = new FileOperations(logger);
     const specialFileName = 'test-file-with-£-€-special-chars.json';
     const specialData = { 
@@ -539,7 +539,7 @@ function testDriveApiEdgeCases() {
   
   suite.addTest('should handle empty files and null data appropriately', function() {
     // Arrange
-    const logger = new GASDBLogger('EdgeCases', 'DEBUG');
+    const logger = GASDBLogger.createComponentLogger('EdgeCases');
     const fileOps = new FileOperations(logger);
     const emptyFileId = 'empty-file-test';
     const emptyData = {};
