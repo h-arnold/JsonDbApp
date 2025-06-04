@@ -551,32 +551,5 @@ function validateSection3Setup() {
   }
 }
 
-/**
- * Run all Section 3 tests - wrapper function for the actual test runner
- * This function consolidates all Section 3 test suites into a single execution
- */
-function runSection3Tests() {
-  try {
-    const testRunner = new TestRunner();
-    
-    // Add all Section 3 test suites
-    testRunner.addTestSuite(testFileOperationsFunctionality());
-    testRunner.addTestSuite(testFileOperationsErrorHandling());
-    testRunner.addTestSuite(testFileServiceFunctionality());
-    testRunner.addTestSuite(testFileServiceOptimisation());
-    testRunner.addTestSuite(testFileServiceErrorRecovery());
-    testRunner.addTestSuite(testFileIntegration());
-    testRunner.addTestSuite(testDriveApiEdgeCases());
-    
-    // Run all tests
-    const results = testRunner.runAllTests();
-    
-    GASDBLogger.info(`Section 3 Tests Complete: ${results.getSummary()}`);
-    
-    return results;
-    
-  } catch (error) {
-    GASDBLogger.error('Failed to run Section 3 tests', { error: error.message });
-    throw error;
-  }
-}
+// Note: runSection3Tests() is implemented in Section3Tests.js
+// This file only contains the wrapper functions for consistent API
