@@ -191,9 +191,16 @@ class FileOperations {
     this._logger.debug('Checking file existence', { fileId });
     
     try {
-      DriveApp.getFileById(fileId);
-      this._logger.debug('File exists', { fileId });
-      return true;
+      const file = DriveApp.getFileById(fileId);
+      const isTrashed = file.isTrashed();
+      const exists = !isTrashed;
+      
+      this._logger.debug('File existence check complete', { 
+        fileId, 
+        exists, 
+        isTrashed 
+      });
+      return exists;
     } catch (error) {
       this._logger.debug('File does not exist or is not accessible', { 
         fileId, 
