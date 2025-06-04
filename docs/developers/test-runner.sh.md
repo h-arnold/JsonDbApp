@@ -53,6 +53,7 @@ This script automates the process of testing Google Apps Script projects using `
 
 - `1`, `section1`: Run Section 1 tests/validation only.
 - `2`, `section2`: Run Section 2 tests/validation only.
+- `3`, `section3`: Run Section 3 tests/validation only.
 - `all`: Run all sections (default if no section is specified).
 
 ### Examples
@@ -81,6 +82,12 @@ This script automates the process of testing Google Apps Script projects using `
     ./test-runner.sh --tests 1
     ```
 
+- Run Section 3 validation only:
+
+    ```bash
+    ./test-runner.sh --validate 3
+    ```
+
 - Get the latest execution logs:
 
     ```bash
@@ -96,8 +103,8 @@ This script automates the process of testing Google Apps Script projects using `
 - `login_for_run()`: Handles authentication for `clasp run` operations. Checks for [`.gas-testing.json`](.gas-testing.json), prompts for email if `GAS_USER_EMAIL` is not set, and sets a session flag.
 - `check_test_success_in_logs()`: Checks `clasp logs` for indicators of test success.
 - `check_validation_success_in_logs()`: Checks `clasp logs` for indicators of validation success.
-- `run_tests()`: Executes remote test functions (`testSection1`, `testSection2`) using `clasp run`.
-- `run_validation()`: Executes remote validation functions (`validateSection1Setup`, `validateSection2Setup`) using `clasp run`.
+- `run_tests()`: Executes remote test functions (`testSection1`, `testSection2`, `testSection3`) using `clasp run`.
+- `run_validation()`: Executes remote validation functions (`validateSection1Setup`, `validateSection2Setup`, `validateSection3Setup`) using `clasp run`.
 - `retrieve_logs()`: Fetches logs using `clasp logs --json` and attempts to parse them using `jq`.
 - `show_help()`: Displays usage instructions.
 - `cleanup()`: Removes temporary files (currently `logs.json`).
@@ -147,7 +154,8 @@ The script uses a single authentication flow for running functions:
 ## Logging
 
 - All `clasp` command outputs are tee'd to `$LOG_FILE` (default: `test-execution.log`).
-- The `retrieve_logs` function attempts to fetch structured logs using `clasp logs --json` and parse them with `jq` if available.
+- The `retrieve_logs` function attempts to fetch structured logs using `clasp logs --json` and parse them using `jq` if available.
+- **Log Persistence**: Both parsed and raw logs are automatically saved to the log file AND displayed to the terminal for complete execution tracking.
 
 ## Error Handling
 
@@ -158,9 +166,11 @@ The script uses a single authentication flow for running functions:
 ## Customisation
 
 - **Email for `clasp run`**: Set the `GAS_USER_EMAIL` environment variable to your Google account email to avoid interactive prompts.
+
     ```bash
     export GAS_USER_EMAIL="your.email@example.com"
     ./test-runner.sh
     ```
+
 - **Log File**: Modify the `LOG_FILE` variable at the top of the script to change the log file name or path.
 - **Test/Validation Functions**: Update the function names in `run_tests` and `run_validation` if your Apps Script functions have different names.

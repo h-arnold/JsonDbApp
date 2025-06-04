@@ -297,13 +297,13 @@ retrieve_logs() {
         # Parse and display logs if jq is available
         if command -v jq &> /dev/null; then
             print_info "Parsing structured logs..."
-            cat logs.json | jq -r '.[] | "\(.timestamp) [\(.level)] \(.message)"' 2>/dev/null || {
+            cat logs.json | jq -r '.[] | "\(.timestamp) [\(.level)] \(.message)"' 2>/dev/null | tee -a "$LOG_FILE" || {
                 print_warning "Could not parse JSON logs, showing raw output"
-                cat logs.json
+                cat logs.json | tee -a "$LOG_FILE"
             }
         else
             print_warning "jq not available, showing raw JSON logs"
-            cat logs.json
+            cat logs.json | tee -a "$LOG_FILE"
         fi
         
         # Clean up temporary file

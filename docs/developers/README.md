@@ -6,6 +6,10 @@ This section contains detailed documentation for developers contributing to or w
 
 These documents have been created by Claude AI and may not be fully accurate or complete. If you notice any discrepancies, please make create an issue or submit a PR with updates.
 
+### Important step to avoid weird issues
+
+Make sure you've enabled the DriveAPI in your Google Cloud project. This is crucial for the GAS DB to function correctly, especially for features like MasterIndex and file watching.
+
 ## Core Documentation
 
 - [**Testing Framework**](./Testing_Framework.md) - Comprehensive guide to the GAS DB testing infrastructure, including AssertionUtilities and TestRunner classes
