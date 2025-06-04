@@ -12,6 +12,7 @@ These documents have been created by Claude AI and may not be fully accurate or 
 - [**Infrastructure Components**](./Infrastructure_Components.md) - Complete reference for logging, error handling, and ID generation utilities
 - [**MasterIndex**](./MasterIndex.md) - Cross-instance coordination system using ScriptProperties for virtual locking and conflict detection
 - [**test-runner.sh Documentation**](./test-runner.sh.md) - Automated testing script for streamlined development workflow
+- [**clasp-watch.sh Documentation**](./clasp-watch.sh.md) - Continuous deployment script for automatic file watching and pushing to Google Apps Script
 
 ## Documentation Structure
 
@@ -19,3 +20,4 @@ These documents have been created by Claude AI and may not be fully accurate or 
 - **Infrastructure Components**: Use GASDBLogger, ErrorHandler, and IdGenerator in your code
 - **MasterIndex**: Understand cross-instance coordination, virtual locking, and conflict resolution
 - **test-runner.sh**: Streamline development with automated testing and deployment
+- **clasp-watch.sh**: Manage continuous deployment with automatic file watching and clasp authentication

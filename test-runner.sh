@@ -65,26 +65,6 @@ check_clasp_prerequisites() {
     print_success "Clasp prerequisites verified (clasp installed, .clasp.json found)."
 }
 
-# Function to login for push/deploy operations
-login_for_push_deploy() {
-    if [ "$LOGIN_FOR_PUSH_DEPLOY_SUCCESSFUL" = true ]; then
-        print_info "Already logged in for push/deploy operations in this session."
-        return 0
-    fi
-
-    print_info "Attempting login for push/deploy operations..."
-    if clasp login --no-localhost; then
-        print_success "Login for push/deploy successful."
-        LOGIN_FOR_PUSH_DEPLOY_SUCCESSFUL=true
-        return 0
-    else
-        print_error "Login for push/deploy failed."
-        print_info "Please ensure you can login with: clasp login --no-localhost"
-        print_info "This login is required to push and deploy code."
-        exit 1
-    fi
-}
-
 # Function to login for run operations (tests/validation)
 login_for_run() {
     if [ "$LOGIN_FOR_RUN_SUCCESSFUL" = true ]; then
@@ -148,49 +128,6 @@ check_validation_success_in_logs() {
         return 0
     fi
     return 1
-}
-
-# Function to push code to Google Apps Script
-push_code() {
-    print_info "Pushing code to Google Apps Script..."
-    
-    if clasp push --force 2>&1 | tee -a "$LOG_FILE"; then
-        print_success "Code pushed successfully"
-        return 0
-    else
-        print_error "Failed to push code to Google Apps Script"
-        return 1
-    fi
-}
-
-# Function to deploy code as API executable
-deploy_code() {
-    print_info "Deploying code as API executable..."
-    
-    # Deploy the latest version
-    if clasp deploy 2>&1 | tee -a "$LOG_FILE"; then
-        print_success "Code deployed successfully"
-        return 0
-    else
-        print_warning "Failed to create new deployment, attempting to update existing deployment..."
-        
-        # Try to get existing deployment and update it
-        local deployment_id=$(clasp deployments 2>/dev/null | grep -o '@[0-9]\+' | head -1 | cut -c2-)
-        
-        if [ -n "$deployment_id" ]; then
-            print_info "Found existing deployment ID: $deployment_id, updating..."
-            if clasp deploy --deploymentId "$deployment_id" 2>&1 | tee -a "$LOG_FILE"; then
-                print_success "Existing deployment updated successfully"
-                return 0
-            else
-                print_error "Failed to update existing deployment"
-                return 1
-            fi
-        else
-            print_error "No existing deployment found and failed to create new one"
-            return 1
-        fi
-    fi
 }
 
 # Function to run tests remotely
@@ -315,7 +252,6 @@ show_help() {
     echo "  -h, --help          Show this help message"
     echo "  -v, --validate      Run validation tests only"
     echo "  -t, --tests         Run full test suite only (skip validation)"
-    echo "  -p, --push-only     Push and deploy code only (no test execution)"
     echo "  -l, --logs-only     Retrieve logs only (no push or execution)"
     echo "  -q, --quiet         Minimal output (errors only)"
     echo "  --no-logs           Skip log retrieval"
@@ -326,12 +262,11 @@ show_help() {
     echo "  all                 Run all sections (default)"
     echo ""
     echo "Examples:"
-    echo "  $0                  # Full workflow: push, deploy, test all sections, retrieve logs"
+    echo "  $0                  # Full workflow: test all sections, retrieve logs"
     echo "  $0 --validate       # Quick validation check for all sections"
     echo "  $0 --validate 2     # Quick validation check for Section 2 only"
     echo "  $0 --tests 1        # Run Section 1 tests only"
     echo "  $0 --tests 2        # Run Section 2 tests only"
-    echo "  $0 --push-only      # Deploy code without running tests"
     echo "  $0 --logs-only      # Get latest execution logs"
     echo ""
 }
@@ -348,11 +283,9 @@ trap cleanup EXIT
 # Parse command line arguments
 VALIDATE_ONLY=false
 TESTS_ONLY=false
-PUSH_ONLY=false
 LOGS_ONLY=false
 QUIET=false
 NO_LOGS=false
-LOGIN_FOR_PUSH_DEPLOY_SUCCESSFUL=false
 LOGIN_FOR_RUN_SUCCESSFUL=false
 SECTION="all"
 
@@ -368,10 +301,6 @@ while [[ $# -gt 0 ]]; do
             ;;
         -t|--tests)
             TESTS_ONLY=true
-            shift
-            ;;
-        -p|--push-only)
-            PUSH_ONLY=true
             shift
             ;;
         -l|--logs-only)
@@ -423,35 +352,15 @@ main() {
         exit $?
     fi
     
-    # Push code unless in logs-only mode
-    if [ "$PUSH_ONLY" = true ] || ([ "$VALIDATE_ONLY" != true ] && [ "$TESTS_ONLY" != true ]); then
-        login_for_push_deploy # Authenticate for push/deploy
-        if ! push_code; then
-            print_error "Code push failed, aborting"
-            exit 1
-        fi
-        
-        # Deploy the code as API executable
-        if ! deploy_code; then
-            print_error "Code deployment failed, aborting"
-            exit 1
-        fi
-        
-        if [ "$PUSH_ONLY" = true ]; then
-            print_success "Code push and deployment completed successfully"
-            exit 0
-        fi
-    fi
-    
     # Run validation if requested or in full mode
-    if [ "$VALIDATE_ONLY" = true ] || ([ "$TESTS_ONLY" != true ] && [ "$PUSH_ONLY" != true ]); then
+    if [ "$VALIDATE_ONLY" = true ] || [ "$TESTS_ONLY" != true ]; then
         login_for_run # Authenticate for running functions
         print_header "Running Environment Validation - Section $SECTION"
         run_validation "$SECTION"
     fi
     
     # Run tests if requested or in full mode
-    if [ "$TESTS_ONLY" = true ] || ([ "$VALIDATE_ONLY" != true ] && [ "$PUSH_ONLY" != true ]); then
+    if [ "$TESTS_ONLY" = true ] || [ "$VALIDATE_ONLY" != true ]; then
         login_for_run # Authenticate for running functions (again, safe if already done)
         print_header "Running Test Suite - Section $SECTION"
         run_tests "$SECTION"

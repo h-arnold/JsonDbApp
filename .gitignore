@@ -2,3 +2,4 @@
 .clasprc.json
 test-execution.log
 .gas-testing.json
+*.log

@@ -6,8 +6,7 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 
 ## Documentation Reference
 
-**Project Documentation**: `/docs/`
-
+**Project Documentation**: `./docs/`
 
 ## Core Principles
 
@@ -92,3 +91,9 @@ function testClassNameMethod() {
 **Key constants**: `LOCK_TIMEOUT`, `MAX_CACHE_SIZE`, `DEFAULT_LOCK_TIMEOUT`, `MASTER_INDEX_KEY`
 
 Follow TDD process: Write failing tests → Implement minimal code → Refactor → Verify completion criteria → Proceed to next section.
+
+## Agent Workflow
+
+1. Run `./clasp-watch-sh` so that the code is automatically pushed to Google Apps Script.
+2. Implement the code requested.
+3. Run the tests using `./test-runnner.sh`.
