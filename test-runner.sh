@@ -65,6 +65,64 @@ check_clasp_prerequisites() {
     print_success "Clasp prerequisites verified (clasp installed, .clasp.json found)."
 }
 
+# Function to check clasp-watch status
+check_clasp_watch_status() {
+    print_info "Checking clasp-watch status..."
+    
+    if [ ! -f "./clasp-watch.sh" ]; then
+        print_warning "clasp-watch.sh not found in current directory"
+        print_info "Deployment will proceed but clasp-watch is recommended for continuous deployment"
+        return 0
+    fi
+    
+    if ./clasp-watch.sh --status 2>/dev/null; then
+        print_success "clasp-watch is running - project should be up to date"
+        return 0
+    else
+        print_warning "clasp-watch is not running"
+        print_info "You may want to start it with: ./clasp-watch.sh"
+        print_info "Continuing with deployment..."
+        return 0
+    fi
+}
+
+# Function to deploy as executable API
+deploy_executable_api() {
+    print_info "Deploying Apps Script project as executable API..."
+    
+    # Check if we already have deployments
+    local existing_deployments=$(clasp deployments 2>/dev/null || echo "")
+    
+    if echo "$existing_deployments" | grep -q "API Executable"; then
+        print_info "API Executable deployment already exists"
+        
+        # Get the deployment ID for the API Executable
+        local deployment_id=$(echo "$existing_deployments" | grep "API Executable" | awk '{print $2}' | head -1)
+        
+        if [ -n "$deployment_id" ]; then
+            print_info "Updating existing API Executable deployment (ID: $deployment_id)..."
+            if clasp deploy --deploymentId "$deployment_id" --description "Updated API Executable for testing" 2>&1 | tee -a "$LOG_FILE"; then
+                print_success "API Executable deployment updated successfully"
+                return 0
+            else
+                print_warning "Failed to update existing deployment, will create new one"
+            fi
+        fi
+    fi
+    
+    # Create new API Executable deployment
+    print_info "Creating new API Executable deployment..."
+    if clasp deploy --description "API Executable for testing" 2>&1 | tee -a "$LOG_FILE"; then
+        print_success "New API Executable deployment created successfully"
+        return 0
+    else
+        print_error "Failed to create API Executable deployment"
+        print_info "This may cause issues with 'clasp run' operations"
+        print_info "You can manually deploy via Apps Script editor or check clasp authentication"
+        return 1
+    fi
+}
+
 # Function to login for run operations (tests/validation)
 login_for_run() {
     if [ "$LOGIN_FOR_RUN_SUCCESSFUL" = true ]; then
@@ -264,11 +322,18 @@ show_help() {
     echo -e "\n${BLUE}GAS DB Test Runner${NC}"
     echo "Usage: $0 [options] [section]"
     echo ""
+    echo "Workflow:"
+    echo "  1. Check clasp prerequisites and clasp-watch status"
+    echo "  2. Deploy project as executable API (required for 'clasp run')"
+    echo "  3. Authenticate for 'clasp run' operations"
+    echo "  4. Execute validation/tests remotely"
+    echo "  5. Retrieve and display execution logs"
+    echo ""
     echo "Options:"
     echo "  -h, --help          Show this help message"
     echo "  -v, --validate      Run validation tests only"
     echo "  -t, --tests         Run full test suite only (skip validation)"
-    echo "  -l, --logs-only     Retrieve logs only (no push or execution)"
+    echo "  -l, --logs-only     Retrieve logs only (no deployment or execution)"
     echo "  -q, --quiet         Minimal output (errors only)"
     echo "  --no-logs           Skip log retrieval"
     echo ""
@@ -279,14 +344,19 @@ show_help() {
     echo "  all                 Run all sections (default)"
     echo ""
     echo "Examples:"
-    echo "  $0                  # Full workflow: test all sections, retrieve logs"
-    echo "  $0 --validate       # Quick validation check for all sections"
-    echo "  $0 --validate 2     # Quick validation check for Section 2 only"
-    echo "  $0 --validate 3     # Quick validation check for Section 3 only"
-    echo "  $0 --tests 1        # Run Section 1 tests only"
-    echo "  $0 --tests 2        # Run Section 2 tests only"
-    echo "  $0 --tests 3        # Run Section 3 tests only"
-    echo "  $0 --logs-only      # Get latest execution logs"
+    echo "  $0                  # Full workflow: deploy, test all sections, retrieve logs"
+    echo "  $0 --validate       # Deploy and run validation check for all sections"
+    echo "  $0 --validate 2     # Deploy and run validation check for Section 2 only"
+    echo "  $0 --validate 3     # Deploy and run validation check for Section 3 only"
+    echo "  $0 --tests 1        # Deploy and run Section 1 tests only"
+    echo "  $0 --tests 2        # Deploy and run Section 2 tests only"
+    echo "  $0 --tests 3        # Deploy and run Section 3 tests only"
+    echo "  $0 --logs-only      # Get latest execution logs (no deployment)"
+    echo ""
+    echo "Prerequisites:"
+    echo "  - clasp must be installed and project configured"
+    echo "  - clasp-watch.sh recommended for continuous deployment"
+    echo "  - .gas-testing.json required for 'clasp run' authentication"
     echo ""
 }
 
@@ -363,6 +433,10 @@ main() {
     # Check clasp prerequisites unless we're only retrieving logs
     if [ "$LOGS_ONLY" != true ]; then
         check_clasp_prerequisites
+        
+        # Check clasp-watch status and deploy as executable API
+        check_clasp_watch_status
+        deploy_executable_api
     fi
     
     # Handle logs-only mode
