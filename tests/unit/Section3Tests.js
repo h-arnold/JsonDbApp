@@ -11,12 +11,22 @@
  */
 
 // Global test data storage for real file IDs
-var SECTION3_TEST_DATA = {
+const SECTION3_TEST_DATA = {
   testFileId: null,
   testFileName: 'GASDB_Test_File_' + new Date().getTime() + '.json',
   testFolderId: null,
   testFolderName: 'GASDB_Test_Folder_' + new Date().getTime(),
-  testData: { test: 'data', timestamp: new Date().toISOString(), collection: 'test' },
+  testData: {
+    collectionName: 'testCollectionFromSetup',
+    metadata: {
+      version: 1,
+      created: new Date().toISOString(), // This will be dynamic
+      updated: new Date().toISOString()  // This will be dynamic
+    },
+    documents: [
+      { _id: 'doc1_setup', data: 'sample document 1 from setup' }
+    ]
+  },
   createdFileIds: [], // Track all files created for cleanup
   createdFolderIds: [] // Track all folders created for cleanup
 };
@@ -52,6 +62,9 @@ function testSection3Setup() {
   suite.addTest('should create initial test file with JSON content', function() {
     // Arrange
     const logger = GASDBLogger.createComponentLogger('Setup');
+    // Update dynamic parts of testData right before use to ensure fresh timestamps
+    SECTION3_TEST_DATA.testData.metadata.created = new Date().toISOString();
+    SECTION3_TEST_DATA.testData.metadata.updated = new Date().toISOString();
     
     // Act
     try {
@@ -83,8 +96,11 @@ function testSection3Setup() {
       const parsedContent = JSON.parse(content);
       
       // Assert
-      AssertionUtilities.assertEquals(parsedContent.test, SECTION3_TEST_DATA.testData.test, 'File content should match test data');
-      AssertionUtilities.assertDefined(parsedContent.timestamp, 'File should contain timestamp');
+      AssertionUtilities.assertEquals(parsedContent.collectionName, SECTION3_TEST_DATA.testData.collectionName, 'File content should match test data collectionName');
+      AssertionUtilities.assertDefined(parsedContent.metadata, 'File should contain metadata object');
+      AssertionUtilities.assertDefined(parsedContent.metadata.created, 'File metadata should contain created timestamp');
+      AssertionUtilities.assertEquals(parsedContent.documents.length, SECTION3_TEST_DATA.testData.documents.length, 'File should contain correct number of documents');
+      AssertionUtilities.assertEquals(parsedContent.documents[0]._id, SECTION3_TEST_DATA.testData.documents[0]._id, 'First document _id should match');
       
     } catch (error) {
       throw new Error('Failed to verify test file access: ' + error.message);
