@@ -291,10 +291,11 @@ function testFileOperationsErrorHandling() {
     const logger = GASDBLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     
-    // Create a file with malformed JSON
+    // Create a file with definitively malformed JSON
     const malformedFileName = 'malformed-json-test-' + new Date().getTime() + '.json';
     const folder = DriveApp.getFolderById(SECTION3_TEST_DATA.testFolderId);
-    const malformedFile = folder.createFile(malformedFileName, '{ invalid json content }', 'application/json');
+    const malformedJsonContent = '{ "incomplete": "json", "missing": }'; // This is definitely malformed
+    const malformedFile = folder.createFile(malformedFileName, malformedJsonContent, 'application/json');
     const malformedFileId = malformedFile.getId();
     SECTION3_TEST_DATA.createdFileIds.push(malformedFileId); // Track for cleanup
     
