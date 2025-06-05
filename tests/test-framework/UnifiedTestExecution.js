@@ -516,4 +516,159 @@ class UnifiedTestExecution {
       throw error;
     }
   }
+
+  /**
+   * Run an individual test for debugging purposes
+   * @param {number} sectionNumber - The section number
+   * @param {string} suiteName - The name of the test suite
+   * @param {string} testName - The name of the specific test
+   * @returns {Object} Test execution result
+   */
+  static runIndividualTest(sectionNumber, suiteName, testName) {
+    try {
+      const section = TEST_SECTIONS[sectionNumber];
+      if (!section) {
+        return {
+          success: false,
+          error: `Section ${sectionNumber} not found`,
+          summary: `Invalid section number: ${sectionNumber}`
+        };
+      }
+
+      const suiteFunction = section.suites[suiteName];
+      if (!suiteFunction) {
+        const availableSuites = Object.keys(section.suites).join(', ');
+        return {
+          success: false,
+          error: `Test suite '${suiteName}' not found in section ${sectionNumber}`,
+          summary: `Available suites: ${availableSuites}`
+        };
+      }
+
+      const testRunner = new TestRunner();
+      const runFunction = globalThis[suiteFunction];
+      
+      if (typeof runFunction !== 'function') {
+        return {
+          success: false,
+          error: `Suite function ${suiteFunction} not found`,
+          summary: `Test suite function '${suiteFunction}' is not available`
+        };
+      }
+
+      // Execute the suite function to get the TestSuite instance
+      const suite = runFunction();
+      
+      // Check if the test exists before running
+      if (!suite.tests.has(testName)) {
+        const availableTests = this._getTestsInSuite(suite);
+        return {
+          success: false,
+          error: `Test '${testName}' not found in suite '${suiteName}'`,
+          summary: `Available tests: ${availableTests.join(', ')}`
+        };
+      }
+
+      // Create a temporary suite with only the specific test for proper lifecycle execution
+      const tempSuite = new TestSuite(suiteName);
+      tempSuite.addTest(testName, suite.tests.get(testName));
+      
+      // Copy lifecycle hooks to ensure proper setup/teardown
+      tempSuite.setBeforeAll(suite.beforeAll);
+      tempSuite.setAfterAll(suite.afterAll);
+      tempSuite.setBeforeEach(suite.beforeEach);
+      tempSuite.setAfterEach(suite.afterEach);
+      
+      testRunner.addTestSuite(tempSuite);
+
+      // Run the test suite (which now contains only the specific test)
+      const result = testRunner.runAllTests();
+      
+      if (!result) {
+        return {
+          success: false,
+          error: `Failed to execute test '${testName}' in suite '${suiteName}'`,
+          summary: `Test execution failed`
+        };
+      }
+
+      return {
+        success: true,
+        result: result,
+        summary: `Individual test completed: ${suiteName} -> ${testName}`,
+        details: result
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.toString(),
+        summary: `Error running individual test: ${error.message}`
+      };
+    }
+  }
+
+  /**
+   * List all available tests in a section
+   * @param {number} sectionNumber - The section number
+   * @returns {Object} Available tests organised by suite
+   */
+  static listSectionTests(sectionNumber) {
+    try {
+      const section = TEST_SECTIONS[sectionNumber];
+      if (!section) {
+        return {
+          success: false,
+          error: `Section ${sectionNumber} not found`
+        };
+      }
+
+      const testsBySuite = {};
+      
+      Object.keys(section.suites).forEach(suiteName => {
+        try {
+          const suiteFunctionName = section.suites[suiteName];
+          const suiteFunction = globalThis[suiteFunctionName];
+          
+          if (typeof suiteFunction === 'function') {
+            const suite = suiteFunction();
+            const tests = this._getTestsInSuite(suite);
+            testsBySuite[suiteName] = tests;
+          } else {
+            testsBySuite[suiteName] = [`Function ${suiteFunctionName} not found`];
+          }
+        } catch (error) {
+          testsBySuite[suiteName] = [`Error loading suite: ${error.message}`];
+        }
+      });
+
+      return {
+        success: true,
+        section: sectionNumber,
+        suites: testsBySuite,
+        summary: `Found ${Object.keys(testsBySuite).length} test suites in section ${sectionNumber}`
+      };
+
+    } catch (error) {
+      return {
+        success: false,
+        error: error.toString()
+      };
+    }
+  }
+
+  /**
+   * Extract test names from a TestSuite instance
+   * @param {TestSuite} suite - The test suite
+   * @returns {Array<string>} Array of test names
+   * @private
+   */
+  static _getTestsInSuite(suite) {
+    if (!suite || !suite.tests) {
+      return [];
+    }
+    
+    // TestSuite.tests is a Map, so we need to get the keys
+    return Array.from(suite.tests.keys());
+  }
 }

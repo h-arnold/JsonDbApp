@@ -47,6 +47,26 @@ function testSuite(sectionNumber, suiteName) {
 }
 
 /**
+ * Run an individual test for debugging purposes
+ * @param {number} sectionNumber - The section number (1-4)
+ * @param {string} suiteName - The name of the test suite
+ * @param {string} testName - The name of the specific test
+ * @returns {Object} Test execution result
+ */
+function runIndividualTest(sectionNumber, suiteName, testName) {
+  return UnifiedTestExecution.runIndividualTest(sectionNumber, suiteName, testName);
+}
+
+/**
+ * List all available tests in a section for easy reference
+ * @param {number} sectionNumber - The section number (1-4)
+ * @returns {Object} Available tests organised by suite
+ */
+function listAvailableTests(sectionNumber) {
+  return UnifiedTestExecution.listSectionTests(sectionNumber);
+}
+
+/**
  * Quick validation function to check if all basic components are working
  * This can be used as a smoke test
  */

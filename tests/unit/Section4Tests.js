@@ -27,54 +27,106 @@ const SECTION4_TEST_DATA = {
 };
 
 /**
- * Setup test that creates real Drive files for testing
- * This must run first to create test resources
+ * Setup function for creating test environment
+ * Called by beforeAll hooks in test suites that need it
  */
-function testSection4Setup() {
-  const suite = new TestSuite('Section 4 Setup - Create Test Environment');
+function setupSection4TestEnvironment() {
+  const logger = GASDBLogger.createComponentLogger('Section4Setup');
   
-  suite.addTest('should create test folder for database files', function() {
-    // Arrange
-    const logger = GASDBLogger.createComponentLogger('Section4Setup');
-    
-    // Act
+  // Create test folder
+  const folder = DriveApp.createFolder(SECTION4_TEST_DATA.testFolderName);
+  SECTION4_TEST_DATA.testFolderId = folder.getId();
+  SECTION4_TEST_DATA.createdFolderIds.push(SECTION4_TEST_DATA.testFolderId);
+  
+  logger.info('Created test folder', { 
+    folderId: SECTION4_TEST_DATA.testFolderId,
+    folderName: SECTION4_TEST_DATA.testFolderName
+  });
+  
+  // Prepare test configuration
+  SECTION4_TEST_DATA.testConfig = {
+    rootFolderId: SECTION4_TEST_DATA.testFolderId,
+    autoCreateCollections: true,
+    lockTimeout: 30000,
+    cacheEnabled: true,
+    logLevel: 'INFO',
+    masterIndexKey: 'GASDB_MASTER_INDEX_TEST_S4'
+  };
+  
+  logger.info('Test environment setup complete');
+}
+
+/**
+ * Cleanup function for removing test environment
+ * Called by afterAll hooks in test suites that need it
+ */
+function cleanupSection4TestEnvironment() {
+  const logger = GASDBLogger.createComponentLogger('Section4Cleanup');
+  let cleanedFiles = 0;
+  let failedFiles = 0;
+  let cleanedFolders = 0;
+  let failedFolders = 0;
+  
+  // Clean up created test files
+  SECTION4_TEST_DATA.createdFileIds.forEach(fileId => {
     try {
-      const folder = DriveApp.createFolder(SECTION4_TEST_DATA.testFolderName);
-      SECTION4_TEST_DATA.testFolderId = folder.getId();
-      SECTION4_TEST_DATA.createdFolderIds.push(SECTION4_TEST_DATA.testFolderId);
-      
-      logger.info('Created test folder', { 
-        folderId: SECTION4_TEST_DATA.testFolderId,
-        folderName: SECTION4_TEST_DATA.testFolderName
-      });
-      
-      // Assert
-      AssertionUtilities.assertNotNull(SECTION4_TEST_DATA.testFolderId, 'Test folder should be created');
-      AssertionUtilities.assertTrue(SECTION4_TEST_DATA.testFolderId.length > 10, 'Folder ID should be valid');
-      
+      if (fileId) {
+        const file = DriveApp.getFileById(fileId);
+        file.setTrashed(true);
+        cleanedFiles++;
+        logger.info('Cleaned up test file', { fileId: fileId });
+      }
     } catch (error) {
-      throw new Error('Failed to create test folder: ' + error.message);
+      failedFiles++;
+      logger.warn('Failed to clean up test file', { fileId: fileId, error: error.message });
     }
   });
   
-  suite.addTest('should prepare test configuration for database', function() {
-    // Arrange & Act
-    SECTION4_TEST_DATA.testConfig = {
-      rootFolderId: SECTION4_TEST_DATA.testFolderId,
-      autoCreateCollections: true,
-      lockTimeout: 30000,
-      cacheEnabled: true,
-      logLevel: 'INFO',
-      masterIndexKey: 'GASDB_MASTER_INDEX_TEST_S4'
-    };
-    
-    // Assert
-    AssertionUtilities.assertNotNull(SECTION4_TEST_DATA.testConfig, 'Test config should be created');
-    AssertionUtilities.assertEquals(SECTION4_TEST_DATA.testConfig.rootFolderId, SECTION4_TEST_DATA.testFolderId, 'Root folder ID should match');
-    AssertionUtilities.assertTrue(SECTION4_TEST_DATA.testConfig.autoCreateCollections, 'Auto create should be enabled');
+  // Clean up created test folders
+  SECTION4_TEST_DATA.createdFolderIds.forEach(folderId => {
+    try {
+      if (folderId) {
+        const folder = DriveApp.getFolderById(folderId);
+        folder.setTrashed(true);
+        cleanedFolders++;
+        logger.info('Cleaned up test folder', { folderId: folderId });
+      }
+    } catch (error) {
+      failedFolders++;
+      logger.warn('Failed to clean up test folder', { folderId: folderId, error: error.message });
+    }
   });
   
-  return suite;
+  // Clean up test master index entries
+  try {
+    const masterIndexKey = SECTION4_TEST_DATA.testConfig?.masterIndexKey;
+    if (masterIndexKey) {
+      PropertiesService.getScriptProperties().deleteProperty(masterIndexKey);
+      logger.info('Cleaned up test master index', { key: masterIndexKey });
+    }
+    
+    // Clean up other test keys
+    const testKeys = ['GASDB_MASTER_INDEX_TEST_S4', 'GASDB_MASTER_INDEX_TEST_INTEGRATION'];
+    testKeys.forEach(key => {
+      try {
+        PropertiesService.getScriptProperties().deleteProperty(key);
+        logger.info('Cleaned up test property', { key: key });
+      } catch (error) {
+        // Ignore errors - property might not exist
+      }
+    });
+  } catch (error) {
+    logger.warn('Failed to clean up master index', { error: error.message });
+  }
+  
+  logger.info('Cleanup summary', { 
+    cleanedFiles: cleanedFiles, 
+    failedFiles: failedFiles,
+    cleanedFolders: cleanedFolders,
+    failedFolders: failedFolders,
+    totalFiles: SECTION4_TEST_DATA.createdFileIds.length,
+    totalFolders: SECTION4_TEST_DATA.createdFolderIds.length
+  });
 }
 
 /**
@@ -83,6 +135,16 @@ function testSection4Setup() {
  */
 function testDatabaseConfigFunctionality() {
   const suite = new TestSuite('DatabaseConfig Functionality');
+  
+  // Setup test environment once before all tests
+  suite.setBeforeAll(function() {
+    setupSection4TestEnvironment();
+  });
+  
+  // Cleanup after all tests
+  suite.setAfterAll(function() {
+    cleanupSection4TestEnvironment();
+  });
   
   suite.addTest('should create DatabaseConfig with default values', function() {
     // Act - This should fail initially (TDD Red phase)
@@ -156,6 +218,13 @@ function testDatabaseConfigFunctionality() {
  */
 function testDatabaseInitialization() {
   const suite = new TestSuite('Database Initialization');
+  
+  // Ensure test environment is set up
+  suite.setBeforeAll(function() {
+    if (!SECTION4_TEST_DATA.testConfig) {
+      setupSection4TestEnvironment();
+    }
+  });
   
   suite.addTest('should create Database with default configuration', function() {
     // Act - This should fail initially (TDD Red phase)
@@ -251,6 +320,13 @@ function testDatabaseInitialization() {
  */
 function testCollectionManagement() {
   const suite = new TestSuite('Collection Management');
+  
+  // Ensure test environment is set up
+  suite.setBeforeAll(function() {
+    if (!SECTION4_TEST_DATA.testConfig) {
+      setupSection4TestEnvironment();
+    }
+  });
   
   suite.addTest('should create new collection', function() {
     // Arrange
@@ -411,6 +487,13 @@ function testCollectionManagement() {
 function testIndexFileStructure() {
   const suite = new TestSuite('Index File Structure');
   
+  // Ensure test environment is set up
+  suite.setBeforeAll(function() {
+    if (!SECTION4_TEST_DATA.testConfig) {
+      setupSection4TestEnvironment();
+    }
+  });
+  
   suite.addTest('should create index file with correct structure', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
@@ -552,6 +635,13 @@ function testIndexFileStructure() {
 function testDatabaseMasterIndexIntegration() {
   const suite = new TestSuite('Database Master Index Integration');
   
+  // Ensure test environment is set up
+  suite.setBeforeAll(function() {
+    if (!SECTION4_TEST_DATA.testConfig) {
+      setupSection4TestEnvironment();
+    }
+  });
+  
   suite.addTest('should integrate with master index on initialization', function() {
     // Arrange
     const config = {
@@ -609,112 +699,6 @@ function testDatabaseMasterIndexIntegration() {
 }
 
 /**
- * Cleanup test that removes all created test files and folders
- * This must run last to clean up test resources
- */
-function testSection4Cleanup() {
-  const suite = new TestSuite('Section 4 Cleanup - Remove Test Files');
-  
-  suite.addTest('should clean up created test files', function() {
-    // Arrange
-    const logger = GASDBLogger.createComponentLogger('Section4Cleanup');
-    let cleanedFiles = 0;
-    let failedFiles = 0;
-    
-    // Act
-    SECTION4_TEST_DATA.createdFileIds.forEach(fileId => {
-      try {
-        if (fileId) {
-          const file = DriveApp.getFileById(fileId);
-          file.setTrashed(true);
-          cleanedFiles++;
-          logger.info('Cleaned up test file', { fileId: fileId });
-        }
-      } catch (error) {
-        failedFiles++;
-        logger.warn('Failed to clean up test file', { fileId: fileId, error: error.message });
-      }
-    });
-    
-    // Assert
-    logger.info('File cleanup summary', { 
-      cleanedFiles: cleanedFiles, 
-      failedFiles: failedFiles,
-      totalFiles: SECTION4_TEST_DATA.createdFileIds.length
-    });
-    
-    AssertionUtilities.assertTrue(cleanedFiles >= 0, 'Should attempt to clean files');
-  });
-  
-  suite.addTest('should clean up created test folders', function() {
-    // Arrange
-    const logger = GASDBLogger.createComponentLogger('Section4Cleanup');
-    let cleanedFolders = 0;
-    let failedFolders = 0;
-    
-    // Act
-    SECTION4_TEST_DATA.createdFolderIds.forEach(folderId => {
-      try {
-        if (folderId) {
-          const folder = DriveApp.getFolderById(folderId);
-          folder.setTrashed(true);
-          cleanedFolders++;
-          logger.info('Cleaned up test folder', { folderId: folderId });
-        }
-      } catch (error) {
-        failedFolders++;
-        logger.warn('Failed to clean up test folder', { folderId: folderId, error: error.message });
-      }
-    });
-    
-    // Assert
-    logger.info('Folder cleanup summary', { 
-      cleanedFolders: cleanedFolders, 
-      failedFolders: failedFolders,
-      totalFolders: SECTION4_TEST_DATA.createdFolderIds.length
-    });
-    
-    AssertionUtilities.assertTrue(cleanedFolders >= 0, 'Should attempt to clean folders');
-  });
-  
-  suite.addTest('should clean up test master index entries', function() {
-    // Arrange
-    const logger = GASDBLogger.createComponentLogger('Section4Cleanup');
-    
-    // Act
-    try {
-      // Clean up test master index entries
-      const masterIndexKey = SECTION4_TEST_DATA.testConfig?.masterIndexKey;
-      if (masterIndexKey) {
-        PropertiesService.getScriptProperties().deleteProperty(masterIndexKey);
-        logger.info('Cleaned up test master index', { key: masterIndexKey });
-      }
-      
-      // Clean up other test keys
-      const testKeys = ['GASDB_MASTER_INDEX_TEST_S4', 'GASDB_MASTER_INDEX_TEST_INTEGRATION'];
-      testKeys.forEach(key => {
-        try {
-          PropertiesService.getScriptProperties().deleteProperty(key);
-          logger.info('Cleaned up test property', { key: key });
-        } catch (error) {
-          // Ignore errors - property might not exist
-        }
-      });
-      
-      // Assert
-      AssertionUtilities.assertTrue(true, 'Cleanup completed');
-      
-    } catch (error) {
-      logger.warn('Failed to clean up master index', { error: error.message });
-      // Don't fail the test for cleanup issues
-      AssertionUtilities.assertTrue(true, 'Cleanup attempted');
-    }
-  });
-  
-  return suite;
-}
-
-/**
  * Run all Section 4 tests
  * This function orchestrates all test suites for Section 4
  */
@@ -724,14 +708,12 @@ function runSection4Tests() {
     
     const testRunner = new TestRunner();
     
-    // Add all test suites
-    testRunner.addTestSuite(testSection4Setup());
+    // Add all test suites - setup/teardown handled by beforeAll/afterAll hooks
     testRunner.addTestSuite(testDatabaseConfigFunctionality());
     testRunner.addTestSuite(testDatabaseInitialization());
     testRunner.addTestSuite(testCollectionManagement());
     testRunner.addTestSuite(testIndexFileStructure());
     testRunner.addTestSuite(testDatabaseMasterIndexIntegration());
-    testRunner.addTestSuite(testSection4Cleanup());
     
     // Run all tests
     const results = testRunner.runAllTests();

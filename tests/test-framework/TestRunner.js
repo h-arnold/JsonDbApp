@@ -297,25 +297,34 @@ class TestRunner {
     return this.results;
   }
   
+  /**
+   * Run a specific test within a test suite
+   * @param {string} suiteName - Name of the test suite
+   * @param {string} testName - Name of the specific test
+   * @returns {TestResults} Test results object or null if test not found
+   */
   runTest(suiteName, testName) {
     const suite = this.testSuites.get(suiteName);
     if (!suite) {
-      throw new Error(`Test suite ${suiteName} not found`);
+      return null;
     }
-    
+
+    this.results = new TestResults();
     this.setupEnvironment();
     
     try {
-      GASDBLogger.info(`Running test: ${suiteName}.${testName}`);
+      GASDBLogger.info(`Running individual test: ${suiteName}.${testName}`);
       const result = suite.runTest(testName);
-      this.results = new TestResults();
       this.results.addResult(result);
-      
-      this.logResults(this.results);
-      return result;
+    } catch (error) {
+      const errorResult = new TestResult(suiteName, testName, false, error, 0);
+      this.results.addResult(errorResult);
     } finally {
       this.teardownEnvironment();
     }
+    
+    this.logResults(this.results);
+    return this.results;
   }
   
   setupEnvironment() {

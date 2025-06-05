@@ -10,6 +10,8 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 
 **TDD**: Red-Green-Refactor cycle. Write failing tests first, implement minimal passing code, then refactor.  
 **Component Separation**: Single responsibility classes with dependency injection via constructor.
+**SOLID Principles**: Follow SOLID principles for maintainable code.
+**Search for existing functionality**: Before implementing new features, check if they already exist in the codebase.
 **GAS Limitations**: Remember that Google App Script uses the V8 Engine, but this does not provide full javascript support.  
 **British English**: All naming, documentation, comments use British English unless referencing American English APIs.
 

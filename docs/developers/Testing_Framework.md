@@ -49,6 +49,26 @@ Tests are executed by calling one of the exposed functions in the Apps Script ed
 - `testSection3()` – Run all Section 3 tests
 - `testSection4()` – Run all Section 4 tests
 - `testSuite(sectionNumber, suiteName)` – Run a specific test suite
+- `runIndividualTest(sectionNumber, suiteName, testName)` – Run a specific test for debugging
+- `listAvailableTests(sectionNumber)` – List all available tests in a section
+
+### Running Individual Tests for Debugging
+
+For debugging purposes, you can run individual tests using the `runIndividualTest` function:
+
+```javascript
+// Run a specific test
+runIndividualTest(4, 'Database Initialization', 'should create database with valid config');
+
+// First, list available tests to see what's available
+listAvailableTests(4);
+// This will show you all suites and tests in section 4
+
+// Then run the specific test you want to debug
+runIndividualTest(4, 'Collection Management', 'should create new collection');
+```
+
+This is particularly useful when using the GAS debugger, as you can focus on just the test you're interested in without having to step through all the other tests.
 
 ## Class Reference
 
