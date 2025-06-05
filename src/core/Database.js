@@ -48,7 +48,7 @@ class Database {
    * 
    * @throws {Error} When initialization fails
    */
-  initialize() {
+  initialise() {
     this._logger.info('Initializing database');
     
     try {

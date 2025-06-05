@@ -265,7 +265,7 @@ function testDatabaseInitialization() {
     
     // Act - This should fail initially (TDD Red phase)
     try {
-      database.initialize();
+      database.initialise();
       
       // Assert
       AssertionUtilities.assertNotNull(database.indexFileId, 'Index file should be created');
@@ -300,7 +300,7 @@ function testDatabaseInitialization() {
       const database = new Database(SECTION4_TEST_DATA.testConfig);
       
       // Simulate loading existing data
-      database.initialize();
+      database.initialise();
       
       // Should be able to load existing collections
       const collections = database.listCollections();
@@ -523,7 +523,7 @@ function testIndexFileStructure() {
     
     // Act - This should fail initially (TDD Red phase)
     try {
-      database.initialize();
+      database.initialise();
       
       // Read the index file to verify structure
       const indexData = database.loadIndex();
@@ -675,7 +675,7 @@ function testDatabaseMasterIndexIntegration() {
     // Act - This should fail initially (TDD Red phase)
     try {
       const database = new Database(config);
-      database.initialize();
+      database.initialise();
       
       // Verify master index is accessible
       const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
