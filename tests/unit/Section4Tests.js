@@ -504,11 +504,37 @@ function testIndexFileStructure() {
     try {
       // Simulate corrupted index file by writing invalid JSON
       if (database.indexFileId) {
+        // First corrupt the index file by writing invalid JSON
+        const file = DriveApp.getFileById(database.indexFileId);
+        const corruptedContent = '{ "collections": { invalid json content }';
+        file.setContent(corruptedContent);
+        
+        console.log('Corrupted index file with content:', corruptedContent);
+        console.log('Index file ID:', database.indexFileId);
+        
         // This test verifies error handling for corrupted files
         // The implementation should detect and handle corrupted index files
-        AssertionUtilities.assertThrows(() => {
+        let threwError = false;
+        let actualError = null;
+        
+        try {
           database.loadIndex();
-        }, Error, 'Should handle corrupted index file');
+        } catch (error) {
+          threwError = true;
+          actualError = error;
+          console.log('loadIndex() threw error:', error.message);
+          console.log('Error type:', error.constructor.name);
+        }
+        
+        if (!threwError) {
+          throw new Error('Expected loadIndex() to throw an error for corrupted file, but it did not');
+        }
+        
+        // Verify that an appropriate error was thrown
+        AssertionUtilities.assertTrue(threwError, 'Should have thrown an error');
+        AssertionUtilities.assertNotNull(actualError, 'Should have an actual error');
+      } else {
+        throw new Error('Database has no index file to corrupt');
       }
       
     } catch (error) {
