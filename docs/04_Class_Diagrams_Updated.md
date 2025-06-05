@@ -112,38 +112,49 @@ This document contains updated class diagrams for the Google Apps Script Databas
 ### FileService Class Diagram (Updated)
 
 ```
-+------------------------------------------+
-|              FileService                 |
-+------------------------------------------+
-| - fileOps: FileOperations                |
-| - logger: GASDBLogger                    |
-+------------------------------------------+
-| + readFile(fileId): Object               |
-| + writeFile(fileId, data): void          |
-| + createFile(name, data, folderId): String|
-| + deleteFile(fileId): Boolean            |
-| + fileExists(fileId): Boolean            |
-| + getFileMetadata(fileId): Object        |
-+------------------------------------------+
++-------------------------------------------------+
+|                   FileService                   |
++-------------------------------------------------+
+| - _fileOps: FileOperations                      |
+| - _logger: GASDBLogger                          |
+| - _cache: Map<String,Object>                    |
+| - _maxCacheSize: Number                         |
+| - _cacheEnabled: Boolean                        |
++-------------------------------------------------+
+| + readFile(fileId): Object                      |
+| + writeFile(fileId, data): void                 |
+| + createFile(name, data, folderId): String      |
+| + deleteFile(fileId): Boolean                   |
+| + fileExists(fileId): Boolean                   |
+| + getFileMetadata(fileId): Object               |
+| + batchReadFiles(fileIds): Array<Object>        |
+| + batchGetMetadata(fileIds): Array<Object>      |
+| + clearCache(): void                            |
+| + getCacheStats(): Object                       |
+| + setCacheEnabled(enabled): void                |
+| - _addToCache(fileId, content): void            |
++-------------------------------------------------+
 ```
 
-### FileOperations Class Diagram (New)
+### FileOperations Class Diagram (Updated)
 
 ```
-+------------------------------------------+
-|            FileOperations                |
-+------------------------------------------+
-| - logger: GASDBLogger                    |
-+------------------------------------------+
-| + readFile(fileId): Object               |
-| + writeFile(fileId, data): void          |
-| + createFile(name, data, folderId): String|
-| + deleteFile(fileId): Boolean            |
-| + fileExists(fileId): Boolean            |
-| + getFileMetadata(fileId): Object        |
-| - handleDriveApiError(error): void       |
-| - retryOperation(operation, maxRetries): * |
-+------------------------------------------+
++-------------------------------------------------+
+|                 FileOperations                  |
++-------------------------------------------------+
+| - _logger: GASDBLogger                          |
+| - _maxRetries: Number                           |
+| - _retryDelayMs: Number                         |
++-------------------------------------------------+
+| + readFile(fileId): Object                      |
+| + writeFile(fileId, data): void                 |
+| + createFile(name, data, folderId): String      |
+| + deleteFile(fileId): Boolean                   |
+| + fileExists(fileId): Boolean                   |
+| + getFileMetadata(fileId): Object               |
+| - _handleDriveApiError(error, op, fileId): void |
+| - _retryOperation(fn, operationName): *         |
++-------------------------------------------------+
 ```
 
 ### QueryEngine Class Diagram
