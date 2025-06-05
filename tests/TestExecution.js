@@ -30,8 +30,16 @@ function testSection3() {
 }
 
 /**
+ * Run all Section 4 tests
+ * This function can be called from the Google Apps Script editor  
+ */
+function testSection4() {
+  return UnifiedTestExecution.runSection(4);
+}
+
+/**
  * Run specific test suite from any section
- * @param {number} sectionNumber - Section number (1, 2, or 3)
+ * @param {number} sectionNumber - Section number (1, 2, 3, or 4)
  * @param {string} suiteName - Name of the test suite to run
  */
 function testSuite(sectionNumber, suiteName) {
@@ -63,6 +71,14 @@ function validateSection3Setup() {
 }
 
 /**
+ * Quick validation function to check if Section 4 components are working
+ * This can be used as a smoke test for Section 4
+ */
+function validateSection4Setup() {
+  return UnifiedTestExecution.validateSetup(4);
+}
+
+/**
  * Initialize and test the basic environment
  * This function should be run first to ensure everything is set up correctly
  */
@@ -91,10 +107,12 @@ GAS DB Test Functions:
 - testSection1(): Run all Section 1 tests
 - testSection2(): Run all Section 2 tests  
 - testSection3(): Run all Section 3 tests
+- testSection4(): Run all Section 4 tests
 - testSuite(sectionNumber, suiteName): Run specific test suite
 - validateSection1Setup(): Quick validation of Section 1 components
 - validateSection2Setup(): Quick validation of Section 2 components
 - validateSection3Setup(): Quick validation of Section 3 components
+- validateSection4Setup(): Quick validation of Section 4 components
 - initializeTestEnvironment(): Initialize and verify test environment
 - getAvailableTests(): Get information about available tests
 - showTestHelp(): Display this help information
@@ -112,11 +130,11 @@ GAS DB Test Functions:
 
 === USAGE ===
 1. Run initializeTestEnvironment() first
-2. Run validateSection1Setup(), validateSection2Setup(), and validateSection3Setup() for quick checks
-3. Run testSection1(), testSection2(), and testSection3() for comprehensive testing
+2. Run validateSection1Setup(), validateSection2Setup(), validateSection3Setup(), and validateSection4Setup() for quick checks
+3. Run testSection1(), testSection2(), testSection3(), and testSection4() for comprehensive testing
 4. Use testSuite(sectionNumber, suiteName) for targeted testing
 
-Note: Section 2 and 3 tests are designed to FAIL initially (TDD Red phase)
+Note: Section 2, 3, and 4 tests are designed to FAIL initially (TDD Red phase)
   `;
   
   GASDBLogger.info(helpText);

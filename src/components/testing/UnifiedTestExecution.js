@@ -192,6 +192,92 @@ const TEST_SECTIONS = {
         }
       }
     ]
+  },
+  
+  4: {
+    name: 'Section 4',
+    description: 'Database and Collection Management',
+    runFunction: 'runSection4Tests',
+    suites: {
+      'Section 4 Setup': 'testSection4Setup',
+      'DatabaseConfig Functionality': 'testDatabaseConfigFunctionality',
+      'Database Initialization': 'testDatabaseInitialization',
+      'Collection Management': 'testCollectionManagement',
+      'Index File Structure': 'testIndexFileStructure',
+      'Database Master Index Integration': 'testDatabaseMasterIndexIntegration',
+      'Section 4 Cleanup': 'testSection4Cleanup'
+    },
+    validations: [
+      {
+        component: 'Database Class',
+        test: () => {
+          try {
+            const database = new Database();
+            return { status: 'FAIL', message: 'Class exists but methods not implemented (expected for TDD)' };
+          } catch (error) {
+            if (error.message.includes('not implemented') || error.message.includes('Database is not defined')) {
+              return { status: 'PASS', message: 'Class not yet implemented (TDD Red phase)' };
+            } else {
+              throw error;
+            }
+          }
+        }
+      },
+      {
+        component: 'DatabaseConfig Class',
+        test: () => {
+          try {
+            const config = new DatabaseConfig();
+            return { status: 'FAIL', message: 'Class exists but methods not implemented (expected for TDD)' };
+          } catch (error) {
+            if (error.message.includes('not implemented') || error.message.includes('DatabaseConfig is not defined')) {
+              return { status: 'PASS', message: 'Class not yet implemented (TDD Red phase)' };
+            } else {
+              throw error;
+            }
+          }
+        }
+      },
+      {
+        component: 'Section 4 Test Functions',
+        test: () => {
+          const requiredFunctions = ['testDatabaseConfigFunctionality', 'testDatabaseInitialization',
+                                   'testCollectionManagement', 'testIndexFileStructure',
+                                   'testDatabaseMasterIndexIntegration'];
+          const missingFunctions = requiredFunctions.filter(fn => typeof globalThis[fn] !== 'function');
+          
+          if (missingFunctions.length === 0) {
+            return { status: 'PASS', message: 'All test functions available' };
+          } else {
+            throw new Error(`Missing test functions: ${missingFunctions.join(', ')}`);
+          }
+        }
+      },
+      {
+        component: 'MasterIndex Integration',
+        test: () => {
+          try {
+            // Test that MasterIndex is available for database integration
+            const masterIndex = new MasterIndex();
+            return { status: 'PASS', message: 'MasterIndex available for database integration' };
+          } catch (error) {
+            throw new Error('MasterIndex not available for database integration');
+          }
+        }
+      },
+      {
+        component: 'FileService Integration',
+        test: () => {
+          try {
+            // Test that FileService is available for database operations
+            const fileService = new FileService();
+            return { status: 'PASS', message: 'FileService available for database operations' };
+          } catch (error) {
+            throw new Error('FileService not available for database operations');
+          }
+        }
+      }
+    ]
   }
 };
 

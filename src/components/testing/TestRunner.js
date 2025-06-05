@@ -64,23 +64,70 @@ class TestResults {
   getDetailedReport() {
     let report = this.getSummary() + '\n\n';
     
-    // Add failed tests first
+    // Add concise failed tests list
     const failed = this.getFailed();
     if (failed.length > 0) {
       report += 'FAILED TESTS:\n';
       failed.forEach(result => {
-        report += result.toString() + '\n\n';
+        report += `FAIL: ${result.suiteName}.${result.testName} - ${result.error ? result.error.message : 'Unknown error'}\n`;
       });
+      report += '\n';
     }
     
-    // Add summary of passed tests
+    // Add concise passed tests list
     const passed = this.getPassed();
     if (passed.length > 0) {
       report += 'PASSED TESTS:\n';
       passed.forEach(result => {
-        report += `PASS: ${result.suiteName}.${result.testName} (${result.executionTime}ms)\n`;
+        report += `PASS: ${result.suiteName}.${result.testName}\n`;
       });
+      report += '\n';
     }
+    
+    return report;
+  }
+  
+  /**
+   * Get a compact summary suitable for logging without truncation
+   */
+  getCompactReport() {
+    const total = this.results.length;
+    const passed = this.getPassed().length;
+    const failed = this.getFailed().length;
+    const passRate = this.getPassRate().toFixed(1);
+    
+    let report = `\n=== TEST RESULTS SUMMARY ===\n`;
+    report += `Total: ${total} | Passed: ${passed} | Failed: ${failed} | Pass Rate: ${passRate}%\n\n`;
+    
+    // Group by suite for better organization
+    const suiteGroups = {};
+    this.results.forEach(result => {
+      if (!suiteGroups[result.suiteName]) {
+        suiteGroups[result.suiteName] = { passed: [], failed: [] };
+      }
+      if (result.passed) {
+        suiteGroups[result.suiteName].passed.push(result.testName);
+      } else {
+        suiteGroups[result.suiteName].failed.push(result.testName);
+      }
+    });
+    
+    // Report by suite
+    Object.keys(suiteGroups).forEach(suiteName => {
+      const suite = suiteGroups[suiteName];
+      const suiteTotal = suite.passed.length + suite.failed.length;
+      const suitePassed = suite.passed.length;
+      
+      report += `[${suiteName}] ${suitePassed}/${suiteTotal} passed\n`;
+      
+      if (suite.failed.length > 0) {
+        report += `  FAILED: ${suite.failed.join(', ')}\n`;
+      }
+      if (suite.passed.length > 0) {
+        report += `  PASSED: ${suite.passed.join(', ')}\n`;
+      }
+      report += '\n';
+    });
     
     return report;
   }
@@ -284,6 +331,41 @@ class TestRunner {
   }
   
   logResults(results) {
-    GASDBLogger.info('\n' + results.getDetailedReport());
+    // First output detailed individual test results
+    this.logDetailedResults(results);
+    
+    // Then output compact summary at the end for easy tail access
+    GASDBLogger.info(results.getCompactReport());
+  }
+  
+  logDetailedResults(results) {
+    const total = results.results.length;
+    const passed = results.getPassed().length;
+    const failed = results.getFailed().length;
+    const passRate = results.getPassRate().toFixed(1);
+    
+    GASDBLogger.info(`\n=== DETAILED TEST RESULTS ===`);
+    GASDBLogger.info(`Tests: ${total}, Passed: ${passed}, Failed: ${failed}, Pass Rate: ${passRate}%`);
+    GASDBLogger.info('');
+    
+    // Log each test result individually
+    results.results.forEach(result => {
+      const status = result.passed ? 'PASS' : 'FAIL';
+      const time = `(${result.executionTime}ms)`;
+      
+      if (result.passed) {
+        GASDBLogger.info(`${status}: ${result.suiteName}.${result.testName} ${time}`);
+      } else {
+        GASDBLogger.info(`${status}: ${result.suiteName}.${result.testName} ${time}`);
+        if (result.error) {
+          GASDBLogger.info(`  Error: ${result.error.message}`);
+          if (result.error.stack) {
+            GASDBLogger.info(`  Stack: ${result.error.stack}`);
+          }
+        }
+      }
+    });
+    
+    GASDBLogger.info('');
   }
 }
