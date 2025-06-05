@@ -6,8 +6,6 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 
 ## Documentation Reference
 
-**Project Documentation**: `./docs/`
-
 ## Core Principles
 
 **TDD**: Red-Green-Refactor cycle. Write failing tests first, implement minimal passing code, then refactor.  
@@ -18,12 +16,13 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 ## File Structure
 
 ```
-src/core/: Database.js, Collection.js, MasterIndex.js
-src/components/: DocumentOperations.js, CollectionMetadata.js, FileOperations.js, FileCache.js  
-src/engines/: QueryEngine.js, UpdateEngine.js
+docs/developer: docs for all implemented features
+src/core/: MasterIndex.js
+src/components/:FileOperations.js
 src/services/: FileService.js
 src/utils/: GASDBLogger.js, ErrorHandler.js, IdGenerator.js
-tests/unit/, tests/integration/, tests/test-framework/
+tests/unit/, tests/integration/ 
+tests/test-framework/AssertionUtilities.js, TestExecution.js, TestRunner.js, UnifiedTestExecution.js
 ```
 
 ## Naming Conventions
@@ -67,21 +66,6 @@ methodName(param) {
 **Error codes**: `'DOCUMENT_NOT_FOUND'`, `'LOCK_TIMEOUT'`  
 **Message format**: `"Operation failed: specific reason"`
 
-## Test Structure
-
-```javascript
-function testClassNameMethod() {
-  const suite = new TestSuite('ClassName.methodName');
-  
-  suite.addTest('should behaviour when condition', () => {
-    // Arrange
-    // Act
-    // Assert
-  });
-  
-  return suite.run();
-}
-```
 
 ## Implementation Requirements
 
@@ -92,8 +76,6 @@ function testClassNameMethod() {
 
 Follow TDD process: Write failing tests → Implement minimal code → Refactor → Verify completion criteria → Proceed to next section.
 
-## Agent Workflow
-
-1. Run `./clasp-watch-sh` so that the code is automatically pushed to Google Apps Script.
-2. Implement the code requested.
-3. Run the tests using `./test-runnner.sh`.
+## After you have implemented the code
+1. Run `clasp push`.
+2. Ask the user to run the tests and await further instructions.
