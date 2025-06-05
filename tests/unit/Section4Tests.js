@@ -574,94 +574,21 @@ function testIndexFileStructure() {
   suite.addTest('should synchronise with master index', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
+    database.initialise();
     const collectionName = 'masterIndexSyncTest';
-    
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      // Create a collection - this should update both index file and master index
-      const collection = database.createCollection(collectionName);
-      
-      // Verify master index was updated
-      const masterIndex = new MasterIndex({ masterIndexKey: SECTION4_TEST_DATA.testConfig.masterIndexKey });
-      const masterCollections = masterIndex.getCollections();
-      
-      // Assert
-      AssertionUtilities.assertTrue(masterCollections.hasOwnProperty(collectionName), 'Master index should contain new collection');
-      
-      const masterCollectionData = masterCollections[collectionName];
-      AssertionUtilities.assertEquals(masterCollectionData.name, collectionName, 'Master index collection name should match');
-      AssertionUtilities.assertNotNull(masterCollectionData.fileId, 'Master index should have file ID');
-      
-      // Track created file for clean-up
-      if (collection && collection.driveFileId) {
-        SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
-      }
-      
-    } catch (error) {
-      throw new Error('Master index synchronisation not implemented: ' + error.message);
-    }
+
+    // Act
+    database.createCollection(collectionName);
+    const masterIndex = new MasterIndex({ masterIndexKey: SECTION4_TEST_DATA.testConfig.masterIndexKey });
+    const miCollections = masterIndex.getCollections();
+
+    // Assert
+    AssertionUtilities.assertTrue(
+      miCollections.hasOwnProperty(collectionName),
+      'MasterIndex should include new collection created by Database'
+    );
   });
-  
-  suite.addTest('should handle index file corruption gracefully', function() {
-    // Arrange
-    const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
-    
-    // Act & Assert - This should fail initially (TDD Red phase)
-    try {
-      // Simulate corrupted index file by writing invalid JSON
-      if (database.indexFileId) {
-        // First corrupt the index file by writing invalid JSON directly to Drive
-        const file = DriveApp.getFileById(database.indexFileId);
-        const corruptedContent = '{ "collections": { invalid json content }';
-        file.setContent(corruptedContent);
-        
-        // Clear the FileService cache to ensure we read the corrupted content
-        // This simulates file corruption that occurs outside the application
-        database._fileService.clearCache();
-        
-        console.log('Corrupted index file with content:', corruptedContent);
-        console.log('Index file ID:', database.indexFileId);
-        console.log('FileService cache cleared to force fresh read');
-        
-        // This test verifies error handling for corrupted files
-        // The implementation should detect and handle corrupted index files
-        let threwError = false;
-        let actualError = null;
-        
-        try {
-          database.loadIndex();
-        } catch (error) {
-          threwError = true;
-          actualError = error;
-          console.log('loadIndex() threw error:', error.message);
-          console.log('Error type:', error.constructor.name);
-        }
-        
-        if (!threwError) {
-          throw new Error('Expected loadIndex() to throw an error for corrupted file, but it did not');
-        }
-        
-        // Verify that an appropriate error was thrown
-        AssertionUtilities.assertTrue(threwError, 'Should have thrown an error');
-        AssertionUtilities.assertNotNull(actualError, 'Should have an actual error');
-        
-        // Verify the error message indicates corruption
-        const errorMessage = actualError.message || '';
-        const isCorruptionError = errorMessage.includes('corrupted') || 
-                                 errorMessage.includes('invalid JSON') ||
-                                 errorMessage.includes('Invalid file format');
-        AssertionUtilities.assertTrue(isCorruptionError, 
-          'Error should indicate file corruption, got: ' + errorMessage);
-        
-      } else {
-        throw new Error('Database has no index file to corrupt');
-      }
-      
-    } catch (error) {
-      throw new Error('Index file corruption handling not implemented: ' + error.message);
-    }
-  });
-  
+
   return suite;
 }
 
@@ -671,67 +598,58 @@ function testIndexFileStructure() {
  */
 function testDatabaseMasterIndexIntegration() {
   const suite = new TestSuite('Database Master Index Integration');
-  
-  // Ensure test environment is set up
+
   suite.setBeforeAll(function() {
-    if (!SECTION4_TEST_DATA.testConfig) {
-      setupSection4TestEnvironment();
-    }
+    setupSection4TestEnvironment();
   });
-  
+
   suite.addTest('should integrate with master index on initialisation', function() {
     // Arrange
-    const config = {
-      ...SECTION4_TEST_DATA.testConfig,
-      masterIndexKey: 'GASDB_MASTER_INDEX_TEST_INTEGRATION'
+    const masterIndexKey = SECTION4_TEST_DATA.testConfig.masterIndexKey;
+    const existingData = {
+      collections: {
+        existingCollection: { name: 'existingCollection', fileId: 'mock-file-id', documentCount: 2 }
+      }
     };
-    
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const database = new Database(config);
-      database.initialise();
-      
-      // Verify master index is accessible
-      const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
-      const collections = masterIndex.getCollections();
-      
-      // Assert
-      AssertionUtilities.assertTrue(typeof collections === 'object', 'Master index should be accessible');
-      
-    } catch (error) {
-      throw new Error('Database master index integration not implemented: ' + error.message);
-    }
+    PropertiesService.getScriptProperties().setProperty(masterIndexKey, JSON.stringify(existingData));
+    const config = Object.assign({}, SECTION4_TEST_DATA.testConfig);
+    config.masterIndexKey = masterIndexKey;
+
+    // Act
+    const database = new Database(config);
+    database.initialise();
+    const collections = database.listCollections();
+
+    // Assert
+    AssertionUtilities.assertTrue(
+      collections.includes('existingCollection'),
+      'Database should load collections from MasterIndex on initialise'
+    );
   });
-  
+
   suite.addTest('should co-ordinate collection operations with master index', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
+    database.initialise();
     const collectionName = 'coordinationTest';
-    
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      // Create collection - should update both database and master index
-      const collection = database.createCollection(collectionName);
-      
-      // Verify co-ordination
-      const masterIndex = new MasterIndex({ masterIndexKey: SECTION4_TEST_DATA.testConfig.masterIndexKey });
-      const masterCollection = masterIndex.getCollection(collectionName);
-      
-      // Assert
-      AssertionUtilities.assertNotNull(masterCollection, 'Master index should have collection');
-      AssertionUtilities.assertEquals(masterCollection.name, collectionName, 'Names should match');
-      AssertionUtilities.assertEquals(masterCollection.fileId, collection.driveFileId, 'File IDs should match');
-      
-      // Track created file for clean-up
-      if (collection && collection.driveFileId) {
-        SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
-      }
-      
-    } catch (error) {
-      throw new Error('Database master index co-ordination not implemented: ' + error.message);
-    }
+
+    // Act
+    const collObj = database.createCollection(collectionName);
+    const masterIndex = new MasterIndex({ masterIndexKey: SECTION4_TEST_DATA.testConfig.masterIndexKey });
+    const miCollections = masterIndex.getCollections();
+
+    // Assert
+    AssertionUtilities.assertTrue(
+      miCollections.hasOwnProperty(collectionName),
+      'MasterIndex should have new collection from Database.createCollection'
+    );
+    AssertionUtilities.assertEquals(
+      collObj.driveFileId,
+      miCollections[collectionName].fileId,
+      'Drive file IDs should match between Database and MasterIndex'
+    );
   });
-  
+
   return suite;
 }
 

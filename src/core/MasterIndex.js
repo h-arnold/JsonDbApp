@@ -19,6 +19,8 @@ class MasterIndex {
       version: config.version || 1
     };
     
+    this._logger = GASDBLogger.createComponentLogger('MasterIndex'); // Initialize logger
+
     this._data = {
       version: this._config.version,
       lastUpdated: new Date().toISOString(),
@@ -142,6 +144,35 @@ class MasterIndex {
       
       return collection;
     });
+  }
+
+  /**
+   * Remove a collection from the master index
+   * @param {string} name - Collection name to remove
+   * @returns {boolean} True if collection was found and removed, false otherwise
+   */
+  removeCollection(name) {
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      this._logger.warn('Invalid collection name for removal', { name });
+      return false;
+    }
+
+    this._loadFromScriptProperties(); // Ensure current data
+
+    if (this._data.collections && this._data.collections.hasOwnProperty(name)) {
+      delete this._data.collections[name];
+      // Also remove any associated locks for the collection
+      if (this._data.locks && this._data.locks.hasOwnProperty(name)) {
+        delete this._data.locks[name];
+      }
+      this._addToModificationHistory(name, 'removeCollection', { name });
+      this.save(); // Persist changes
+      this._logger.info('Collection removed from master index', { name });
+      return true;
+    }
+    
+    this._logger.warn('Attempted to remove non-existent collection from master index', { name });
+    return false;
   }
   
   /**

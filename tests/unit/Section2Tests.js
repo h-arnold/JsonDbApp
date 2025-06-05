@@ -98,6 +98,40 @@ function testMasterIndexFunctionality() {
     AssertionUtilities.assertEquals(collection.documentCount, 10, 'Document count should be updated');
     AssertionUtilities.assertEquals(collection.lastModified, '2025-06-02T10:00:00Z', 'Last modified should be updated');
   });
+
+  const S2_MI_FUNCTIONALITY_TEST_KEY = 'GASDB_MI_S2_Functionality_TestKey';
+
+  suite.addTest('should remove a collection and persist the removal', function() {
+    // Arrange
+    // Ensure a clean slate for this test key
+    PropertiesService.getScriptProperties().deleteProperty(S2_MI_FUNCTIONALITY_TEST_KEY);
+    const masterIndex = new MasterIndex({ masterIndexKey: S2_MI_FUNCTIONALITY_TEST_KEY });
+    
+    const collectionName = 'collectionToRemove';
+    const collectionData = {
+      name: collectionName,
+      fileId: 'file-id-to-remove',
+      documentCount: 3
+    };
+    masterIndex.addCollection(collectionName, collectionData);
+    masterIndex.save(); // Save the addition
+
+    // Act
+    const result = masterIndex.removeCollection(collectionName); // This method needs to be implemented in MasterIndex.js
+    masterIndex.save(); // Save the removal
+
+    // Assert
+    AssertionUtilities.assertTrue(result, 'removeCollection should return true if the collection existed and was removed');
+    AssertionUtilities.assertNull(masterIndex.getCollection(collectionName), 'getCollection should return null for a removed collection');
+
+    // Verify persistence by loading a new instance
+    const newMasterIndex = new MasterIndex({ masterIndexKey: S2_MI_FUNCTIONALITY_TEST_KEY });
+    const collectionsAfterRemoval = newMasterIndex.getCollections();
+    AssertionUtilities.assertFalse(collectionsAfterRemoval.hasOwnProperty(collectionName), 'Removed collection should not exist in a new instance after save');
+
+    // Clean up
+    PropertiesService.getScriptProperties().deleteProperty(S2_MI_FUNCTIONALITY_TEST_KEY);
+  });
   
   return suite;
 }

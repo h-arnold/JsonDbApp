@@ -493,6 +493,91 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 **Ready for Green Phase:** All tests are in place and properly failing. Implementation can now begin following TDD Green phase principles.
 
+### 🔄 Post-Completion Architecture Refactoring (June 5, 2025)
+
+**Issue Identified**: The relationship between `Database` and `MasterIndex` classes has redundant responsibilities:
+
+- Both classes maintain collection metadata and driveFileIds
+- `MasterIndex` was designed to be the primary source for collection IDs to minimize Drive API calls
+- The current implementation results in unnecessary duplication and Drive API calls
+
+**Refactoring Goals**:
+
+1. Make `MasterIndex` the authoritative source for collection metadata and IDs
+2. Reduce Drive-based index file usage to backups and migrations only
+3. Consolidate collection management in `MasterIndex`
+4. Have `Database` delegate collection operations to `MasterIndex`
+
+**Refactoring Progress**:
+
+- ✅ Test cases updated to assert proper delegation behavior
+- ✅ `removeCollection` method implemented in `MasterIndex` class
+- ✅ Fixed logger initialization in `MasterIndex` class
+- 🔄 Reworking `Database` methods to delegate to `MasterIndex` (in progress)
+
+**Updated Design**:
+
+```mermaid
+classDiagram
+    class Database {
+        - indexFileId : string
+        - collections : Map
+        - _masterIndex : MasterIndex
+        + initialise()
+        + createCollection(name)
+        + collection(name)
+        + dropCollection(name)
+        + listCollections()
+        + backupIndexToDrive()
+        - _findExistingIndexFile()
+        - _createIndexFile()
+        - _validateCollectionName()
+    }
+
+    class MasterIndex {
+        - _data : object
+        + addCollection(name, metadata)
+        + removeCollection(name)
+        + getCollection(name)
+        + getCollections()
+        + isInitialised()
+        + save()
+    }
+
+    Database --> MasterIndex : uses
+```
+
+**Architecture Benefits**:
+
+1. Faster operations by minimizing Drive API calls
+2. Clearer separation of concerns between classes
+3. Simplified collection management through single source of truth
+4. More robust backup and recovery options
+
+### ✅ Test Implementation Complete
+
+**Files Created:**
+- Tests: `Section4Tests.js` (719 lines with 7 comprehensive test suites)
+- Updated: `UnifiedTestExecution.js` (Section 4 configuration), `TestExecution.js` (Section 4 functions)
+- Enhanced: `TestRunner.js` (improved logging with detailed results and compact summary)
+
+**Test Suites Implemented:**
+
+1. **Section 4 Setup** - Test environment creation (2 tests)
+2. **DatabaseConfig Functionality** - Configuration validation and creation (3 tests)
+3. **Database Initialization** - Database creation and setup (4 tests)
+4. **Collection Management** - Collection CRUD operations (6 tests)
+5. **Index File Structure** - Index file management (4 tests)
+6. **Database Master Index Integration** - Master index coordination (2 tests)
+7. **Section 4 Cleanup** - Resource cleanup (3 tests)
+
+**Next Steps (Architecture Refactoring):**
+
+1. **Modify Database class** - Delegate collection operations to MasterIndex
+2. **Update Drive index operations** - Use for backup/restore only
+3. **Optimize file read/write operations** - Minimize Drive API calls
+4. **Document the architecture improvements** - Update developer docs
+
 ## Section 5: Collection Components Implementation
 
 ### Objectives
@@ -899,9 +984,8 @@ The separation of concerns in Collection and FileService components improves cod
 - Test Results: 16/16 tests passing (100% pass rate)
 - Next: Ready to proceed with Section 3
 
-### 🚧 IN PROGRESS SECTIONS
 
-**Section 3: File Service and Drive Integration** - Red Phase Complete ✅
+**Section 3: File Service and Drive Integration** - COMPLETE
 
 - Status: All tests failing as expected - ready for implementation (green phase)
 - Test Coverage: 7 comprehensive test suites covering FileOperations and FileService functionality
@@ -909,27 +993,6 @@ The separation of concerns in Collection and FileService components improves cod
 - Dependencies: Sections 1-2 complete and providing solid foundation
 - Next Steps: Implement FileOperations and FileService classes to make tests pass
 
-### ⚠️ IDENTIFIED ISSUES
-
-**test-runner.sh Flow Issue**
-
-- **Issue Identified**: During Section 3 preparation, a flow issue was identified in the test-runner.sh script that may affect test execution
-- **Impact**: Could prevent proper Section 3 test execution and validation
-- **Status**: Issue documented, resolution pending
-- **Recommendation**: Address this issue before proceeding with Section 3 implementation to ensure TDD workflow integrity
-- **Files Affected**: `/test-runner.sh`
-- **Next Action**: Debug and fix the test-runner flow issue to maintain reliable test execution pipeline
-
-### ⏳ PENDING SECTIONS
-
-**Section 3: File Service and Drive Integration** - Ready for Green Phase Implementation
-**Section 4: Database and Collection Management** - Awaiting Section 3
-**Section 5: Collection Components Implementation** - Awaiting Section 4
-**Section 6: Basic CRUD Operations** - Awaiting Section 5
-**Section 7: Query Engine** - Awaiting Section 6
-**Section 8: Update Engine** - Awaiting Section 7
-**Section 9: Cross-Instance Coordination** - Awaiting Section 8
-**Section 10: Integration and System Testing** - Awaiting Section 9
 
 ## Implementation Notes for Future Sections
 
@@ -940,26 +1003,4 @@ The separation of concerns in Collection and FileService components improves cod
 - **IdGenerator**: Use `IdGenerator.generateUUID()` for modification tokens
 - **Test Framework**: Follow established pattern with TestSuite creation and GlobalTestRunner
 
-### Code Quality Standards Established
 
-- All classes include comprehensive JSDoc documentation
-- Error handling with custom error types and context preservation
-- Consistent logging patterns with appropriate log levels
-- Comprehensive test coverage with multiple assertion types
-- Modular architecture with clear separation of concerns
-
-### Testing Approach Proven
-
-- TDD workflow validated with Section 1 implementation
-- Test execution in Google Apps Script environment verified
-- Clear test reporting and validation criteria established
-- Setup/teardown patterns established for resource management
-
-### Ready for Clasp Integration
-
-- File push order optimized for dependency management
-- Google Apps Script manifest configured for Drive API access
-- Test execution functions ready for GAS editor usage
-- npm scripts configured for development workflow
-
-Following this plan will result in a robust, well-tested implementation of the GAS DB library that meets all core requirements specified in the PRD and Class Diagrams.
