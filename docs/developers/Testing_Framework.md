@@ -58,7 +58,7 @@ For debugging purposes, you can run individual tests using the `runIndividualTes
 
 ```javascript
 // Run a specific test
-runIndividualTest(4, 'Database Initialization', 'should create database with valid config');
+runIndividualTest(4, 'Database Initialisation', 'should create database with valid config');
 
 // First, list available tests to see what's available
 listAvailableTests(4);
@@ -69,6 +69,57 @@ runIndividualTest(4, 'Collection Management', 'should create new collection');
 ```
 
 This is particularly useful when using the GAS debugger, as you can focus on just the test you're interested in without having to step through all the other tests.
+
+#### How Individual Test Running Works
+
+The individual test runner maintains proper test lifecycle by:
+
+1. **Finding the test suite**: Locates the specified suite within the section
+2. **Creating a temporary suite**: Copies only the specific test to a new TestSuite instance
+3. **Preserving lifecycle hooks**: Copies all `beforeAll`, `afterAll`, `beforeEach`, and `afterEach` hooks from the original suite
+4. **Running full lifecycle**: Executes the complete test lifecycle (setup → test → teardown) for just that one test
+
+```javascript
+// Example: Running an individual test preserves environment setup
+runIndividualTest(4, 'Database Config', 'should create config with default values');
+// This will:
+// 1. Execute setupTestEnvironment() via beforeAll hook
+// 2. Run only the specified test
+// 3. Execute cleanupTestEnvironment() via afterAll hook
+```
+
+#### Listing Available Tests
+
+Use `listAvailableTests()` to discover what tests are available for debugging:
+
+```javascript
+// List all tests in Section 4
+const section4Tests = listAvailableTests(4);
+Logger.log(section4Tests);
+
+// Example output:
+// {
+//   "success": true,
+//   "section": 4,
+//   "suites": {
+//     "Database Config": [
+//       "should create config with default values",
+//       "should create config with custom values",
+//       "should validate configuration parameters"
+//     ],
+//     "Database Initialisation": [
+//       "should create database with default configuration",
+//       "should create database with custom configuration",
+//       "should initialise database and create index file"
+//     ],
+//     "Collection Management": [
+//       "should create new collection",
+//       "should access existing collection",
+//       "should auto-create collection when configured"
+//     ]
+//   }
+// }
+```
 
 ## Class Reference
 
@@ -91,8 +142,8 @@ function validateSection4Setup() {
   return UnifiedTestExecution.validateSetup(4);
 }
 
-function initializeTestEnvironment() {
-  return UnifiedTestExecution.initializeEnvironment();
+function initialiseTestEnvironment() {
+  return UnifiedTestExecution.initialiseEnvironment();
 }
 
 function getAvailableTests() {
@@ -110,7 +161,7 @@ Manages configuration-driven test execution across different sections of the app
 - `runSuite(sectionNumber, suiteName)` – Run a specific test suite
 - `validateSetup(sectionNumber)` – Validate section component availability
 - `getAvailableTests()` – Get information about available tests
-- `initializeEnvironment()` – Check basic environment setup
+- `initialiseEnvironment()` – Check basic environment setup
 
 **Example:**
 
@@ -120,7 +171,7 @@ const results = UnifiedTestExecution.runSection(4);
 Logger.log(results.summary);
 
 // Run a specific test suite
-const suiteResults = UnifiedTestExecution.runSuite(4, 'Database Initialization');
+const suiteResults = UnifiedTestExecution.runSuite(4, 'Database Initialisation');
 ```
 
 ### TestRunner
@@ -138,7 +189,7 @@ Core test execution engine responsible for running test suites and tracking resu
 
 ```javascript
 const testRunner = new TestRunner();
-testRunner.addTestSuite(testDatabaseInitialization());
+testRunner.addTestSuite(testDatabaseInitialisation());
 testRunner.addTestSuite(testCollectionManagement());
 const results = testRunner.runAllTests();
 ```
@@ -244,30 +295,106 @@ suite.addTest('should perform specific behaviour', function() {
 });
 ```
 
-### Test Dependencies with Setup/Teardown
+### Test Environment Setup and Teardown
 
-Use hooks to manage shared resources:
+Use `beforeAll` and `afterAll` hooks to manage test environment lifecycle. Create dedicated setup and cleanup functions for shared resources:
 
 ```javascript
-function testDatabaseOperations() {
-  const suite = new TestSuite('Database Operations');
+// Global test data storage
+const TEST_DATA = {
+  testFolderId: null,
+  createdFileIds: [],
+  createdFolderIds: [],
+  testConfig: null
+};
+
+// Setup function called by beforeAll hooks
+function setupTestEnvironment() {
+  // Create test folder
+  const folder = DriveApp.createFolder('GASDB_Test_' + new Date().getTime());
+  TEST_DATA.testFolderId = folder.getId();
+  TEST_DATA.createdFolderIds.push(TEST_DATA.testFolderId);
   
-  let testFolder = null;
-  let testDb = null;
-  
-  suite.setBeforeAll(function() {
-    testFolder = DriveApp.createFolder('GASDB_Test_' + Date.now());
-    testDb = new Database({ rootFolderId: testFolder.getId() });
-    testDb.initialize();
-  });
-  
-  suite.setAfterAll(function() {
-    if (testFolder) {
-      testFolder.setTrashed(true);
+  // Prepare test configuration
+  TEST_DATA.testConfig = {
+    rootFolderId: TEST_DATA.testFolderId,
+    autoCreateCollections: true,
+    lockTimeout: 30000
+  };
+}
+
+// Cleanup function called by afterAll hooks
+function cleanupTestEnvironment() {
+  // Clean up created test files and folders
+  TEST_DATA.createdFileIds.forEach(fileId => {
+    try {
+      DriveApp.getFileById(fileId).setTrashed(true);
+    } catch (error) {
+      // Log but don't fail cleanup
     }
   });
   
-  // Tests that use the shared testDb...
+  TEST_DATA.createdFolderIds.forEach(folderId => {
+    try {
+      DriveApp.getFolderById(folderId).setTrashed(true);
+    } catch (error) {
+      // Log but don't fail cleanup
+    }
+  });
+}
+
+// Test suite with proper lifecycle management
+function testDatabaseConfig() {
+  const suite = new TestSuite('Database Config');
+  
+  // Setup test environment once before all tests
+  suite.setBeforeAll(function() {
+    setupTestEnvironment();
+  });
+  
+  // Cleanup after all tests
+  suite.setAfterAll(function() {
+    cleanupTestEnvironment();
+  });
+  
+  suite.addTest('should create config with default values', function() {
+    // Act
+    const config = new DatabaseConfig();
+    
+    // Assert
+    AssertionUtilities.assertNotNull(config);
+    AssertionUtilities.assertTrue(config.autoCreateCollections);
+  });
+  
+  return suite;
+}
+
+// Test suite that conditionally sets up environment
+function testCollectionOperations() {
+  const suite = new TestSuite('Collection Operations');
+  
+  // Conditionally set up environment if not already done
+  suite.setBeforeAll(function() {
+    if (!TEST_DATA.testConfig) {
+      setupTestEnvironment();
+    }
+  });
+  
+  suite.addTest('should create new collection', function() {
+    // Arrange
+    const database = new Database(TEST_DATA.testConfig);
+    
+    // Act
+    const collection = database.createCollection('testCollection');
+    
+    // Assert
+    AssertionUtilities.assertNotNull(collection);
+    
+    // Track created files for cleanup
+    if (collection?.driveFileId) {
+      TEST_DATA.createdFileIds.push(collection.driveFileId);
+    }
+  });
   
   return suite;
 }
@@ -320,7 +447,7 @@ class DatabaseConfig {
 
 ## Organising Tests
 
-### Section-Based Organisation
+### Section Organisation Structure
 
 The framework organises tests into sections, each focusing on a specific area of functionality:
 
@@ -331,21 +458,29 @@ The framework organises tests into sections, each focusing on a specific area of
 
 ### Test Suites Within Sections
 
-Each section contains multiple test suites, each testing a specific component or feature:
+Each section contains multiple test suites, each testing a specific component or feature. Use only business logic test suites in the run function:
 
 ```javascript
-// Sample organisation for Section 4
+// Good: Section run function with only business logic test suites
 function runSection4Tests() {
   const testRunner = new TestRunner();
   
-  // Add test suites in logical order
-  testRunner.addTestSuite(testSection4Setup());
-  testRunner.addTestSuite(testDatabaseConfigFunctionality());
-  testRunner.addTestSuite(testDatabaseInitialization());
+  // Add only actual test suites - setup/teardown handled by beforeAll/afterAll hooks
+  testRunner.addTestSuite(testDatabaseConfig());
+  testRunner.addTestSuite(testDatabaseInitialisation());
   testRunner.addTestSuite(testCollectionManagement());
   testRunner.addTestSuite(testIndexFileStructure());
-  testRunner.addTestSuite(testDatabaseMasterIndexIntegration());
-  testRunner.addTestSuite(testSection4Cleanup());
+  
+  return testRunner.runAllTests();
+}
+
+// Bad: Including setup/teardown as separate test suites (deprecated approach)
+function runSection4TestsBad() {
+  const testRunner = new TestRunner();
+  
+  testRunner.addTestSuite(testSection4Setup()); // Don't do this
+  testRunner.addTestSuite(testDatabaseConfig());
+  testRunner.addTestSuite(testSection4Cleanup()); // Don't do this
   
   return testRunner.runAllTests();
 }
@@ -353,11 +488,193 @@ function runSection4Tests() {
 
 ## Best Practices
 
-1. **Test Isolation** – Each test should be independent and not rely on other tests
-2. **Descriptive Names** – Use clear, descriptive names for tests and suites
-3. **Clean Up Resources** – Use setup/teardown to manage test resources
-4. **Test Edge Cases** – Include tests for error conditions and boundary values
-5. **Fail Fast** – Let tests fail clearly when preconditions are not met
+### 1. Test Isolation and Independence
+
+Each test should be independent and not rely on other tests:
+
+```javascript
+// Good: Independent test
+suite.addTest('should create collection', function() {
+  // Arrange
+  const database = new Database(TEST_DATA.testConfig);
+  const collectionName = 'independentTestCollection';
+  
+  // Act
+  const collection = database.createCollection(collectionName);
+  
+  // Assert
+  AssertionUtilities.assertNotNull(collection);
+  
+  // Track for cleanup
+  if (collection?.driveFileId) {
+    TEST_DATA.createdFileIds.push(collection.driveFileId);
+  }
+});
+
+// Bad: Test depends on previous test state
+suite.addTest('should access existing collection', function() {
+  // This assumes a collection was created in a previous test
+  const collection = database.getCollection('someCollection'); // May fail!
+  AssertionUtilities.assertNotNull(collection);
+});
+```
+
+### 2. Proper Environment Setup and Teardown
+
+Use `beforeAll` and `afterAll` hooks for shared resources, and conditional setup for dependent test suites:
+
+```javascript
+// Primary test suite handles full lifecycle
+function testDatabaseConfig() {
+  const suite = new TestSuite('Database Config');
+  
+  // Setup test environment once before all tests
+  suite.setBeforeAll(function() {
+    setupTestEnvironment();
+  });
+  
+  // Cleanup after all tests
+  suite.setAfterAll(function() {
+    cleanupTestEnvironment();
+  });
+  
+  // Tests...
+  
+  return suite;
+}
+
+// Dependent test suite conditionally sets up environment
+function testCollectionManagement() {
+  const suite = new TestSuite('Collection Management');
+  
+  // Conditionally set up environment if not already done
+  suite.setBeforeAll(function() {
+    if (!TEST_DATA.testConfig) {
+      setupTestEnvironment();
+    }
+  });
+  
+  // Tests...
+  
+  return suite;
+}
+```
+
+### 3. Resource Tracking for Cleanup
+
+Track all created resources during tests for proper cleanup:
+
+```javascript
+// Global storage for tracking test resources
+const TEST_DATA = {
+  testFolderId: null,
+  createdFileIds: [], // Track all files created during tests
+  createdFolderIds: [], // Track all folders created during tests
+  testConfig: null
+};
+
+// In tests, track resources as they're created
+suite.addTest('should create collection file', function() {
+  const collection = database.createCollection('testCollection');
+  
+  // Track the created file for cleanup
+  if (collection && collection.driveFileId) {
+    TEST_DATA.createdFileIds.push(collection.driveFileId);
+  }
+  
+  AssertionUtilities.assertNotNull(collection);
+});
+
+// Cleanup function handles all tracked resources
+function cleanupTestEnvironment() {
+  // Clean up all tracked files
+  TEST_DATA.createdFileIds.forEach(fileId => {
+    try {
+      DriveApp.getFileById(fileId).setTrashed(true);
+    } catch (error) {
+      // Log but don't fail cleanup
+    }
+  });
+  
+  // Clean up all tracked folders
+  TEST_DATA.createdFolderIds.forEach(folderId => {
+    try {
+      DriveApp.getFolderById(folderId).setTrashed(true);
+    } catch (error) {
+      // Log but don't fail cleanup
+    }
+  });
+}
+```
+
+### 4. Descriptive Test Names
+
+Use clear, descriptive names that explain the expected behaviour:
+
+```javascript
+// Good: Descriptive test names
+suite.addTest('should create DatabaseConfig with default values', function() { });
+suite.addTest('should throw error for invalid collection name', function() { });
+suite.addTest('should auto-create collection when configured', function() { });
+
+// Bad: Vague test names
+suite.addTest('test config', function() { });
+suite.addTest('test error', function() { });
+suite.addTest('test collection', function() { });
+```
+
+### 5. Comprehensive Error Testing
+
+Include tests for error conditions and boundary values:
+
+```javascript
+suite.addTest('should handle collection name validation', function() {
+  const database = new Database(TEST_DATA.testConfig);
+  
+  // Test invalid collection names
+  AssertionUtilities.assertThrows(() => {
+    database.createCollection('');
+  }, Error, 'Should throw error for empty collection name');
+  
+  AssertionUtilities.assertThrows(() => {
+    database.createCollection(null);
+  }, Error, 'Should throw error for null collection name');
+  
+  AssertionUtilities.assertThrows(() => {
+    database.createCollection('invalid/name');
+  }, Error, 'Should throw error for collection name with invalid characters');
+});
+```
+
+### 6. Section Organisation Structure
+
+Organise tests by logical sections and avoid setup/teardown test suites:
+
+```javascript
+// Good: Run function includes only business logic test suites
+function runSection4Tests() {
+  const testRunner = new TestRunner();
+  
+  // Add only actual test suites - setup/teardown handled by hooks
+  testRunner.addTestSuite(testDatabaseConfig());
+  testRunner.addTestSuite(testDatabaseInitialisation());
+  testRunner.addTestSuite(testCollectionManagement());
+  testRunner.addTestSuite(testIndexFileStructure());
+  
+  return testRunner.runAllTests();
+}
+
+// Bad: Including setup/teardown as separate test suites
+function runSection4TestsBad() {
+  const testRunner = new TestRunner();
+  
+  testRunner.addTestSuite(testSection4Setup()); // Don't do this
+  testRunner.addTestSuite(testDatabaseConfig());
+  testRunner.addTestSuite(testSection4Cleanup()); // Don't do this
+  
+  return testRunner.runAllTests();
+}
+```
 
 ## Troubleshooting
 
@@ -367,7 +684,7 @@ function runSection4Tests() {
    - Solution: Break tests into smaller suites or use continuation patterns
 
 2. **Drive API permission errors** – Tests that use DriveApp require proper permissions
-   - Solution: Run `initializeTestEnvironment()` to check permissions first
+   - Solution: Run `initialiseTestEnvironment()` to check permissions first
 
 3. **Test dependency failures** – When tests depend on each other
    - Solution: Use proper setup/teardown hooks and make tests independent

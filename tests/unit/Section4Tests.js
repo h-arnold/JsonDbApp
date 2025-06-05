@@ -5,7 +5,7 @@
  * - Database class implementation
  * - DatabaseConfig implementation 
  * - Collection creation and management
- * - Index file structure and synchronization
+ * - Index file structure and synchronisation
  * 
  * Following TDD: These tests should initially fail (Red phase)
  * Test flow: Setup -> Tests -> Cleanup
@@ -20,8 +20,8 @@ const SECTION4_TEST_DATA = {
   testFolderId: null,
   testFolderName: 'GASDB_Test_Section4_' + new Date().getTime(),
   testCollectionNames: ['testCollection1', 'testCollection2', 'tempCollection'],
-  createdFileIds: [], // Track all files created for cleanup
-  createdFolderIds: [], // Track all folders created for cleanup
+  createdFileIds: [], // Track all files created for clean-up
+  createdFolderIds: [], // Track all folders created for clean-up
   testConfig: null,
   testDatabase: null
 };
@@ -213,11 +213,11 @@ function testDatabaseConfigFunctionality() {
 }
 
 /**
- * Test Database class initialization
+ * Test Database class initialisation
  * Tests database creation with various configurations
  */
 function testDatabaseInitialization() {
-  const suite = new TestSuite('Database Initialization');
+  const suite = new TestSuite('Database Initialisation');
   
   // Ensure test environment is set up
   suite.setBeforeAll(function() {
@@ -259,7 +259,7 @@ function testDatabaseInitialization() {
     }
   });
   
-  suite.addTest('should initialize database and create index file', function() {
+  suite.addTest('should initialise database and create index file', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
     
@@ -271,7 +271,7 @@ function testDatabaseInitialization() {
       AssertionUtilities.assertNotNull(database.indexFileId, 'Index file should be created');
       AssertionUtilities.assertTrue(database.indexFileId.length > 10, 'Index file ID should be valid');
       
-      // Track created file for cleanup
+      // Track created file for clean-up
       SECTION4_TEST_DATA.testIndexFileId = database.indexFileId;
       SECTION4_TEST_DATA.createdFileIds.push(database.indexFileId);
       
@@ -280,7 +280,7 @@ function testDatabaseInitialization() {
     }
   });
   
-  suite.addTest('should handle initialization with existing index file', function() {
+  suite.addTest('should handle initialisation with existing index file', function() {
     // Arrange - Create a mock existing index file
     const existingIndexData = {
       collections: {
@@ -307,7 +307,7 @@ function testDatabaseInitialization() {
       AssertionUtilities.assertTrue(Array.isArray(collections), 'Should return array of collection names');
       
     } catch (error) {
-      throw new Error('Database initialization with existing data not implemented: ' + error.message);
+      throw new Error('Database initialisation with existing data not implemented: ' + error.message);
     }
   });
   
@@ -342,7 +342,7 @@ function testCollectionManagement() {
       AssertionUtilities.assertEquals(collection.name, collectionName, 'Collection name should match');
       AssertionUtilities.assertNotNull(collection.driveFileId, 'Collection should have drive file ID');
       
-      // Track created file for cleanup
+      // Track created file for clean-up
       SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
       
     } catch (error) {
@@ -382,7 +382,7 @@ function testCollectionManagement() {
       AssertionUtilities.assertNotNull(collection, 'Collection should be auto-created');
       AssertionUtilities.assertEquals(collection.name, collectionName, 'Collection name should match');
       
-      // Track created file for cleanup
+      // Track created file for clean-up
       if (collection.driveFileId) {
         SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
@@ -482,7 +482,7 @@ function testCollectionManagement() {
 
 /**
  * Test index file structure and operations
- * Tests central index file management and synchronization
+ * Tests central index file management and synchronisation
  */
 function testIndexFileStructure() {
   const suite = new TestSuite('Index File Structure');
@@ -491,6 +491,29 @@ function testIndexFileStructure() {
   suite.setBeforeAll(function() {
     if (!SECTION4_TEST_DATA.testConfig) {
       setupSection4TestEnvironment();
+    }
+  });
+  
+  // Ensure database is initialised with index file before each test
+  suite.setBeforeEach(function() {
+    if (!SECTION4_TEST_DATA.testDatabase) {
+      SECTION4_TEST_DATA.testDatabase = new Database(SECTION4_TEST_DATA.testConfig);
+    }
+    
+    // Initialise database if it doesn't have an index file
+    if (!SECTION4_TEST_DATA.testDatabase.indexFileId) {
+      try {
+        SECTION4_TEST_DATA.testDatabase.initialize();
+        
+        // Track the index file for clean-up
+        if (SECTION4_TEST_DATA.testDatabase.indexFileId) {
+          SECTION4_TEST_DATA.testIndexFileId = SECTION4_TEST_DATA.testDatabase.indexFileId;
+          SECTION4_TEST_DATA.createdFileIds.push(SECTION4_TEST_DATA.testDatabase.indexFileId);
+        }
+      } catch (error) {
+        // Expected to fail in TDD Red phase - continue with test
+        console.log('Database initialisation failed (expected in TDD Red phase):', error.message);
+      }
     }
   });
   
@@ -538,7 +561,7 @@ function testIndexFileStructure() {
       AssertionUtilities.assertDefined(collectionData.created, 'Collection should have created timestamp');
       AssertionUtilities.assertDefined(collectionData.lastModified, 'Collection should have lastModified timestamp');
       
-      // Track created file for cleanup
+      // Track created file for clean-up
       if (collection && collection.driveFileId) {
         SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
@@ -548,7 +571,7 @@ function testIndexFileStructure() {
     }
   });
   
-  suite.addTest('should synchronize with master index', function() {
+  suite.addTest('should synchronise with master index', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
     const collectionName = 'masterIndexSyncTest';
@@ -569,13 +592,13 @@ function testIndexFileStructure() {
       AssertionUtilities.assertEquals(masterCollectionData.name, collectionName, 'Master index collection name should match');
       AssertionUtilities.assertNotNull(masterCollectionData.fileId, 'Master index should have file ID');
       
-      // Track created file for cleanup
+      // Track created file for clean-up
       if (collection && collection.driveFileId) {
         SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
       
     } catch (error) {
-      throw new Error('Master index synchronization not implemented: ' + error.message);
+      throw new Error('Master index synchronisation not implemented: ' + error.message);
     }
   });
   
@@ -630,7 +653,7 @@ function testIndexFileStructure() {
 
 /**
  * Test database and master index integration
- * Tests coordination between database and master index
+ * Tests co-ordination between database and master index
  */
 function testDatabaseMasterIndexIntegration() {
   const suite = new TestSuite('Database Master Index Integration');
@@ -642,7 +665,7 @@ function testDatabaseMasterIndexIntegration() {
     }
   });
   
-  suite.addTest('should integrate with master index on initialization', function() {
+  suite.addTest('should integrate with master index on initialisation', function() {
     // Arrange
     const config = {
       ...SECTION4_TEST_DATA.testConfig,
@@ -666,7 +689,7 @@ function testDatabaseMasterIndexIntegration() {
     }
   });
   
-  suite.addTest('should coordinate collection operations with master index', function() {
+  suite.addTest('should co-ordinate collection operations with master index', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
     const collectionName = 'coordinationTest';
@@ -676,7 +699,7 @@ function testDatabaseMasterIndexIntegration() {
       // Create collection - should update both database and master index
       const collection = database.createCollection(collectionName);
       
-      // Verify coordination
+      // Verify co-ordination
       const masterIndex = new MasterIndex({ masterIndexKey: SECTION4_TEST_DATA.testConfig.masterIndexKey });
       const masterCollection = masterIndex.getCollection(collectionName);
       
@@ -685,13 +708,13 @@ function testDatabaseMasterIndexIntegration() {
       AssertionUtilities.assertEquals(masterCollection.name, collectionName, 'Names should match');
       AssertionUtilities.assertEquals(masterCollection.fileId, collection.driveFileId, 'File IDs should match');
       
-      // Track created file for cleanup
+      // Track created file for clean-up
       if (collection && collection.driveFileId) {
         SECTION4_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
       
     } catch (error) {
-      throw new Error('Database master index coordination not implemented: ' + error.message);
+      throw new Error('Database master index co-ordination not implemented: ' + error.message);
     }
   });
   
