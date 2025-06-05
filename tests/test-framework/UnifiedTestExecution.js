@@ -451,10 +451,10 @@ class UnifiedTestExecution {
   }
   
   /**
-   * Initialize test environment with basic checks
+   * initialise test environment with basic checks
    * @returns {Object} Initialization results
    */
-  static initializeEnvironment() {
+  static initialiseEnvironment() {
     try {
       GASDBLogger.info('Initializing GAS DB test environment...');
       

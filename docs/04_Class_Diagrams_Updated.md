@@ -16,7 +16,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 | - collections: Map<String, Collection>   |
 | - config: DatabaseConfig                 |
 +------------------------------------------+
-| + initialize(): void                     |
+| + initialise(): void                     |
 | + collection(name): Collection           |
 | + createCollection(name): Collection     |
 | + listCollections(): Array<String>       |

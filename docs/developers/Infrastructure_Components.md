@@ -66,7 +66,7 @@ A comprehensive logging utility providing structured logging with multiple level
 
 ```javascript
 // Basic logging
-GASDBLogger.info('Database initialized successfully');
+GASDBLogger.info('Database initialised successfully');
 GASDBLogger.error('Failed to read file', { fileId: 'abc123', error: 'Permission denied' });
 
 // Set log level

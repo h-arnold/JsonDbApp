@@ -16,21 +16,21 @@ class Database {
    * @throws {Error} When configuration is invalid
    */
   constructor(config = {}) {
-    // Initialize configuration
+    // initialise configuration
     if (config instanceof DatabaseConfig) {
       this.config = config;
     } else {
       this.config = new DatabaseConfig(config);
     }
     
-    // Initialize properties
+    // initialise properties
     this.indexFileId = null;
     this.collections = new Map();
     
-    // Initialize logging
+    // initialise logging
     this._logger = GASDBLogger.createComponentLogger('Database');
     
-    // Initialize services
+    // initialise services
     this._fileOps = new FileOperations(this._logger);
     this._fileService = new FileService(this._fileOps, this._logger);
     this._masterIndex = new MasterIndex({ 
@@ -44,7 +44,7 @@ class Database {
   }
   
   /**
-   * Initialize the database and create/load index file
+   * initialise the database and create/load index file
    * 
    * @throws {Error} When initialization fails
    */
@@ -251,7 +251,7 @@ class Database {
    */
   loadIndex() {
     if (!this.indexFileId) {
-      throw new Error('Database not initialized - no index file');
+      throw new Error('Database not initialised - no index file');
     }
     
     try {

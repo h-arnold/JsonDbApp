@@ -349,7 +349,7 @@ class ErrorHandler {
   }
 }
 
-// Initialize static properties after class declaration
+// initialise static properties after class declaration
 ErrorHandler.ErrorTypes = {
   GASDB_ERROR: GASDBError,
   DOCUMENT_NOT_FOUND: DocumentNotFoundError,

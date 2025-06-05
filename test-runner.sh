@@ -427,7 +427,7 @@ main() {
         print_header "$SCRIPT_NAME - $TIMESTAMP"
     fi
     
-    # Initialize log file
+    # initialise log file
     echo "GAS DB Test Execution Log - $TIMESTAMP" > "$LOG_FILE"
     
     # Check clasp prerequisites unless we're only retrieving logs

@@ -487,7 +487,7 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 - ✅ All test cases implemented and properly failing (TDD Red phase complete)
 - ⏳ All test cases pass (awaiting Green phase implementation)
-- ⏳ Database can be initialized with various configurations
+- ⏳ Database can be initialised with various configurations
 - ⏳ Collections can be created, accessed, listed, and deleted
 - ⏳ Index file is properly maintained and synchronized
 

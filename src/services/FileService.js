@@ -31,7 +31,7 @@ class FileService {
     this._maxCacheSize = 50;
     this._cacheEnabled = true;
     
-    this._logger.debug('FileService initialized', {
+    this._logger.debug('FileService initialised', {
       maxCacheSize: this._maxCacheSize,
       cacheEnabled: this._cacheEnabled
     });

@@ -214,7 +214,7 @@ class GASDBLogger {
   }
 }
 
-// Initialize static properties after class declaration
+// initialise static properties after class declaration
 GASDBLogger.LOG_LEVELS = {
   ERROR: 0,
   WARN: 1,

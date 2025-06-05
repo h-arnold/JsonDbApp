@@ -276,7 +276,7 @@ function testDatabaseInitialization() {
       SECTION4_TEST_DATA.createdFileIds.push(database.indexFileId);
       
     } catch (error) {
-      throw new Error('Database.initialize() not implemented: ' + error.message);
+      throw new Error('Database.initialise() not implemented: ' + error.message);
     }
   });
   
@@ -503,7 +503,7 @@ function testIndexFileStructure() {
     // Initialise database if it doesn't have an index file
     if (!SECTION4_TEST_DATA.testDatabase.indexFileId) {
       try {
-        SECTION4_TEST_DATA.testDatabase.initialize();
+        SECTION4_TEST_DATA.testDatabase.initialise();
         
         // Track the index file for clean-up
         if (SECTION4_TEST_DATA.testDatabase.indexFileId) {
@@ -610,13 +610,18 @@ function testIndexFileStructure() {
     try {
       // Simulate corrupted index file by writing invalid JSON
       if (database.indexFileId) {
-        // First corrupt the index file by writing invalid JSON
+        // First corrupt the index file by writing invalid JSON directly to Drive
         const file = DriveApp.getFileById(database.indexFileId);
         const corruptedContent = '{ "collections": { invalid json content }';
         file.setContent(corruptedContent);
         
+        // Clear the FileService cache to ensure we read the corrupted content
+        // This simulates file corruption that occurs outside the application
+        database._fileService.clearCache();
+        
         console.log('Corrupted index file with content:', corruptedContent);
         console.log('Index file ID:', database.indexFileId);
+        console.log('FileService cache cleared to force fresh read');
         
         // This test verifies error handling for corrupted files
         // The implementation should detect and handle corrupted index files
@@ -639,6 +644,15 @@ function testIndexFileStructure() {
         // Verify that an appropriate error was thrown
         AssertionUtilities.assertTrue(threwError, 'Should have thrown an error');
         AssertionUtilities.assertNotNull(actualError, 'Should have an actual error');
+        
+        // Verify the error message indicates corruption
+        const errorMessage = actualError.message || '';
+        const isCorruptionError = errorMessage.includes('corrupted') || 
+                                 errorMessage.includes('invalid JSON') ||
+                                 errorMessage.includes('Invalid file format');
+        AssertionUtilities.assertTrue(isCorruptionError, 
+          'Error should indicate file corruption, got: ' + errorMessage);
+        
       } else {
         throw new Error('Database has no index file to corrupt');
       }

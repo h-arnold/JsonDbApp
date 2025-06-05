@@ -20,7 +20,7 @@ class FileOperations {
     this._maxRetries = 3;
     this._retryDelayMs = 1000;
     
-    this._logger.debug('FileOperations initialized', {
+    this._logger.debug('FileOperations initialised', {
       maxRetries: this._maxRetries,
       retryDelayMs: this._retryDelayMs
     });

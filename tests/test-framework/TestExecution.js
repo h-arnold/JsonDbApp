@@ -99,11 +99,11 @@ function validateSection4Setup() {
 }
 
 /**
- * Initialize and test the basic environment
+ * initialise and test the basic environment
  * This function should be run first to ensure everything is set up correctly
  */
-function initializeTestEnvironment() {
-  return UnifiedTestExecution.initializeEnvironment();
+function initialiseTestEnvironment() {
+  return UnifiedTestExecution.initialiseEnvironment();
 }
 
 /**

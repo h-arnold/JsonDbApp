@@ -53,8 +53,8 @@ Use the included test automation script for streamlined development:
 Run tests directly in Google Apps Script editor:
 
 ```javascript
-// Initialize environment
-initializeTestEnvironment();
+// initialise environment
+initialiseTestEnvironment();
 
 // Quick validation
 validateSection1Setup();

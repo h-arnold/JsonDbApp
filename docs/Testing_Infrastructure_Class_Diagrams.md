@@ -24,7 +24,7 @@ This document contains class diagrams for the testing infrastructure required to
 | + runSuite(sectionNumber, suiteName): Object |
 | + validateSetup(sectionNumber): Object   |
 | + getAvailableTests(): Object            |
-| + initializeEnvironment(): Object        |
+| + initialiseEnvironment(): Object        |
 +------------------------------------------+
 ```
 

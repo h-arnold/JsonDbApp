@@ -89,7 +89,7 @@ A master index stored in ScriptProperties provides cross-instance coordination:
 4.1 Database Interface
 
 ```javascript
-// Initialize database
+// initialise database
 const db = new GASDB(config);
 
 // Access or create collection
