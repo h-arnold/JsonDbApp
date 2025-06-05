@@ -1,8 +1,8 @@
 /**
- * Streamlined test execution entry point for Google Apps Script
+ * Test execution entry point for Google Apps Script
  * 
- * This file provides simplified functions that delegate to the unified test execution system.
- * All duplication has been eliminated in favor of configuration-driven execution.
+ * This file provides functions that use the unified test execution system.
+ * Configuration-driven execution enables consistent test handling.
  */
 
 /**
@@ -133,8 +133,6 @@ GAS DB Test Functions:
 2. Run validateSection1Setup(), validateSection2Setup(), validateSection3Setup(), and validateSection4Setup() for quick checks
 3. Run testSection1(), testSection2(), testSection3(), and testSection4() for comprehensive testing
 4. Use testSuite(sectionNumber, suiteName) for targeted testing
-
-Note: Section 2, 3, and 4 tests are designed to FAIL initially (TDD Red phase)
   `;
   
   GASDBLogger.info(helpText);

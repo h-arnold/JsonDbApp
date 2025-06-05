@@ -1,8 +1,8 @@
 /**
- * UnifiedTestExecution - Streamlined test execution system for GAS DB
+ * UnifiedTestExecution - Configuration-driven test execution system for GAS DB
  * 
- * This replaces the duplicated code in TestExecution.js with a unified,
- * configuration-driven approach that eliminates redundancy.
+ * This system provides a consistent approach to test execution through
+ * configuration-based test management.
  */
 
 /**

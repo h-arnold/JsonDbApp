@@ -4,6 +4,8 @@
  * This class provides a high-level interface for file operations,
  * including batch operations, intelligent caching, and optimised
  * Drive API usage patterns. Built on top of FileOperations.
+ * 
+ * NOTE: For now, caching is not implemented but will be at a later stage.
  */
 
 /**
