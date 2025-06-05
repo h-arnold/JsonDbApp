@@ -22,8 +22,8 @@ src/core/: Database.js, Collection.js, MasterIndex.js
 src/components/: DocumentOperations.js, CollectionMetadata.js, FileOperations.js, FileCache.js  
 src/engines/: QueryEngine.js, UpdateEngine.js
 src/services/: FileService.js
-src/utils/: Logger.js (GASDBLogger), ErrorHandler.js, IdGenerator.js
-tests/unit/, tests/integration/, tests/utils/
+src/utils/: GASDBLogger.js, ErrorHandler.js, IdGenerator.js
+tests/unit/, tests/integration/, tests/test-framework/
 ```
 
 ## Naming Conventions
