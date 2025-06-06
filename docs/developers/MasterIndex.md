@@ -28,38 +28,52 @@
     - [Basic Operations](#basic-operations)
     - [Locking Pattern](#locking-pattern)
     - [Conflict Resolution](#conflict-resolution)
+  - [Integration with Database Class](#integration-with-database-class)
+    - [Collection Lifecycle Integration](#collection-lifecycle-integration)
+    - [Data Synchronisation](#data-synchronisation)
+    - [Locking Coordination](#locking-coordination)
   - [Error Types](#error-types)
   - [Best Practices](#best-practices)
 
 ## Overview
 
-The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management.
+The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. Following the Section 4 refactoring, `MasterIndex` serves as the **primary source of truth** for collection metadata, with the `Database` class delegating all collection management operations to it.
 
 **Key Responsibilities:**
 
 - Cross-instance coordination via ScriptProperties
 - Virtual locking for collection access
 - Conflict detection using modification tokens
-- Collection metadata management
+- Collection metadata management (primary source of truth)
+- Integration with Database class for collection lifecycle management
 
 **Storage:** ScriptProperties with key `GASDB_MASTER_INDEX`
+
+**Integration with Database Class:**
+The `Database` class delegates collection operations to `MasterIndex`:
+- Collection creation, access, and deletion
+- Collection listing and metadata retrieval
+- Backup synchronisation to Drive-based index files
 
 ## Core Workflow
 
 ### Collection Access Protocol
 
+Database class collection access follows this protocol when delegating to MasterIndex:
+
 ```javascript
-// 1. Acquire virtual lock
+// 1. Database.collection() or Database.createCollection() delegates to MasterIndex
+// 2. Acquire virtual lock for thread safety
 const acquired = masterIndex.acquireLock('users', operationId);
 
-// 2. Check for conflicts
+// 3. Check for conflicts (if updating existing collection)
 const hasConflict = masterIndex.hasConflict('users', expectedToken);
 
-// 3. Perform operations (if no conflicts)
-// 4. Update metadata with new modification token
+// 4. Perform operations (Database coordinates with Drive operations)
+// 5. Update metadata with new modification token
 masterIndex.updateCollectionMetadata('users', updates);
 
-// 5. Release lock
+// 6. Release lock
 masterIndex.releaseLock('users', operationId);
 ```
 
@@ -117,18 +131,20 @@ constructor(config = {})
 
 #### `addCollection(name, metadata)`
 
-Adds collection to master index.
+Adds collection to master index. Called by `Database.createCollection()` during collection creation.
 
 - `name` (String): Collection name
 - `metadata` (Object): Collection metadata (fileId, documentCount, etc.)
 - **Returns:** Collection data object
 - **Throws:** `CONFIGURATION_ERROR` for invalid name
+- **Database Integration:** Primary method used by Database class to register new collections
 
 #### `getCollection(name)` / `getCollections()`
 
-Retrieves collection metadata.
+Retrieves collection metadata. Used by `Database.collection()` and `Database.listCollections()` to access collection information.
 
 - **Returns:** Collection object or collections map
+- **Database Integration:** Called by Database class methods to check for existing collections before creation or access
 
 #### `updateCollectionMetadata(name, updates)`
 
@@ -139,10 +155,11 @@ Updates collection metadata with new modification token.
 
 #### `removeCollection(name)`
 
-Removes a collection from the master index.
+Removes a collection from the master index. Called by `Database.dropCollection()` during collection deletion.
 
 - `name` (String): Collection name to remove
 - **Returns:** Boolean - `true` if the collection was removed, `false` otherwise
+- **Database Integration:** Used by Database class to remove collections from the primary metadata store
 
 #### `getCollections()`
 
@@ -154,9 +171,10 @@ Retrieves all collections in the master index.
 
 #### `acquireLock(collectionName, operationId)`
 
-Acquires virtual lock for collection.
+Acquires virtual lock for collection. Used by Database class before performing collection operations.
 
 - **Returns:** `true` if successful, `false` if already locked
+- **Database Integration:** Called by Database methods during collection creation, modification, and deletion
 
 #### `releaseLock(collectionName, operationId)`
 
@@ -193,18 +211,19 @@ Validates token format (timestamp-randomstring).
 ### Basic Operations
 
 ```javascript
+// Typically called via Database class, not directly
 const masterIndex = new MasterIndex();
 
-// Add collection
+// Database.createCollection() triggers this workflow:
 const collection = masterIndex.addCollection('users', {
   fileId: 'abc123',
   documentCount: 0
 });
 
-// Get collection
+// Database.collection() and Database.listCollections() use:
 const users = masterIndex.getCollection('users');
 
-// Update metadata
+// Collection operations trigger metadata updates:
 masterIndex.updateCollectionMetadata('users', {
   documentCount: 5
 });
@@ -235,6 +254,60 @@ if (masterIndex.hasConflict('users', expectedToken)) {
     newData, 'LAST_WRITE_WINS');
 } else {
   masterIndex.updateCollectionMetadata('users', newData);
+}
+```
+
+## Integration with Database Class
+
+The `MasterIndex` serves as the primary source of truth for collection metadata, working closely with the `Database` class in the following ways:
+
+### Collection Lifecycle Integration
+
+**Creation Flow:**
+
+1. `Database.createCollection()` validates collection name
+2. Database creates Drive file for collection data
+3. Database calls `MasterIndex.addCollection()` to register metadata
+4. Database updates Drive-based index file as backup
+5. Database caches collection object in memory
+
+**Access Flow:**
+
+1. `Database.collection()` checks in-memory cache first
+2. If not cached, Database calls `MasterIndex.getCollection()`
+3. If not in MasterIndex, Database falls back to Drive index file
+4. Auto-creation triggers if enabled and collection doesn't exist
+
+**Deletion Flow:**
+
+1. `Database.dropCollection()` removes from memory cache
+2. Database calls `MasterIndex.removeCollection()` to update metadata
+3. Database deletes Drive file and updates index file
+
+### Data Synchronisation
+
+The Database class maintains consistency between MasterIndex and Drive-based storage:
+
+- **Primary Operations:** MasterIndex handles all metadata operations
+- **Backup Operations:** Database synchronises to Drive index file via `backupIndexToDrive()`
+- **Recovery Operations:** Database can restore from Drive index to MasterIndex if needed
+
+### Locking Coordination
+
+Database class uses MasterIndex locking for thread safety:
+
+```javascript
+// Example from Database.createCollection()
+const operationId = 'create_' + Date.now();
+if (this._masterIndex.acquireLock(name, operationId)) {
+  try {
+    // Perform Drive operations
+    const driveFileId = this._fileService.createFile(fileName, data, folderId);
+    // Update MasterIndex
+    this._masterIndex.addCollection(name, { fileId: driveFileId });
+  } finally {
+    this._masterIndex.releaseLock(name, operationId);
+  }
 }
 ```
 

@@ -14,6 +14,8 @@ Make sure you've enabled the DriveAPI in your Google Cloud project. This is cruc
 
 - [**Testing Framework**](./Testing_Framework.md) - Comprehensive guide to the GAS DB testing infrastructure, including AssertionUtilities and TestRunner classes
 - [**Infrastructure Components**](./Infrastructure_Components.md) - Complete reference for logging, error handling, and ID generation utilities
+- [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex
+- [**DatabaseConfig**](./DatabaseConfig.md) - Database configuration management with validation and defaults
 - [**MasterIndex**](./MasterIndex.md) - Cross-instance coordination system using ScriptProperties for virtual locking and conflict detection
 - [**test-runner.sh Documentation**](./test-runner.sh.md) - Automated testing script for streamlined development workflow
 - [**clasp-watch.sh Documentation**](./clasp-watch.sh.md) - Continuous deployment script for automatic file watching and pushing to Google Apps Script
@@ -22,6 +24,8 @@ Make sure you've enabled the DriveAPI in your Google Cloud project. This is cruc
 
 - **Testing Framework**: Learn to write effective tests using AssertionUtilities and TestRunner
 - **Infrastructure Components**: Use GASDBLogger, ErrorHandler, and IdGenerator in your code
+- **Database**: Main entry point for database operations, collection management, and index file coordination
+- **DatabaseConfig**: Configuration validation, defaults, and management for database instances
 - **MasterIndex**: Understand cross-instance coordination, virtual locking, and conflict resolution
 - **test-runner.sh**: Streamline development with automated testing and deployment
 - **clasp-watch.sh**: Manage continuous deployment with automatic file watching and clasp authentication

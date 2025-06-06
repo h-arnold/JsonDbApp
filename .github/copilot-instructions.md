@@ -81,3 +81,5 @@ Follow TDD process: Write failing tests → Implement minimal code → Refactor 
 ## After you have implemented the code
 1. Run `clasp push`.
 2. Ask the user to run the tests and await further instructions.
+
+** REMEMBER **: Always write using British English
