@@ -6,7 +6,6 @@
  * - Default and custom values
  * - Parameter validation
  * 
- * Migrated from Section4Tests.js → testDatabaseConfigFunctionality()
  */
 
 // Global test data storage for DatabaseConfig tests
