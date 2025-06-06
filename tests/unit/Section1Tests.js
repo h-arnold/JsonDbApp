@@ -9,9 +9,9 @@ function runEnvironmentTests() {
   // Test clasp configuration
   suite.addTest('testClaspConfiguration', function() {
     // Test that clasp.json exists and has required properties
-    AssertionUtilities.assertTrue(typeof TestRunner !== 'undefined', 'TestRunner class should be available');
-    AssertionUtilities.assertTrue(typeof GASDBLogger !== 'undefined', 'GASDBLogger should be available');
-    AssertionUtilities.assertTrue(typeof ErrorHandler !== 'undefined', 'ErrorHandler should be available');
+    TestFramework.assertTrue(typeof GASDBLogger !== 'undefined', 'GASDBLogger should be available');
+    TestFramework.assertTrue(typeof ErrorHandler !== 'undefined', 'ErrorHandler should be available');
+    TestFramework.assertTrue(typeof TestFramework !== 'undefined', 'TestFramework should be available');
   });
   
   // Test Google Drive access permissions
@@ -19,9 +19,9 @@ function runEnvironmentTests() {
     try {
       // Try to access Drive API - this will fail if permissions aren't set up
       const folders = DriveApp.getFolders();
-      AssertionUtilities.assertTrue(true, 'Drive API access successful');
+      TestFramework.assertTrue(true, 'Drive API access successful');
     } catch (error) {
-      AssertionUtilities.assertTrue(false, `Drive API access failed: ${error.message}`);
+      TestFramework.assertTrue(false, `Drive API access failed: ${error.message}`);
     }
   });
   
