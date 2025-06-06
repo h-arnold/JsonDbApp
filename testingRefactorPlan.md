@@ -172,6 +172,148 @@ tests/
 - Reduced duplication and improved resource management.
 - Consistent, reliable test execution and reporting.
 
-## 7. Next Steps
-- Review this plan with the team.
-- Begin implementation following the migration steps above.
+## 8. Refactor Migration Checklist
+
+### **📋 File Migration Overview**
+- [ ] Create new `tests/framework/` directory
+- [ ] Create unified `TestFramework.js` file
+- [ ] Migrate all functionality from 4 existing files
+- [ ] Validate no functionality is lost
+
+---
+
+### **🔄 Class Migration from TestRunner.js**
+
+#### **TestResult Class**
+- [ ] Migrate constructor: `TestResult(suiteName, testName, passed, error, executionTime)`
+- [ ] Migrate properties: `suiteName`, `testName`, `passed`, `error`, `executionTime`, `timestamp`
+- [ ] Migrate `toString()` method with status, time, error details
+
+#### **TestResults Class**
+- [ ] Migrate constructor: `TestResults()`
+- [ ] Migrate `results[]` array property
+- [ ] Migrate `addResult(result)` method
+- [ ] Migrate `getPassed()` method
+- [ ] Migrate `getFailed()` method  
+- [ ] Migrate `getPassRate()` method
+- [ ] Migrate `getSummary()` method
+- [ ] Migrate `getDetailedReport()` method
+- [ ] Migrate `getCompactReport()` method
+
+#### **TestSuite Class**
+- [ ] Migrate constructor: `TestSuite(name, tests)`
+- [ ] Migrate properties: `name`, `tests`, `beforeAll`, `afterAll`, `beforeEach`, `afterEach`
+- [ ] Migrate `addTest(name, fn)` method
+- [ ] Migrate `setBeforeAll(fn)` method
+- [ ] Migrate `setAfterAll(fn)` method
+- [ ] Migrate `setBeforeEach(fn)` method
+- [ ] Migrate `setAfterEach(fn)` method
+
+#### **TestRunner Class**
+- [ ] Migrate constructor: `TestRunner()`
+- [ ] Migrate `testSuites[]` property
+- [ ] Migrate `addTestSuite(suite)` method
+- [ ] Migrate `runAllTests()` method
+- [ ] Migrate `runSuite(suite)` method
+- [ ] Migrate `runTest(suite, testName, testFn)` method
+- [ ] Migrate hook execution logic (beforeAll, afterAll, beforeEach, afterEach)
+
+---
+
+### **🧪 Static Methods Migration from AssertionUtilities.js**
+
+#### **Basic Assertions**
+- [ ] Migrate `assertEquals(expected, actual, message)` with error handling
+- [ ] Migrate `assertNotEquals(expected, actual, message)` with error handling
+- [ ] Migrate `assertTrue(condition, message)` with error handling
+- [ ] Migrate `assertFalse(condition, message)` with error handling
+
+#### **Type Assertions**
+- [ ] Migrate `assertDefined(value, message)` with error handling
+- [ ] Migrate `assertUndefined(value, message)` with error handling
+- [ ] Migrate `assertNull(value, message)` with error handling
+- [ ] Migrate `assertNotNull(value, message)` with error handling
+
+#### **Advanced Assertions**
+- [ ] Migrate `assertThrows(fn, errorType, message)` with optional error type checking
+- [ ] Migrate `assertContains(array, element, message)` with array validation
+- [ ] Migrate `assertMatches(string, regex, message)` with type validation
+
+---
+
+### **⚙️ Configuration Migration from UnifiedTestExecution.js**
+
+#### **TEST_SECTIONS Configuration**
+- [ ] Migrate Section 1 configuration (Environment, Utility, Framework tests)
+- [ ] Migrate Section 2 configuration (MasterIndex functionality tests)
+- [ ] Migrate Section 3 configuration (File operations tests)
+- [ ] Migrate Section 4 configuration (Database integration tests)
+- [ ] Migrate validation logic for each section
+
+#### **UnifiedTestExecution Class Methods**
+- [ ] Migrate `runSection(sectionNumber)` method
+- [ ] Migrate `runSuite(sectionNumber, suiteName)` method
+- [ ] Migrate `runIndividualTest(sectionNumber, suiteName, testName)` method
+- [ ] Migrate `listSectionTests(sectionNumber)` method
+- [ ] Migrate `validateSetup(sectionNumber)` method
+- [ ] Migrate `initialiseEnvironment()` method
+- [ ] Migrate `getAvailableTests()` method
+
+---
+
+### **🚀 Entry Point Migration from TestExecution.js**
+
+#### **Section Functions**
+- [ ] Migrate `testSection1()` function
+- [ ] Migrate `testSection2()` function
+- [ ] Migrate `testSection3()` function
+- [ ] Migrate `testSection4()` function
+
+#### **Utility Functions**
+- [ ] Migrate `testSuite(sectionNumber, suiteName)` function
+- [ ] Migrate `runIndividualTest(sectionNumber, suiteName, testName)` function
+- [ ] Migrate `listAvailableTests(sectionNumber)` function
+
+#### **Validation Functions**
+- [ ] Migrate `validateSection1Setup()` function
+- [ ] Migrate `validateSection2Setup()` function
+- [ ] Migrate `validateSection3Setup()` function
+- [ ] Migrate `validateSection4Setup()` function
+- [ ] Migrate `initialiseTestEnvironment()` function
+- [ ] Migrate `getAvailableTests()` function
+
+---
+
+### **✅ Migration Validation**
+
+#### **Functionality Verification**
+- [ ] All TestRunner.js classes work identically in new framework
+- [ ] All AssertionUtilities.js methods work identically in new framework  
+- [ ] All UnifiedTestExecution.js methods work identically in new framework
+- [ ] All TestExecution.js functions work identically in new framework
+
+#### **API Compatibility**
+- [ ] Existing test files can use new framework without changes
+- [ ] All method signatures remain identical
+- [ ] All error handling behaviour preserved
+- [ ] All return value structures preserved
+
+#### **Testing Validation**
+- [ ] Run existing tests with new framework
+- [ ] Verify all tests pass as before
+- [ ] Check that individual test debugging still works
+- [ ] Verify resource cleanup still functions
+
+---
+
+### **🧹 Cleanup**
+- [ ] Remove `tests/test-framework/AssertionUtilities.js` 
+- [ ] Remove `tests/test-framework/TestRunner.js`
+- [ ] Remove `tests/test-framework/UnifiedTestExecution.js`
+- [ ] Remove `tests/test-framework/TestExecution.js`
+- [ ] Update any imports/references to point to new `TestFramework.js`
+
+## 9. Next Steps
+- Review this implementation checklist with the team.
+- Begin implementation following the TDD approach outlined in the coding instructions.
+- Execute checklist items systematically, validating each section before proceeding.
