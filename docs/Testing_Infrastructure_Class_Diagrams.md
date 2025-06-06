@@ -5,6 +5,7 @@
 This document contains class diagrams for the testing infrastructure required to implement Test-Driven Development (TDD) for the GAS DB library. These testing components are designed to work within the Google Apps Script environment and feature a consolidated framework approach with static assertion utilities.
 
 **Key Features:**
+
 - **TestFramework**: Main consolidated testing framework with environment management
 - **Global Convenience Functions**: Simplified access patterns through global functions
 - **Integrated Environment Management**: Built-in validation and resource tracking
@@ -217,4 +218,3 @@ This document contains class diagrams for the testing infrastructure required to
 - **No Mock Infrastructure**: Real Google Apps Script APIs are used directly
 - **No TestEnvironment Class**: Environment management is integrated into TestFramework
 - **Simplified Architecture**: More streamlined with fewer classes and clearer responsibilities
-

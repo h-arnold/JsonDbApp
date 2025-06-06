@@ -1,696 +1,670 @@
-# GAS-DB Testing Framework Documentation
+# Testing Framework Developer Documentation
 
 ## Overview
 
-The GAS-DB Testing Framework provides a robust, extensible system for testing Google Apps Script applications. It follows Test-Driven Development principles and offers a structured approach to organising and executing tests through a unified interface.
+The GAS DB Testing Framework is a comprehensive Test-Driven Development (TDD) infrastructure designed specifically for Google Apps Script environments. It provides MongoDB-like testing patterns with automatic environment validation, resource management, and detailed reporting capabilities.
 
-## Core Components
+## Key Features
 
-The framework consists of the following key components:
+- **TDD-Ready**: Red-Green-Refactor workflow support
+- **Environment Management**: Automatic GAS API validation and resource tracking
+- **Comprehensive Assertions**: Static assertion utilities with detailed error messages
+- **Lifecycle Hooks**: beforeAll, afterAll, beforeEach, afterEach support
+- **Resource Cleanup**: Automatic tracking and cleanup of test files
+- **Detailed Reporting**: Suite-based reporting with execution times and comprehensive output
 
-1. **Test Execution Interface** – Entry points for running tests via the Apps Script UI
-2. **Unified Test Execution** – Configuration-driven test execution system
-3. **Test Runner** – Core test execution engine
-4. **Test Suites** – Collections of related tests
-5. **Assertion Utilities** – Methods for verifying expected behaviour
-6. **Test Results** – Test outcome tracking and reporting
+## Framework Architecture
 
-## Getting Started
+The testing framework consists of several key components:
 
-### Basic Test Structure
+- **TestFramework**: Main orchestrator for test execution and environment management
+- **TestSuite**: Collection of related tests with lifecycle hooks
+- **AssertionUtilities**: Static assertion methods for test validation
+- **TestResult/TestResults**: Result data structures with comprehensive reporting
+- **TestRunner**: Global convenience functions for easy access
 
-Tests in GAS-DB follow this basic structure:
+## Basic Workflow
+
+### 1. Create a Test Suite
 
 ```javascript
-function testMyFeature() {
-  const suite = new TestSuite('My Feature Tests');
+// Create a new test suite
+const suite = new TestSuite('MyComponent Tests');
+
+// Add tests to the suite
+suite.addTest('should create component correctly', function() {
+  // Arrange
+  const config = { setting: 'value' };
   
-  suite.addTest('should perform specific behaviour', function() {
-    // Arrange
-    const myObject = new MyClass();
-    
-    // Act
-    const result = myObject.doSomething();
-    
-    // Assert
-    AssertionUtilities.assertEquals('expected result', result);
-  });
+  // Act
+  const component = new MyComponent(config);
   
-  return suite;
-}
-```
-
-### Running Tests
-
-Tests are executed by calling one of the exposed functions in the Apps Script editor:
-
-- `testSection1()` – Run all Section 1 tests
-- `testSection2()` – Run all Section 2 tests
-- `testSection3()` – Run all Section 3 tests
-- `testSection4()` – Run all Section 4 tests
-- `testSuite(sectionNumber, suiteName)` – Run a specific test suite
-- `runIndividualTest(sectionNumber, suiteName, testName)` – Run a specific test for debugging
-- `listAvailableTests(sectionNumber)` – List all available tests in a section
-
-### Running Individual Tests for Debugging
-
-For debugging purposes, you can run individual tests using the `runIndividualTest` function:
-
-```javascript
-// Run a specific test
-runIndividualTest(4, 'Database Initialisation', 'should create database with valid config');
-
-// First, list available tests to see what's available
-listAvailableTests(4);
-// This will show you all suites and tests in section 4
-
-// Then run the specific test you want to debug
-runIndividualTest(4, 'Collection Management', 'should create new collection');
-```
-
-This is particularly useful when using the GAS debugger, as you can focus on just the test you're interested in without having to step through all the other tests.
-
-#### How Individual Test Running Works
-
-The individual test runner maintains proper test lifecycle by:
-
-1. **Finding the test suite**: Locates the specified suite within the section
-2. **Creating a temporary suite**: Copies only the specific test to a new TestSuite instance
-3. **Preserving lifecycle hooks**: Copies all `beforeAll`, `afterAll`, `beforeEach`, and `afterEach` hooks from the original suite
-4. **Running full lifecycle**: Executes the complete test lifecycle (setup → test → teardown) for just that one test
-
-```javascript
-// Example: Running an individual test preserves environment setup
-runIndividualTest(4, 'Database Config', 'should create config with default values');
-// This will:
-// 1. Execute setupTestEnvironment() via beforeAll hook
-// 2. Run only the specified test
-// 3. Execute cleanupTestEnvironment() via afterAll hook
-```
-
-#### Listing Available Tests
-
-Use `listAvailableTests()` to discover what tests are available for debugging:
-
-```javascript
-// List all tests in Section 4
-const section4Tests = listAvailableTests(4);
-Logger.log(section4Tests);
-
-// Example output:
-// {
-//   "success": true,
-//   "section": 4,
-//   "suites": {
-//     "Database Config": [
-//       "should create config with default values",
-//       "should create config with custom values",
-//       "should validate configuration parameters"
-//     ],
-//     "Database Initialisation": [
-//       "should create database with default configuration",
-//       "should create database with custom configuration",
-//       "should initialise database and create index file"
-//     ],
-//     "Collection Management": [
-//       "should create new collection",
-//       "should access existing collection",
-//       "should auto-create collection when configured"
-//     ]
-//   }
-// }
-```
-
-## Class Reference
-
-### TestExecution
-
-Provides entry points for executing tests through the Google Apps Script editor.
-
-**Methods:**
-
-```javascript
-function testSection4() {
-  return UnifiedTestExecution.runSection(4);
-}
-
-function testSuite(sectionNumber, suiteName) {
-  return UnifiedTestExecution.runSuite(sectionNumber, suiteName);
-}
-
-function validateSection4Setup() {
-  return UnifiedTestExecution.validateSetup(4);
-}
-
-function initialiseTestEnvironment() {
-  return UnifiedTestExecution.initialiseEnvironment();
-}
-
-function getAvailableTests() {
-  return UnifiedTestExecution.getAvailableTests();
-}
-```
-
-### UnifiedTestExecution
-
-Manages configuration-driven test execution across different sections of the application.
-
-**Methods:**
-
-- `runSection(sectionNumber)` – Run all tests for a specific section
-- `runSuite(sectionNumber, suiteName)` – Run a specific test suite
-- `validateSetup(sectionNumber)` – Validate section component availability
-- `getAvailableTests()` – Get information about available tests
-- `initialiseEnvironment()` – Check basic environment setup
-
-**Example:**
-
-```javascript
-// Run all Database tests
-const results = UnifiedTestExecution.runSection(4);
-Logger.log(results.summary);
-
-// Run a specific test suite
-const suiteResults = UnifiedTestExecution.runSuite(4, 'Database Initialisation');
-```
-
-### TestRunner
-
-Core test execution engine responsible for running test suites and tracking results.
-
-**Methods:**
-
-- `addTestSuite(suite)` – Add a test suite to the runner
-- `runAllTests()` – Run all test suites
-- `runTestSuite(name)` – Run a specific test suite
-- `runTest(suiteName, testName)` – Run a specific test
-
-**Example:**
-
-```javascript
-const testRunner = new TestRunner();
-testRunner.addTestSuite(testDatabaseInitialisation());
-testRunner.addTestSuite(testCollectionManagement());
-const results = testRunner.runAllTests();
-```
-
-### TestSuite
-
-Represents a collection of related tests with common setup and teardown procedures.
-
-**Methods:**
-
-- `addTest(name, testFn)` – Add a test to the suite
-- `setBeforeEach(fn)` – Set a function to run before each test
-- `setAfterEach(fn)` – Set a function to run after each test
-- `setBeforeAll(fn)` – Set a function to run once before all tests
-- `setAfterAll(fn)` – Set a function to run once after all tests
-- `runTests()` – Run all tests in the suite
-- `runTest(name)` – Run a specific test
-
-**Example:**
-
-```javascript
-function testDatabaseFunctionality() {
-  const suite = new TestSuite('Database Functionality');
-  
-  let testDb = null;
-  
-  suite.setBeforeAll(function() {
-    // Setup that runs once before all tests
-    testDb = createTestDatabase();
-  });
-  
-  suite.setAfterAll(function() {
-    // Cleanup that runs once after all tests
-    cleanupTestDatabase(testDb);
-  });
-  
-  suite.addTest('should create collection', function() {
-    const collection = testDb.createCollection('testCollection');
-    AssertionUtilities.assertNotNull(collection);
-  });
-  
-  return suite;
-}
-```
-
-### AssertionUtilities
-
-Provides methods to verify expected behaviours during test execution.
-
-**Key Methods:**
-
-- `assertEquals(expected, actual, message)` – Assert that values are equal
-- `assertNotEquals(expected, actual, message)` – Assert that values are not equal
-- `assertTrue(condition, message)` – Assert that a condition is true
-- `assertFalse(condition, message)` – Assert that a condition is false
-- `assertDefined(value, message)` – Assert that a value is not undefined
-- `assertNotNull(value, message)` – Assert that a value is not null
-- `assertThrows(fn, errorType, message)` – Assert that a function throws an error
-
-**Example:**
-
-```javascript
-// Basic assertions
-AssertionUtilities.assertEquals(42, calculator.add(20, 22));
-AssertionUtilities.assertTrue(user.isLoggedIn(), 'User should be logged in');
-
-// Error assertions
-AssertionUtilities.assertThrows(() => {
-  database.createCollection('');
-}, Error, 'Should throw error for empty collection name');
-```
-
-### TestResults
-
-Aggregates and summarises test execution results.
-
-**Methods:**
-
-- `addResult(result)` – Add a test result
-- `getPassed()` – Get passed tests
-- `getFailed()` – Get failed tests
-- `getPassRate()` – Get pass rate percentage
-- `getSummary()` – Get summary of test results
-- `getDetailedReport()` – Get detailed test report
-- `getCompactReport()` – Get compact test report
-
-## Test Structure Patterns
-
-### Arrange-Act-Assert Pattern
-
-Follow this pattern for clear, maintainable tests:
-
-```javascript
-suite.addTest('should perform specific behaviour', function() {
-  // Arrange – Set up the test conditions
-  const user = new User('John');
-  
-  // Act – Perform the action being tested
-  user.grantPermission('read');
-  
-  // Assert – Verify the expected outcome
-  AssertionUtilities.assertTrue(user.hasPermission('read'));
+  // Assert
+  TestFramework.assertNotNull(component, 'Component should be created');
+  TestFramework.assertEquals(config.setting, component.config.setting, 'Config should match');
 });
 ```
 
-### Test Environment Setup and Teardown
+### 2. Register and Run Tests
 
-Use `beforeAll` and `afterAll` hooks to manage test environment lifecycle. Create dedicated setup and cleanup functions for shared resources:
+```javascript
+// Register the suite with the framework
+const testFramework = new TestFramework();
+testFramework.registerTestSuite(suite);
+
+// Run all tests
+const results = testFramework.runAllTests();
+
+// Or run specific suite
+const results = testFramework.runTestSuite('MyComponent Tests');
+
+// Or run single test
+const results = testFramework.runSingleTest('MyComponent Tests', 'should create component correctly');
+```
+
+### 3. Using Global Convenience Functions
+
+```javascript
+// Alternative approach using global functions
+registerTestSuite(suite);
+const results = runAllTests();
+```
+
+## Practical Examples
+
+### Basic Component Test
+
+Here's a real example from the IdGenerator tests:
+
+```javascript
+function createIdGeneratorTestSuite() {
+  const suite = new TestSuite('IdGenerator Tests');
+  
+  // Test basic functionality
+  suite.addTest('testIdGeneratorBasicFunctionality', function() {
+    TestFramework.assertEquals('function', typeof IdGenerator.generateUUID, 'Should have generateUUID method');
+    TestFramework.assertEquals('function', typeof IdGenerator.generateTimestampId, 'Should have generateTimestampId method');
+    TestFramework.assertEquals('function', typeof IdGenerator.generateShortId, 'Should have generateShortId method');
+  });
+  
+  // Test uniqueness
+  suite.addTest('testIdGeneratorUniqueness', function() {
+    const id1 = IdGenerator.generateUUID();
+    const id2 = IdGenerator.generateUUID();
+    TestFramework.assertNotEquals(id1, id2, 'UUIDs should be unique');
+    
+    const timestampId1 = IdGenerator.generateTimestampId();
+    const timestampId2 = IdGenerator.generateTimestampId();
+    TestFramework.assertNotEquals(timestampId1, timestampId2, 'Timestamp IDs should be unique');
+  });
+  
+  return suite;
+}
+```
+
+### Test with Setup and Cleanup
+
+Here's an example from the Database tests showing resource management:
 
 ```javascript
 // Global test data storage
-const TEST_DATA = {
+const DATABASE_TEST_DATA = {
   testFolderId: null,
+  testFolderName: 'GASDB_Test_Database_' + new Date().getTime(),
+  createdFileIds: [],
+  createdFolderIds: []
+};
+
+function createDatabaseSetupTestSuite() {
+  const suite = new TestSuite('Database Setup - Create Test Environment');
+  
+  suite.addTest('should create test folder for Database tests', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('Database-Setup');
+    
+    // Act
+    try {
+      const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
+      DATABASE_TEST_DATA.testFolderId = folder.getId();
+      DATABASE_TEST_DATA.createdFolderIds.push(DATABASE_TEST_DATA.testFolderId);
+      
+      // Assert
+      TestFramework.assertDefined(DATABASE_TEST_DATA.testFolderId, 'Test folder should be created');
+      TestFramework.assertTrue(DATABASE_TEST_DATA.testFolderId.length > 0, 'Folder ID should not be empty');
+      
+      logger.info('Created test folder for Database', { 
+        folderId: DATABASE_TEST_DATA.testFolderId, 
+        name: DATABASE_TEST_DATA.testFolderName
+      });
+      
+    } catch (error) {
+      logger.error('Failed to create test folder for Database', { error: error.message });
+      throw error;
+    }
+  });
+  
+  return suite;
+}
+```
+
+### Test with Lifecycle Hooks
+
+```javascript
+function createTestSuiteWithHooks() {
+  const suite = new TestSuite('Component With Lifecycle');
+  
+  let testResource;
+  
+  // Setup before all tests in the suite
+  suite.setBeforeAll(function() {
+    testResource = createSharedResource();
+  });
+  
+  // Setup before each test
+  suite.setBeforeEach(function() {
+    testResource.reset();
+  });
+  
+  // Cleanup after each test
+  suite.setAfterEach(function() {
+    testResource.cleanup();
+  });
+  
+  // Cleanup after all tests
+  suite.setAfterAll(function() {
+    testResource.destroy();
+  });
+  
+  suite.addTest('should use shared resource', function() {
+    TestFramework.assertNotNull(testResource, 'Shared resource should be available');
+    testResource.doSomething();
+    TestFramework.assertTrue(testResource.isValid(), 'Resource should be valid after operation');
+  });
+  
+  return suite;
+}
+```
+
+### Error Testing
+
+```javascript
+suite.addTest('should throw error for invalid input', function() {
+  TestFramework.assertThrows(() => {
+    new MyComponent(null); // Should throw error
+  }, Error, 'Should throw error for null config');
+  
+  // Test specific error type
+  TestFramework.assertThrows(() => {
+    new MyComponent({ invalid: true });
+  }, InvalidArgumentError, 'Should throw InvalidArgumentError for invalid config');
+});
+```
+
+## API Reference
+
+### TestFramework Class
+
+The main framework orchestrator.
+
+#### Constructor
+
+```javascript
+new TestFramework()
+```
+
+Creates a new TestFramework instance with empty test suites, results tracking, and environment validation.
+
+#### Methods
+
+##### registerTestSuite(suite)
+
+- **Parameters**: `suite` (TestSuite) - The test suite to register
+- **Returns**: TestFramework instance for chaining
+- **Description**: Registers a test suite with the framework
+
+##### createTestSuite(name)
+
+- **Parameters**: `name` (string) - Name of the test suite
+- **Returns**: TestSuite instance for chaining
+- **Description**: Creates and registers a new test suite
+
+##### runAllTests()
+
+- **Returns**: TestResults with comprehensive results
+- **Description**: Runs all registered test suites with environment validation and cleanup
+
+##### runTestSuite(name)
+
+- **Parameters**: `name` (string) - Name of the test suite to run
+- **Returns**: TestResults for the specific suite
+- **Throws**: Error if suite not found
+- **Description**: Runs a specific test suite by name
+
+##### runSingleTest(suiteName, testName)
+
+- **Parameters**:
+  - `suiteName` (string) - Name of the test suite
+  - `testName` (string) - Name of the specific test
+- **Returns**: TestResults for the single test
+- **Throws**: Error if suite or test not found
+- **Description**: Runs a single test within a test suite
+
+##### listTests()
+
+- **Returns**: Object mapping suite names to array of test names
+- **Description**: Lists all available tests organised by suite
+
+##### validateEnvironment()
+
+- **Throws**: Error if environment validation fails
+- **Description**: Validates that the testing environment is properly set up
+
+##### trackResourceFile(fileId)
+
+- **Parameters**: `fileId` (string) - The file ID to track for cleanup
+- **Description**: Tracks a file for automatic cleanup after tests
+
+#### Static Assertion Methods
+
+All assertion methods are available as static methods on TestFramework:
+
+```javascript
+TestFramework.assertEquals(expected, actual, message)
+TestFramework.assertTrue(condition, message)
+// ... etc
+```
+
+### TestSuite Class
+
+Represents a collection of related tests with lifecycle hooks.
+
+#### Constructor
+
+```javascript
+new TestSuite(name)
+```
+
+- **Parameters**: `name` (string) - Name of the test suite
+
+#### Methods
+
+##### addTest(name, testFn)
+
+- **Parameters**:
+  - `name` (string) - Name of the test
+  - `testFn` (function) - Test function to execute
+- **Returns**: TestSuite instance for chaining
+- **Description**: Adds a test to the suite
+
+##### setBeforeEach(fn)
+
+- **Parameters**: `fn` (function) - Function to run before each test
+- **Returns**: TestSuite instance for chaining
+- **Description**: Sets function to run before each test in the suite
+
+##### setAfterEach(fn)
+
+- **Parameters**: `fn` (function) - Function to run after each test
+- **Returns**: TestSuite instance for chaining
+- **Description**: Sets function to run after each test in the suite
+
+##### setBeforeAll(fn)
+
+- **Parameters**: `fn` (function) - Function to run before all tests
+- **Returns**: TestSuite instance for chaining
+- **Description**: Sets function to run once before all tests in the suite
+
+##### setAfterAll(fn)
+
+- **Parameters**: `fn` (function) - Function to run after all tests
+- **Returns**: TestSuite instance for chaining
+- **Description**: Sets function to run once after all tests in the suite
+
+##### runTests()
+
+- **Returns**: Array of TestResult objects
+- **Description**: Runs all tests in the suite with lifecycle hooks
+
+##### runTest(name)
+
+- **Parameters**: `name` (string) - Name of the test to run
+- **Returns**: TestResult object
+- **Throws**: Error if test not found
+- **Description**: Runs a specific test by name
+
+##### hasTest(name)
+
+- **Parameters**: `name` (string) - Name of the test to check
+- **Returns**: boolean
+- **Description**: Checks if a test exists in the suite
+
+##### getTestNames()
+
+- **Returns**: Array of test names
+- **Description**: Gets all test names in the suite
+
+### AssertionUtilities Class
+
+Static assertion methods for test validation.
+
+#### Equality Assertions
+
+##### assertEquals(expected, actual, message)
+
+- **Parameters**:
+  - `expected` (any) - The expected value
+  - `actual` (any) - The actual value
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if values are not equal
+- **Description**: Asserts that two values are equal using strict equality (===)
+
+##### assertNotEquals(expected, actual, message)
+
+- **Parameters**:
+  - `expected` (any) - The value that should not match
+  - `actual` (any) - The actual value
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if values are equal
+- **Description**: Asserts that two values are not equal
+
+#### Boolean Assertions
+
+##### assertTrue(condition, message)
+
+- **Parameters**:
+  - `condition` (boolean) - The condition to test
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if condition is false
+- **Description**: Asserts that a condition is true
+
+##### assertFalse(condition, message)
+
+- **Parameters**:
+  - `condition` (boolean) - The condition to test
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if condition is true
+- **Description**: Asserts that a condition is false
+
+#### Null/Undefined Assertions
+
+##### assertNull(value, message)
+
+- **Parameters**:
+  - `value` (any) - The value to test
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if value is not null
+- **Description**: Asserts that a value is null
+
+##### assertNotNull(value, message)
+
+- **Parameters**:
+  - `value` (any) - The value to test
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if value is null
+- **Description**: Asserts that a value is not null
+
+##### assertDefined(value, message)
+
+- **Parameters**:
+  - `value` (any) - The value to test
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if value is undefined
+- **Description**: Asserts that a value is defined (not undefined)
+
+##### assertUndefined(value, message)
+
+- **Parameters**:
+  - `value` (any) - The value to test
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if value is not undefined
+- **Description**: Asserts that a value is undefined
+
+#### Exception Assertions
+
+##### assertThrows(fn, errorType, message)
+
+- **Parameters**:
+  - `fn` (function) - The function that should throw
+  - `errorType` (function, optional) - Expected error constructor
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if function doesn't throw or throws wrong type
+- **Description**: Asserts that a function throws an error, optionally of a specific type
+
+#### Collection Assertions
+
+##### assertContains(array, element, message)
+
+- **Parameters**:
+  - `array` (Array) - The array to search
+  - `element` (any) - The element to find
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if array doesn't contain element
+- **Description**: Asserts that an array contains a specific element
+
+##### assertMatches(string, regex, message)
+
+- **Parameters**:
+  - `string` (string) - The string to test
+  - `regex` (RegExp) - The regular expression to match
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if string doesn't match regex
+- **Description**: Asserts that a string matches a regular expression
+
+### TestResult Class
+
+Represents the result of a single test execution.
+
+#### Constructor
+
+```javascript
+new TestResult(suiteName, testName, passed, error, executionTime)
+```
+
+- **Parameters**:
+  - `suiteName` (string) - Name of the test suite
+  - `testName` (string) - Name of the test
+  - `passed` (boolean) - Whether the test passed
+  - `error` (Error, optional) - Error object if test failed
+  - `executionTime` (number) - Execution time in milliseconds
+
+#### Properties
+
+- **suiteName**: Name of the test suite
+- **testName**: Name of the test
+- **passed**: Boolean indicating if test passed
+- **error**: Error object if test failed
+- **executionTime**: Execution time in milliseconds
+- **timestamp**: Date when test was executed
+
+#### Methods
+
+##### toString()
+
+- **Returns**: String representation of the test result
+- **Description**: Formats the test result for display
+
+### TestResults Class
+
+Aggregates multiple test results with comprehensive reporting.
+
+#### Constructor
+
+```javascript
+new TestResults()
+```
+
+#### Methods
+
+##### addResult(result)
+
+- **Parameters**: `result` (TestResult) - Test result to add
+- **Description**: Adds a test result to the collection
+
+##### finish()
+
+- **Description**: Marks the test run as finished and records end time
+
+##### getPassed()
+
+- **Returns**: Array of passed TestResult objects
+- **Description**: Gets all passed test results
+
+##### getFailed()
+
+- **Returns**: Array of failed TestResult objects
+- **Description**: Gets all failed test results
+
+##### getPassRate()
+
+- **Returns**: Number (percentage)
+- **Description**: Calculates the pass rate as a percentage
+
+##### getTotalExecutionTime()
+
+- **Returns**: Number (milliseconds)
+- **Description**: Gets total execution time from start to finish
+
+##### getSummary()
+
+- **Returns**: String summary of test results
+- **Description**: Gets a brief summary of test results
+
+##### getComprehensiveReport()
+
+- **Returns**: String with detailed test report
+- **Description**: Gets a comprehensive report with all test details organised by suite
+
+## Global Convenience Functions
+
+These functions provide easy access to the global TestFramework instance:
+
+### runAllTests()
+
+- **Returns**: TestResults
+- **Description**: Runs all tests using the global framework
+
+### runTestSuite(name)
+
+- **Parameters**: `name` (string) - Suite name
+- **Returns**: TestResults
+- **Description**: Runs a specific test suite
+
+### runSingleTest(suiteName, testName)
+
+- **Parameters**:
+  - `suiteName` (string) - Suite name
+  - `testName` (string) - Test name
+- **Returns**: TestResults
+- **Description**: Runs a single test
+
+### listTests()
+
+- **Returns**: Object mapping suite names to test names
+- **Description**: Lists all available tests
+
+### registerTestSuite(suite)
+
+- **Parameters**: `suite` (TestSuite) - Suite to register
+- **Description**: Registers a test suite with global framework
+
+### createTestSuite(name)
+
+- **Parameters**: `name` (string) - Suite name
+- **Returns**: TestSuite
+- **Description**: Creates and registers a new test suite
+
+### getTestFramework()
+
+- **Returns**: TestFramework
+- **Description**: Gets the global framework instance
+
+## Best Practices
+
+### 1. Test Organisation
+
+- Create separate test files for each component (`ComponentNameTest.js`)
+- Use descriptive test function names (`testComponentInitialisation`)
+- Group related tests in test suites
+- Use setup and teardown functions for resource management
+
+### 2. Assertion Patterns
+
+```javascript
+// Use descriptive messages
+TestFramework.assertEquals(expected, actual, 'Config should match input parameters');
+
+// Test both positive and negative cases
+TestFramework.assertTrue(component.isValid(), 'Component should be valid after creation');
+TestFramework.assertFalse(component.isDestroyed(), 'Component should not be destroyed initially');
+
+// Use specific error types when testing exceptions
+TestFramework.assertThrows(() => {
+  new Component(null);
+}, InvalidArgumentError, 'Should throw InvalidArgumentError for null config');
+```
+
+### 3. Resource Management
+
+```javascript
+// Track files for automatic cleanup
+const testFile = DriveApp.createFile('test.json', '{}');
+testFramework.trackResourceFile(testFile.getId());
+
+// Use global test data objects for complex setups
+const TEST_DATA = {
   createdFileIds: [],
   createdFolderIds: [],
   testConfig: null
 };
-
-// Setup function called by beforeAll hooks
-function setupTestEnvironment() {
-  // Create test folder
-  const folder = DriveApp.createFolder('GASDB_Test_' + new Date().getTime());
-  TEST_DATA.testFolderId = folder.getId();
-  TEST_DATA.createdFolderIds.push(TEST_DATA.testFolderId);
-  
-  // Prepare test configuration
-  TEST_DATA.testConfig = {
-    rootFolderId: TEST_DATA.testFolderId,
-    autoCreateCollections: true,
-    lockTimeout: 30000
-  };
-}
-
-// Cleanup function called by afterAll hooks
-function cleanupTestEnvironment() {
-  // Clean up created test files and folders
-  TEST_DATA.createdFileIds.forEach(fileId => {
-    try {
-      DriveApp.getFileById(fileId).setTrashed(true);
-    } catch (error) {
-      // Log but don't fail cleanup
-    }
-  });
-  
-  TEST_DATA.createdFolderIds.forEach(folderId => {
-    try {
-      DriveApp.getFolderById(folderId).setTrashed(true);
-    } catch (error) {
-      // Log but don't fail cleanup
-    }
-  });
-}
-
-// Test suite with proper lifecycle management
-function testDatabaseConfig() {
-  const suite = new TestSuite('Database Config');
-  
-  // Setup test environment once before all tests
-  suite.setBeforeAll(function() {
-    setupTestEnvironment();
-  });
-  
-  // Cleanup after all tests
-  suite.setAfterAll(function() {
-    cleanupTestEnvironment();
-  });
-  
-  suite.addTest('should create config with default values', function() {
-    // Act
-    const config = new DatabaseConfig();
-    
-    // Assert
-    AssertionUtilities.assertNotNull(config);
-    AssertionUtilities.assertTrue(config.autoCreateCollections);
-  });
-  
-  return suite;
-}
-
-// Test suite that conditionally sets up environment
-function testCollectionOperations() {
-  const suite = new TestSuite('Collection Operations');
-  
-  // Conditionally set up environment if not already done
-  suite.setBeforeAll(function() {
-    if (!TEST_DATA.testConfig) {
-      setupTestEnvironment();
-    }
-  });
-  
-  suite.addTest('should create new collection', function() {
-    // Arrange
-    const database = new Database(TEST_DATA.testConfig);
-    
-    // Act
-    const collection = database.createCollection('testCollection');
-    
-    // Assert
-    AssertionUtilities.assertNotNull(collection);
-    
-    // Track created files for cleanup
-    if (collection?.driveFileId) {
-      TEST_DATA.createdFileIds.push(collection.driveFileId);
-    }
-  });
-  
-  return suite;
-}
 ```
 
-## TDD Workflow with GAS-DB Framework
+### 4. TDD Workflow
 
-1. **Write Test First** – Create a test that defines the expected behaviour
-2. **Run the Test** – Verify it fails (Red phase)
-3. **Implement Minimal Code** – Write code to make the test pass
-4. **Run the Test Again** – Verify it passes (Green phase)
-5. **Refactor** – Improve code while keeping the test passing
-6. **Repeat** – Continue with the next feature
-
-### Example TDD Workflow
+1. **Red**: Write a failing test first
+2. **Green**: Write minimal code to make it pass
+3. **Refactor**: Improve code while keeping tests green
 
 ```javascript
-// 1. Write a test for DatabaseConfig class
-function testDatabaseConfigFunctionality() {
-  const suite = new TestSuite('DatabaseConfig Functionality');
-  
-  suite.addTest('should create DatabaseConfig with default values', function() {
-    // This will fail initially (Red phase)
-    const config = new DatabaseConfig();
-    
-    AssertionUtilities.assertNotNull(config);
-    AssertionUtilities.assertTrue(config.autoCreateCollections);
-    AssertionUtilities.assertEquals(config.lockTimeout, 30000);
-  });
-  
-  return suite;
-}
+// Red: Write failing test
+suite.addTest('should create component', function() {
+  const component = new MyComponent(); // This will fail initially
+  TestFramework.assertNotNull(component);
+});
 
-// 2. Implement minimal code to pass the test
-/**
- * Configuration for Database
- */
-class DatabaseConfig {
-  constructor(options = {}) {
-    this.rootFolderId = options.rootFolderId || 'default-folder-id';
-    this.autoCreateCollections = options.autoCreateCollections !== undefined ? 
-      options.autoCreateCollections : true;
-    this.lockTimeout = options.lockTimeout || 30000;
-    this.cacheEnabled = options.cacheEnabled !== undefined ? 
-      options.cacheEnabled : true;
-    this.logLevel = options.logLevel || 'INFO';
+// Green: Implement minimal functionality
+class MyComponent {
+  constructor() {
+    // Minimal implementation
   }
 }
+
+// Refactor: Improve implementation while tests pass
 ```
 
-## Organising Tests
+### 5. Environment Validation
 
-### Section Organisation Structure
+The framework automatically validates:
 
-The framework organises tests into sections, each focusing on a specific area of functionality:
+- GAS APIs (DriveApp, PropertiesService, Logger)
+- GAS DB components (GASDBLogger, ErrorHandler, IdGenerator)
+- Basic functionality of core components
 
-- **Section 1**: Project Setup and Basic Infrastructure
-- **Section 2**: ScriptProperties Master Index
-- **Section 3**: File Service and Drive Integration
-- **Section 4**: Database and Collection Management
-
-### Test Suites Within Sections
-
-Each section contains multiple test suites, each testing a specific component or feature. Use only business logic test suites in the run function:
-
-```javascript
-// Good: Section run function with only business logic test suites
-function runSection4Tests() {
-  const testRunner = new TestRunner();
-  
-  // Add only actual test suites - setup/teardown handled by beforeAll/afterAll hooks
-  testRunner.addTestSuite(testDatabaseConfig());
-  testRunner.addTestSuite(testDatabaseInitialisation());
-  testRunner.addTestSuite(testCollectionManagement());
-  testRunner.addTestSuite(testIndexFileStructure());
-  
-  return testRunner.runAllTests();
-}
-
-// Bad: Including setup/teardown as separate test suites (deprecated approach)
-function runSection4TestsBad() {
-  const testRunner = new TestRunner();
-  
-  testRunner.addTestSuite(testSection4Setup()); // Don't do this
-  testRunner.addTestSuite(testDatabaseConfig());
-  testRunner.addTestSuite(testSection4Cleanup()); // Don't do this
-  
-  return testRunner.runAllTests();
-}
-```
-
-## Best Practices
-
-### 1. Test Isolation and Independence
-
-Each test should be independent and not rely on other tests:
-
-```javascript
-// Good: Independent test
-suite.addTest('should create collection', function() {
-  // Arrange
-  const database = new Database(TEST_DATA.testConfig);
-  const collectionName = 'independentTestCollection';
-  
-  // Act
-  const collection = database.createCollection(collectionName);
-  
-  // Assert
-  AssertionUtilities.assertNotNull(collection);
-  
-  // Track for cleanup
-  if (collection?.driveFileId) {
-    TEST_DATA.createdFileIds.push(collection.driveFileId);
-  }
-});
-
-// Bad: Test depends on previous test state
-suite.addTest('should access existing collection', function() {
-  // This assumes a collection was created in a previous test
-  const collection = database.getCollection('someCollection'); // May fail!
-  AssertionUtilities.assertNotNull(collection);
-});
-```
-
-### 2. Proper Environment Setup and Teardown
-
-Use `beforeAll` and `afterAll` hooks for shared resources, and conditional setup for dependent test suites:
-
-```javascript
-// Primary test suite handles full lifecycle
-function testDatabaseConfig() {
-  const suite = new TestSuite('Database Config');
-  
-  // Setup test environment once before all tests
-  suite.setBeforeAll(function() {
-    setupTestEnvironment();
-  });
-  
-  // Cleanup after all tests
-  suite.setAfterAll(function() {
-    cleanupTestEnvironment();
-  });
-  
-  // Tests...
-  
-  return suite;
-}
-
-// Dependent test suite conditionally sets up environment
-function testCollectionManagement() {
-  const suite = new TestSuite('Collection Management');
-  
-  // Conditionally set up environment if not already done
-  suite.setBeforeAll(function() {
-    if (!TEST_DATA.testConfig) {
-      setupTestEnvironment();
-    }
-  });
-  
-  // Tests...
-  
-  return suite;
-}
-```
-
-### 3. Resource Tracking for Cleanup
-
-Track all created resources during tests for proper cleanup:
-
-```javascript
-// Global storage for tracking test resources
-const TEST_DATA = {
-  testFolderId: null,
-  createdFileIds: [], // Track all files created during tests
-  createdFolderIds: [], // Track all folders created during tests
-  testConfig: null
-};
-
-// In tests, track resources as they're created
-suite.addTest('should create collection file', function() {
-  const collection = database.createCollection('testCollection');
-  
-  // Track the created file for cleanup
-  if (collection && collection.driveFileId) {
-    TEST_DATA.createdFileIds.push(collection.driveFileId);
-  }
-  
-  AssertionUtilities.assertNotNull(collection);
-});
-
-// Cleanup function handles all tracked resources
-function cleanupTestEnvironment() {
-  // Clean up all tracked files
-  TEST_DATA.createdFileIds.forEach(fileId => {
-    try {
-      DriveApp.getFileById(fileId).setTrashed(true);
-    } catch (error) {
-      // Log but don't fail cleanup
-    }
-  });
-  
-  // Clean up all tracked folders
-  TEST_DATA.createdFolderIds.forEach(folderId => {
-    try {
-      DriveApp.getFolderById(folderId).setTrashed(true);
-    } catch (error) {
-      // Log but don't fail cleanup
-    }
-  });
-}
-```
-
-### 4. Descriptive Test Names
-
-Use clear, descriptive names that explain the expected behaviour:
-
-```javascript
-// Good: Descriptive test names
-suite.addTest('should create DatabaseConfig with default values', function() { });
-suite.addTest('should throw error for invalid collection name', function() { });
-suite.addTest('should auto-create collection when configured', function() { });
-
-// Bad: Vague test names
-suite.addTest('test config', function() { });
-suite.addTest('test error', function() { });
-suite.addTest('test collection', function() { });
-```
-
-### 5. Comprehensive Error Testing
-
-Include tests for error conditions and boundary values:
-
-```javascript
-suite.addTest('should handle collection name validation', function() {
-  const database = new Database(TEST_DATA.testConfig);
-  
-  // Test invalid collection names
-  AssertionUtilities.assertThrows(() => {
-    database.createCollection('');
-  }, Error, 'Should throw error for empty collection name');
-  
-  AssertionUtilities.assertThrows(() => {
-    database.createCollection(null);
-  }, Error, 'Should throw error for null collection name');
-  
-  AssertionUtilities.assertThrows(() => {
-    database.createCollection('invalid/name');
-  }, Error, 'Should throw error for collection name with invalid characters');
-});
-```
-
-### 6. Section Organisation Structure
-
-Organise tests by logical sections and avoid setup/teardown test suites:
-
-```javascript
-// Good: Run function includes only business logic test suites
-function runSection4Tests() {
-  const testRunner = new TestRunner();
-  
-  // Add only actual test suites - setup/teardown handled by hooks
-  testRunner.addTestSuite(testDatabaseConfig());
-  testRunner.addTestSuite(testDatabaseInitialisation());
-  testRunner.addTestSuite(testCollectionManagement());
-  testRunner.addTestSuite(testIndexFileStructure());
-  
-  return testRunner.runAllTests();
-}
-
-// Bad: Including setup/teardown as separate test suites
-function runSection4TestsBad() {
-  const testRunner = new TestRunner();
-  
-  testRunner.addTestSuite(testSection4Setup()); // Don't do this
-  testRunner.addTestSuite(testDatabaseConfig());
-  testRunner.addTestSuite(testSection4Cleanup()); // Don't do this
-  
-  return testRunner.runAllTests();
-}
-```
+This ensures tests run in a properly configured environment.
 
 ## Troubleshooting
 
 ### Common Issues
 
-1. **Test timeout errors** – Google Apps Script execution time limits may be reached for large test suites
-   - Solution: Break tests into smaller suites or use continuation patterns
+1. **Environment Validation Failures**: Ensure all GAS DB components are loaded before running tests
+2. **Resource Cleanup**: Use `trackResourceFile()` to avoid leaving test files in Drive
+3. **Assertion Errors**: Include descriptive messages to make failures clear
+4. **Test Isolation**: Use beforeEach/afterEach to ensure tests don't interfere with each other
 
-2. **Drive API permission errors** – Tests that use DriveApp require proper permissions
-   - Solution: Run `initialiseTestEnvironment()` to check permissions first
+### Debugging Tips
 
-3. **Test dependency failures** – When tests depend on each other
-   - Solution: Use proper setup/teardown hooks and make tests independent
+- Use `GASDBLogger` for detailed logging in tests
+- Run single tests to isolate issues: `runSingleTest('SuiteName', 'testName')`
+- Check the comprehensive report for detailed error information
+- Validate that dependencies are loaded before running tests
 
-### Getting Help
-
-1. Run `validateSection4Setup()` to check if the necessary components are available
-2. Run `getAvailableTests()` to see what test sections and suites exist
-3. Check the execution logs for detailed error information
+This testing framework provides a robust foundation for Test-Driven Development in the GAS DB project, with comprehensive assertion capabilities, automatic resource management, and detailed reporting.
