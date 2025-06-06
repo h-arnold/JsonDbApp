@@ -2,7 +2,7 @@
 
 ## 📊 Implementation Progress Summary
 
-**Overall Status: 4 of 4 core sections completed, Section 5 in progress (CollectionMetadata Complete)**
+**Overall Status: 4 of 4 core sections completed, Section 5 in progress (CollectionMetadata Complete, DocumentOperations Red Phase Complete)**
 
 | Section | Status | Progress | Tests | Pass Rate | Notes |
 |---------|--------|----------|-------|-----------|--------|
@@ -10,12 +10,12 @@
 | **Section 2** | ✅ **COMPLETE** | 100% | 16/16 | 100% | ScriptProperties master index, locking |
 | **Section 3** | ✅ **COMPLETE** | 100% | 36/36 | 100% | File service, Drive API integration |
 | **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
-| **Section 5** | 🟢 **IN PROGRESS** | 33% | 19/19 | 100% | CollectionMetadata complete, DocumentOperations pending |
+| **Section 5** | 🟡 **RED PHASE** | 50% | 41/41 | 100% | CollectionMetadata complete, DocumentOperations red phase complete |
 | **Sections 6-9** | ⏳ **PENDING** | 0% | - | - | Awaiting Section 5 completion |
 
-**Total Tests Implemented:** 105 tests across 5 sections (86 + 19)
-**Tests Passing:** 105/105 (100% overall)
-**Current Focus:** Section 5 DocumentOperations implementation (next TDD Red → Green phase)
+**Total Tests Implemented:** 127 tests across 5 sections (86 + 19 + 22)
+**Tests Passing:** 105/127 (83% overall - 22 DocumentOperations tests failing as expected in Red Phase)
+**Current Focus:** Section 5 DocumentOperations green phase implementation (ready for Red → Green transition)
 
 ## Overview
 
@@ -154,33 +154,40 @@ classDiagram
 
 This refactored architecture provides a more efficient and maintainable foundation for the database.
 
-## ✅ Section 5: Collection Components and Basic CRUD Operations (IN PROGRESS - CollectionMetadata COMPLETE)
+## 🟡 Section 5: Collection Components and Basic CRUD Operations (RED PHASE - DocumentOperations Complete)
 
-### Summary 🟢
+### Summary 🟡
 
-Section 5 focuses on implementing the Collection system with separated components for metadata management, document operations, and MongoDB-compatible CRUD API. This section follows TDD methodology and has successfully completed the **CollectionMetadata** component with 100% test coverage.
+Section 5 focuses on implementing the Collection system with separated components for metadata management, document operations, and MongoDB-compatible CRUD API. This section follows TDD methodology and has successfully completed the **CollectionMetadata** component and the **DocumentOperations red phase** with comprehensive test suites.
 
 **Current Status:**
 
 - ✅ **CollectionMetadata Complete**: All 19 tests passing (100%)
-- ✅ **Test Infrastructure**: Comprehensive test suites implemented and running
-- ✅ **CollectionMetadata Implementation**: Full functionality with validation and error handling
-- ⏳ **DocumentOperations Pending**: Next component for implementation
+- ✅ **DocumentOperations Red Phase Complete**: All 22 tests failing as expected (100% failure rate)
+- ✅ **Test Infrastructure**: Comprehensive test suites with real Drive file integration
+- ✅ **Real Drive Integration**: Tests use actual Google Drive files with proper lifecycle management
+- 🟡 **Ready for Green Phase**: DocumentOperations implementation ready for TDD green phase
 
 **Test Breakdown:**
 
-| Test Suite | Tests | Status | Pass Rate |
-|------------|-------|--------|-----------|
-| **CollectionMetadata Constructor** | 5 | ✅ **Passing** | **5/5 (100%)** |
-| **CollectionMetadata Update Operations** | 7 | ✅ **Passing** | **7/7 (100%)** |
-| **CollectionMetadata Serialisation** | 3 | ✅ **Passing** | **3/3 (100%)** |
-| **CollectionMetadata Edge Cases** | 4 | ✅ **Passing** | **4/4 (100%)** |
-| **Total CollectionMetadata Tests** | **19** | ✅ **Passing** | **19/19 (100%)** |
+| Test Suite | Tests | Status | Pass Rate | Phase |
+|------------|-------|--------|-----------|-------|
+| **CollectionMetadata Constructor** | 5 | ✅ **Passing** | **5/5 (100%)** | **Green Complete** |
+| **CollectionMetadata Update Operations** | 7 | ✅ **Passing** | **7/7 (100%)** | **Green Complete** |
+| **CollectionMetadata Serialisation** | 3 | ✅ **Passing** | **3/3 (100%)** | **Green Complete** |
+| **CollectionMetadata Edge Cases** | 4 | ✅ **Passing** | **4/4 (100%)** | **Green Complete** |
+| **DocumentOperations Constructor** | 3 | 🔴 **Failing** | **0/3 (0%)** | **Red Complete** |
+| **DocumentOperations Insert Operations** | 4 | 🔴 **Failing** | **0/4 (0%)** | **Red Complete** |
+| **DocumentOperations Find Operations** | 5 | 🔴 **Failing** | **0/5 (0%)** | **Red Complete** |
+| **DocumentOperations Update Operations** | 3 | 🔴 **Failing** | **0/3 (0%)** | **Red Complete** |
+| **DocumentOperations Delete Operations** | 3 | 🔴 **Failing** | **0/3 (0%)** | **Red Complete** |
+| **DocumentOperations Utility Operations** | 4 | 🔴 **Failing** | **0/4 (0%)** | **Red Complete** |
+| **Total Section 5 Tests** | **41** | 🟡 **Mixed** | **19/41 (46%)** | **Red Phase Complete** |
 
 **Files Created:**
 
-- Core: `CollectionMetadata.js` (complete implementation)
-- Tests: `CollectionMetadataTest.js` (comprehensive test suites)
+- Core: `CollectionMetadata.js` (complete implementation), `DocumentOperations.js` (skeleton with placeholders)
+- Tests: `CollectionMetadataTest.js` (complete), `DocumentOperationsTest.js` (comprehensive red phase test suite)
 
 **Green Phase Test Results:**
 ```
@@ -201,18 +208,45 @@ Total: 19 | Passed: 19 | Failed: 0 | Pass Rate: 100.0%
 - ✅ Comprehensive error handling with InvalidArgumentError
 - ✅ Edge case support (large numbers, partial objects, invalid dates)
 
-**Next Steps (DocumentOperations Implementation):**
+**DocumentOperations Red Phase Complete 🔴:**
 
-1. Create DocumentOperations skeleton class with placeholder methods
-2. Implement comprehensive test suite for DocumentOperations
-3. Follow Red-Green-Refactor cycle for DocumentOperations implementation
-4. Proceed to Collection class implementation after DocumentOperations completion
+- ✅ **Comprehensive Test Suite**: 22 tests across 6 test suites covering all CRUD operations
+- ✅ **Real Drive Integration**: Tests use actual Google Drive files with proper lifecycle management
+- ✅ **Lifecycle Hooks**: `setupDocumentOperationsTestEnvironment()`, `cleanupDocumentOperationsTestEnvironment()`, `resetCollectionState()`
+- ✅ **Resource Management**: Automatic tracking and cleanup of created files and folders
+- ✅ **Test Isolation**: Each test gets fresh environment with real FileService and FileOperations
+- ✅ **Drive Persistence Testing**: Verifies operations persist to actual Drive files
+- ✅ **Expected Failure Rate**: 100% failure rate with "not implemented" errors (perfect red phase)
+- ✅ **Test Coverage**: 
+  - Constructor validation (3 tests)
+  - Insert operations with ID generation and validation (4 tests)
+  - Find operations with ID-based queries (5 tests) 
+  - Update operations with Drive persistence (3 tests)
+  - Delete operations with Drive cleanup (3 tests)
+  - Utility operations for counting and existence checking (4 tests)
+
+**Real Drive Integration Features:**
+
+- ✅ **Actual Google Drive Files**: Creates real Drive folders and JSON collection files
+- ✅ **FileService Integration**: Uses real FileService for read/write operations
+- ✅ **State Synchronisation**: Tests verify in-memory and Drive state consistency
+- ✅ **Resource Cleanup**: Automatic cleanup prevents Drive pollution
+- ✅ **Performance Monitoring**: Execution times logged for Drive operations
+- ✅ **Error Resilience**: Proper error handling for Drive API failures
+
+**Next Steps (DocumentOperations Green Phase):**
+
+1. ✅ ~~Create DocumentOperations skeleton class with placeholder methods~~
+2. ✅ ~~Implement comprehensive test suite for DocumentOperations~~
+3. 🟡 **Implement DocumentOperations methods** to make all 22 tests pass (green phase)
+4. 🔄 **Refactor DocumentOperations** for optimal performance and maintainability
+5. ⏳ **Proceed to Collection class** implementation after DocumentOperations completion
 
 The CollectionMetadata component is now ready for integration with other components in the Collection system.
 
-## ⚠️ Section 5: Collection Components and Basic CRUD Operations (MOVED TO IN-PROGRESS ABOVE)
+## ⚠️ Section 5: Collection Components and Basic CRUD Operations (MOVED TO RED PHASE ABOVE)
 
-> **Note**: This section has been moved to the "IN PROGRESS - RED PHASE" section above to reflect the current implementation status. The planning details below remain for reference but the active work is documented in the progress section.
+> **Note**: This section has been moved to the "RED PHASE - DocumentOperations Complete" section above to reflect the current implementation status. The planning details below remain for reference but the active work is documented in the progress section.
 
 ### Objectives
 
@@ -265,22 +299,25 @@ Create a class to handle document manipulation on plain object collections.
 **Key Requirements:**
 - Work with documents stored as plain objects
 - Generate document IDs using IdGenerator
-- Provide CRUD operations on document collections
+- Provide basic CRUD operations on document collections (ID-based only)
 - Validate document structure
 - Support document counting and existence checks
+
+**Note:** No filtering or query processing in this component - all query capabilities will be added in Section 6: Query Engine.
 
 **Implementation Tasks:**
 1. Create DocumentOperations constructor accepting collection reference
 2. Implement `insertDocument(doc)` - adds document with generated ID
 3. Implement `findDocumentById(id)` - finds document by ID
-4. Implement `findDocumentBySimpleQuery(query)` - finds first document matching exact field values
-5. Implement `findDocuments()` - finds all documents (with optional simple filtering)
-6. Implement `updateDocument(id, doc)` - updates document by ID
-7. Implement `deleteDocument(id)` - deletes document by ID
-8. Implement `countDocuments()` - counts total documents
-9. Implement `documentExists(docId)` - checks document existence
-10. Implement `_generateDocumentId()` private method
-11. Implement `_validateDocument(doc)` private method
+4. Implement `findAllDocuments()` - returns all documents (no filtering)
+5. Implement `updateDocument(id, doc)` - updates document by ID
+6. Implement `deleteDocument(id)` - deletes document by ID
+7. Implement `countDocuments()` - counts total documents
+8. Implement `documentExists(docId)` - checks document existence
+9. Implement `_generateDocumentId()` private method
+10. Implement `_validateDocument(doc)` private method
+
+**Note:** All filtering capabilities (including simple field matching) will be implemented in Section 6: Query Engine to avoid dependency issues.
 
 #### Step 3: Collection Implementation with CRUD API
 
@@ -305,11 +342,11 @@ Create the main Collection class that coordinates components and exposes MongoDB
 5. Implement `_markDirty()` method for change tracking
 6. Implement public API methods for basic CRUD operations:
    - `insertOne(doc)` - Insert a single document
-   - `find()` - Find all documents (with optional simple filtering)
-   - `findOne(idOrSimpleFilter)` - Find document by ID or simple filter
-   - `updateOne(idOrSimpleFilter, doc)` - Update document by ID or simple filter
-   - `deleteOne(idOrSimpleFilter)` - Delete document by ID or simple filter
-   - `countDocuments()` - Count all documents
+   - `find(filter)` - Find documents (initially returns all documents, filtering added in Section 6)
+   - `findOne(idOrFilter)` - Find document (initially ID-only, filter support added in Section 6)
+   - `updateOne(idOrFilter, doc)` - Update document (initially ID-only, filter support added in Section 6)
+   - `deleteOne(idOrFilter)` - Delete document (initially ID-only, filter support added in Section 6)
+   - `countDocuments(filter)` - Count documents (initially counts all, filtering added in Section 6)
 7. Implement metadata access methods that delegate to CollectionMetadata
 8. Implement cleanup and memory management methods
 
@@ -345,29 +382,26 @@ function testCollectionMetadataTimestampPrecision()
 - Metadata cloning for immutable operations
 - Error handling for invalid inputs
 
-#### 2. DocumentOperations Tests (18 test cases)
+#### 2. DocumentOperations Tests (15 test cases)
 
 **File:** `tests/unit/DocumentOperationsTest.js`
 
 ```javascript
-// Test document manipulation operations
+// Test document manipulation operations (ID-based only initially)
 function testDocumentOperationsInitialisation()
 function testDocumentOperationsInsertDocument()
 function testDocumentOperationsInsertDocumentWithId()
 function testDocumentOperationsInsertDocumentDuplicateId()
 function testDocumentOperationsFindDocumentById()
-function testDocumentOperationsFindDocumentBySimpleQuery()
 function testDocumentOperationsFindDocumentNotFound()
-function testDocumentOperationsFindDocuments()
-function testDocumentOperationsFindDocumentsEmpty()
-function testDocumentOperationsFindDocumentsWithSimpleFilter()
+function testDocumentOperationsFindAllDocuments()
+function testDocumentOperationsFindAllDocumentsEmpty()
 function testDocumentOperationsUpdateDocument()
 function testDocumentOperationsUpdateDocumentNotFound()
 function testDocumentOperationsDeleteDocument()
 function testDocumentOperationsDeleteDocumentNotFound()
 function testDocumentOperationsCountDocuments()
 function testDocumentOperationsDocumentExists()
-function testDocumentOperationsDocumentValidation()
 function testDocumentOperationsIdGeneration()
 ```
 
@@ -376,14 +410,14 @@ function testDocumentOperationsIdGeneration()
 - Document insertion with automatic ID generation
 - Document insertion with provided ID
 - Duplicate ID handling
-- Document retrieval by ID
-- Document retrieval by simple exact-match query (no operators)
-- Document update operations
-- Document deletion operations
-- Document counting
+- Document retrieval by ID only (no filtering yet)
+- Document update operations (ID-based only)
+- Document deletion operations (ID-based only)
+- Document counting (all documents)
 - Document existence checking
-- Document validation
 - ID generation integration
+
+**Note:** Query/filtering capabilities will be added in Section 6: Query Engine.
 
 #### 3. Collection API Tests (20 test cases)
 
@@ -419,13 +453,15 @@ function testCollectionCountDocuments()
 - Data loading from Drive files via FileService
 - Error handling for corrupted or missing files
 - Data persistence to Drive files
-- Public API methods for basic CRUD operations
+- Public API methods for basic CRUD operations (ID-based initially)
 - Metadata updates during document operations
 - Dirty tracking and conditional saves
 - Memory management and cleanup
 - Component coordination
 - FileService integration
 - Error propagation and handling
+
+**Note:** Initially these methods support ID-based operations only. Filter support will be added in Section 6: Query Engine.
 
 #### 4. Integration Tests (10 test cases)
 
@@ -489,8 +525,6 @@ tests/
 │   ├── DocumentOperationsTest.js
 │   └── CollectionTest.js
 ├── integration/
-│   └── Section5IntegrationTest.js
-└── Section5Tests.js (test suite orchestration)
 ```
 
 ### Implementation Details From Class Diagrams
@@ -649,12 +683,14 @@ No changes needed to CollectionMetadata implementation plan.
 ### Completion Criteria
 
 **Functional Requirements:**
-- [ ] All 60 test cases pass (12 + 18 + 20 + 10)
+- [ ] All 41 test cases pass (19 + 22) for Section 5 core functionality (DocumentOperations + CollectionMetadata)
 - [ ] CollectionMetadata manages metadata as plain objects
-- [ ] DocumentOperations handles document manipulation on plain object collections
-- [ ] Collection provides MongoDB-compatible API for basic CRUD operations
+- [ ] DocumentOperations handles ID-based document manipulation only
+- [ ] Collection provides MongoDB-compatible API structure (ID-based operations initially)
 - [ ] Lazy loading works correctly with FileService integration
 - [ ] Memory management and dirty tracking function properly
+
+**Note:** Additional filtering capabilities (25 tests) will be added in Section 6: Query Engine. Advanced update capabilities (25 tests) will be added in Section 7: Update Engine. This staged approach avoids dependency issues while ensuring complete functionality.
 
 **Code Quality Requirements:**
 - [ ] All classes follow established naming conventions
@@ -675,116 +711,233 @@ No changes needed to CollectionMetadata implementation plan.
 1. **Red Phase**: Write failing tests for CollectionMetadata (12 tests)
 2. **Green Phase**: Implement CollectionMetadata to pass tests
 3. **Refactor Phase**: Optimise CollectionMetadata implementation
-4. **Red Phase**: Write failing tests for DocumentOperations (18 tests)
+4. **Red Phase**: Write failing tests for DocumentOperations (15 tests) 
 5. **Green Phase**: Implement DocumentOperations to pass tests
 6. **Refactor Phase**: Optimise DocumentOperations implementation
 7. **Red Phase**: Write failing tests for Collection API (20 tests)
 8. **Green Phase**: Implement Collection class to pass tests
 9. **Refactor Phase**: Optimise Collection implementation
-10. **Integration Phase**: Write and pass integration tests (10 tests)
-11. **Final Phase**: Verify all 60 tests pass and completion criteria are met
+10. **Integration Phase**: Write and pass integration tests (8 tests)
+11. **Final Phase**: Verify all 55 tests pass and completion criteria are met
 
-This section establishes the foundation for document storage and manipulation using plain objects with MongoDB-compatible API methods for basic CRUD operations, while maintaining clean component separation and comprehensive test coverage.
+This section establishes the foundation for document storage and manipulation using plain objects with MongoDB-compatible API methods for basic ID-based CRUD operations, while maintaining clean component separation and comprehensive test coverage. Query capabilities will be added in Section 6.
 
-## Section 6: Query Engine
+## Section 6: Query Engine and Document Filtering
 
 ### Objectives
 
-- Implement basic query engine
-- Support comparison operators
-- Support logical operators
+- Implement basic query engine with MongoDB-compatible operators
+- Add filtering capabilities to DocumentOperations (deferred from Section 5)
+- Enhance Collection API methods to support filter parameters
+- Support comparison and logical operators
+- Complete the MongoDB-compatible API implementation
 
 ### Implementation Steps
 
 1. **Query Engine Implementation**
-   - Create QueryEngine class
-   - Implement document matching
-   - Integrate with DocumentOperations
+   - Create QueryEngine class with document matching logic
+   - Implement field access and value comparison utilities
+   - Support nested object field access (e.g., "user.name")
+   - Create query validation and normalization
 
 2. **Comparison Operators**
-   - Implement $eq operator
-   - Implement $gt operator
-   - Implement $lt operator
+   - Implement $eq operator (equality)
+   - Implement $gt operator (greater than)
+   - Implement $lt operator (less than)
+   - Implement $gte operator (greater than or equal)
+   - Implement $lte operator (less than or equal)
+   - Implement $ne operator (not equal)
 
 3. **Logical Operators**
-   - Implement $and operator
-   - Implement $or operator
-   - Support nested conditions
+   - Implement $and operator (logical AND)
+   - Implement $or operator (logical OR)
+   - Support nested logical conditions
+   - Implement query optimization for complex conditions
+
+4. **DocumentOperations Enhancement** *(Complete deferred functionality from Section 5)*
+   - Add `findDocumentsByQuery(query)` - find documents matching query
+   - Add `findFirstDocumentByQuery(query)` - find first document matching query
+   - Add `countDocumentsByQuery(query)` - count documents matching query
+   - Enhance existing methods to support filtering
+   - Integrate QueryEngine for all filtering operations
+
+5. **Collection API Enhancement** *(Complete deferred functionality from Section 5)*
+   - Enhance `find(filter)` to support MongoDB-style queries
+   - Enhance `findOne(idOrFilter)` to support query objects
+   - Enhance `updateOne(idOrFilter, doc)` to support query filters
+   - Enhance `deleteOne(idOrFilter)` to support query filters
+   - Enhance `countDocuments(filter)` to support query filters
 
 ### Test Cases
 
-1. **Query Engine Tests**
-   - Test basic document matching
-   - Test field access
-   - Test integration with DocumentOperations
+1. **Query Engine Tests** (15 test cases)
+   - Test basic document matching against queries
+   - Test field access (including nested fields)
+   - Test query validation and error handling
+   - Test query normalization
 
-2. **Comparison Operator Tests**
-   - Test $eq with various types
-   - Test $gt with numbers and dates
-   - Test $lt with numbers and dates
+2. **Comparison Operator Tests** (18 test cases)
+   - Test $eq with various data types (string, number, boolean, Date, null)
+   - Test $gt/$gte with numbers and dates
+   - Test $lt/$lte with numbers and dates
+   - Test $ne with various data types
+   - Test operator combinations
 
-3. **Logical Operator Tests**
+3. **Logical Operator Tests** (12 test cases)
    - Test $and with multiple conditions
    - Test $or with multiple conditions
    - Test nested logical operators
+   - Test complex query combinations
+
+4. **DocumentOperations Filtering Tests** (10 test cases) *(Previously deferred)*
+   - Test `findDocumentsByQuery()` with various queries
+   - Test `findFirstDocumentByQuery()` functionality
+   - Test `countDocumentsByQuery()` accuracy
+   - Test integration with QueryEngine
+
+5. **Collection API Filtering Tests** (15 test cases) *(Previously deferred)*
+   - Test `find(filter)` with MongoDB-style queries
+   - Test `findOne(filter)` with query objects
+   - Test `updateOne(filter, doc)` with query filters
+   - Test `deleteOne(filter)` with query filters
+   - Test `countDocuments(filter)` with query filters
+
+### File Updates Required
+
+**New Files:**
+- `src/components/QueryEngine.js`
+- `tests/unit/QueryEngineTest.js`
+
+**Enhanced Files:**
+- `src/components/DocumentOperations.js` - Add filtering methods
+- `src/core/Collection.js` - Enhance API methods with filtering
+- `tests/unit/DocumentOperationsTest.js` - Add filtering tests
+- `tests/unit/CollectionTest.js` - Add filtering tests
 
 ### Completion Criteria
 
-- All test cases pass
-- Query engine can match documents based on criteria
+- All test cases pass (70 total: 15 + 18 + 12 + 10 + 15)
+- Query engine can match documents based on MongoDB-style criteria
 - Comparison operators work with various data types
-- Logical operators support complex conditions
-- QueryEngine integrates properly with DocumentOperations
+- Logical operators support complex nested conditions
+- DocumentOperations supports all filtering methods
+- Collection API methods fully support filter parameters
+- QueryEngine integrates seamlessly with existing components
+- Full MongoDB query compatibility for basic operations
 
-## Section 7: Update Engine
+## Section 7: Update Engine and Document Modification
 
 ### Objectives
 
-- Implement basic update engine
-- Support field modification operators
-- Support field removal operators
+- Implement basic update engine with MongoDB-compatible operators
+- Add advanced update capabilities to DocumentOperations (beyond simple replacement)
+- Enhance Collection API to support MongoDB-style update operations
+- Support field modification and removal operators
+- Complete MongoDB-compatible update functionality
 
 ### Implementation Steps
 
 1. **Update Engine Implementation**
-   - Create UpdateEngine class
-   - Implement document modification
-   - Integrate with DocumentOperations
+   - Create UpdateEngine class with document modification logic
+   - Implement field access and modification utilities
+   - Support nested object field updates (e.g., "user.address.city")
+   - Create update validation and sanitization
 
-2. **Field Modification**
-   - Implement $set operator
-   - Support nested field updates
-   - Handle various data types
+2. **Field Modification Operators**
+   - Implement $set operator (set field values)
+   - Implement $inc operator (increment numeric values)
+   - Implement $mul operator (multiply numeric values)
+   - Implement $min operator (set minimum value)
+   - Implement $max operator (set maximum value)
+   - Support nested field updates and array element updates
 
-3. **Field Removal**
-   - Implement $unset operator
+3. **Field Removal Operators**
+   - Implement $unset operator (remove fields)
    - Support nested field removal
-   - Maintain document structure
+   - Maintain document structure integrity
+   - Handle array element removal
+
+4. **Array Update Operators**
+   - Implement $push operator (add elements to array)
+   - Implement $pull operator (remove elements from array)
+   - Implement $addToSet operator (add unique elements)
+   - Support array position updates
+
+5. **DocumentOperations Enhancement** *(Add advanced update capabilities)*
+   - Add `updateDocumentByQuery(query, updateOperations)` - update using query + operators
+   - Add `updateDocumentWithOperators(id, updateOperations)` - update using operators
+   - Enhance existing `updateDocument(id, doc)` to support both replacement and operators
+   - Integrate UpdateEngine for all complex update operations
+
+6. **Collection API Enhancement** *(Complete MongoDB-style updates)*
+   - Enhance `updateOne(idOrFilter, update)` to support update operators
+   - Add `updateMany(filter, update)` for multiple document updates
+   - Add `replaceOne(idOrFilter, doc)` for document replacement
+   - Support both document replacement and operator-based updates
 
 ### Test Cases
 
-1. **Update Engine Tests**
-   - Test basic document modification
-   - Test field access
-   - Test integration with DocumentOperations
+1. **Update Engine Tests** (12 test cases)
+   - Test basic document modification with operators
+   - Test field access and modification utilities
+   - Test update validation and error handling
+   - Test nested field access and updates
 
-2. **Field Modification Tests**
-   - Test $set with various types
-   - Test nested field updates
-   - Test array and object updates
+2. **Field Modification Tests** (20 test cases)
+   - Test $set with various data types (string, number, boolean, Date, object)
+   - Test $inc with positive and negative increments
+   - Test $mul with various multipliers
+   - Test $min/$max with numbers and dates
+   - Test nested field updates (e.g., "user.settings.theme")
+   - Test array element updates
 
-3. **Field Removal Tests**
-   - Test $unset operator
+3. **Field Removal Tests** (8 test cases)
+   - Test $unset operator with various field types
    - Test nested field removal
-   - Test document structure integrity
+   - Test document structure integrity after removal
+   - Test removal of non-existent fields
+
+4. **Array Update Tests** (15 test cases)
+   - Test $push with single and multiple values
+   - Test $pull with various match conditions
+   - Test $addToSet for unique value enforcement
+   - Test array position updates
+   - Test nested array operations
+
+5. **DocumentOperations Update Tests** (10 test cases) *(Advanced update capabilities)*
+   - Test `updateDocumentByQuery()` with various queries and updates
+   - Test `updateDocumentWithOperators()` functionality
+   - Test integration with UpdateEngine
+   - Test validation of update operations
+
+6. **Collection API Update Tests** (15 test cases) *(MongoDB-style updates)*
+   - Test `updateOne()` with update operators
+   - Test `updateMany()` for multiple documents
+   - Test `replaceOne()` for document replacement
+   - Test distinction between replacement and operator updates
+
+### File Updates Required
+
+**New Files:**
+- `src/components/UpdateEngine.js`
+- `tests/unit/UpdateEngineTest.js`
+
+**Enhanced Files:**
+- `src/components/DocumentOperations.js` - Add advanced update methods
+- `src/core/Collection.js` - Enhance update API methods
+- `tests/unit/DocumentOperationsTest.js` - Add update operation tests
+- `tests/unit/CollectionTest.js` - Add advanced update tests
 
 ### Completion Criteria
 
-- All test cases pass
-- Update engine can modify documents based on operators
-- Field modification works with various data types and structures
+- All test cases pass (80 total: 12 + 20 + 8 + 15 + 10 + 15)
+- Update engine can modify documents using MongoDB-style operators
+- Field modification works with various data types and nested structures
 - Field removal maintains document integrity
-- UpdateEngine integrates properly with DocumentOperations
+- Array operations work correctly with various data scenarios
+- DocumentOperations supports all advanced update methods
+- Collection API provides full MongoDB-compatible update functionality
+- UpdateEngine integrates seamlessly with existing components
 
 ## Section 8: Cross-Instance Coordination
 
