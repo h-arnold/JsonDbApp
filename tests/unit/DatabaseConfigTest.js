@@ -136,10 +136,9 @@ function createDatabaseConfigValidationTestSuite() {
         new DatabaseConfig({ lockTimeout: -1000 });
       }, Error, 'Should throw error for negative lock timeout');
       
-      // Test zero lock timeout
-      TestFramework.assertThrows(() => {
-        new DatabaseConfig({ lockTimeout: 0 });
-      }, Error, 'Should throw error for zero lock timeout');
+      // Test zero lock timeout (should be allowed according to documentation: "Zero means no timeout")
+      const zeroTimeoutConfig = new DatabaseConfig({ lockTimeout: 0 });
+      TestFramework.assertEquals(zeroTimeoutConfig.lockTimeout, 0, 'Zero lock timeout should be accepted as no timeout');
       
       // Test non-numeric lock timeout
       TestFramework.assertThrows(() => {
@@ -163,10 +162,13 @@ function createDatabaseConfigValidationTestSuite() {
         new DatabaseConfig({ logLevel: 'INVALID' });
       }, Error, 'Should throw error for invalid log level');
       
-      // Test null log level
-      TestFramework.assertThrows(() => {
-        new DatabaseConfig({ logLevel: null });
-      }, Error, 'Should throw error for null log level');
+      // Test null log level (should be allowed - constructor sets default)
+      const configWithNull = new DatabaseConfig({ logLevel: null });
+      TestFramework.assertEquals(configWithNull.logLevel, 'INFO', 'Null log level should default to INFO');
+      
+      // Test undefined log level (should be allowed - constructor sets default)
+      const configWithUndefined = new DatabaseConfig({ logLevel: undefined });
+      TestFramework.assertEquals(configWithUndefined.logLevel, 'INFO', 'Undefined log level should default to INFO');
       
       // Test valid log levels should work
       const validLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
@@ -206,14 +208,23 @@ function createDatabaseConfigValidationTestSuite() {
   suite.addTest('should validate rootFolderId parameter', function() {
     // Act & Assert - Test invalid rootFolderId values
     try {
-      // Test empty string rootFolderId
-      TestFramework.assertThrows(() => {
-        new DatabaseConfig({ rootFolderId: '' });
-      }, Error, 'Should throw error for empty rootFolderId');
+      // Test empty string rootFolderId (should be allowed - defaults to root folder)
+      const configWithEmpty = new DatabaseConfig({ rootFolderId: '' });
+      TestFramework.assertDefined(configWithEmpty.rootFolderId, 'Empty rootFolderId should default to Drive root');
+      TestFramework.assertTrue(configWithEmpty.rootFolderId.length > 0, 'Root folder ID should not remain empty');
       
       // Test null rootFolderId (should be allowed for default behaviour)
       const configWithNull = new DatabaseConfig({ rootFolderId: null });
       TestFramework.assertDefined(configWithNull.rootFolderId, 'Null rootFolderId should default to Drive root');
+      
+      // Test non-string rootFolderId (should throw error)
+      TestFramework.assertThrows(() => {
+        new DatabaseConfig({ rootFolderId: 123 });
+      }, Error, 'Should throw error for non-string rootFolderId');
+      
+      TestFramework.assertThrows(() => {
+        new DatabaseConfig({ rootFolderId: {} });
+      }, Error, 'Should throw error for object rootFolderId');
       
       // Test valid rootFolderId
       const validConfig = new DatabaseConfig({ rootFolderId: DATABASECONFIG_TEST_DATA.testFolderId });
