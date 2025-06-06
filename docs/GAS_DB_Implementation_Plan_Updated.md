@@ -2,7 +2,7 @@
 
 ## 📊 Implementation Progress Summary
 
-**Overall Status: 4 of 4 core sections completed, Sections 5-10 pending**
+**Overall Status: 4 of 4 core sections completed, Sections 5-9 pending**
 
 | Section | Status | Progress | Tests | Pass Rate | Notes |
 |---------|--------|----------|-------|-----------|--------|
@@ -10,11 +10,11 @@
 | **Section 2** | ✅ **COMPLETE** | 100% | 16/16 | 100% | ScriptProperties master index, locking |
 | **Section 3** | ✅ **COMPLETE** | 100% | 36/36 | 100% | File service, Drive API integration |
 | **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
-| **Sections 5-10** | ⏳ **PENDING** | 0% | - | - | Awaiting Section 4 completion |
+| **Sections 5-9** | ⏳ **PENDING** | 0% | - | - | Awaiting Section 4 completion |
 
 **Total Tests Implemented:** 86 tests across 4 sections
 **Tests Passing:** 86/86 (100% overall)
-**Ready for Implementation:** Section 5 (Collection Components Implementation)
+**Ready for Implementation:** Section 5 (Collection Components and CRUD Operations)
 
 ## Overview
 
@@ -32,7 +32,7 @@ Section 1 successfully established the development environment, project structur
 
 - ✅ Clasp environment configured with an organized project structure.
 - ✅ Comprehensive test framework (`AssertionUtilities.js`, `TestRunner.js`) implemented.
-- ✅ Core utilities (`GASDBLogger.js`, `ErrorHandler.js`, `IdGenerator.js`) created and tested.
+- ✅ Core utilities (`GASDBLogger.js`, `ErrorHandler.js`, `IdGenerator.js`, `AssertionUtilities.js`, `TestRunner.js`) created and tested.
 - ✅ `GASDBLogger` (renamed from `Logger`) provides robust, configurable logging.
 - ✅ `test-runner.sh` script enhanced for reliable test execution with clasp.
 - ✅ All 16 test cases for this section are passing (100%).
@@ -153,13 +153,14 @@ classDiagram
 
 This refactored architecture provides a more efficient and maintainable foundation for the database.
 
-## Section 5: Collection Components Implementation
+## Section 5: Collection Components and Basic CRUD Operations
 
 ### Objectives
 
 - Implement Collection class with separated components using plain objects
-- Create CollectionMetadata for metadata management with plain object data
-- Implement DocumentOperations for document manipulation using plain object storage
+- Create CollectionMetadata for metadata management
+- Implement DocumentOperations for document manipulation
+- Support basic CRUD operations with plain object storage
 - Establish lazy loading and memory management patterns
 
 ### Architecture Overview
@@ -212,18 +213,19 @@ Create a class to handle document manipulation on plain object collections.
 **Implementation Tasks:**
 1. Create DocumentOperations constructor accepting collection reference
 2. Implement `insertDocument(doc)` - adds document with generated ID
-3. Implement `findDocument(query)` - finds single document matching query
-4. Implement `findDocuments(query)` - finds all documents matching query
-5. Implement `updateDocument(query, update)` - updates single document
-6. Implement `deleteDocument(query)` - deletes single document
-7. Implement `countDocuments(query)` - counts matching documents
-8. Implement `documentExists(docId)` - checks document existence
-9. Implement `_generateDocumentId()` private method
-10. Implement `_validateDocument(doc)` private method
+3. Implement `findDocumentById(id)` - finds document by ID
+4. Implement `findDocumentBySimpleQuery(query)` - finds first document matching exact field values
+5. Implement `findDocuments()` - finds all documents (with optional simple filtering)
+6. Implement `updateDocument(id, doc)` - updates document by ID
+7. Implement `deleteDocument(id)` - deletes document by ID
+8. Implement `countDocuments()` - counts total documents
+9. Implement `documentExists(docId)` - checks document existence
+10. Implement `_generateDocumentId()` private method
+11. Implement `_validateDocument(doc)` private method
 
-#### Step 3: Collection Integration
+#### Step 3: Collection Implementation with CRUD API
 
-Create the main Collection class that coordinates components and manages file operations.
+Create the main Collection class that coordinates components and exposes MongoDB-style API methods.
 
 **Files to create:**
 - `src/core/Collection.js`
@@ -233,7 +235,7 @@ Create the main Collection class that coordinates components and manages file op
 - Coordinate CollectionMetadata and DocumentOperations
 - Manage lazy loading of collection data from Drive
 - Handle file persistence through FileService
-- Provide public API that delegates to components
+- Provide MongoDB-compatible public API
 - Manage memory state and dirty tracking
 
 **Implementation Tasks:**
@@ -242,7 +244,13 @@ Create the main Collection class that coordinates components and manages file op
 3. Implement `_loadData()` method to read from Drive via FileService
 4. Implement `_saveData()` method to write to Drive via FileService
 5. Implement `_markDirty()` method for change tracking
-6. Implement public API methods that delegate to DocumentOperations
+6. Implement public API methods for basic CRUD operations:
+   - `insertOne(doc)` - Insert a single document
+   - `find()` - Find all documents (with optional simple filtering)
+   - `findOne(idOrSimpleFilter)` - Find document by ID or simple filter
+   - `updateOne(idOrSimpleFilter, doc)` - Update document by ID or simple filter
+   - `deleteOne(idOrSimpleFilter)` - Delete document by ID or simple filter
+   - `countDocuments()` - Count all documents
 7. Implement metadata access methods that delegate to CollectionMetadata
 8. Implement cleanup and memory management methods
 
@@ -289,16 +297,16 @@ function testDocumentOperationsInsertDocument()
 function testDocumentOperationsInsertDocumentWithId()
 function testDocumentOperationsInsertDocumentDuplicateId()
 function testDocumentOperationsFindDocumentById()
-function testDocumentOperationsFindDocumentByQuery()
+function testDocumentOperationsFindDocumentBySimpleQuery()
 function testDocumentOperationsFindDocumentNotFound()
 function testDocumentOperationsFindDocuments()
 function testDocumentOperationsFindDocumentsEmpty()
+function testDocumentOperationsFindDocumentsWithSimpleFilter()
 function testDocumentOperationsUpdateDocument()
 function testDocumentOperationsUpdateDocumentNotFound()
 function testDocumentOperationsDeleteDocument()
 function testDocumentOperationsDeleteDocumentNotFound()
 function testDocumentOperationsCountDocuments()
-function testDocumentOperationsCountDocumentsWithQuery()
 function testDocumentOperationsDocumentExists()
 function testDocumentOperationsDocumentValidation()
 function testDocumentOperationsIdGeneration()
@@ -309,20 +317,21 @@ function testDocumentOperationsIdGeneration()
 - Document insertion with automatic ID generation
 - Document insertion with provided ID
 - Duplicate ID handling
-- Document retrieval by ID and simple queries
+- Document retrieval by ID
+- Document retrieval by simple exact-match query (no operators)
 - Document update operations
 - Document deletion operations
-- Document counting with and without queries
+- Document counting
 - Document existence checking
 - Document validation
 - ID generation integration
 
-#### 3. Collection Integration Tests (24 test cases)
+#### 3. Collection API Tests (20 test cases)
 
 **File:** `tests/unit/CollectionTest.js`
 
 ```javascript
-// Test Collection class coordination and public API
+// Test Collection class public API and internal functions
 function testCollectionInitialisation()
 function testCollectionLazyLoading()
 function testCollectionLoadDataFromDrive()
@@ -330,23 +339,19 @@ function testCollectionLoadDataCorruptedFile()
 function testCollectionLoadDataMissingFile()
 function testCollectionSaveDataToDrive()
 function testCollectionSaveDataError()
-function testCollectionInsertOneDocument()
+function testCollectionInsertOne()
+function testCollectionInsertOneWithExplicitId()
 function testCollectionInsertOneWithMetadataUpdate()
-function testCollectionFindOneDocument()
+function testCollectionFindOne()
+function testCollectionFindOneById()
 function testCollectionFindOneNotFound()
-function testCollectionFindDocuments()
-function testCollectionFindDocumentsEmpty()
-function testCollectionUpdateOneDocument()
+function testCollectionFind()
+function testCollectionFindWithEmptyResult()
+function testCollectionUpdateOne()
 function testCollectionUpdateOneNotFound()
-function testCollectionDeleteOneDocument()
+function testCollectionDeleteOne()
 function testCollectionDeleteOneNotFound()
 function testCollectionCountDocuments()
-function testCollectionDirtyTracking()
-function testCollectionMemoryManagement()
-function testCollectionMetadataAccess()
-function testCollectionFileServiceIntegration()
-function testCollectionErrorHandling()
-function testCollectionConcurrentOperations()
 ```
 
 **Test Coverage:**
@@ -355,16 +360,15 @@ function testCollectionConcurrentOperations()
 - Data loading from Drive files via FileService
 - Error handling for corrupted or missing files
 - Data persistence to Drive files
-- Public API methods delegating to DocumentOperations
+- Public API methods for basic CRUD operations
 - Metadata updates during document operations
 - Dirty tracking and conditional saves
 - Memory management and cleanup
 - Component coordination
 - FileService integration
 - Error propagation and handling
-- Concurrent operation safety
 
-#### 4. Integration Tests (6 test cases)
+#### 4. Integration Tests (10 test cases)
 
 **File:** `tests/integration/Section5IntegrationTest.js`
 
@@ -376,6 +380,10 @@ function testCollectionMetadataConsistency()
 function testCollectionDocumentOperationsFlow()
 function testCollectionErrorRecovery()
 function testCollectionPerformanceBaseline()
+function testCollectionCRUDWorkflow()
+function testCollectionChangeAndSaveFlow()
+function testCollectionMemoryLifecycle()
+function testCollectionMultipleInstances()
 ```
 
 **Test Coverage:**
@@ -385,6 +393,10 @@ function testCollectionPerformanceBaseline()
 - Complete document operation workflows
 - Error recovery and state consistency
 - Performance baseline for future optimisation
+- Complete CRUD workflow across components
+- Full lifecycle from load to save to reload
+- Memory management during collection lifecycle
+- Multiple instances working with same data
 
 ### Mock Objects and Test Utilities
 
@@ -395,6 +407,7 @@ Create mock objects for testing isolation:
 function createMockFileService()
 function createMockDatabase()
 function createMockIdGenerator()
+function createMockMasterIndex()
 
 // Test data generators
 function generateTestDocument()
@@ -421,13 +434,166 @@ tests/
 └── Section5Tests.js (test suite orchestration)
 ```
 
+### Implementation Details From Class Diagrams
+
+#### Collection Class Implementation
+
+Based on the class diagram, the Collection class should implement:
+
+```javascript
+class Collection {
+  /**
+   * Create a new Collection instance
+   * @param {string} name - Collection name
+   * @param {string} driveFileId - Drive file ID for storage
+   * @param {Database} db - Database reference
+   * @param {FileService} fileService - FileService instance
+   */
+  constructor(name, driveFileId, db, fileService) {...}
+  
+  /**
+   * Find one document by ID or simple filter
+   * @param {string|Object} idOrFilter - Document ID or simple filter object
+   * @returns {Object} Found document or null
+   */
+  findOne(idOrFilter) {...}
+  
+  /**
+   * Find all documents with optional simple filtering
+   * @param {Object} [filter] - Simple filter object (exact matches only)
+   * @returns {Array<Object>} Array of matching documents
+   */
+  find(filter) {...}
+  
+  /**
+   * Insert a single document
+   * @param {Object} doc - Document to insert
+   * @returns {Object} Result with inserted document and ID
+   */
+  insertOne(doc) {...}
+  
+  /**
+   * Update a document by ID or simple filter
+   * @param {string|Object} idOrFilter - Document ID or simple filter object
+   * @param {Object} doc - Document to replace existing one
+   * @returns {Object} Update result
+   */
+  updateOne(idOrFilter, doc) {...}
+  
+  /**
+   * Delete a document by ID or simple filter
+   * @param {string|Object} idOrFilter - Document ID or simple filter object
+   * @returns {Object} Delete result
+   */
+  deleteOne(idOrFilter) {...}
+  
+  /**
+   * Count all documents
+   * @returns {number} Count of documents
+   */
+  countDocuments() {...}
+  
+  // Private methods
+  _loadData() {...}
+  _saveData() {...}
+  _markDirty() {...}
+  _ensureLoaded() {...}
+}
+```
+
+#### DocumentOperations Class Implementation
+
+Based on the class diagram and simplified requirements, the DocumentOperations class should implement:
+
+```javascript
+class DocumentOperations {
+  /**
+   * Create DocumentOperations instance
+   * @param {Collection} collection - Collection reference
+   */
+  constructor(collection) {...}
+  
+  /**
+   * Find document by ID
+   * @param {string} id - Document ID
+   * @returns {Object} Found document or null
+   */
+  findDocumentById(id) {...}
+  
+  /**
+   * Find document by simple query (exact matches only)
+   * @param {Object} query - Simple query with exact field matches
+   * @returns {Object} Found document or null
+   */
+  findDocumentBySimpleQuery(query) {...}
+  
+  /**
+   * Find all documents with optional simple filtering
+   * @param {Object} [filter] - Simple filter object (exact matches only)
+   * @returns {Array<Object>} Matching documents
+   */
+  findDocuments(filter) {...}
+  
+  /**
+   * Insert document with ID
+   * @param {Object} doc - Document to insert
+   * @returns {Object} Inserted document with ID
+   */
+  insertDocument(doc) {...}
+  
+  /**
+   * Update document by ID
+   * @param {string} id - Document ID
+   * @param {Object} doc - Document to replace existing one
+   * @returns {Object} Update result
+   */
+  updateDocument(id, doc) {...}
+  
+  /**
+   * Delete document by ID
+   * @param {string} id - Document ID
+   * @returns {Object} Delete result
+   */
+  deleteDocument(id) {...}
+  
+  /**
+   * Count all documents
+   * @returns {number} Count of documents
+   */
+  countDocuments() {...}
+  
+  /**
+   * Check if document exists
+   * @param {string} id - Document ID
+   * @returns {boolean} True if document exists
+   */
+  documentExists(id) {...}
+  
+  /**
+   * Generate document ID
+   * @returns {string} Generated document ID
+   */
+  _generateDocumentId() {...}
+  
+  /**
+   * Validate document structure
+   * @param {Object} doc - Document to validate
+   */
+  _validateDocument(doc) {...}
+}
+```
+
+#### CollectionMetadata Class Implementation
+
+No changes needed to CollectionMetadata implementation plan.
+
 ### Completion Criteria
 
 **Functional Requirements:**
-- [ ] All 60 test cases pass (12 + 18 + 24 + 6)
+- [ ] All 60 test cases pass (12 + 18 + 20 + 10)
 - [ ] CollectionMetadata manages metadata as plain objects
 - [ ] DocumentOperations handles document manipulation on plain object collections
-- [ ] Collection coordinates components whilst providing simple public API
+- [ ] Collection provides MongoDB-compatible API for basic CRUD operations
 - [ ] Lazy loading works correctly with FileService integration
 - [ ] Memory management and dirty tracking function properly
 
@@ -453,68 +619,15 @@ tests/
 4. **Red Phase**: Write failing tests for DocumentOperations (18 tests)
 5. **Green Phase**: Implement DocumentOperations to pass tests
 6. **Refactor Phase**: Optimise DocumentOperations implementation
-7. **Red Phase**: Write failing tests for Collection integration (24 tests)
+7. **Red Phase**: Write failing tests for Collection API (20 tests)
 8. **Green Phase**: Implement Collection class to pass tests
 9. **Refactor Phase**: Optimise Collection implementation
-10. **Integration Phase**: Write and pass integration tests (6 tests)
-11. **Final Phase**: Verify all 60 tests pass and criteria met
+10. **Integration Phase**: Write and pass integration tests (10 tests)
+11. **Final Phase**: Verify all 60 tests pass and completion criteria are met
 
-This section establishes the foundation for document storage and manipulation using plain objects whilst maintaining clean component separation and comprehensive test coverage.
+This section establishes the foundation for document storage and manipulation using plain objects with MongoDB-compatible API methods for basic CRUD operations, while maintaining clean component separation and comprehensive test coverage.
 
-## Section 6: Basic CRUD Operations
-
-### Objectives
-
-- Implement document insertion
-- Implement document retrieval
-- Implement document update and deletion
-
-### Implementation Steps
-
-1. **Document Insertion**
-   - Implement insertOne method in Collection
-   - Delegate to DocumentOperations for document handling
-   - Update CollectionMetadata after insertion
-
-2. **Document Retrieval**
-   - Implement findOne and find methods in Collection
-   - Delegate to DocumentOperations for document retrieval
-   - Implement countDocuments method
-
-3. **Document Update and Deletion**
-   - Implement updateOne method in Collection
-   - Implement deleteOne method in Collection
-   - Update CollectionMetadata after modifications
-
-### Test Cases
-
-1. **Insertion Tests**
-   - Test document insertion
-   - Test ID generation
-   - Test duplicate ID handling
-   - Test metadata updates after insertion
-
-2. **Retrieval Tests**
-   - Test findOne by ID
-   - Test find with simple criteria
-   - Test countDocuments
-   - Test component coordination during retrieval
-
-3. **Update and Deletion Tests**
-   - Test document update
-   - Test document deletion
-   - Test metadata updates after modifications
-   - Test component coordination during modifications
-
-### Completion Criteria
-
-- All test cases pass
-- Documents can be inserted with proper IDs
-- Documents can be retrieved by ID or simple criteria
-- Documents can be updated and deleted
-- Components coordinate properly during CRUD operations
-
-## Section 7: Query Engine
+## Section 6: Query Engine
 
 ### Objectives
 
@@ -564,7 +677,7 @@ This section establishes the foundation for document storage and manipulation us
 - Logical operators support complex conditions
 - QueryEngine integrates properly with DocumentOperations
 
-## Section 8: Update Engine
+## Section 7: Update Engine
 
 ### Objectives
 
@@ -614,7 +727,7 @@ This section establishes the foundation for document storage and manipulation us
 - Field removal maintains document integrity
 - UpdateEngine integrates properly with DocumentOperations
 
-## Section 9: Cross-Instance Coordination
+## Section 8: Cross-Instance Coordination
 
 ### Objectives
 
@@ -663,7 +776,7 @@ This section establishes the foundation for document storage and manipulation us
 - Concurrent operations are handled safely
 - Data consistency is maintained across instances
 
-## Section 10: Integration and System Testing
+## Section 9: Integration and System Testing
 
 ### Objectives
 
@@ -742,25 +855,64 @@ For each section, the development process will follow these steps:
 The implementation will use clasp for testing with Google Apps Script. Key considerations include:
 
 1. **Test Environment**
-   - Create isolated test environments in Drive
-   - Clean up test data after tests
-   - Use unique identifiers for test resources
+   - Create isolated test environments in Drive with unique timestamped folder names
+   - Track created resources (files, folders) for proper cleanup
+   - Use global test data objects to maintain resource references between tests
+   - Ensure cleanup runs even after test failures using afterAll hooks
 
 2. **Test Runner**
    - Implement custom test runner for Apps Script
    - Support setup and teardown operations
    - Provide clear test reporting
+   - Leverage TestFramework's resource tracking capabilities
 
-3. **Mocking and Stubbing**
-   - Mock Drive API for unit testing
-   - Stub PropertiesService for controlled testing
-   - Create test doubles for external dependencies
-   - Mock component dependencies for isolated testing
+3. **Resource Management Instead of Mocking**
+   - Create actual Drive files/folders with unique names instead of using mocks
+   - Track all created resources using `testFramework.trackResourceFile()` or in test data arrays
+   - Use descriptive naming with timestamps to avoid conflicts (e.g., `Test_Collection_${timestamp}`)
+   - Ensure proper cleanup in afterEach/afterAll hooks:
+   ```javascript
+   suite.setAfterAll(function() {
+     // Clean up all created resources
+     DATABASE_TEST_DATA.createdFileIds.forEach(fileId => {
+       try {
+         DriveApp.getFileById(fileId).setTrashed(true);
+       } catch (e) {
+         // Log but continue cleanup
+         GASDBLogger.warn('Failed to clean up file: ' + fileId, {error: e});
+       }
+     });
+     
+     DATABASE_TEST_DATA.createdFolderIds.forEach(folderId => {
+       try {
+         DriveApp.getFolderById(folderId).setTrashed(true);
+       } catch (e) {
+         // Log but continue cleanup
+         GASDBLogger.warn('Failed to clean up folder: ' + folderId, {error: e});
+       }
+     });
+   });
+   ```
 
-4. **Permissions**
+4. **Test Isolation**
+   - Use unique identifiers in resource names (timestamps, UUIDs)
+   - Create separate test folders for each test suite
+   - Reset ScriptProperties between tests when testing MasterIndex
+   - Use test data objects to track all created resources for cleanup:
+   ```javascript
+   const TEST_DATA = {
+     testFolderId: null,
+     testFolderName: 'GASDB_Test_Collection_' + new Date().getTime(),
+     createdFileIds: [],
+     createdFolderIds: []
+   };
+   ```
+
+5. **Permissions**
    - Tests will require Drive read/write permissions
    - Tests will require ScriptProperties access
    - Tests should run with the same permissions as the production code
+   - Add necessary scopes to appsscript.json
 
 ---
 
