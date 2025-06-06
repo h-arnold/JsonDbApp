@@ -1,438 +1,112 @@
-# Updated GAS DB Implementation Plan
+# GAS DB Implementation Plan
 
 ## 📊 Implementation Progress Summary
 
-**Overall Status: 3 of 4 completed sections, Section 4 Red phase complete**
+**Overall Status: 4 of 4 core sections completed, Sections 5-10 pending**
 
 | Section | Status | Progress | Tests | Pass Rate | Notes |
 |---------|--------|----------|-------|-----------|--------|
 | **Section 1** | ✅ **COMPLETE** | 100% | 16/16 | 100% | Project setup, utilities, test framework |
 | **Section 2** | ✅ **COMPLETE** | 100% | 16/16 | 100% | ScriptProperties master index, locking |
 | **Section 3** | ✅ **COMPLETE** | 100% | 36/36 | 100% | File service, Drive API integration |
-| **Section 4** | 🔄 **RED PHASE** | 50% | 5/24 | 20.8% | Database/Collection (tests ready) |
+| **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
 | **Sections 5-10** | ⏳ **PENDING** | 0% | - | - | Awaiting Section 4 completion |
 
-**Total Tests Implemented:** 92 tests across 4 sections  
-**Tests Passing:** 73/92 (79.3% overall)  
-**Ready for Implementation:** Section 4 Green phase (DatabaseConfig and Database classes)
+**Total Tests Implemented:** 86 tests across 4 sections
+**Tests Passing:** 86/86 (100% overall)
+**Ready for Implementation:** Section 5 (Collection Components Implementation)
 
 ## Overview
 
-This implementation plan outlines the development of the GAS DB MVP (Minimum Viable Product) using Test-Driven Development (TDD) principles. The plan divides the implementation into discrete, testable sections, each with specific objectives and test cases that must pass before progressing to the next section.
+This implementation plan outlines the development of the GAS DB MVP (Minimum Viable Product) using Test-Driven Development (TDD) principles. The plan divides the implementation into discrete, testable sections, each with specific objectives and test cases that must pass before progressing to the next section. So far, four core sections have been successfully completed.
 
 The implementation will use Google Apps Script with clasp for testing, and assumes permissions to read and write to Google Drive files and folders. The plan focuses on delivering core functionality while ensuring code quality, maintainability, and adherence to the requirements specified in the PRD and Class Diagrams.
 
 ## ✅ Section 1: Project Setup and Basic Infrastructure (COMPLETED)
 
-### Objectives ✅
+### Summary ✅
 
-- ✅ Set up the development environment with clasp
-- ✅ Create the basic project structure
-- ✅ Implement core utility classes
-- ✅ Establish test framework
+Section 1 successfully established the development environment, project structure, core utility classes, and the TDD framework. Key utilities like `GASDBLogger`, `ErrorHandler`, and `IdGenerator` were implemented and thoroughly tested. The test framework, including assertion utilities and a test runner, is fully operational.
 
-### Implementation Steps ✅
+**Key Achievements:**
 
-1. **✅ Environment Setup**
-   - ✅ Install and configure clasp
-   - ✅ Set up project structure with appropriate manifest
-   - ✅ Configure test runner for Google Apps Script
-
-   **Implementation Notes:**
-   - Created `package.json` with clasp dependency and npm scripts
-   - Created `appsscript.json` with Drive API v3 access and V8 runtime
-   - Created `clasp.json` with optimized file push order
-   - Established organized directory structure: `src/`, `tests/`, `docs/`
-
-2. **✅ Test Framework Implementation**
-   - ✅ Create assertion utilities
-   - ✅ Implement test runner
-   - ✅ Set up test environment creation and teardown
-
-   **Implementation Notes:**
-   - `AssertionUtilities.js`: 12 comprehensive assertion methods (assertEquals, assertTrue, assertThrows, etc.)
-   - `TestRunner.js`: Complete framework with TestSuite, TestResult, TestResults classes
-   - Global test runner instance for easy access
-   - Setup/teardown hooks with before/after functionality
-   - Detailed test reporting with timing and error information
-
-3. **✅ Core Utility Classes**
-   - ✅ Implement GASDBLogger class
-   - ✅ Implement ErrorHandler class
-   - ✅ Implement IdGenerator class
-
-   **Implementation Notes:**
-   - **GASDBLogger**: 4 log levels (ERROR/WARN/INFO/DEBUG), component-specific loggers, operation timing
-     - **UPDATED**: Renamed from `Logger` to `GASDBLogger` to avoid conflicts with Google Apps Script's built-in Logger class
-     - Maintains all existing functionality: configurable levels, standardized formatting, operation timing
-   - **ErrorHandler**: 9 custom error types extending GASDBError, validation utilities, context preservation
-   - **IdGenerator**: 8 ID generation strategies (UUID, timestamp, ObjectId, sequential, etc.), format validation
-
-### Test Cases ✅
-
-1. **✅ Test Environment Tests**
-   - ✅ Test clasp configuration
-   - ✅ Test Google Drive access permissions
-   - ✅ Test test runner functionality
-
-   **Implemented in:** `tests/unit/Section1Tests.js` - Environment test suite
-
-2. **✅ Utility Class Tests**
-   - ✅ Test GASDBLogger functionality (different log levels)
-   - ✅ Test ErrorHandler standard error types
-   - ✅ Test IdGenerator uniqueness and format
-
-   **Implemented in:** `tests/unit/Section1Tests.js` - Comprehensive utility class tests
-
-### Completion Criteria ✅
-
-- ✅ All test cases pass (verified in implementation)
-- ✅ Project structure is established (complete directory structure created)
-- ✅ Core utility classes are implemented and tested (GASDBLogger, ErrorHandler, IdGenerator complete)
-- ✅ Test framework is operational (full TDD infrastructure ready)
+- ✅ Clasp environment configured with an organized project structure.
+- ✅ Comprehensive test framework (`AssertionUtilities.js`, `TestRunner.js`) implemented.
+- ✅ Core utilities (`GASDBLogger.js`, `ErrorHandler.js`, `IdGenerator.js`) created and tested.
+- ✅ `GASDBLogger` (renamed from `Logger`) provides robust, configurable logging.
+- ✅ `test-runner.sh` script enhanced for reliable test execution with clasp.
+- ✅ All 16 test cases for this section are passing (100%).
 
 **Files Created:**
 
-- Core: `Logger.js` (GASDBLogger class), `ErrorHandler.js`, `IdGenerator.js`, `AssertionUtilities.js`, `TestRunner.js`
+- Core: `GASDBLogger.js`, `ErrorHandler.js`, `IdGenerator.js`, `AssertionUtilities.js`, `TestRunner.js`
 - Tests: `Section1Tests.js`, `TestExecution.js`
 - Config: `package.json`, `appsscript.json`, `clasp.json`
-- Automation: `test-runner.sh` (enhanced test execution script with clasp error handling)
+- Automation: `test-runner.sh`
 - Docs: `Section1_README.md`, `IMPLEMENTATION_PROGRESS.md`
 
-### Post-Completion Updates ✅
-
-**Logger Class Rename (Completed):**
-
-- **Issue**: Naming conflict identified between custom `Logger` class and Google Apps Script's built-in `Logger` class
-- **Solution**: Renamed custom class from `Logger` to `GASDBLogger` throughout entire codebase
-- **Files Updated**:
-  - `/src/utils/Logger.js` - Main logger implementation
-  - `/src/components/testing/TestRunner.js` - Test framework logging
-  - `/tests/TestExecution.js` - Test execution logging  
-  - `/tests/unit/Section1Tests.js` - Unit test logging
-  - `/src/utils/ErrorHandler.js` - Error handling logging
-- **Benefits**: Eliminates naming conflicts while maintaining all beneficial features:
-  - Configurable log levels (ERROR, WARN, INFO, DEBUG)
-  - Standardized formatting with timestamps and context
-  - Component-specific loggers via `createComponentLogger()`
-  - Operation timing utilities for performance monitoring
-  - Context object support for rich logging information
-- **Verification**: All functionality preserved, no compilation errors, full backward compatibility
-
-**Test Runner Script Enhancement (Completed):**
-
-- **Issue**: The `test-runner.sh` script was throwing "Script function not found" errors when executing tests via clasp, despite tests actually running successfully
-- **Root Cause**: clasp's remote execution API (`clasp run`) was failing due to deployment/API issues, but the actual test functions were executing properly in the Google Apps Script environment
-- **Solution**: Enhanced test-runner.sh script with intelligent log parsing to detect successful test execution regardless of clasp exit codes
-- **Improvements Made**:
-  - Added `check_test_success_in_logs()` function to parse logs for test completion patterns
-  - Added `check_validation_success_in_logs()` function to detect validation success in logs
-  - Enhanced `run_tests()` and `run_validation()` functions to check for actual test results in logs rather than relying solely on clasp exit codes
-  - Improved error handling to detect successful test execution even when clasp returns errors
-- **Files Updated**:
-  - `/test-runner.sh` - Enhanced script with log-based success detection
-- **Verification**: Script now correctly reports test success with 16 tests passed (100% pass rate) across all three test suites:
-  - Environment Tests: 3 tests ✅
-  - Utility Class Tests: 10 tests ✅  
-  - Test Framework Tests: 3 tests ✅
-- **Benefits**: Provides reliable test execution pipeline that works despite underlying clasp API deployment issues
-
-**Ready for Section 2:** All infrastructure components are in place for implementing ScriptProperties Master Index.
+This section provides the foundational tools and infrastructure for subsequent development.
 
 ## ✅ Section 2: ScriptProperties Master Index (COMPLETED)
 
-### Objectives ✅
+### Summary ✅
 
-- ✅ Implement the ScriptProperties master index
-- ✅ Create virtual locking mechanism
-- ✅ Implement conflict detection and resolution
+Section 2 focused on implementing the `MasterIndex` class, which manages collection metadata and virtual locking using Google Apps Script's `ScriptProperties`. This component is crucial for efficient metadata access and preventing concurrent modification conflicts.
 
-### Implementation Steps ✅
+**Key Achievements:**
 
-1. **✅ Master Index Implementation**
-   - ✅ Create MasterIndex class structure
-   - ✅ Define methods to read/write from ScriptProperties
-   - ✅ Define collection metadata management methods
-   - ✅ Implement complete functional implementation (523 lines of code)
-
-2. **✅ Virtual Locking Mechanism**
-   - ✅ Define lock acquisition methods
-   - ✅ Define lock release methods  
-   - ✅ Define lock timeout and expiration methods
-   - ✅ Implement full virtual locking functionality with ScriptLock integration
-
-3. **✅ Conflict Detection**
-   - ✅ Define modification token generation methods
-   - ✅ Define token verification methods
-   - ✅ Define conflict resolution strategy methods
-   - ✅ Implement complete conflict detection and resolution system
-
-### Test Cases ✅
-
-1. **✅ Master Index Tests**
-   - ✅ Test index initialization (4/4 passing)
-   - ✅ Test collection registration (4/4 passing)
-   - ✅ Test metadata updates (4/4 passing)
-   - ✅ Test index persistence (4/4 passing)
-
-2. **✅ Virtual Locking Tests**
-   - ✅ Test lock acquisition (5/5 passing)
-   - ✅ Test lock timeout (5/5 passing)
-   - ✅ Test lock release (5/5 passing)
-   - ✅ Test expired lock cleanup (5/5 passing)
-   - ✅ Test lock coordination (5/5 passing)
-
-3. **✅ Conflict Detection Tests**
-   - ✅ Test token generation (5/5 passing)
-   - ✅ Test token verification (5/5 passing)
-   - ✅ Test conflict detection (5/5 passing)
-   - ✅ Test conflict resolution (5/5 passing)
-   - ✅ Test modification tracking (5/5 passing)
-
-4. **✅ Integration Tests**
-   - ✅ Test component coordination (2/2 passing)
-   - ✅ Test error handling (2/2 passing)
-
-### Completion Criteria ✅
-
-- ✅ All test cases pass (16/16 tests passing - 100% pass rate)
-- ✅ Master index can be read from and written to ScriptProperties
-- ✅ Virtual locking prevents concurrent modifications
-- ✅ Conflicts are detected and resolved appropriately
+- ✅ `MasterIndex.js` (523 lines) implemented, providing methods for reading/writing to `ScriptProperties`, collection metadata management, virtual locking, and conflict detection/resolution.
+- ✅ Integrated `ScriptLock` for robust locking.
+- ✅ All 16 test cases covering index operations, locking, and conflict detection are passing (100%).
 
 **Files Created:**
 
-- Core: `MasterIndex.js` (complete implementation with all method functionality - 523 lines)
-- Tests: `Section2Tests.js` (comprehensive test suite with 16 tests)
-- Updated: `TestExecution.js` (Section 2 test functions), `test-runner.sh` (section support)
+- Core: `MasterIndex.js`
+- Tests: `Section2Tests.js`
+- Updated: `TestExecution.js`, `test-runner.sh`
 
-**Ready for Section 3:** File Service and Drive Integration
+The `MasterIndex` provides a fast and reliable way to manage database metadata, minimizing direct Drive API calls for such operations.
 
 ## ✅ Section 3: File Service and Drive Integration (COMPLETED)
 
-### Current Status ✅ COMPLETED
+### Summary ✅
 
-- **✅ Drive API Resolved**: Google Drive API enabled in Google Cloud Console - all operations working
-- **✅ Test Infrastructure Working**: 36 tests executed, 36 passed (100% pass rate)
-- **✅ File Creation/Access**: Setup tests passing - can create folders and files in Drive
-- **✅ Basic File Operations**: All file operations working perfectly
-- **✅ All Implementation Bugs Fixed**: All 11 previously identified bugs have been resolved
-- **✅ Section 2 Status**: 16/16 tests passing (100% pass rate) - all previous functionality verified
+Section 3 successfully implemented the `FileService` and `FileOperations` classes, enabling robust interaction with Google Drive for storing and managing database files. Drive API integration is fully functional, and all related bugs have been resolved.
 
-### ✅ All Bugs Successfully Fixed
+**Key Achievements:**
 
-**Final Test Results (June 4, 2025):**
-- **Total Tests**: 36
-- **Passed**: 36 (100% pass rate)
-- **Failed**: 0
-- **Test Environment**: Fully functional with real Drive API access
-
-**All Previously Identified Issues Resolved:**
-
-1. **✅ FIXED: Malformed JSON Error Handling**
-   - **Issue**: InvalidFileFormatError not being thrown for malformed JSON
-   - **Root Cause**: Error handling structure in readFile() method causing InvalidFileFormatError to be converted to FileIOError
-   - **Solution**: Restructured readFile() method to let InvalidFileFormatError bubble up directly to retry logic
-   - **Result**: Test now correctly identifies and handles malformed JSON files
-
-2. **✅ FIXED: All Other Implementation Bugs**
-   - **Data Structure Handling**: File reading and JSON parsing working correctly
-   - **File Deletion**: Delete operations working properly
-   - **Error Type Checking**: All error types correctly referenced and handled
-   - **Advanced Features**: Caching, circuit breaker, and batch optimizations all functional
-
-**Successful Test Categories:**
-- ✅ **Setup/Cleanup**: All 6 tests passing (file and folder creation/deletion)
-- ✅ **Basic File Operations**: All core functionality working perfectly
-- ✅ **FileService Functionality**: Complete interface working optimally
-- ✅ **Error Handling**: All error scenarios properly handled
-- ✅ **Advanced Features**: Caching, circuit breakers, and optimizations working
-- ✅ **Integration**: All coordination tests passing
-- ✅ **Edge Cases**: All edge case scenarios handled correctly
-
-### Objectives
-
-- Implement FileService with Drive API integration
-- Create FileOperations for direct Drive API interactions
-- Optimize Drive API calls through intelligent batching and error handling
-
-### Implementation Steps
-
-1. **✅ FileOperations Implementation**
-   - ✅ Create FileOperations class (501 lines of code)
-   - ✅ Implement methods for reading/writing Drive files
-   - ✅ Implement file creation and deletion
-   - ✅ Add logging and retry logic for Drive API calls
-
-2. **✅ FileService Implementation**
-   - ✅ Create FileService class as primary interface (223 lines of code)
-   - ✅ Implement optimized read/write operations
-   - ✅ Add batch operations where possible
-   - ✅ Implement proper error handling and retries
-
-3. **✅ Drive API Optimization**
-   - ✅ Minimize API calls through intelligent operations
-   - ✅ Implement retry logic for transient failures
-   - ✅ Add proper error handling for quota limits
-
-### Test Cases
-
-1. **✅ FileOperations Tests**
-   - ✅ Test direct file reading and writing (working perfectly)
-   - ✅ Test file creation and deletion (working perfectly)
-   - ✅ Test error handling and retries (working perfectly)
-   - ✅ Test Drive API integration (working perfectly)
-
-2. **✅ FileService Tests**
-   - ✅ Test optimized file operations (working perfectly)
-   - ✅ Test batch operations where applicable (working perfectly)
-   - ✅ Test error recovery (working perfectly)
-   - ✅ Test caching functionality (working perfectly)
-
-3. **✅ Integration Tests**
-   - ✅ Test coordinated file operations (working perfectly)
-   - ✅ Test Drive API call optimization (working perfectly)
-   - ✅ Test component integration (working perfectly)
-
-### Completion Criteria
-
-- ✅ All test cases pass (currently 36/36 passing - 100% pass rate)
-- ✅ FileOperations can perform most required Drive API interactions (basic functionality working)
-- ✅ FileService provides optimized interface for file operations (implementation complete)
-- ✅ Proper error handling and retry logic implemented (mostly working, some bugs to fix)
-
-### Primary Bug Categories
-
-1. **Test Configuration Issues**
-   - Tests using hardcoded fake file IDs instead of real files created during setup
-   - Need to update tests to use actual file IDs from test setup phase
-
-2. **Implementation Bugs**
-   - JSON data structure preservation in file reading
-   - File deletion not working properly
-   - Error type handling in test assertions
-
-3. **Feature Completion**
-   - FileService caching mechanism needs implementation
-   - Circuit breaker pattern needs completion
-   - Batch operation efficiency needs optimization
+- ✅ `FileOperations.js` (501 lines) created for direct Drive API interactions (read, write, create, delete files) with logging and retry logic.
+- ✅ `FileService.js` (223 lines) implemented as the primary interface for optimized file operations, including batching, caching, and circuit breaker patterns.
+- ✅ Google Drive API access fully resolved and functional.
+- ✅ All 36 test cases, covering basic file operations, advanced features (caching, circuit breaker), error handling, and integration, are passing (100%).
+- ✅ Resolved issues including malformed JSON error handling and data structure preservation.
 
 **Files Created:**
 
-- Core: `FileOperations.js` (501 lines), `FileService.js` (223 lines)
-- Tests: `Section3Tests.js` (608 lines with 36 comprehensive tests)
-- Updated: `appsscript.json` (OAuth scopes), `TestExecution.js` (Section 3 support)
+- Core: `FileOperations.js`, `FileService.js`
+- Tests: `Section3Tests.js`
+- Updated: `appsscript.json` (OAuth scopes), `TestExecution.js`
 
-**Status**: Section 3 has made major progress with Drive API now fully functional. With 36/36 tests passing (100% pass rate), the remaining issues are specific implementation bugs and feature completion tasks rather than fundamental API access problems. Ready for systematic bug fixing to achieve 100% pass rate.
+This section ensures reliable and optimized data persistence on Google Drive.
 
-## ✅ Section 4: Database and Collection Management (COMPLETE - GREEN PHASE 100%)
+## ✅ Section 4: Database and Collection Management (COMPLETED & REFACTORED)
 
-### Current Status ✅ GREEN PHASE COMPLETE - 24/24 TESTS PASSING
+### Summary ✅
 
-- **✅ TDD Red Phase Complete**: Comprehensive failing tests implemented (24 tests, 5 passing, 19 failing)
-- **✅ Test Infrastructure Working**: All setup and cleanup tests passing (5/5)
-- **✅ DatabaseConfig Class Implemented**: Complete configuration validation and defaults functionality
-- **✅ Database Class Implemented**: Main database functionality with collection management
-- **✅ Final Bug Fixed**: Corruption handling test now properly detects and handles corrupted JSON
-- **✅ 100% Test Coverage**: All 24 tests passing successfully
+Section 4 implemented the core `Database` and `DatabaseConfig` classes. Initially, `Database` handled index file management and collection operations directly. A significant post-completion refactoring shifted primary responsibility for collection metadata and management to the `MasterIndex` (from Section 2), with the `Database` class now delegating these tasks. This optimizes performance by leveraging `ScriptProperties` and uses Drive-based index files mainly for backup and migration.
 
-### ✅ TDD Red Phase Results (June 5, 2025)
+**Key Achievements & Architecture:**
 
-**Final Test Results:**
-- **Total Tests**: 24
-- **Passed**: 5 (20.8% - all infrastructure)
-- **Failed**: 19 (79.2% - all core functionality)
-- **Status**: Perfect TDD Red phase achieved
+- ✅ `DatabaseConfig.js` implemented for configuration validation and defaults.
+- ✅ `Database.js` implemented for high-level database operations.
+- ✅ **Post-Completion Refactoring**:
+  - `MasterIndex` is now the authoritative source for collection metadata and IDs.
+  - `Database` class methods (`collection()`, `createCollection()`, `listCollections()`, `dropCollection()`, `initialise()`) now delegate to `MasterIndex`.
+  - Drive-based index files are used for explicit backup (`backupIndexToDrive()`) and recovery/migration.
+  - This significantly reduces Drive API calls for routine operations.
+- ✅ All 18 streamlined test cases (post-refactoring) covering `DatabaseConfig`, `Database` initialization, collection management delegation, index file structure (including corruption handling), and `MasterIndex` integration are passing (100%).
 
-**✅ Correctly Passing Tests (Infrastructure):**
-- Setup Tests (2/2): Test environment creation, configuration preparation
-- Cleanup Tests (3/3): File cleanup, folder cleanup, master index cleanup
-
-**✅ Correctly Failing Tests (Implementation):**
-- DatabaseConfig Functionality (0/3): All failing with "DatabaseConfig is not defined"
-- Database Initialization (0/4): All failing with "Database is not defined"
-- Collection Management (0/6): All failing with proper class not found errors
-- Index File Structure (0/4): All failing with expected implementation errors
-- Database Master Index Integration (0/2): All failing with correct error patterns
-
-**Test Quality Indicators:**
-- ✅ Clean error messages guiding implementation
-- ✅ Proper test isolation and independence
-- ✅ Comprehensive coverage of all Section 4 requirements
-- ✅ Robust setup/cleanup ensuring test environment stability
-
-### ✅ Green Phase Implementation Complete (100% Test Success)
-
-**Final Implementation Results:**
-- **Total Tests**: 24
-- **Passed**: 24 (100% pass rate)
-- **Failed**: 0
-- **Status**: ✅ Section 4 Complete - All objectives achieved
-
-**✅ Successfully Implemented Classes:**
-
-1. **DatabaseConfig Class** (`/src/core/DatabaseConfig.js`)
-   - Configuration validation and defaults
-   - Support for custom configuration parameters  
-   - Validation for lock timeout, log level, and other parameters
-   - Clone and toObject methods for configuration management
-
-2. **Database Class** (`/src/core/Database.js`)
-   - Database initialization and index file management
-   - Collection creation, access, listing, and deletion
-   - Master index synchronization
-   - Index file structure management
-   - Collection name validation
-   - Error handling and logging
-   - **Fixed**: Corruption handling for invalid JSON in index files
-
-**✅ All Test Categories Passing:**
-- ✅ **Setup Tests (2/2)**: Test environment creation, configuration preparation
-- ✅ **DatabaseConfig Functionality (3/3)**: All configuration tests passing
-- ✅ **Database Initialization (4/4)**: All initialization tests passing
-- ✅ **Collection Management (6/6)**: All collection CRUD tests passing
-- ✅ **Index File Structure (4/4)**: All index file tests passing including corruption handling
-- ✅ **Database Master Index Integration (2/2)**: All integration tests passing  
-- ✅ **Cleanup Tests (3/3)**: All cleanup tests passing
-
-**✅ Fixed Issues:**
-
-- **Corruption Handling**: The index file corruption test was failing because the corrupted JSON (`{ "collections": { invalid json content }`) was not being properly detected as invalid. This was resolved by ensuring the FileOperations → FileService → Database error handling chain correctly propagates JSON parsing errors.
-
-
-### ✅ Post-Completion Architecture Refactoring (June 6, 2025) - COMPLETED
-
-**Issue Identified**: The relationship between `Database` and `MasterIndex` classes has redundant responsibilities:
-
-- Both classes maintain collection metadata and driveFileIds
-- `MasterIndex` was designed to be the primary source for collection IDs to minimize Drive API calls
-- The current implementation results in unnecessary duplication and Drive API calls
-
-**Refactoring Goals**:
-
-1. Make `MasterIndex` the authoritative source for collection metadata and IDs
-2. Reduce Drive-based index file usage to backups and migrations only
-3. Consolidate collection management in `MasterIndex`
-4. Have `Database` delegate collection operations to `MasterIndex`
-
-**✅ Refactoring Progress - COMPLETED**:
-
-- ✅ Test cases updated to assert proper delegation behavior
-- ✅ `removeCollection` method implemented in `MasterIndex` class
-- ✅ Fixed logger initialization in `MasterIndex` class
-- ✅ **Database class refactored** - All methods now delegate to `MasterIndex`
-- ✅ **Architecture validation** - All 18 Section 4 tests passing (100% success rate)
-
-**✅ Completed Database Refactoring**:
-
-1. **collection()** - Now checks MasterIndex first, falls back to Drive index for migration
-2. **createCollection()** - Prioritizes MasterIndex updates, Drive index as backup
-3. **listCollections()** - Uses MasterIndex.getCollections() as primary source
-4. **dropCollection()** - Checks MasterIndex first for collection removal
-5. **initialise()** - Loads from MasterIndex first, syncs with Drive index as needed
-6. **backupIndexToDrive()** - New explicit method for Drive persistence
-
-**Updated Design**:
+**Updated Design (Post-Refactoring):**
 
 ```mermaid
 classDiagram
@@ -464,40 +138,20 @@ classDiagram
     Database --> MasterIndex : uses
 ```
 
-**✅ Architecture Benefits Achieved**:
+**Benefits of Refactoring:**
 
-1. ✅ **Faster operations** - Minimized Drive API calls by using ScriptProperties
-2. ✅ **Clear separation** - MasterIndex manages metadata, Database manages high-level operations
-3. ✅ **Single source of truth** - MasterIndex is authoritative for collection data
-4. ✅ **Robust backup** - Drive index file serves as explicit backup mechanism
+- ✅ Faster operations due to minimized Drive API calls.
+- ✅ Clearer separation of concerns: `MasterIndex` for metadata, `Database` for high-level operations.
+- ✅ Single source of truth for collection data (`MasterIndex`).
+- ✅ Robust backup mechanism via Drive index file.
 
-**✅ Validation Results (June 6, 2025)**:
+**Files Created/Updated:**
 
-- **Total Tests**: 18 (previously 24, streamlined after refactoring)
-- **Passed**: 18 (100% pass rate)
-- **Failed**: 0
-- **Key Evidence**: Logs show proper delegation behavior:
-  - "[Database] Loading existing collections from MasterIndex"
-  - "[MasterIndex] Collection removed from master index"
-  - "[Database] Backing up MasterIndex to Drive index file"
+- Core: `DatabaseConfig.js`, `Database.js`
+- Tests: `Section4Tests.js` (reflecting 18 tests post-refactoring)
+- Updated: `UnifiedTestExecution.js`, `TestExecution.js`, `TestRunner.js`
 
-### ✅ Test Implementation Complete
-
-**Files Created:**
-- Tests: `Section4Tests.js` (719 lines with 7 comprehensive test suites)
-- Updated: `UnifiedTestExecution.js` (Section 4 configuration), `TestExecution.js` (Section 4 functions)
-- Enhanced: `TestRunner.js` (improved logging with detailed results and compact summary)
-
-**✅ Architecture Refactoring Complete:**
-
-The post-completion refactoring has been successfully implemented and validated:
-
-1. ✅ **Database class modified** - All collection operations now delegate to MasterIndex
-2. ✅ **Drive index operations updated** - Now used for backup/restore only
-3. ✅ **File read/write operations optimized** - Minimized Drive API calls through ScriptProperties
-4. ✅ **Architecture improvements documented** - Updated class diagrams and implementation notes
-
-**Ready for Section 5:** Collection Components Implementation
+This refactored architecture provides a more efficient and maintainable foundation for the database.
 
 ## Section 5: Collection Components Implementation
 
@@ -880,7 +534,7 @@ The implementation will use clasp for testing with Google Apps Script. Key consi
 
 ## Conclusion
 
-This implementation plan provides a structured approach to developing the GAS DB MVP using Test-Driven Development. By breaking the implementation into discrete, testable sections with clear objectives and completion criteria, the plan ensures that each component is thoroughly tested and meets requirements before integration.
+This implementation plan provides a structured approach to developing the GAS DB MVP using Test-Driven Development. By breaking the implementation into discrete, testable sections with clear objectives and completion criteria, the plan ensures that each component is thoroughly tested and meets requirements before integration. The first four core sections have been successfully completed, laying a strong foundation.
 
 The focus on TDD ensures code quality and maintainability, while the section-by-section approach allows for incremental progress and validation. The plan addresses the unique challenges of Google Apps Script development, including execution limits, API constraints, and cross-instance coordination.
 
@@ -892,28 +546,27 @@ The separation of concerns in Collection and FileService components improves cod
 
 **Section 1: Project Setup and Basic Infrastructure** - COMPLETE
 
-- Status: All objectives met, all test cases implemented and passing
-- Key Components: GASDBLogger, ErrorHandler, IdGenerator, Test Framework
-- Files: 9 implementation files created
-- Next: Ready to proceed with Section 3
+- Status: All objectives met, 16/16 tests passing (100%).
+- Key Components: `GASDBLogger`, `ErrorHandler`, `IdGenerator`, Test Framework.
+- Foundation for TDD and core utilities established.
 
 **Section 2: ScriptProperties Master Index** - COMPLETE
 
-- Status: All objectives met, all test cases implemented and passing
-- Key Components: MasterIndex class with virtual locking, conflict detection, ScriptProperties integration
-- Files: Complete MasterIndex.js implementation (523 lines), comprehensive test suite (16 tests)
-- Test Results: 16/16 tests passing (100% pass rate)
-- Next: Ready to proceed with Section 3
-
+- Status: All objectives met, 16/16 tests passing (100%).
+- Key Components: `MasterIndex` class with virtual locking, conflict detection, `ScriptProperties` integration.
+- Efficient metadata management and concurrency control established.
 
 **Section 3: File Service and Drive Integration** - COMPLETE
 
-- Status: All tests failing as expected - ready for implementation (green phase)
-- Test Coverage: 7 comprehensive test suites covering FileOperations and FileService functionality
-- Test Results: FileOperations and FileService classes not yet implemented, causing expected test failures
-- Dependencies: Sections 1-2 complete and providing solid foundation
-- Next Steps: Implement FileOperations and FileService classes to make tests pass
+- Status: All objectives met, 36/36 tests passing (100%).
+- Key Components: `FileOperations`, `FileService`, Drive API integration.
+- Robust and optimized file persistence on Google Drive achieved.
 
+**Section 4: Database and Collection Management** - COMPLETE & REFACTORED
+
+- Status: All objectives met (including refactoring), 18/18 tests passing (100%).
+- Key Components: `DatabaseConfig`, `Database` (delegating to `MasterIndex`).
+- Core database structure established with optimized metadata handling.
 
 ## Implementation Notes for Future Sections
 
@@ -923,5 +576,3 @@ The separation of concerns in Collection and FileService components improves cod
 - **ErrorHandler**: Extend with new error types as needed, use validation utilities
 - **IdGenerator**: Use `IdGenerator.generateUUID()` for modification tokens
 - **Test Framework**: Follow established pattern with TestSuite creation and GlobalTestRunner
-
-
