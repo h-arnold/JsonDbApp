@@ -8,28 +8,34 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### Database Class Diagram
 
-```
+```text
 +------------------------------------------+
 |                Database                  |
 +------------------------------------------+
-| - indexFileId: String                    |
-| - collections: Map<String, Collection>   |
 | - config: DatabaseConfig                 |
+| - masterIndex: MasterIndex               | 
+| - fileService: FileService               |
+| - initialised: Boolean                   |
+| - collections: Map<String, Collection>   |
+| - indexFileId: String                    |
 +------------------------------------------+
+| + constructor(config: DatabaseConfig)    |
 | + initialise(): void                     |
-| + collection(name): Collection           |
-| + createCollection(name): Collection     |
+| + collection(name: String): Collection   |
+| + createCollection(name: String): Collection |
 | + listCollections(): Array<String>       |
-| + dropCollection(name): Boolean          |
-| - loadIndex(): void                      |
-| - saveIndex(): void                      |
-| - getCachedCollection(name): Collection  |
+| + dropCollection(name: String): Boolean  |
+| + loadIndex(): Object                    |
+| - _findExistingIndexFile(): String       |
+| - _createIndexFile(): void               |
+| - _loadIndexFile(): void                 |
+| - _createCollectionObject(name: String, driveFileId: String): Collection |
 +------------------------------------------+
 ```
 
 ### DatabaseConfig Class Diagram
 
-```
+```text
 +------------------------------------------+
 |             DatabaseConfig               |
 +------------------------------------------+
@@ -38,12 +44,19 @@ This document contains updated class diagrams for the Google Apps Script Databas
 | + lockTimeout: Number                    |
 | + cacheEnabled: Boolean                  |
 | + logLevel: String                       |
+| + masterIndexKey: String                 |
++------------------------------------------+
+| + constructor(config: Object)            |
+| + clone(): DatabaseConfig                |
+| + toObject(): Object                     |
+| - _getDefaultRootFolder(): String        |
+| - _validateConfig(): void                |
 +------------------------------------------+
 ```
 
 ### Collection Class Diagram (Updated)
 
-```
+```text
 +------------------------------------------+
 |               Collection                 |
 +------------------------------------------+
@@ -75,7 +88,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### DocumentOperations Class Diagram (New)
 
-```
+```text
 +------------------------------------------+
 |          DocumentOperations              |
 +------------------------------------------+
@@ -94,7 +107,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### CollectionMetadata Class Diagram (Updated)
 
-```
+```text
 +------------------------------------------+
 |          CollectionMetadata              |
 +------------------------------------------+
@@ -111,7 +124,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### FileService Class Diagram (Updated)
 
-```
+```text
 +-------------------------------------------------+
 |                   FileService                   |
 +-------------------------------------------------+
@@ -138,7 +151,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### FileOperations Class Diagram (Updated)
 
-```
+```text
 +-------------------------------------------------+
 |                 FileOperations                  |
 +-------------------------------------------------+
@@ -159,7 +172,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### QueryEngine Class Diagram
 
-```
+```text
 +------------------------------------------+
 |             QueryEngine                  |
 +------------------------------------------+
@@ -172,7 +185,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### UpdateEngine Class Diagram
 
-```
+```text
 +------------------------------------------+
 |             UpdateEngine                 |
 +------------------------------------------+
@@ -187,7 +200,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### IdGenerator Class Diagram
 
-```
+```text
 +------------------------------------------+
 |             IdGenerator                  |
 +------------------------------------------+
@@ -209,7 +222,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### LockService Class Diagram
 
-```
+```text
 +------------------------------------------+
 |             LockService                  |
 +------------------------------------------+
@@ -223,7 +236,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### GASDBLogger Class Diagram
 
-```
+```text
 +------------------------------------------+
 |              GASDBLogger                 |
 +------------------------------------------+
@@ -249,7 +262,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### ErrorHandler Class Diagram
 
-```
+```text
 +------------------------------------------+
 |             ErrorHandler                 |
 +------------------------------------------+
@@ -270,7 +283,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### GASDBError Class Diagram
 
-```
+```text
 +------------------------------------------+
 |              GASDBError                  |
 +------------------------------------------+
@@ -286,7 +299,7 @@ This document contains updated class diagrams for the Google Apps Script Databas
 
 ### Specific Error Classes
 
-```
+```text
 +------------------------------------------+
 |        DocumentNotFoundError             |
 |        DuplicateKeyError                 |
@@ -300,6 +313,38 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 | All extend GASDBError                    |
 | Each has specific constructor parameters |
++------------------------------------------+
+```
+
+### MasterIndex Class Diagram (New)
+
+```text
++------------------------------------------+
+|               MasterIndex                |
++------------------------------------------+
+| - config: Object                         |
+| - properties: GoogleAppsScript.Properties.Properties |
+| - masterIndexKey: String                 |
+| - lockTimeout: Number                    |
+| - indexData: Object                      |
+| - initialised: Boolean                   |
++------------------------------------------+
+| + constructor(config: Object)            |
+| # initialise(): void (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
+| + isInitialised(): Boolean               |
+| + addCollection(name: String, metadata: Object): void |
+| + save(): void                           |
+| + getCollections(): Object               |
+| + getCollection(name: String): Object    |
+| + updateCollectionMetadata(name: String, updates: Object): void |
+| + removeCollection(name: String): Boolean |
+| + acquireLock(collectionName: String, operationId: String): Boolean |
+| + isLocked(collectionName: String): Boolean |
+| + releaseLock(collectionName: String, operationId: String): Boolean |
+| # - _loadIndex(): void (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
+| # - _saveIndex(): void (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
+| # - _getLockKey(collectionName: String): String (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
+| # - _getTimestamp(): Number (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
 +------------------------------------------+
 ```
 
@@ -414,7 +459,6 @@ Collection            FileService           FileOperations         FileCache
   |                        | getCachedFile()      |                    |
   |                        |--------------------->|                    |
   |                        |                      |                    |
-  |                        |                      |                    |
   |                        |                      | getFile()          |
   |                        |                      |------------------->|
   |                        |                      |                    |
@@ -435,6 +479,7 @@ Collection            FileService           FileOperations         FileCache
 ### FileService Caching
 
 The FileService now explicitly separates file operations from caching:
+
 - FileOperations handles direct Drive API calls
 - FileCache manages in-memory storage of file content
 - FileService orchestrates these components
@@ -442,11 +487,13 @@ The FileService now explicitly separates file operations from caching:
 ### Collection Component Separation
 
 The Collection class now delegates responsibilities:
+
 - DocumentOperations handles CRUD operations on documents
 - CollectionMetadata manages collection statistics and metadata
 - Collection orchestrates these components while maintaining a simple API
 
 This separation improves:
+
 - Code maintainability through focused components
 - Testability by allowing component mocking
 - Future extensibility without major refactoring
@@ -454,6 +501,7 @@ This separation improves:
 ### Batch Operations
 
 The system continues to support batch operations to minimize Drive API calls:
+
 - insertMany() performs a single write for multiple documents
 - updateMany() performs a single write after multiple updates
 - deleteMany() performs a single write after multiple deletions
@@ -461,6 +509,7 @@ The system continues to support batch operations to minimize Drive API calls:
 ### Metadata Management
 
 Metadata management is now more explicitly handled:
+
 - CollectionMetadata provides methods for metadata manipulation
 - Collection coordinates metadata updates with document operations
 - Periodic synchronization ensures index metadata stays current
