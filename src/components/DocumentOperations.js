@@ -25,8 +25,30 @@ class DocumentOperations {
    * @throws {InvalidArgumentError} When collection is invalid
    */
   constructor(collection) {
-    // TODO: Implement constructor validation
-    throw new Error('DocumentOperations constructor not implemented');
+    // Validate collection reference
+    if (!collection) {
+      throw new InvalidArgumentError('collection', collection, 'Collection reference is required');
+    }
+    
+    if (typeof collection !== 'object') {
+      throw new InvalidArgumentError('collection', collection, 'Collection must be an object');
+    }
+    
+    // Validate collection has required properties and methods
+    if (!collection.hasOwnProperty('_documents') || typeof collection._documents !== 'object') {
+      throw new InvalidArgumentError('collection', collection, 'Collection must have _documents property');
+    }
+    
+    if (typeof collection._markDirty !== 'function') {
+      throw new InvalidArgumentError('collection', collection, 'Collection must have _markDirty method');
+    }
+    
+    if (typeof collection._updateMetadata !== 'function') {
+      throw new InvalidArgumentError('collection', collection, 'Collection must have _updateMetadata method');
+    }
+    
+    this._collection = collection;
+    this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
   }
   
   /**
@@ -37,8 +59,37 @@ class DocumentOperations {
    * @throws {ConflictError} When document ID already exists
    */
   insertDocument(doc) {
-    // TODO: Implement document insertion
-    throw new Error('insertDocument not implemented');
+    // Validate document
+    this._validateDocument(doc);
+    
+    // Create a copy to avoid modifying the original
+    const documentToInsert = JSON.parse(JSON.stringify(doc));
+    
+    // Generate ID if not provided
+    if (!documentToInsert._id) {
+      documentToInsert._id = this._generateDocumentId();
+    } else {
+      // Validate provided ID
+      if (typeof documentToInsert._id !== 'string' || documentToInsert._id.trim() === '') {
+        throw new InvalidArgumentError('_id', documentToInsert._id, 'Document ID must be a non-empty string');
+      }
+      
+      // Check for duplicate ID
+      if (this._collection._documents[documentToInsert._id]) {
+        throw new ConflictError('document', documentToInsert._id, 'Document with this ID already exists');
+      }
+    }
+    
+    // Insert document
+    this._collection._documents[documentToInsert._id] = documentToInsert;
+    
+    // Update collection metadata and mark dirty
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    
+    this._logger.debug('Document inserted', { documentId: documentToInsert._id });
+    
+    return documentToInsert;
   }
   
   /**
@@ -48,8 +99,19 @@ class DocumentOperations {
    * @throws {InvalidArgumentError} When ID is invalid
    */
   findDocumentById(id) {
-    // TODO: Implement document finding by ID
-    throw new Error('findDocumentById not implemented');
+    // Validate ID
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+    }
+    
+    const document = this._collection._documents[id];
+    
+    if (document) {
+      // Return a copy to prevent external modification
+      return JSON.parse(JSON.stringify(document));
+    }
+    
+    return null;
   }
   
   /**
@@ -57,8 +119,19 @@ class DocumentOperations {
    * @returns {Array<Object>} Array of all documents
    */
   findAllDocuments() {
-    // TODO: Implement finding all documents
-    throw new Error('findAllDocuments not implemented');
+    const documents = [];
+    
+    // Convert documents object to array
+    for (const documentId in this._collection._documents) {
+      if (this._collection._documents.hasOwnProperty(documentId)) {
+        // Return copies to prevent external modification
+        documents.push(JSON.parse(JSON.stringify(this._collection._documents[documentId])));
+      }
+    }
+    
+    this._logger.debug('Found all documents', { count: documents.length });
+    
+    return documents;
   }
   
   /**
@@ -69,8 +142,41 @@ class DocumentOperations {
    * @throws {InvalidArgumentError} When parameters are invalid
    */
   updateDocument(id, updateData) {
-    // TODO: Implement document update
-    throw new Error('updateDocument not implemented');
+    // Validate ID
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+    }
+    
+    // Validate update data
+    if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
+      throw new InvalidArgumentError('updateData', updateData, 'Update data must be an object');
+    }
+    
+    // Check if document exists
+    if (!this._collection._documents[id]) {
+      return { acknowledged: true, modifiedCount: 0 };
+    }
+    
+    // Create updated document by merging
+    const existingDocument = this._collection._documents[id];
+    const updatedDocument = Object.assign({}, existingDocument, updateData);
+    
+    // Preserve the original _id (cannot be changed)
+    updatedDocument._id = existingDocument._id;
+    
+    // Validate the updated document
+    this._validateDocument(updatedDocument);
+    
+    // Update document in collection
+    this._collection._documents[id] = updatedDocument;
+    
+    // Update collection metadata and mark dirty
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    
+    this._logger.debug('Document updated', { documentId: id });
+    
+    return { acknowledged: true, modifiedCount: 1 };
   }
   
   /**
@@ -80,8 +186,26 @@ class DocumentOperations {
    * @throws {InvalidArgumentError} When ID is invalid
    */
   deleteDocument(id) {
-    // TODO: Implement document deletion
-    throw new Error('deleteDocument not implemented');
+    // Validate ID
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+    }
+    
+    // Check if document exists
+    if (!this._collection._documents[id]) {
+      return { acknowledged: true, deletedCount: 0 };
+    }
+    
+    // Delete document
+    delete this._collection._documents[id];
+    
+    // Update collection metadata and mark dirty
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    
+    this._logger.debug('Document deleted', { documentId: id });
+    
+    return { acknowledged: true, deletedCount: 1 };
   }
   
   /**
@@ -89,8 +213,9 @@ class DocumentOperations {
    * @returns {number} Total number of documents
    */
   countDocuments() {
-    // TODO: Implement document counting
-    throw new Error('countDocuments not implemented');
+    const count = Object.keys(this._collection._documents).length;
+    this._logger.debug('Counted documents', { count });
+    return count;
   }
   
   /**
@@ -100,8 +225,12 @@ class DocumentOperations {
    * @throws {InvalidArgumentError} When ID is invalid
    */
   documentExists(id) {
-    // TODO: Implement document existence check
-    throw new Error('documentExists not implemented');
+    // Validate ID
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+    }
+    
+    return this._collection._documents.hasOwnProperty(id);
   }
   
   /**
@@ -110,8 +239,21 @@ class DocumentOperations {
    * @returns {string} Generated unique ID
    */
   _generateDocumentId() {
-    // TODO: Implement ID generation using IdGenerator
-    throw new Error('_generateDocumentId not implemented');
+    let id;
+    let attempts = 0;
+    const maxAttempts = 100;
+    
+    // Generate unique ID (with collision protection)
+    do {
+      id = IdGenerator.generateUUID();
+      attempts++;
+      
+      if (attempts >= maxAttempts) {
+        throw new Error('Failed to generate unique document ID after maximum attempts');
+      }
+    } while (this._collection._documents[id]);
+    
+    return id;
   }
   
   /**
@@ -121,7 +263,31 @@ class DocumentOperations {
    * @throws {InvalidArgumentError} When document is invalid
    */
   _validateDocument(doc) {
-    // TODO: Implement document validation
-    throw new Error('_validateDocument not implemented');
+    // Check if document is provided
+    if (!doc) {
+      throw new InvalidArgumentError('doc', doc, 'Document is required');
+    }
+    
+    // Check if document is an object
+    if (typeof doc !== 'object' || Array.isArray(doc)) {
+      throw new InvalidArgumentError('doc', doc, 'Document must be an object');
+    }
+    
+    // Check for forbidden fields (reserved prefixes)
+    for (const field in doc) {
+      if (field.startsWith('__')) {
+        throw new InvalidArgumentError('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
+      }
+    }
+    
+    // Validate _id field if present
+    if (doc._id !== undefined && (typeof doc._id !== 'string' || doc._id.trim() === '')) {
+      throw new InvalidArgumentError('doc._id', doc._id, 'Document _id must be a non-empty string if provided');
+    }
+    
+    // Additional validation could be added here for:
+    // - Maximum document size
+    // - Field name restrictions
+    // - Data type constraints
   }
 }
