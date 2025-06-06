@@ -1,8 +1,12 @@
 /**
- * AssertionUtilities - Provides assertion methods for testing in Google Apps Script
+ * AssertionUtilities.js - Static assertion methods
  * 
- * This class provides assertion methods similar to those found in traditional testing
- * frameworks, adapted for the Google Apps Script environment.
+ * Contains all assertion methods as static functions for test validation.
+ * These utilities are framework-independent and can be used standalone.
+ */
+
+/**
+ * AssertionUtilities - Static assertion methods for testing
  */
 class AssertionUtilities {
   
