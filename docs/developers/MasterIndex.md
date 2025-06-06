@@ -12,6 +12,8 @@
       - [`addCollection(name, metadata)`](#addcollectionname-metadata)
       - [`getCollection(name)` / `getCollections()`](#getcollectionname--getcollections)
       - [`updateCollectionMetadata(name, updates)`](#updatecollectionmetadataname-updates)
+      - [`removeCollection(name)`](#removecollectionname)
+      - [`getCollections()`](#getcollections)
     - [Locking Methods](#locking-methods)
       - [`acquireLock(collectionName, operationId)`](#acquirelockcollectionname-operationid)
       - [`releaseLock(collectionName, operationId)`](#releaselockcollectionname-operationid)
@@ -73,19 +75,25 @@ Prevents concurrent modifications across script instances:
 
 ```javascript
 {
-  version: 1,
-  lastUpdated: "2024-01-01T12:00:00Z",
+  version: Number,
+  lastUpdated: String,
   collections: {
-    "collectionName": {
-      name: "collectionName",
-      fileId: "driveFileId",
-      lastModified: "2024-01-01T12:00:00Z",
-      modificationToken: "timestamp-randomstring",
-      lockStatus: null | { lockedBy, lockedAt, expiresAt }
+    [collectionName]: {
+      name: String,
+      fileId: String | null,
+      created: String,
+      lastModified: String,
+      documentCount: Number,
+      modificationToken: String,
+      lockStatus: null | { lockedBy: String, lockedAt: String, expiresAt: String }
     }
   },
-  locks: { /* collection locks */ },
-  modificationHistory: { /* change tracking */ }
+  locks: {
+    [collectionName]: { lockedBy: String, lockedAt: String, expiresAt: String }
+  },
+  modificationHistory: {
+    [collectionName]: Array<{ operation: String, timestamp: String, data: Object }>
+  }
 }
 ```
 
@@ -128,6 +136,19 @@ Updates collection metadata with new modification token.
 
 - `updates` (Object): Metadata changes
 - **Returns:** Updated collection data
+
+#### `removeCollection(name)`
+
+Removes a collection from the master index.
+
+- `name` (String): Collection name to remove
+- **Returns:** Boolean - `true` if the collection was removed, `false` otherwise
+
+#### `getCollections()`
+
+Retrieves all collections in the master index.
+
+- **Returns:** Object - map of collection metadata
 
 ### Locking Methods
 

@@ -322,29 +322,33 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |               MasterIndex                |
 +------------------------------------------+
-| - config: Object                         |
-| - properties: GoogleAppsScript.Properties.Properties |
-| - masterIndexKey: String                 |
-| - lockTimeout: Number                    |
-| - indexData: Object                      |
-| - initialised: Boolean                   |
+| - _config: Object                        |
+| - _logger: GASDBLogger                   |
+| - _data: { version: Number, lastUpdated: String, collections: Object, locks: Object, modificationHistory: Object } |
 +------------------------------------------+
 | + constructor(config: Object)            |
-| # initialise(): void (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
 | + isInitialised(): Boolean               |
-| + addCollection(name: String, metadata: Object): void |
+| + addCollection(name: String, metadata: Object): Object |
 | + save(): void                           |
 | + getCollections(): Object               |
 | + getCollection(name: String): Object    |
-| + updateCollectionMetadata(name: String, updates: Object): void |
-| + removeCollection(name: String): Boolean |
+| + updateCollectionMetadata(name: String, updates: Object): Object |
+| + removeCollection(name: String): Boolean|
 | + acquireLock(collectionName: String, operationId: String): Boolean |
-| + isLocked(collectionName: String): Boolean |
+| + isLocked(collectionName: String): Boolean|
 | + releaseLock(collectionName: String, operationId: String): Boolean |
-| # - _loadIndex(): void (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
-| # - _saveIndex(): void (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
-| # - _getLockKey(collectionName: String): String (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
-| # - _getTimestamp(): Number (Note: This seems to be missing from the provided MasterIndex.js, added based on common patterns) |
+| + cleanupExpiredLocks(): Boolean         |
+| + generateModificationToken(): String    |
+| + hasConflict(collectionName: String, expectedToken: String): Boolean |
+| + resolveConflict(collectionName: String, newData: Object, strategy: String): { success: Boolean, data: Object, strategy: String } |
+| + getModificationHistory(collectionName: String): Array<Object> |
+| + validateModificationToken(token: String): Boolean |
+| # _loadFromScriptProperties(): void       |
+| # _removeLock(collectionName: String): void |
+| # _addToModificationHistory(collectionName: String, operation: String, data: Object): void |
+| # _internalCleanupExpiredLocks(): Boolean |
+| # _acquireScriptLock(timeout: Number): Lock |
+| # _withScriptLock(operation: Function, timeout: Number): * |
 +------------------------------------------+
 ```
 
