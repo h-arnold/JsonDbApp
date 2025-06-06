@@ -27,25 +27,60 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} For invalid metadata input
    */
   constructor(initialMetadata = {}) {
-    // TODO: Implement constructor
-    // This is a placeholder that will cause tests to fail (Red phase)
-    throw new Error('CollectionMetadata not yet implemented');
+    // Validate input is an object
+    if (typeof initialMetadata !== 'object' || initialMetadata === null || Array.isArray(initialMetadata)) {
+      throw new InvalidArgumentError('initialMetadata', initialMetadata, 'Must be an object');
+    }
+
+    const now = new Date();
+    
+    // Set created timestamp
+    if (initialMetadata.created !== undefined) {
+      if (!(initialMetadata.created instanceof Date) || isNaN(initialMetadata.created.getTime())) {
+        throw new InvalidArgumentError('created', initialMetadata.created, 'Must be a valid Date object');
+      }
+      this.created = new Date(initialMetadata.created.getTime());
+    } else {
+      this.created = new Date(now.getTime());
+    }
+
+    // Set lastUpdated timestamp
+    if (initialMetadata.lastUpdated !== undefined) {
+      if (!(initialMetadata.lastUpdated instanceof Date) || isNaN(initialMetadata.lastUpdated.getTime())) {
+        throw new InvalidArgumentError('lastUpdated', initialMetadata.lastUpdated, 'Must be a valid Date object');
+      }
+      this.lastUpdated = new Date(initialMetadata.lastUpdated.getTime());
+    } else {
+      this.lastUpdated = new Date(now.getTime());
+    }
+
+    // Set document count with validation
+    if (initialMetadata.documentCount !== undefined) {
+      if (typeof initialMetadata.documentCount !== 'number' || !Number.isInteger(initialMetadata.documentCount)) {
+        throw new InvalidArgumentError('documentCount', initialMetadata.documentCount, 'Must be an integer');
+      }
+      if (initialMetadata.documentCount < 0) {
+        throw new InvalidArgumentError('documentCount', initialMetadata.documentCount, 'Cannot be negative');
+      }
+      this.documentCount = initialMetadata.documentCount;
+    } else {
+      this.documentCount = 0;
+    }
   }
 
   /**
    * Update the lastModified timestamp to current time
    */
   updateLastModified() {
-    // TODO: Implement updateLastModified
-    throw new Error('updateLastModified not yet implemented');
+    this.lastUpdated = new Date();
   }
 
   /**
    * Increment document count by 1 and update lastModified
    */
   incrementDocumentCount() {
-    // TODO: Implement incrementDocumentCount
-    throw new Error('incrementDocumentCount not yet implemented');
+    this.documentCount++;
+    this.updateLastModified();
   }
 
   /**
@@ -53,8 +88,11 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} If count would go below zero
    */
   decrementDocumentCount() {
-    // TODO: Implement decrementDocumentCount
-    throw new Error('decrementDocumentCount not yet implemented');
+    if (this.documentCount <= 0) {
+      throw new InvalidArgumentError('documentCount', this.documentCount, 'Cannot decrement below zero');
+    }
+    this.documentCount--;
+    this.updateLastModified();
   }
 
   /**
@@ -63,8 +101,14 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} For invalid count values
    */
   setDocumentCount(count) {
-    // TODO: Implement setDocumentCount
-    throw new Error('setDocumentCount not yet implemented');
+    if (typeof count !== 'number' || !Number.isInteger(count)) {
+      throw new InvalidArgumentError('count', count, 'Must be an integer');
+    }
+    if (count < 0) {
+      throw new InvalidArgumentError('count', count, 'Cannot be negative');
+    }
+    this.documentCount = count;
+    this.updateLastModified();
   }
 
   /**
@@ -72,8 +116,11 @@ class CollectionMetadata {
    * @returns {Object} Plain object with metadata properties
    */
   toObject() {
-    // TODO: Implement toObject
-    throw new Error('toObject not yet implemented');
+    return {
+      created: new Date(this.created.getTime()),
+      lastUpdated: new Date(this.lastUpdated.getTime()),
+      documentCount: this.documentCount
+    };
   }
 
   /**
@@ -81,7 +128,10 @@ class CollectionMetadata {
    * @returns {CollectionMetadata} New instance with same values
    */
   clone() {
-    // TODO: Implement clone
-    throw new Error('clone not yet implemented');
+    return new CollectionMetadata({
+      created: new Date(this.created.getTime()),
+      lastUpdated: new Date(this.lastUpdated.getTime()),
+      documentCount: this.documentCount
+    });
   }
 }
