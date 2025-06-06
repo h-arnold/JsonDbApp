@@ -199,13 +199,11 @@ const TEST_SECTIONS = {
     description: 'Database and Collection Management',
     runFunction: 'runSection4Tests',
     suites: {
-      'Section 4 Setup': 'testSection4Setup',
       'DatabaseConfig Functionality': 'testDatabaseConfigFunctionality',
       'Database Initialization': 'testDatabaseInitialization',
       'Collection Management': 'testCollectionManagement',
       'Index File Structure': 'testIndexFileStructure',
-      'Database Master Index Integration': 'testDatabaseMasterIndexIntegration',
-      'Section 4 Cleanup': 'testSection4Cleanup'
+      'Database Master Index Integration': 'testDatabaseMasterIndexIntegration'
     },
     validations: [
       {

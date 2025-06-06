@@ -70,30 +70,24 @@ function cleanupSection4TestEnvironment() {
   // Clean up created test files
   SECTION4_TEST_DATA.createdFileIds.forEach(fileId => {
     try {
-      if (fileId) {
-        const file = DriveApp.getFileById(fileId);
-        file.setTrashed(true);
-        cleanedFiles++;
-        logger.info('Cleaned up test file', { fileId: fileId });
-      }
+      const file = DriveApp.getFileById(fileId);
+      file.setTrashed(true);
+      cleanedFiles++;
     } catch (error) {
       failedFiles++;
-      logger.warn('Failed to clean up test file', { fileId: fileId, error: error.message });
+      logger.warn('Failed to delete file', { fileId, error: error.message });
     }
   });
   
   // Clean up created test folders
   SECTION4_TEST_DATA.createdFolderIds.forEach(folderId => {
     try {
-      if (folderId) {
-        const folder = DriveApp.getFolderById(folderId);
-        folder.setTrashed(true);
-        cleanedFolders++;
-        logger.info('Cleaned up test folder', { folderId: folderId });
-      }
+      const folder = DriveApp.getFolderById(folderId);
+      folder.setTrashed(true);
+      cleanedFolders++;
     } catch (error) {
       failedFolders++;
-      logger.warn('Failed to clean up test folder', { folderId: folderId, error: error.message });
+      logger.warn('Failed to delete folder', { folderId, error: error.message });
     }
   });
   
@@ -219,6 +213,10 @@ function testDatabaseConfigFunctionality() {
 function testDatabaseInitialization() {
   const suite = new TestSuite('Database Initialisation');
   
+  suite.setBeforeAll(function() {
+    setupSection4TestEnvironment();
+  });
+  
   // Ensure test environment is set up
   suite.setBeforeAll(function() {
     if (!SECTION4_TEST_DATA.testConfig) {
@@ -281,34 +279,37 @@ function testDatabaseInitialization() {
   });
   
   suite.addTest('should handle initialisation with existing index file', function() {
-    // Arrange - Create a mock existing index file
-    const existingIndexData = {
-      collections: {
-        'existingCollection': {
-          name: 'existingCollection',
-          fileId: 'mock-file-id',
-          created: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          documentCount: 5
-        }
-      },
-      lastUpdated: new Date().toISOString()
-    };
+    // Arrange - create a unique test collection for this specific test
+    const testCollectionName = 'existingCollection_' + new Date().getTime();
     
-    // Act & Assert - This should fail initially (TDD Red phase)
-    try {
-      const database = new Database(SECTION4_TEST_DATA.testConfig);
-      
-      // Simulate loading existing data
-      database.initialise();
-      
-      // Should be able to load existing collections
-      const collections = database.listCollections();
-      AssertionUtilities.assertTrue(Array.isArray(collections), 'Should return array of collection names');
-      
-    } catch (error) {
-      throw new Error('Database initialisation with existing data not implemented: ' + error.message);
+    // First, create a database and add a collection to ensure it exists in MasterIndex
+    const setupConfig = Object.assign({}, SECTION4_TEST_DATA.testConfig);
+    const setupDatabase = new Database(setupConfig);
+    setupDatabase.initialise();
+    setupDatabase.createCollection(testCollectionName);
+    
+    // Track the created file for cleanup
+    const setupCollections = setupDatabase.listCollections();
+    if (setupCollections.includes(testCollectionName)) {
+      // Find the collection object to get its fileId for cleanup
+      const masterIndex = new MasterIndex({ masterIndexKey: setupConfig.masterIndexKey });
+      const miCollections = masterIndex.getCollections();
+      if (miCollections[testCollectionName] && miCollections[testCollectionName].fileId) {
+        SECTION4_TEST_DATA.createdFileIds.push(miCollections[testCollectionName].fileId);
+      }
     }
+    
+    // Act - create a new database instance that should load the existing collection
+    const config = Object.assign({}, SECTION4_TEST_DATA.testConfig);
+    const database = new Database(config);
+    database.initialise();
+    const collections = database.listCollections();
+    
+    // Assert
+    AssertionUtilities.assertTrue(
+      collections.includes(testCollectionName), 
+      'Database should handle existing index file and load collections'
+    );
   });
   
   return suite;
@@ -453,6 +454,17 @@ function testCollectionManagement() {
     }
   });
   
+  suite.addTest('should throw error if collection does not exist and autoCreateCollections is false', function() {
+    // Arrange
+    const config = Object.assign({}, SECTION4_TEST_DATA.testConfig, { autoCreateCollections: false });
+    const database = new Database(config);
+
+    // Act & Assert
+    AssertionUtilities.assertThrows(() => {
+      database.collection('nonExistentCollection');
+    }, Error, 'Should throw error when collection does not exist with autoCreateCollections disabled');
+  });
+  
   suite.addTest('should handle collection name validation', function() {
     // Arrange
     const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
@@ -587,6 +599,18 @@ function testIndexFileStructure() {
       miCollections.hasOwnProperty(collectionName),
       'MasterIndex should include new collection created by Database'
     );
+  });
+
+  suite.addTest('should backup MasterIndex to the Drive-based index file', function() {
+    // Arrange
+    const database = SECTION4_TEST_DATA.testDatabase || new Database(SECTION4_TEST_DATA.testConfig);
+    database.initialise();
+
+    // Act
+    const backedUp = database.backupIndexToDrive();
+
+    // Assert
+    AssertionUtilities.assertTrue(backedUp, 'backupIndexToDrive should return true on success');
   });
 
   return suite;
