@@ -319,38 +319,51 @@ const testSuites = new Map([
    - ✅ Unified reporting format implemented
 
 #### **🚧 IN PROGRESS:**
-- **Test Suite Migration** - Deferred per user request (test files still use old patterns)
+- **Test Suite Migration** - ✅ **Section 1 Complete**, Section 2-4 pending
 
 #### **⏳ REMAINING TASKS:**
-1. **Test Suite Migration (when requested)**
-   - Update all test files to use `TestFramework.assertEquals()` instead of `AssertionUtilities.assertEquals()`
-   - Replace `new TestRunner()` pattern with new framework global functions
-   - Update `runSection*Tests()` functions to use new API (`runAllTests()`, `runTestSuite()`, etc.)
-   - Update assertion calls across all Section*Tests.js files
+1. **Test Suite Migration**
+   - ✅ **Section 1 Tests COMPLETED:**
+     - ✅ `EnvironmentTest.js` - Environment and project setup tests migrated and tested
+     - ✅ `GASDBLoggerTest.js` - Logger functionality tests migrated and tested
+     - ✅ `ErrorHandlerTest.js` - Error handling tests migrated and tested
+     - ✅ `IdGeneratorTest.js` - ID generation tests migrated and tested
+     - ✅ `TestFrameworkTest.js` - Framework self-tests migrated and tested
+     - ✅ `UtilityTest.js` - Convenience wrapper for utility tests created and tested
+     - ✅ Updated all assertion calls from `AssertionUtilities.assertEquals()` to `TestFramework.assertEquals()`
+     - ✅ Replaced `new TestRunner()` pattern with new TestFramework API
+     - ✅ Individual test functions use new `TestSuite` and `TestFramework.registerTestSuite()` pattern
+   
+   - ⏳ **Section 2-4 Tests PENDING:**
+     - [ ] `Section2Tests.js` → `MasterIndexTest.js`
+     - [ ] `Section3Tests.js` → `FileOperationsTest.js`, `FileServiceTest.js`
+     - [ ] `Section4Tests.js` → `DatabaseConfigTest.js`, `DatabaseTest.js`
 
 2. **Final Testing and Validation (when migration complete)**
-   - Ensure all existing tests run identically with new framework
-   - Validate individual test debugging capability
-   - Confirm lifecycle hooks work unchanged
-   - Test resource cleanup functionality
+   - ✅ **Section 1:** All tests run identically with new framework (validated)
+   - ✅ **Section 1:** Individual test debugging capability confirmed
+   - ✅ **Section 1:** Framework functionality confirmed working
+   - [ ] **Section 2-4:** Remaining sections to be validated after migration
 
 ---
 
 ### **✅ Success Criteria**
 
 #### **Functional Requirements**
-- [ ] All existing tests run identically with new framework
-- [ ] Individual test debugging preserved
-- [ ] Lifecycle hooks (beforeAll, afterAll, etc.) work unchanged
-- [ ] Resource cleanup functions correctly
-- [ ] All assertion methods behave identically
+- 🔄 **Partially Complete:** All existing tests run identically with new framework
+  - ✅ **Section 1:** All tests migrated and validated (Environment, Utilities, TestFramework)
+  - ⏳ **Section 2-4:** Pending migration
+- ✅ **Individual test debugging preserved** - Confirmed with Section 1 tests
+- ✅ **Lifecycle hooks (beforeAll, afterAll, etc.) work unchanged** - TestSuite supports all hooks
+- ✅ **Resource cleanup functions correctly** - Automatic tracking implemented
+- ✅ **All assertion methods behave identically** - All TestFramework static methods work correctly
 
 #### **Consolidation Requirements**  
 - [x] **Single file framework** - Down from 4 files to 1
 - [x] **3 main API methods** - Down from 10+ functions
 - [x] **Simple configuration** - No complex section mapping
 - [x] **Unified reporting** - Single comprehensive format
-- [ ] **No wrapper layers** - Direct method calls
+- [x] **No wrapper layers** - Direct method calls (Section 1 migrated, others pending)
 
 #### **Enhancement Requirements**
 - [x] **Automatic resource tracking** - No manual file ID management needed
@@ -394,11 +407,114 @@ const testSuites = new Map([
 
 ### **📋 NEXT STEPS:**
 
-1. **Test Suite Migration (when requested)**
-   - Update all test files to use `TestFramework.assertEquals()` instead of `AssertionUtilities.assertEquals()`
-   - Replace `new TestRunner()` pattern with new framework global functions
-   - Update `runSection*Tests()` functions to use new API (`runAllTests()`, `runTestSuite()`, etc.)
-   - Update assertion calls across all Section*Tests.js files
+## Test Suite Migration and Restructuring Plan
+
+### **Phase 1: Test File Restructuring**
+
+The current section-based test files should be split into class-focused test files that map directly to the codebase structure:
+
+#### **Current Structure → New Structure Mapping:**
+
+| **Current File** | **Current Content** | **New Test Files** | **Status** |
+|------------------|-------------------|-------------------|------------|
+| `Section1Tests.js` | Environment, Utilities, TestFramework tests | `EnvironmentTest.js`, `GASDBLoggerTest.js`, `ErrorHandlerTest.js`, `IdGeneratorTest.js`, `TestFrameworkTest.js`, `UtilityTest.js` (wrapper) | ✅ **COMPLETED** |
+| `Section2Tests.js` | MasterIndex functionality, locking, conflicts | `MasterIndexTest.js` | ⏳ Pending |
+| `Section3Tests.js` | FileOperations, FileService, file integration | `FileOperationsTest.js`, `FileServiceTest.js` | ⏳ Pending |
+| `Section4Tests.js` | Database, DatabaseConfig, collections | `DatabaseConfigTest.js`, `DatabaseTest.js` | ⏳ Pending |
+| New | Cross-component integration tests | `IntegrationTest.js` | ⏳ Pending |
+
+#### **Detailed File Split Plan:**
+
+**1. EnvironmentTest.js** ✅ **COMPLETED**
+- **From:** `Section1Tests.js` → `runEnvironmentTests()`
+- **Tests:** Basic project setup, clasp configuration, Drive API access, project dependencies
+- **Focus:** Environment validation and project setup verification
+- **Status:** ✅ Migrated to new TestFramework, tested and working
+
+**2. GASDBLoggerTest.js** ✅ **COMPLETED**
+- **From:** `Section1Tests.js` → `runUtilityClassTests()` (logger portion)
+- **Tests:** Logger basic functionality, log levels, component loggers
+- **Focus:** `src/utils/GASDBLogger.js` class testing
+- **Status:** ✅ Migrated to new TestFramework, tested and working
+
+**3. ErrorHandlerTest.js** ✅ **COMPLETED**
+- **From:** `Section1Tests.js` → `runUtilityClassTests()` (error portion) 
+- **Tests:** Error types, error creation, validation functions
+- **Focus:** `src/utils/ErrorHandler.js` class testing
+- **Status:** ✅ Migrated to new TestFramework, tested and working
+
+**4. IdGeneratorTest.js** ✅ **COMPLETED**
+- **From:** `Section1Tests.js` → `runUtilityClassTests()` (ID portion)
+- **Tests:** UUID generation, timestamp IDs, custom generators, format validation
+- **Focus:** `src/utils/IdGenerator.js` class testing
+- **Status:** ✅ Migrated to new TestFramework, tested and working
+
+**5. TestFrameworkTest.js** ✅ **COMPLETED**
+- **From:** `Section1Tests.js` → `runTestFrameworkTests()`
+- **Tests:** Assertion utilities, test suite functionality, framework itself
+- **Focus:** `tests/framework/TestFramework.js` testing
+- **Status:** ✅ Migrated to new TestFramework, tested and working
+
+**6. UtilityTest.js** ✅ **COMPLETED**
+- **New:** Convenience wrapper for all utility tests
+- **Tests:** Aggregates GASDBLogger, ErrorHandler, and IdGenerator tests
+- **Focus:** Batch utility testing while keeping individual files separate
+- **Status:** ✅ Created as convenience wrapper, tested and working
+
+**6. MasterIndexTest.js**
+- **From:** `Section2Tests.js` → All functions
+  - `testMasterIndexFunctionality()` - Core CRUD operations
+  - `testVirtualLockingMechanism()` - Lock acquisition/release/timeout
+  - `testConflictDetectionResolution()` - Modification tokens and conflicts
+  - `testMasterIndexIntegration()` - Component integration
+- **Focus:** `src/core/MasterIndex.js` class testing (comprehensive)
+
+**7. FileOperationsTest.js**
+- **From:** `Section3Tests.js` → FileOperations-specific functions
+  - `testFileOperationsFunctionality()` - Direct Drive API interactions
+  - `testFileOperationsErrorHandling()` - Retry logic and error handling
+- **Focus:** `src/components/FileOperations.js` class testing
+
+**8. FileServiceTest.js**
+- **From:** `Section3Tests.js` → FileService-specific functions
+  - `testFileServiceFunctionality()` - Optimised interface
+  - `testFileServiceOptimisation()` - Batch operations and caching
+  - `testFileServiceErrorRecovery()` - Error recovery mechanisms
+- **Focus:** `src/services/FileService.js` class testing
+
+**9. DatabaseConfigTest.js**
+- **From:** `Section4Tests.js` → `testDatabaseConfigFunctionality()`
+- **Tests:** Configuration creation, validation, default/custom values
+- **Focus:** `src/core/DatabaseConfig.js` class testing
+
+**10. DatabaseTest.js**
+- **From:** `Section4Tests.js` → Database-specific functions
+  - `testDatabaseInitialization()` - Database class creation and initialisation
+  - `testCollectionManagement()` - Collection lifecycle operations
+  - `testIndexFileStructure()` - Index file management
+- **Focus:** `src/core/Database.js` class testing
+
+**11. IntegrationTest.js**
+- **From:** Multiple sources
+  - `Section3Tests.js` → `testFileIntegration()`, `testDriveApiEdgeCases()`
+  - `Section4Tests.js` → `testDatabaseMasterIndexIntegration()`
+  - Setup/cleanup functions from `testSection3Setup()`, `testSection3Cleanup()`
+- **Tests:** Cross-component integration, end-to-end workflows
+- **Focus:** Integration between multiple classes and components
+
+### **Phase 2: Syntax Migration (for each new file)**
+
+1. **Update all test files to use `TestFramework.assertEquals()` instead of `AssertionUtilities.assertEquals()`**
+2. **Replace `new TestRunner()` pattern with new framework global functions**
+3. **Update `runSection*Tests()` functions to use new API (`runAllTests()`, `runTestSuite()`, etc.)**
+4. **Update assertion calls across all test files**
+
+### **Phase 3: Test Registration and Execution**
+
+1. **Update test registration** to use new `TestFramework` class instead of old section-based system
+2. **Create unified test runner** that can execute individual test files or all tests
+3. **Maintain backwards compatibility** during transition period
+4. **Update entry points** to work with new structure
 
 2. Final testing and validation
 
