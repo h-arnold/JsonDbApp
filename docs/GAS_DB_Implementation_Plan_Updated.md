@@ -157,51 +157,309 @@ This refactored architecture provides a more efficient and maintainable foundati
 
 ### Objectives
 
-- Implement Collection class with separated components
-- Create CollectionMetadata for metadata management
-- Implement DocumentOperations for document manipulation
+- Implement Collection class with separated components using plain objects
+- Create CollectionMetadata for metadata management with plain object data
+- Implement DocumentOperations for document manipulation using plain object storage
+- Establish lazy loading and memory management patterns
+
+### Architecture Overview
+
+The Collection system will use plain JavaScript objects throughout:
+- **Collection documents**: Stored as plain objects in memory (`{ docId: { ...docData }, ... }`)
+- **Collection metadata**: Plain object with properties (`{ created: Date, lastUpdated: Date, documentCount: Number }`)
+- **File structure**: JSON files containing `{ documents: {}, metadata: {} }`
+- **No classes for data**: Only behaviour classes (Collection, CollectionMetadata, DocumentOperations)
 
 ### Implementation Steps
 
-1. **CollectionMetadata Implementation**
-   - Create CollectionMetadata class
-   - Implement metadata properties (created, lastUpdated, documentCount)
-   - Implement metadata update methods
+#### Step 1: CollectionMetadata Implementation
 
-2. **DocumentOperations Implementation**
-   - Create DocumentOperations class
-   - Implement document manipulation methods
-   - Prepare for integration with query and update engines
+Create a class to manage collection metadata as plain objects.
 
-3. **Collection Integration**
-   - Create Collection class to coordinate components
-   - Implement public API methods that delegate to components
-   - Implement lazy loading and memory management
+**Files to create:**
+- `src/components/CollectionMetadata.js`
+- `tests/unit/CollectionMetadataTest.js`
 
-### Test Cases
+**Key Requirements:**
+- Manage metadata as plain object: `{ created, lastUpdated, documentCount }`
+- Provide methods to update metadata properties
+- Track document count changes
+- Generate modification timestamps
 
-1. **CollectionMetadata Tests**
-   - Test metadata initialization
-   - Test metadata update methods
-   - Test metadata persistence
+**Implementation Tasks:**
+1. Create CollectionMetadata constructor accepting initial metadata object
+2. Implement `updateLastModified()` method
+3. Implement `incrementDocumentCount()` and `decrementDocumentCount()` methods
+4. Implement `setDocumentCount(count)` method
+5. Implement `toObject()` method returning plain metadata object
+6. Implement `clone()` method for immutable operations
 
-2. **DocumentOperations Tests**
-   - Test document manipulation methods
-   - Test document ID generation
-   - Test document validation
+#### Step 2: DocumentOperations Implementation
 
-3. **Collection Integration Tests**
-   - Test public API methods
-   - Test component coordination
-   - Test lazy loading behavior
-   - Test memory management
+Create a class to handle document manipulation on plain object collections.
+
+**Files to create:**
+- `src/components/DocumentOperations.js`
+- `tests/unit/DocumentOperationsTest.js`
+
+**Key Requirements:**
+- Work with documents stored as plain objects
+- Generate document IDs using IdGenerator
+- Provide CRUD operations on document collections
+- Validate document structure
+- Support document counting and existence checks
+
+**Implementation Tasks:**
+1. Create DocumentOperations constructor accepting collection reference
+2. Implement `insertDocument(doc)` - adds document with generated ID
+3. Implement `findDocument(query)` - finds single document matching query
+4. Implement `findDocuments(query)` - finds all documents matching query
+5. Implement `updateDocument(query, update)` - updates single document
+6. Implement `deleteDocument(query)` - deletes single document
+7. Implement `countDocuments(query)` - counts matching documents
+8. Implement `documentExists(docId)` - checks document existence
+9. Implement `_generateDocumentId()` private method
+10. Implement `_validateDocument(doc)` private method
+
+#### Step 3: Collection Integration
+
+Create the main Collection class that coordinates components and manages file operations.
+
+**Files to create:**
+- `src/core/Collection.js`
+- `tests/unit/CollectionTest.js`
+
+**Key Requirements:**
+- Coordinate CollectionMetadata and DocumentOperations
+- Manage lazy loading of collection data from Drive
+- Handle file persistence through FileService
+- Provide public API that delegates to components
+- Manage memory state and dirty tracking
+
+**Implementation Tasks:**
+1. Create Collection constructor accepting name, driveFileId, database, and fileService
+2. Implement lazy loading pattern with `_ensureLoaded()` private method
+3. Implement `_loadData()` method to read from Drive via FileService
+4. Implement `_saveData()` method to write to Drive via FileService
+5. Implement `_markDirty()` method for change tracking
+6. Implement public API methods that delegate to DocumentOperations
+7. Implement metadata access methods that delegate to CollectionMetadata
+8. Implement cleanup and memory management methods
+
+### Detailed Test Cases
+
+#### 1. CollectionMetadata Tests (12 test cases)
+
+**File:** `tests/unit/CollectionMetadataTest.js`
+
+```javascript
+// Test metadata initialization and basic operations
+function testCollectionMetadataInitialisation()
+function testCollectionMetadataWithExistingData()
+function testCollectionMetadataUpdateLastModified()
+function testCollectionMetadataIncrementDocumentCount()
+function testCollectionMetadataDecrementDocumentCount()
+function testCollectionMetadataSetDocumentCount()
+function testCollectionMetadataToObject()
+function testCollectionMetadataClone()
+function testCollectionMetadataInvalidDocumentCount()
+function testCollectionMetadataZeroDocumentCount()
+function testCollectionMetadataLargeDocumentCount()
+function testCollectionMetadataTimestampPrecision()
+```
+
+**Test Coverage:**
+- Metadata object initialisation with defaults
+- Metadata initialisation with existing data
+- Last modified timestamp updates
+- Document count increment/decrement operations
+- Document count validation and edge cases
+- Metadata serialisation to plain objects
+- Metadata cloning for immutable operations
+- Error handling for invalid inputs
+
+#### 2. DocumentOperations Tests (18 test cases)
+
+**File:** `tests/unit/DocumentOperationsTest.js`
+
+```javascript
+// Test document manipulation operations
+function testDocumentOperationsInitialisation()
+function testDocumentOperationsInsertDocument()
+function testDocumentOperationsInsertDocumentWithId()
+function testDocumentOperationsInsertDocumentDuplicateId()
+function testDocumentOperationsFindDocumentById()
+function testDocumentOperationsFindDocumentByQuery()
+function testDocumentOperationsFindDocumentNotFound()
+function testDocumentOperationsFindDocuments()
+function testDocumentOperationsFindDocumentsEmpty()
+function testDocumentOperationsUpdateDocument()
+function testDocumentOperationsUpdateDocumentNotFound()
+function testDocumentOperationsDeleteDocument()
+function testDocumentOperationsDeleteDocumentNotFound()
+function testDocumentOperationsCountDocuments()
+function testDocumentOperationsCountDocumentsWithQuery()
+function testDocumentOperationsDocumentExists()
+function testDocumentOperationsDocumentValidation()
+function testDocumentOperationsIdGeneration()
+```
+
+**Test Coverage:**
+- DocumentOperations initialisation with collection reference
+- Document insertion with automatic ID generation
+- Document insertion with provided ID
+- Duplicate ID handling
+- Document retrieval by ID and simple queries
+- Document update operations
+- Document deletion operations
+- Document counting with and without queries
+- Document existence checking
+- Document validation
+- ID generation integration
+
+#### 3. Collection Integration Tests (24 test cases)
+
+**File:** `tests/unit/CollectionTest.js`
+
+```javascript
+// Test Collection class coordination and public API
+function testCollectionInitialisation()
+function testCollectionLazyLoading()
+function testCollectionLoadDataFromDrive()
+function testCollectionLoadDataCorruptedFile()
+function testCollectionLoadDataMissingFile()
+function testCollectionSaveDataToDrive()
+function testCollectionSaveDataError()
+function testCollectionInsertOneDocument()
+function testCollectionInsertOneWithMetadataUpdate()
+function testCollectionFindOneDocument()
+function testCollectionFindOneNotFound()
+function testCollectionFindDocuments()
+function testCollectionFindDocumentsEmpty()
+function testCollectionUpdateOneDocument()
+function testCollectionUpdateOneNotFound()
+function testCollectionDeleteOneDocument()
+function testCollectionDeleteOneNotFound()
+function testCollectionCountDocuments()
+function testCollectionDirtyTracking()
+function testCollectionMemoryManagement()
+function testCollectionMetadataAccess()
+function testCollectionFileServiceIntegration()
+function testCollectionErrorHandling()
+function testCollectionConcurrentOperations()
+```
+
+**Test Coverage:**
+- Collection initialisation with required dependencies
+- Lazy loading behaviour and triggers
+- Data loading from Drive files via FileService
+- Error handling for corrupted or missing files
+- Data persistence to Drive files
+- Public API methods delegating to DocumentOperations
+- Metadata updates during document operations
+- Dirty tracking and conditional saves
+- Memory management and cleanup
+- Component coordination
+- FileService integration
+- Error propagation and handling
+- Concurrent operation safety
+
+#### 4. Integration Tests (6 test cases)
+
+**File:** `tests/integration/Section5IntegrationTest.js`
+
+```javascript
+// Test component integration and workflows
+function testCollectionComponentsWorkTogether()
+function testCollectionWithRealFileService()
+function testCollectionMetadataConsistency()
+function testCollectionDocumentOperationsFlow()
+function testCollectionErrorRecovery()
+function testCollectionPerformanceBaseline()
+```
+
+**Test Coverage:**
+- All components working together seamlessly
+- Integration with real FileService operations
+- Metadata consistency across operations
+- Complete document operation workflows
+- Error recovery and state consistency
+- Performance baseline for future optimisation
+
+### Mock Objects and Test Utilities
+
+Create mock objects for testing isolation:
+
+```javascript
+// Mock FileService for unit testing
+function createMockFileService()
+function createMockDatabase()
+function createMockIdGenerator()
+
+// Test data generators
+function generateTestDocument()
+function generateTestCollection()
+function generateTestMetadata()
+```
+
+### File Structure Expected
+
+```
+src/
+├── core/
+│   └── Collection.js
+├── components/
+│   ├── CollectionMetadata.js
+│   └── DocumentOperations.js
+tests/
+├── unit/
+│   ├── CollectionMetadataTest.js
+│   ├── DocumentOperationsTest.js
+│   └── CollectionTest.js
+├── integration/
+│   └── Section5IntegrationTest.js
+└── Section5Tests.js (test suite orchestration)
+```
 
 ### Completion Criteria
 
-- All test cases pass
-- CollectionMetadata properly manages collection statistics
-- DocumentOperations handles document manipulation
-- Collection coordinates components while providing a simple API
+**Functional Requirements:**
+- [ ] All 60 test cases pass (12 + 18 + 24 + 6)
+- [ ] CollectionMetadata manages metadata as plain objects
+- [ ] DocumentOperations handles document manipulation on plain object collections
+- [ ] Collection coordinates components whilst providing simple public API
+- [ ] Lazy loading works correctly with FileService integration
+- [ ] Memory management and dirty tracking function properly
+
+**Code Quality Requirements:**
+- [ ] All classes follow established naming conventions
+- [ ] All methods have JSDoc documentation
+- [ ] Error handling follows ErrorHandler patterns
+- [ ] Logging uses GASDBLogger.createComponentLogger()
+- [ ] All dependencies injected through constructors
+- [ ] Private methods use underscore prefix
+
+**Integration Requirements:**
+- [ ] Components integrate with existing Database and MasterIndex
+- [ ] FileService integration works with real Drive operations
+- [ ] Error types extend GASDBError hierarchy
+- [ ] Configuration uses DatabaseConfig patterns
+
+### Development Process
+
+1. **Red Phase**: Write failing tests for CollectionMetadata (12 tests)
+2. **Green Phase**: Implement CollectionMetadata to pass tests
+3. **Refactor Phase**: Optimise CollectionMetadata implementation
+4. **Red Phase**: Write failing tests for DocumentOperations (18 tests)
+5. **Green Phase**: Implement DocumentOperations to pass tests
+6. **Refactor Phase**: Optimise DocumentOperations implementation
+7. **Red Phase**: Write failing tests for Collection integration (24 tests)
+8. **Green Phase**: Implement Collection class to pass tests
+9. **Refactor Phase**: Optimise Collection implementation
+10. **Integration Phase**: Write and pass integration tests (6 tests)
+11. **Final Phase**: Verify all 60 tests pass and criteria met
+
+This section establishes the foundation for document storage and manipulation using plain objects whilst maintaining clean component separation and comprehensive test coverage.
 
 ## Section 6: Basic CRUD Operations
 
