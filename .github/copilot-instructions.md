@@ -19,7 +19,7 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 
 ```
 docs/developer: docs for all implemented features
-src/core/: MasterIndex.js
+src/core/: MasterIndex.js, Database.js, DatabaseConfig.js
 src/components/:FileOperations.js
 src/services/: FileService.js
 src/utils/: GASDBLogger.js, ErrorHandler.js, IdGenerator.js
