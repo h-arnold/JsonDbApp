@@ -319,7 +319,7 @@ const testSuites = new Map([
    - ✅ Unified reporting format implemented
 
 #### **🚧 IN PROGRESS:**
-- **Test Suite Migration** - ✅ **Section 1 Complete**, Section 2-4 pending
+- **Test Suite Migration** - ✅ **Sections 1-3 Complete**, Section 4 pending
 
 #### **⏳ REMAINING TASKS:**
 1. **Test Suite Migration**
@@ -338,9 +338,15 @@ const testSuites = new Map([
      - ✅ Updated all assertion calls from `AssertionUtilities.assertEquals()` to `TestFramework.assertEquals()`
      - ✅ Replaced `new TestRunner()` pattern with new TestFramework API
      - ✅ Individual test functions use new `TestSuite` and `TestFramework.registerTestSuite()` pattern
+   - ✅ **Section 3 Tests COMPLETED:**
+     - ✅ `FileOperationsTest.js` - FileOperations functionality, error handling, edge cases migrated and tested
+     - ✅ `FileServiceTest.js` - FileService functionality, optimisation, error recovery migrated and tested
+     - ✅ Updated all assertion calls from `AssertionUtilities.assertEquals()` to `TestFramework.assertEquals()`
+     - ✅ Replaced `new TestRunner()` pattern with new TestFramework API
+     - ✅ Fixed FileService constructor calls to include both FileOperations and logger parameters
+     - ✅ Individual test functions use new `TestSuite` and `TestFramework.registerTestSuite()` pattern
    
-   - ⏳ **Section 3-4 Tests PENDING:**
-     - [ ] `Section3Tests.js` → `FileOperationsTest.js`, `FileServiceTest.js`
+   - ⏳ **Section 4 Tests PENDING:**
      - [ ] `Section4Tests.js` → `DatabaseConfigTest.js`, `DatabaseTest.js`
 
 2. **Final Testing and Validation (when migration complete)**
@@ -350,17 +356,22 @@ const testSuites = new Map([
    - ✅ **Section 2:** All tests run identically with new framework (validated)
    - ✅ **Section 2:** Individual test debugging capability confirmed
    - ✅ **Section 2:** Framework functionality confirmed working
-   - [ ] **Section 2-4:** Remaining sections to be validated after migration
+   - ✅ **Section 3:** All tests run identically with new framework (validated)
+   - ✅ **Section 3:** Individual test debugging capability confirmed
+   - ✅ **Section 3:** Framework functionality confirmed working
+   - [ ] **Section 4:** Pending migration and validation
 
 ---
 
 ### **✅ Success Criteria**
 
 #### **Functional Requirements**
-- 🔄 **Partially Complete:** All existing tests run identically with new framework
+- 🔄 **75% Complete:** All existing tests run identically with new framework
   - ✅ **Section 1:** All tests migrated and validated (Environment, Utilities, TestFramework)
-  - ⏳ **Section 2-4:** Pending migration
-- ✅ **Individual test debugging preserved** - Confirmed with Section 1 tests
+  - ✅ **Section 2:** All tests migrated and validated (MasterIndex functionality, locking, conflicts)
+  - ✅ **Section 3:** All tests migrated and validated (FileOperations, FileService, file integration)
+  - ⏳ **Section 4:** Pending migration (Database, DatabaseConfig, collections)
+- ✅ **Individual test debugging preserved** - Confirmed with Sections 1-3 tests
 - ✅ **Lifecycle hooks (beforeAll, afterAll, etc.) work unchanged** - TestSuite supports all hooks
 - ✅ **Resource cleanup functions correctly** - Automatic tracking implemented
 - ✅ **All assertion methods behave identically** - All TestFramework static methods work correctly
@@ -426,7 +437,7 @@ The current section-based test files should be split into class-focused test fil
 |------------------|-------------------|-------------------|------------|
 | `Section1Tests.js` | Environment, Utilities, TestFramework tests | `EnvironmentTest.js`, `GASDBLoggerTest.js`, `ErrorHandlerTest.js`, `IdGeneratorTest.js`, `TestFrameworkTest.js`, `UtilityTest.js` (wrapper) | ✅ **COMPLETED** |
 | `Section2Tests.js` | MasterIndex functionality, locking, conflicts | `MasterIndexTest.js` | ✅ **COMPLETED** |
-| `Section3Tests.js` | FileOperations, FileService, file integration | `FileOperationsTest.js`, `FileServiceTest.js` | ⏳ Pending |
+| `Section3Tests.js` | FileOperations, FileService, file integration | `FileOperationsTest.js`, `FileServiceTest.js` | ✅ **COMPLETED** |
 | `Section4Tests.js` | Database, DatabaseConfig, collections | `DatabaseConfigTest.js`, `DatabaseTest.js` | ⏳ Pending |
 | New | Cross-component integration tests | `IntegrationTest.js` | ⏳ Pending |
 
@@ -476,18 +487,20 @@ The current section-based test files should be split into class-focused test fil
   - `testMasterIndexIntegration()` - Component integration
 - **Focus:** `src/core/MasterIndex.js` class testing (comprehensive)
 
-**7. FileOperationsTest.js**
+**7. FileOperationsTest.js** ✅ **COMPLETED**
 - **From:** `Section3Tests.js` → FileOperations-specific functions
   - `testFileOperationsFunctionality()` - Direct Drive API interactions
   - `testFileOperationsErrorHandling()` - Retry logic and error handling
 - **Focus:** `src/components/FileOperations.js` class testing
+- **Status:** ✅ Migrated to new TestFramework, tested and working
 
-**8. FileServiceTest.js**
+**8. FileServiceTest.js** ✅ **COMPLETED**
 - **From:** `Section3Tests.js` → FileService-specific functions
   - `testFileServiceFunctionality()` - Optimised interface
   - `testFileServiceOptimisation()` - Batch operations and caching
   - `testFileServiceErrorRecovery()` - Error recovery mechanisms
 - **Focus:** `src/services/FileService.js` class testing
+- **Status:** ✅ Migrated to new TestFramework, tested and working
 
 **9. DatabaseConfigTest.js**
 - **From:** `Section4Tests.js` → `testDatabaseConfigFunctionality()`
