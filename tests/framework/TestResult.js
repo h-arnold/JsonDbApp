@@ -143,4 +143,107 @@ class TestResults {
     
     return report;
   }
+  
+  /**
+   * Log comprehensive test results using separate console calls to prevent truncation
+   * @param {Function} loggerFunction - The logger function to use (e.g., GASDBLogger.info)
+   */
+  logComprehensiveResults(loggerFunction = console.log) {
+    this._logTestSummary(loggerFunction);
+    loggerFunction(''); // Empty line
+    
+    const suiteGroups = this._groupResultsBySuite();
+    Object.keys(suiteGroups).forEach(suiteName => {
+      this._logSuiteResults(suiteName, suiteGroups[suiteName], loggerFunction);
+    });
+  }
+  
+  /**
+   * Log the overall test summary header
+   * @private
+   */
+  _logTestSummary(loggerFunction) {
+    const total = this.results.length;
+    const passed = this.getPassed().length;
+    const failed = this.getFailed().length;
+    const passRate = this.getPassRate().toFixed(1);
+    const totalTime = this.getTotalExecutionTime();
+    
+    loggerFunction('=== COMPREHENSIVE TEST RESULTS ===');
+    loggerFunction(`Total: ${total} | Passed: ${passed} | Failed: ${failed} | Pass Rate: ${passRate}%`);
+    loggerFunction(`Execution Time: ${totalTime}ms | Started: ${this.startTime.toISOString()}`);
+  }
+  
+  /**
+   * Group test results by suite name
+   * @private
+   * @returns {Object} Grouped results by suite
+   */
+  _groupResultsBySuite() {
+    const suiteGroups = {};
+    this.results.forEach(result => {
+      if (!suiteGroups[result.suiteName]) {
+        suiteGroups[result.suiteName] = { passed: [], failed: [] };
+      }
+      suiteGroups[result.suiteName][result.passed ? 'passed' : 'failed'].push(result);
+    });
+    return suiteGroups;
+  }
+  
+  /**
+   * Log results for a single test suite
+   * @private
+   */
+  _logSuiteResults(suiteName, suite, loggerFunction) {
+    const suiteTotal = suite.passed.length + suite.failed.length;
+    const suitePassed = suite.passed.length;
+    const suitePassRate = suiteTotal > 0 ? ((suitePassed / suiteTotal) * 100).toFixed(1) : '0.0';
+    
+    loggerFunction(`[${suiteName}] ${suitePassed}/${suiteTotal} passed (${suitePassRate}%)`);
+    
+    this._logFailedTests(suite.failed, loggerFunction);
+    this._logPassedTests(suite.passed, loggerFunction);
+    
+    loggerFunction(''); // Empty line between suites
+  }
+  
+  /**
+   * Log failed test results with error details
+   * @private
+   */
+  _logFailedTests(failedTests, loggerFunction) {
+    if (failedTests.length === 0) return;
+    
+    loggerFunction('  FAILED:');
+    failedTests.forEach(result => {
+      loggerFunction(`    ✗ ${result.testName} (${result.executionTime}ms)`);
+      this._logTestError(result.error, loggerFunction);
+    });
+  }
+  
+  /**
+   * Log passed test results
+   * @private
+   */
+  _logPassedTests(passedTests, loggerFunction) {
+    if (passedTests.length === 0) return;
+    
+    loggerFunction('  PASSED:');
+    passedTests.forEach(result => {
+      loggerFunction(`    ✓ ${result.testName} (${result.executionTime}ms)`);
+    });
+  }
+  
+  /**
+   * Log error details for a failed test
+   * @private
+   */
+  _logTestError(error, loggerFunction) {
+    if (!error) return;
+    
+    loggerFunction(`      Error: ${error.message}`);
+    if (error.stack) {
+      loggerFunction(`      Stack: ${error.stack}`);
+    }
+  }
 }

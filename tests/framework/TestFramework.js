@@ -326,8 +326,8 @@ class TestFramework {
    * @private
    */
   logResults(results) {
-    // Output the comprehensive report
-    GASDBLogger.info(results.getComprehensiveReport());
+    // Use separate console calls to prevent truncation
+    results.logComprehensiveResults(GASDBLogger.info);
   }
   
   // ============= COMPATIBILITY METHODS =============
