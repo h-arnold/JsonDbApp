@@ -514,6 +514,7 @@ Create the main Collection class that coordinates components and exposes MongoDB
 8. Implement cleanup and memory management methods
 
 **Section 5 Supported Query Patterns:**
+
 - `findOne({})` - first document
 - `findOne({ _id: "documentId" })` - by ID
 - `find({})` - all documents
@@ -522,11 +523,13 @@ Create the main Collection class that coordinates components and exposes MongoDB
 - `countDocuments({})` - count all documents
 
 **Section 5 Error Messages for Unsupported Features:**
+
 - Field queries: `"Field-based queries not yet implemented - requires Section 6 Query Engine"`
 - Complex filters: `"Advanced queries not yet implemented - requires Section 6 Query Engine"`
 - Update operators: `"Update operators not yet implemented - requires Section 7 Update Engine"`
 
 **Deferred to Section 6: Query Engine:**
+
 - `find({ name: "John" })` with field-based filtering
 - `findOne({ age: { $gt: 18 } })` with comparison operators
 - `updateOne({ status: "active" }, doc)` with field-based filters
@@ -534,6 +537,7 @@ Create the main Collection class that coordinates components and exposes MongoDB
 - `countDocuments({ published: true })` with field-based counting
 
 **Deferred to Section 7: Update Engine:**
+
 - `updateOne({ _id: "id" }, { $set: { name: "New Name" } })` with update operators
 - `updateOne({ _id: "id" }, { $inc: { count: 1 } })` with increment operations
 - Complex field-level modifications beyond document replacement
@@ -608,6 +612,7 @@ function testDocumentOperationsDocumentExists()
 - Document existence checking
 
 **MongoDB-Compatible Filter Support:**
+
 - `{ _id: "documentId" }` - find by ID
 - `{}` - find first document or all documents
 - Other patterns throw descriptive "not yet implemented" errors
@@ -658,12 +663,14 @@ function testCollectionCountDocumentsUnsupportedFilter()
 - Component coordination and FileService integration
 
 **Section 5 MongoDB Compatibility:**
+
 - Standard method signatures match MongoDB exactly
 - Return values follow MongoDB format (`{insertedId, acknowledged}`, etc.)
 - Supported filter patterns work identically to MongoDB
 - Unsupported patterns provide clear progression messaging
 
 **Error Messages for Unsupported Features:**
+
 - Field-based queries: `"Field-based queries not yet implemented - requires Section 6 Query Engine"`
 - Update operators: `"Update operators not yet implemented - requires Section 7 Update Engine"`
 
@@ -722,22 +729,26 @@ function testCollectionCountDocumentsUnsupportedFilter()
 ### Supported Query Patterns (Section 6)
 
 **Field-based queries:**
+
 - `{ name: "John" }` - exact field match
 - `{ age: 25 }` - exact numeric match
 - `{ "user.email": "john@example.com" }` - nested field access
 
 **Comparison operators:**
+
 - `{ age: { $gt: 18 } }` - greater than
 - `{ price: { $lte: 100 } }` - less than or equal
 - `{ status: { $ne: "inactive" } }` - not equal
 - `{ created: { $gte: new Date("2023-01-01") } }` - date comparisons
 
 **Logical operators:**
+
 - `{ $and: [{ age: { $gt: 18 } }, { status: "active" }] }` - explicit AND
 - `{ $or: [{ type: "admin" }, { type: "moderator" }] }` - logical OR
 - `{ age: { $gt: 18 }, status: "active" }` - implicit AND (multiple fields)
 
 **Complex combinations:**
+
 - `{ $or: [{ age: { $lt: 18 } }, { $and: [{ age: { $gte: 65 } }, { status: "retired" }] }] }`
 
 ### Test Cases

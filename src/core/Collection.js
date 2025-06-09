@@ -36,8 +36,41 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid parameters
    */
   constructor(name, driveFileId, database, fileService) {
-    // TODO: Implement constructor validation and initialisation
-    throw new Error('Collection constructor not yet implemented');
+    // Validate parameters
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+      throw new InvalidArgumentError('name', name, 'Collection name must be a non-empty string');
+    }
+    
+    if (!driveFileId || typeof driveFileId !== 'string' || driveFileId.trim() === '') {
+      throw new InvalidArgumentError('driveFileId', driveFileId, 'Drive file ID must be a non-empty string');
+    }
+    
+    if (!database || typeof database !== 'object') {
+      throw new InvalidArgumentError('database', database, 'Database reference is required');
+    }
+    
+    if (!fileService || typeof fileService !== 'object') {
+      throw new InvalidArgumentError('fileService', fileService, 'FileService reference is required');
+    }
+    
+    // Validate fileService has required methods
+    if (typeof fileService.readFile !== 'function' || typeof fileService.writeFile !== 'function') {
+      throw new InvalidArgumentError('fileService', fileService, 'FileService must have readFile and writeFile methods');
+    }
+    
+    this._name = name;
+    this._driveFileId = driveFileId;
+    this._database = database;
+    this._fileService = fileService;
+    this._logger = GASDBLogger.createComponentLogger('Collection');
+    
+    // Internal state management
+    this._loaded = false;
+    this._dirty = false;
+    this._documents = {};
+    this._metadata = null;
+    this._collectionMetadata = null;
+    this._documentOperations = null;
   }
 
   /**
@@ -46,8 +79,10 @@ class Collection {
    * @throws {OperationError} If loading fails
    */
   _ensureLoaded() {
-    // TODO: Implement lazy loading logic
-    throw new Error('_ensureLoaded not yet implemented');
+    if (!this._loaded) {
+      this._loadData();
+      this._loaded = true;
+    }
   }
 
   /**
@@ -56,8 +91,50 @@ class Collection {
    * @throws {OperationError} If file read fails
    */
   _loadData() {
-    // TODO: Implement data loading from Drive
-    throw new Error('_loadData not yet implemented');
+    try {
+      this._logger.debug('Loading collection data from Drive', { fileId: this._driveFileId });
+      
+      const fileContent = this._fileService.readFile(this._driveFileId);
+      let data;
+      
+      try {
+        data = JSON.parse(fileContent);
+      } catch (parseError) {
+        throw new OperationError('JSON parsing failed', `Invalid JSON in collection file: ${parseError.message}`);
+      }
+      
+      // Validate file structure
+      if (!data || typeof data !== 'object') {
+        throw new OperationError('Invalid file structure', 'Collection file must contain a JSON object');
+      }
+      
+      // Initialize documents and metadata with defaults
+      this._documents = data.documents || {};
+      const metadataObj = data.metadata || {};
+      
+      // Create CollectionMetadata instance
+      this._collectionMetadata = new CollectionMetadata(metadataObj);
+      
+      // Create DocumentOperations instance with this collection as reference
+      this._documentOperations = new DocumentOperations(this);
+      
+      this._logger.debug('Collection data loaded successfully', { 
+        documentCount: Object.keys(this._documents).length,
+        metadata: this._collectionMetadata.toObject()
+      });
+      
+    } catch (error) {
+      this._logger.error('Failed to load collection data', { 
+        fileId: this._driveFileId, 
+        error: error.message 
+      });
+      
+      if (error instanceof OperationError) {
+        throw error;
+      }
+      
+      throw new OperationError('Collection data loading failed', error.message);
+    }
   }
 
   /**
@@ -66,8 +143,28 @@ class Collection {
    * @throws {OperationError} If file write fails
    */
   _saveData() {
-    // TODO: Implement data saving to Drive
-    throw new Error('_saveData not yet implemented');
+    try {
+      this._logger.debug('Saving collection data to Drive', { fileId: this._driveFileId });
+      
+      const data = {
+        documents: this._documents,
+        metadata: this._collectionMetadata.toObject()
+      };
+      
+      const jsonContent = JSON.stringify(data, null, 2);
+      this._fileService.writeFile(this._driveFileId, jsonContent);
+      
+      this._dirty = false;
+      this._logger.debug('Collection data saved successfully');
+      
+    } catch (error) {
+      this._logger.error('Failed to save collection data', { 
+        fileId: this._driveFileId, 
+        error: error.message 
+      });
+      
+      throw new OperationError('Collection data saving failed', error.message);
+    }
   }
 
   /**
@@ -75,8 +172,8 @@ class Collection {
    * @private
    */
   _markDirty() {
-    // TODO: Implement dirty tracking
-    throw new Error('_markDirty not yet implemented');
+    this._dirty = true;
+    this._logger.debug('Collection marked as dirty');
   }
 
   /**
@@ -84,9 +181,15 @@ class Collection {
    * @private
    * @param {Object} changes - Metadata changes to apply
    */
-  _updateMetadata(changes) {
-    // TODO: Implement metadata updates
-    throw new Error('_updateMetadata not yet implemented');
+  _updateMetadata(changes = {}) {
+    this._ensureLoaded();
+    
+    if (changes.documentCount !== undefined) {
+      this._collectionMetadata.setDocumentCount(changes.documentCount);
+    }
+    
+    this._collectionMetadata.updateLastModified();
+    this._logger.debug('Collection metadata updated', { changes });
   }
 
   /**
@@ -97,8 +200,36 @@ class Collection {
    * @throws {OperationError} For unsupported filters
    */
   _validateFilter(filter, operation) {
-    // TODO: Implement filter validation
-    throw new Error('_validateFilter not yet implemented');
+    if (!filter || typeof filter !== 'object' || Array.isArray(filter)) {
+      throw new InvalidArgumentError('filter', filter, 'Filter must be an object');
+    }
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Empty filter {} is always supported
+    if (filterKeys.length === 0) {
+      return;
+    }
+    
+    // Check if it's an _id filter
+    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+      const idValue = filter._id;
+      if (!idValue || typeof idValue !== 'string' || idValue.trim() === '') {
+        throw new InvalidArgumentError('filter._id', idValue, 'ID filter value must be a non-empty string');
+      }
+      return;
+    }
+    
+    // All other filters are unsupported in Section 5
+    if (operation === 'find' || operation === 'findOne') {
+      throw new OperationError('Field-based queries not yet implemented - requires Section 6 Query Engine');
+    } else if (operation === 'updateOne' || operation === 'deleteOne') {
+      throw new OperationError('Field-based queries not yet implemented - requires Section 6 Query Engine');
+    } else if (operation === 'countDocuments') {
+      throw new OperationError('Field-based queries not yet implemented - requires Section 6 Query Engine');
+    } else {
+      throw new OperationError('Advanced queries not yet implemented - requires Section 6 Query Engine');
+    }
   }
 
   /**
@@ -109,8 +240,18 @@ class Collection {
    * @throws {ConflictError} For duplicate IDs
    */
   insertOne(doc) {
-    // TODO: Implement insertOne with MongoDB-compatible return format
-    throw new Error('insertOne not yet implemented');
+    this._ensureLoaded();
+    
+    const insertedDoc = this._documentOperations.insertDocument(doc);
+    
+    // Update metadata and mark dirty
+    this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+    this._markDirty();
+    
+    return {
+      insertedId: insertedDoc._id,
+      acknowledged: true
+    };
   }
 
   /**
@@ -120,8 +261,24 @@ class Collection {
    * @throws {OperationError} For unsupported filters
    */
   findOne(filter = {}) {
-    // TODO: Implement findOne with Section 5 limitations
-    throw new Error('findOne not yet implemented');
+    this._ensureLoaded();
+    this._validateFilter(filter, 'findOne');
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Empty filter {} - return first document
+    if (filterKeys.length === 0) {
+      const allDocs = this._documentOperations.findAllDocuments();
+      return allDocs.length > 0 ? allDocs[0] : null;
+    }
+    
+    // ID filter {_id: "id"}
+    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+      return this._documentOperations.findDocumentById(filter._id);
+    }
+    
+    // Should not reach here due to _validateFilter, but safety check
+    throw new OperationError('Unsupported filter pattern for findOne');
   }
 
   /**
@@ -131,8 +288,18 @@ class Collection {
    * @throws {OperationError} For unsupported filters
    */
   find(filter = {}) {
-    // TODO: Implement find with Section 5 limitations
-    throw new Error('find not yet implemented');
+    this._ensureLoaded();
+    this._validateFilter(filter, 'find');
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Only empty filter {} is supported in Section 5
+    if (filterKeys.length === 0) {
+      return this._documentOperations.findAllDocuments();
+    }
+    
+    // Should not reach here due to _validateFilter, but safety check
+    throw new OperationError('Unsupported filter pattern for find');
   }
 
   /**
@@ -143,8 +310,42 @@ class Collection {
    * @throws {OperationError} For unsupported filters or update operators
    */
   updateOne(filter, update) {
-    // TODO: Implement updateOne with Section 5 limitations
-    throw new Error('updateOne not yet implemented');
+    this._ensureLoaded();
+    this._validateFilter(filter, 'updateOne');
+    
+    // Validate update parameter
+    if (!update || typeof update !== 'object' || Array.isArray(update)) {
+      throw new InvalidArgumentError('update', update, 'Update must be an object');
+    }
+    
+    // Check for update operators (not supported in Section 5)
+    const updateKeys = Object.keys(update);
+    for (const key of updateKeys) {
+      if (key.startsWith('$')) {
+        throw new OperationError('Update operators not yet implemented - requires Section 7 Update Engine');
+      }
+    }
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Only ID filter {_id: "id"} is supported
+    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+      const result = this._documentOperations.updateDocument(filter._id, update);
+      
+      if (result.modifiedCount > 0) {
+        this._updateMetadata();
+        this._markDirty();
+      }
+      
+      return {
+        matchedCount: result.modifiedCount > 0 ? 1 : 0,
+        modifiedCount: result.modifiedCount,
+        acknowledged: true
+      };
+    }
+    
+    // Should not reach here due to _validateFilter, but safety check
+    throw new OperationError('Unsupported filter pattern for updateOne');
   }
 
   /**
@@ -154,8 +355,28 @@ class Collection {
    * @throws {OperationError} For unsupported filters
    */
   deleteOne(filter) {
-    // TODO: Implement deleteOne with Section 5 limitations
-    throw new Error('deleteOne not yet implemented');
+    this._ensureLoaded();
+    this._validateFilter(filter, 'deleteOne');
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Only ID filter {_id: "id"} is supported
+    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+      const result = this._documentOperations.deleteDocument(filter._id);
+      
+      if (result.deletedCount > 0) {
+        this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+        this._markDirty();
+      }
+      
+      return {
+        deletedCount: result.deletedCount,
+        acknowledged: true
+      };
+    }
+    
+    // Should not reach here due to _validateFilter, but safety check
+    throw new OperationError('Unsupported filter pattern for deleteOne');
   }
 
   /**
@@ -165,8 +386,18 @@ class Collection {
    * @throws {OperationError} For unsupported filters
    */
   countDocuments(filter = {}) {
-    // TODO: Implement countDocuments with Section 5 limitations
-    throw new Error('countDocuments not yet implemented');
+    this._ensureLoaded();
+    this._validateFilter(filter, 'countDocuments');
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Only empty filter {} is supported in Section 5
+    if (filterKeys.length === 0) {
+      return this._documentOperations.countDocuments();
+    }
+    
+    // Should not reach here due to _validateFilter, but safety check
+    throw new OperationError('Unsupported filter pattern for countDocuments');
   }
 
   /**
@@ -174,8 +405,7 @@ class Collection {
    * @returns {string} Collection name
    */
   getName() {
-    // TODO: Implement getName
-    throw new Error('getName not yet implemented');
+    return this._name;
   }
 
   /**
@@ -183,8 +413,8 @@ class Collection {
    * @returns {Object} Metadata object
    */
   getMetadata() {
-    // TODO: Implement getMetadata
-    throw new Error('getMetadata not yet implemented');
+    this._ensureLoaded();
+    return this._collectionMetadata.toObject();
   }
 
   /**
@@ -192,8 +422,7 @@ class Collection {
    * @returns {boolean} True if dirty
    */
   isDirty() {
-    // TODO: Implement isDirty
-    throw new Error('isDirty not yet implemented');
+    return this._dirty;
   }
 
   /**
@@ -201,7 +430,8 @@ class Collection {
    * @throws {OperationError} If save fails
    */
   save() {
-    // TODO: Implement save
-    throw new Error('save not yet implemented');
+    if (this._loaded && this._dirty) {
+      this._saveData();
+    }
   }
 }

@@ -188,6 +188,16 @@ class InvalidArgumentError extends GASDBError {
 }
 
 /**
+ * General operation error
+ */
+class OperationError extends GASDBError {
+  constructor(operation, reason = null) {
+    const message = `Operation failed: ${operation}`;
+    super(message, 'OPERATION_ERROR', { operation, reason });
+  }
+}
+
+/**
  * ErrorHandler - Main error handling utility class
  */
 class ErrorHandler {
@@ -365,5 +375,6 @@ ErrorHandler.ErrorTypes = {
   PERMISSION_DENIED: PermissionDeniedError,
   QUOTA_EXCEEDED: QuotaExceededError,
   INVALID_FILE_FORMAT: InvalidFileFormatError,
-  INVALID_ARGUMENT: InvalidArgumentError
+  INVALID_ARGUMENT: InvalidArgumentError,
+  OPERATION_ERROR: OperationError
 };
