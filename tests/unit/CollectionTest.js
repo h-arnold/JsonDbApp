@@ -406,24 +406,18 @@ function createCollectionFindOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'findUnsupportedTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Test unsupported field-based query - should throw with Section 6 message
-      TestFramework.assertThrows(() => {
-        collection.find({ name: 'Test' });
-      }, OperationError, 'Should throw OperationError for field-based query in find');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'findUnsupportedTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Test unsupported field-based query - should throw with Section 6 message
+    TestFramework.assertThrows(() => {
+      collection.find({ name: 'Test' });
+    }, OperationError, 'Should throw OperationError for field-based query in find');
   });
   
   return suite;
@@ -439,84 +433,66 @@ function createCollectionUpdateOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'updateOneByIdTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Insert test document
-      const insertResult = collection.insertOne({ name: 'Original Doc', value: 100, status: 'active' });
-      const docId = insertResult.insertedId;
-      
-      // Test updateOne by ID with document replacement
-      const updateDoc = { name: 'Updated Doc', value: 150, status: 'modified', newField: 'added' };
-      const updateResult = collection.updateOne({ _id: docId }, updateDoc);
-      
-      // Verify MongoDB-compatible return format
-      TestFramework.assertEquals(1, updateResult.matchedCount, 'Should match 1 document');
-      TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should modify 1 document');
-      TestFramework.assertTrue(updateResult.acknowledged, 'Operation should be acknowledged');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'updateOneByIdTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ name: 'Original Doc', value: 100, status: 'active' });
+    const docId = insertResult.insertedId;
+    
+    // Test updateOne by ID with document replacement
+    const updateDoc = { name: 'Updated Doc', value: 150, status: 'modified', newField: 'added' };
+    const updateResult = collection.updateOne({ _id: docId }, updateDoc);
+    
+    // Verify MongoDB-compatible return format
+    TestFramework.assertEquals(1, updateResult.matchedCount, 'Should match 1 document');
+    TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should modify 1 document');
+    TestFramework.assertTrue(updateResult.acknowledged, 'Operation should be acknowledged');
   });
   
   suite.addTest('testCollectionUpdateOneUnsupportedFilter', function() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'updateOneUnsupportedFilterTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Test unsupported field-based filter - should throw with Section 6 message
-      TestFramework.assertThrows(() => {
-        collection.updateOne({ name: 'Test' }, { name: 'Updated' });
-      }, OperationError, 'Should throw OperationError for field-based filter in updateOne');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'updateOneUnsupportedFilterTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Test unsupported field-based filter - should throw with Section 6 message
+    TestFramework.assertThrows(() => {
+      collection.updateOne({ name: 'Test' }, { name: 'Updated' });
+    }, OperationError, 'Should throw OperationError for field-based filter in updateOne');
   });
   
   suite.addTest('testCollectionUpdateOneUnsupportedOperators', function() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'updateOneUnsupportedOperatorsTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Insert test document
-      const insertResult = collection.insertOne({ name: 'Test Doc', value: 100 });
-      const docId = insertResult.insertedId;
-      
-      // Test unsupported $set operator - should throw with Section 7 message
-      TestFramework.assertThrows(() => {
-        collection.updateOne({ _id: docId }, { $set: { name: 'Updated' } });
-      }, OperationError, 'Should throw OperationError for $set operator');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'updateOneUnsupportedOperatorsTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ name: 'Test Doc', value: 100 });
+    const docId = insertResult.insertedId;
+    
+    // Test unsupported $set operator - should throw with Section 7 message
+    TestFramework.assertThrows(() => {
+      collection.updateOne({ _id: docId }, { $set: { name: 'Updated' } });
+    }, OperationError, 'Should throw OperationError for $set operator');
   });
   
   return suite;
@@ -532,54 +508,42 @@ function createCollectionDeleteOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'deleteOneByIdTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Insert test documents
-      const doc1 = collection.insertOne({ name: 'Delete Doc 1', value: 100 });
-      const doc2 = collection.insertOne({ name: 'Delete Doc 2', value: 200 });
-      
-      // Test deleteOne by ID
-      const deleteResult = collection.deleteOne({ _id: doc1.insertedId });
-      
-      // Verify MongoDB-compatible return format
-      TestFramework.assertEquals(1, deleteResult.deletedCount, 'Should delete 1 document');
-      TestFramework.assertTrue(deleteResult.acknowledged, 'Operation should be acknowledged');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'deleteOneByIdTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test documents
+    const doc1 = collection.insertOne({ name: 'Delete Doc 1', value: 100 });
+    const doc2 = collection.insertOne({ name: 'Delete Doc 2', value: 200 });
+    
+    // Test deleteOne by ID
+    const deleteResult = collection.deleteOne({ _id: doc1.insertedId });
+    
+    // Verify MongoDB-compatible return format
+    TestFramework.assertEquals(1, deleteResult.deletedCount, 'Should delete 1 document');
+    TestFramework.assertTrue(deleteResult.acknowledged, 'Operation should be acknowledged');
   });
   
   suite.addTest('testCollectionDeleteOneUnsupportedFilter', function() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'deleteOneUnsupportedFilterTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Test unsupported field-based filter - should throw with Section 6 message
-      TestFramework.assertThrows(() => {
-        collection.deleteOne({ name: 'Test' });
-      }, OperationError, 'Should throw OperationError for field-based filter in deleteOne');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'deleteOneUnsupportedFilterTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Test unsupported field-based filter - should throw with Section 6 message
+    TestFramework.assertThrows(() => {
+      collection.deleteOne({ name: 'Test' });
+    }, OperationError, 'Should throw OperationError for field-based filter in deleteOne');
   });
   
   return suite;
@@ -595,56 +559,44 @@ function createCollectionCountOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'countDocumentsAllTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Test count on empty collection
-      let count = collection.countDocuments({});
-      TestFramework.assertEquals(0, count, 'Empty collection should have count 0');
-      
-      // Insert test documents
-      collection.insertOne({ name: 'Count Doc 1', value: 100 });
-      collection.insertOne({ name: 'Count Doc 2', value: 200 });
-      collection.insertOne({ name: 'Count Doc 3', value: 300 });
-      
-      // Test count after inserts
-      count = collection.countDocuments({});
-      TestFramework.assertEquals(3, count, 'Collection should have count 3 after 3 inserts');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'countDocumentsAllTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Test count on empty collection
+    let count = collection.countDocuments({});
+    TestFramework.assertEquals(0, count, 'Empty collection should have count 0');
+    
+    // Insert test documents
+    collection.insertOne({ name: 'Count Doc 1', value: 100 });
+    collection.insertOne({ name: 'Count Doc 2', value: 200 });
+    collection.insertOne({ name: 'Count Doc 3', value: 300 });
+    
+    // Test count after inserts
+    count = collection.countDocuments({});
+    TestFramework.assertEquals(3, count, 'Collection should have count 3 after 3 inserts');
   });
   
   suite.addTest('testCollectionCountDocumentsUnsupportedFilter', function() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act - This should fail initially (TDD Red phase)
-    try {
-      const collection = new Collection(
-        'countDocumentsUnsupportedFilterTestCollection',
-        fileId,
-        COLLECTION_TEST_DATA.testDatabase,
-        COLLECTION_TEST_DATA.testFileService
-      );
-      
-      // Test unsupported field-based filter - should throw with Section 6 message
-      TestFramework.assertThrows(() => {
-        collection.countDocuments({ name: 'Test' });
-      }, OperationError, 'Should throw OperationError for field-based filter in countDocuments');
-      
-    } catch (error) {
-      // Expected to fail in Red Phase
-      TestFramework.assertTrue(true, 'Expected failure in Red Phase: ' + error.message);
-    }
+    // Act & Assert - Should fail in Red phase
+    const collection = new Collection(
+      'countDocumentsUnsupportedFilterTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Test unsupported field-based filter - should throw with Section 6 message
+    TestFramework.assertThrows(() => {
+      collection.countDocuments({ name: 'Test' });
+    }, OperationError, 'Should throw OperationError for field-based filter in countDocuments');
   });
   
   return suite;
