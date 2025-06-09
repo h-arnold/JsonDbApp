@@ -66,6 +66,10 @@ class TestFramework {
     return AssertionUtilities.assertMatches(string, regex, message);
   }
   
+  static assertArrayEquals(expected, actual, message = '') {
+    return AssertionUtilities.assertArrayEquals(expected, actual, message);
+  }
+  
   // ============= MAIN API METHODS =============
   
   /**

@@ -497,6 +497,15 @@ Static assertion methods for test validation.
 - **Throws**: Error if string doesn't match regex
 - **Description**: Asserts that a string matches a regular expression
 
+##### assertArrayEquals(expected, actual, message)
+
+- **Parameters**:
+  - `expected` (Array) - The expected array
+  - `actual` (Array) - The actual array
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if arrays are not equal (different lengths or elements)
+- **Description**: Asserts that two arrays are equal by comparing length and element-wise equality using strict equality (===)
+
 ### TestResult Class
 
 Represents the result of a single test execution.
