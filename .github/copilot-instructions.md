@@ -13,7 +13,7 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 **SOLID Principles**: Follow SOLID principles for maintainable code.
 **Search for existing functionality**: Before implementing new features, check if they already exist in the codebase.
 **GAS Limitations**: Remember that Google App Script uses the V8 Engine, but this does not provide full javascript support.
-**Concise Writing**: Write code, docmentations and plans that are concise and to the point, avoiding unnecessary verbosity.  
+**Commnication style**: Concise, analystical and to the point. Always challenge incorrect assmumptions or requirements.
 **British English**: All naming, documentation, comments use British English unless referencing American English APIs.
 
 ## File Structure
