@@ -94,14 +94,8 @@ class Collection {
     try {
       this._logger.debug('Loading collection data from Drive', { fileId: this._driveFileId });
       
-      const fileContent = this._fileService.readFile(this._driveFileId);
-      let data;
-      
-      try {
-        data = JSON.parse(fileContent);
-      } catch (parseError) {
-        throw new OperationError('JSON parsing failed', `Invalid JSON in collection file: ${parseError.message}`);
-      }
+      // FileService.readFile() already returns parsed JSON object, not a string
+      const data = this._fileService.readFile(this._driveFileId);
       
       // Validate file structure
       if (!data || typeof data !== 'object') {
@@ -111,6 +105,14 @@ class Collection {
       // Initialize documents and metadata with defaults
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
+      
+      // Convert date strings back to Date objects for CollectionMetadata
+      if (metadataObj.created && typeof metadataObj.created === 'string') {
+        metadataObj.created = new Date(metadataObj.created);
+      }
+      if (metadataObj.lastUpdated && typeof metadataObj.lastUpdated === 'string') {
+        metadataObj.lastUpdated = new Date(metadataObj.lastUpdated);
+      }
       
       // Create CollectionMetadata instance
       this._collectionMetadata = new CollectionMetadata(metadataObj);

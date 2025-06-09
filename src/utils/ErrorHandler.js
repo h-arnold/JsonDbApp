@@ -357,6 +357,37 @@ class ErrorHandler {
     
     return info;
   }
+  
+  /**
+   * Detects if someone is trying to JSON.parse() an already-parsed object
+   * Provides helpful error message for this common mistake
+   * @param {any} data - The data being parsed
+   * @param {Error} parseError - The original JSON.parse error
+   * @param {string} context - Context where this occurred (e.g., 'FileOperations.readFile')
+   * @throws {OperationError} With helpful message if double-parsing detected
+   */
+  static detectDoubleParsing(data, parseError, context = 'JSON parsing') {
+    // Check if the "JSON string" is actually an object
+    if (typeof data === 'object' && data !== null) {
+      const errorMessage = 
+        `Attempted to JSON.parse() an already-parsed object in ${context}. ` +
+        'FileOperations and FileService return parsed JavaScript objects, not JSON strings. ' +
+        'Use the returned object directly instead of calling JSON.parse() on it. ' +
+        '\n\n' +
+        'Common fix: Change "JSON.parse(fileService.readFile(id))" to "fileService.readFile(id)"';
+      
+      GASDBLogger.error('Double JSON parsing detected', {
+        context,
+        dataType: typeof data,
+        isArray: Array.isArray(data),
+        hasKeys: data && typeof data === 'object' ? Object.keys(data).length > 0 : false,
+        originalError: parseError.message,
+        suggestion: 'Remove JSON.parse() call - data is already parsed'
+      });
+      
+      throw new OperationError('Double JSON parsing error', errorMessage);
+    }
+  }
 }
 
 // initialise static properties after class declaration

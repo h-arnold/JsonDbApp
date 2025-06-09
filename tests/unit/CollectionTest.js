@@ -109,14 +109,18 @@ function cleanupCollectionTestEnvironment() {
 function createTestCollectionFile() {
   const folder = DriveApp.getFolderById(COLLECTION_TEST_DATA.testFolderId);
   const fileName = 'test_collection_' + new Date().getTime() + '.json';
-  const file = folder.createFile(fileName, JSON.stringify({
+  
+  // Create proper test data with ISO date strings
+  const testData = {
     documents: {},
     metadata: {
-      created: new Date(),
-      lastUpdated: new Date(),
+      created: new Date().toISOString(),
+      lastUpdated: new Date().toISOString(),
       documentCount: 0
     }
-  }));
+  };
+  
+  const file = folder.createFile(fileName, JSON.stringify(testData, null, 2));
   const fileId = file.getId();
   COLLECTION_TEST_DATA.createdFileIds.push(fileId);
   return fileId;
