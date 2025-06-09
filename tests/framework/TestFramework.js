@@ -102,10 +102,9 @@ class TestFramework {
     this.setupEnvironment();
     
     try {
-      GASDBLogger.info('Starting comprehensive test execution...');
+      GASDBLogger.info('Running tests...');
       
       for (const [suiteName, suite] of this.testSuites) {
-        GASDBLogger.info(`Running test suite: ${suiteName}`);
         const suiteResults = suite.runTests();
         suiteResults.forEach(result => this.results.addResult(result));
       }
@@ -171,7 +170,7 @@ class TestFramework {
     this.setupEnvironment();
     
     try {
-      GASDBLogger.info(`Running individual test: ${suiteName}.${testName}`);
+      GASDBLogger.info(`Running test: ${suiteName}.${testName}`);
       const result = suite.runTest(testName);
       this.results.addResult(result);
       
@@ -211,7 +210,7 @@ class TestFramework {
       return; // Already validated
     }
     
-    GASDBLogger.info('Validating test environment...');
+    GASDBLogger.debug('Validating test environment...');
     
     // Check GAS APIs
     this._validateGASAPI('DriveApp', () => DriveApp.getRootFolder());
@@ -227,7 +226,7 @@ class TestFramework {
     this._testBasicFunctionality();
     
     this.environmentValidated = true;
-    GASDBLogger.info('Environment validation completed successfully');
+    GASDBLogger.info('Environment validated ✓');
   }
   
   /**
@@ -237,7 +236,7 @@ class TestFramework {
   _validateGASAPI(name, testFn) {
     try {
       testFn();
-      GASDBLogger.info(`✓ ${name} API available`);
+      GASDBLogger.debug(`✓ ${name} API available`);
     } catch (error) {
       throw new Error(`${name} API not available: ${error.message}`);
     }
@@ -251,7 +250,7 @@ class TestFramework {
     if (typeof component === 'undefined') {
       throw new Error(`${name} component not available`);
     }
-    GASDBLogger.info(`✓ ${name} component available`);
+    GASDBLogger.debug(`✓ ${name} component available`);
   }
   
   /**
@@ -274,7 +273,7 @@ class TestFramework {
         throw new Error('Error handling test failed');
       }
       
-      GASDBLogger.info('✓ Basic functionality tests passed');
+      GASDBLogger.debug('✓ Basic functionality tests passed');
       
     } catch (error) {
       throw new Error(`Basic functionality test failed: ${error.message}`);
@@ -286,7 +285,7 @@ class TestFramework {
    * @private
    */
   setupEnvironment() {
-    GASDBLogger.info('Setting up test environment');
+    GASDBLogger.debug('Setting up test environment');
     this.resourceFiles.clear();
   }
   
@@ -295,11 +294,11 @@ class TestFramework {
    * @private
    */
   teardownEnvironment() {
-    GASDBLogger.info('Cleaning up test environment');
+    GASDBLogger.debug('Cleaning up test environment');
     
     // Clean up any tracked resource files
     if (this.resourceFiles.size > 0) {
-      GASDBLogger.info(`Cleaning up ${this.resourceFiles.size} test resource files`);
+      GASDBLogger.debug(`Cleaning up ${this.resourceFiles.size} test resource files`);
       this.resourceFiles.forEach(fileId => {
         try {
           DriveApp.getFileById(fileId).setTrashed(true);
@@ -326,8 +325,12 @@ class TestFramework {
    * @private
    */
   logResults(results) {
-    // Use separate console calls to prevent truncation
-    results.logComprehensiveResults(GASDBLogger.info);
+    // Add visual separator and use console.log for clean output without timestamps
+    console.log('\n' + '='.repeat(50));
+    console.log('TEST RESULTS');
+    console.log('='.repeat(50));
+    results.logComprehensiveResults(console.log);
+    console.log('='.repeat(50) + '\n');
   }
   
   // ============= COMPATIBILITY METHODS =============

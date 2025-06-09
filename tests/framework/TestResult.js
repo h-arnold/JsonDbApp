@@ -216,8 +216,8 @@ class TestResults {
     
     loggerFunction('  FAILED:');
     failedTests.forEach(result => {
-      loggerFunction(`    ✗ ${result.testName} (${result.executionTime}ms)`);
-      this._logTestError(result.error, loggerFunction);
+      const testOutput = this._formatFailedTestOutput(result);
+      loggerFunction(testOutput);
     });
   }
   
@@ -235,15 +235,19 @@ class TestResults {
   }
   
   /**
-   * Log error details for a failed test
+   * Format failed test output as a single string
    * @private
    */
-  _logTestError(error, loggerFunction) {
-    if (!error) return;
+  _formatFailedTestOutput(result) {
+    let output = `    ✗ ${result.testName} (${result.executionTime}ms)`;
     
-    loggerFunction(`      Error: ${error.message}`);
-    if (error.stack) {
-      loggerFunction(`      Stack: ${error.stack}`);
+    if (result.error) {
+      output += `\n      Error: ${result.error.message}`;
+      if (result.error.stack) {
+        output += `\n      Stack: ${result.error.stack}`;
+      }
     }
+    
+    return output;
   }
 }
