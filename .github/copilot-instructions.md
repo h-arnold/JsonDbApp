@@ -12,7 +12,8 @@ A synchronous document database for Google Apps Script, using MongoDB-like synta
 **Component Separation**: Single responsibility classes with dependency injection via constructor.
 **SOLID Principles**: Follow SOLID principles for maintainable code.
 **Search for existing functionality**: Before implementing new features, check if they already exist in the codebase.
-**GAS Limitations**: Remember that Google App Script uses the V8 Engine, but this does not provide full javascript support.  
+**GAS Limitations**: Remember that Google App Script uses the V8 Engine, but this does not provide full javascript support.
+**Concise Writing**: Write code, docmentations and plans that are concise and to the point, avoiding unnecessary verbosity.  
 **British English**: All naming, documentation, comments use British English unless referencing American English APIs.
 
 ## File Structure
@@ -73,8 +74,6 @@ methodName(param) {
 
 **Every class**: PascalCase name, constructor validates inputs, JSDoc on all methods, error handling patterns, component separation  
 **Every test**: Matches `ClassNameTest.js`, descriptive function names, Arrange-Act-Assert pattern, independent execution, mock dependencies
-
-**Key constants**: `LOCK_TIMEOUT`, `MAX_CACHE_SIZE`, `DEFAULT_LOCK_TIMEOUT`, `MASTER_INDEX_KEY`
 
 Follow TDD process: Write failing tests → Implement minimal code → Refactor → Verify completion criteria → Proceed to next section.
 

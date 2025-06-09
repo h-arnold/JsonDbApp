@@ -3,38 +3,25 @@
  * 
  * Comprehensive tests for the Collection class including:
  * - MongoDB-compatible API with Section 5 limitations
- * - Lazy loading and memory management
+ * - Lazy loading and memory management  
  * - File persistence and dirty tracking
  * - Integration with CollectionMetadata and DocumentOperations
  * 
  * Following TDD Red-Green-Refactor cycle for Section 5 implementation
- * 
- * Section 5 Test Coverage:
- * - Basic CRUD operations with limited filter support
- * - Clear error messages for unsupported features
- * - MongoDB-compatible return value formats
  */
 
 // Global test data storage for Collection tests
 const COLLECTION_TEST_DATA = {
   testFolderId: null,
-  testFolderName: 'GASDB_Collection_Test_Folder_' + new Date().getTime(),
-  testCollectionFileId: null,
-  testCollectionFileName: 'GASDB_Collection_Test_' + new Date().getTime() + '.json',
-  testDatabase: null,
+  testFolderName: 'GASDB_Test_Collection_' + new Date().getTime(),
+  testFileId: null,
+  testFileName: 'test_collection.json',
+  testCollectionName: 'test_collection',
+  createdFileIds: [], // Track all files created for cleanup
+  createdFolderIds: [], // Track all folders created for cleanup
+  testCollection: null,
   testFileService: null,
-  testStartTime: null,
-  testEnvironmentReady: false,
-  createdFileIds: [],
-  createdFolderIds: [],
-  testCollectionData: {
-    metadata: {
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      documentCount: 0
-    },
-    documents: {}
-  }
+  testDatabase: null
 };
 
 /**
