@@ -124,6 +124,9 @@ class TestResults {
           report += `    ✗ ${result.testName} (${result.executionTime}ms)\n`;
           if (result.error) {
             report += `      Error: ${result.error.message}\n`;
+            if (result.error.stack) {
+              report += `      Stack: ${result.error.stack}\n`;
+            }
           }
         });
       }
