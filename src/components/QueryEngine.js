@@ -273,6 +273,7 @@ class QueryEngine {
     // Second: Always validate query structure for security and robustness
     this._validateQueryDepth(query, 0);
     this._validateOperators(query);
+    this._validateOperatorValues(query);
   }
 
   /**
@@ -358,6 +359,52 @@ class QueryEngine {
     }
 
     return operators;
+  }
+
+  /**
+   * Validate operator values in query
+   * @param {Object} query - Query object to validate
+   * @throws {InvalidQueryError} When operator values are invalid
+   * @private
+   */
+  _validateOperatorValues(query) {
+    this._validateOperatorValuesRecursive(query, 0);
+  }
+
+  /**
+   * Recursively validate operator values in query with depth protection
+   * @param {*} obj - Object to validate
+   * @param {number} depth - Current recursion depth
+   * @throws {InvalidQueryError} When operator values are invalid or depth exceeds limit
+   * @private
+   */
+  _validateOperatorValuesRecursive(obj, depth) {
+    // Prevent excessive recursion depth
+    if (depth > this._config.maxNestedDepth) {
+      throw new InvalidQueryError(`Operator validation depth exceeds maximum of ${this._config.maxNestedDepth}`);
+    }
+
+    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
+      Object.keys(obj).forEach(key => {
+        if (key === '$and' || key === '$or') {
+          // Logical operators must have array values
+          if (!Array.isArray(obj[key])) {
+            throw new InvalidQueryError(`${key} operator requires an array of conditions`);
+          }
+          // Recursively validate each condition in the array
+          obj[key].forEach(condition => {
+            this._validateOperatorValuesRecursive(condition, depth + 1);
+          });
+        } else if (key.startsWith('$')) {
+          // Other operators - can add specific validation here as needed
+          // For now, just recursively validate the value
+          this._validateOperatorValuesRecursive(obj[key], depth + 1);
+        } else {
+          // Regular field - validate its value
+          this._validateOperatorValuesRecursive(obj[key], depth + 1);
+        }
+      });
+    }
   }
 
   /**
