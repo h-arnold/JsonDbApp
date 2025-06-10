@@ -49,6 +49,7 @@ class DocumentOperations {
     
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
+    this._queryEngine = null; // Lazy-loaded QueryEngine instance
   }
   
   /**
@@ -227,12 +228,153 @@ class DocumentOperations {
   documentExists(id) {
     // Validate ID
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
+      throw new InvalidArgumentError('Document ID is required and must be a non-empty string');
     }
     
     return this._collection._documents.hasOwnProperty(id);
   }
   
+  /**
+   * Find first document matching query using QueryEngine
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {Object|null} First matching document or null if none found
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  findByQuery(query) {
+    // Validate query
+    if (!query || typeof query !== 'object' || Array.isArray(query)) {
+      throw new InvalidArgumentError('Query must be a valid object');
+    }
+    
+    // Get all documents as array for QueryEngine
+    const documents = this.findAllDocuments();
+    
+    // Create QueryEngine instance if not already created
+    if (!this._queryEngine) {
+      this._queryEngine = new QueryEngine();
+    }
+    
+    try {
+      // Execute query and return first result
+      const results = this._queryEngine.executeQuery(documents, query);
+      
+      this._logger.debug('Query executed by findByQuery', { 
+        queryString: JSON.stringify(query), 
+        resultCount: results.length 
+      });
+      
+      return results.length > 0 ? results[0] : null;
+      
+    } catch (error) {
+      // Convert QueryEngine errors to appropriate types
+      if (error.name === 'InvalidQueryError') {
+        throw error; // Re-throw as-is
+      }
+      
+      this._logger.error('Query execution failed in findByQuery', { 
+        error: error.message, 
+        query: JSON.stringify(query) 
+      });
+      
+      throw new InvalidQueryError('Query execution failed: ' + error.message);
+    }
+  }
+  
+  /**
+   * Find multiple documents matching query using QueryEngine
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {Array<Object>} Array of matching documents (empty array if none found)
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  findMultipleByQuery(query) {
+    // Validate query
+    if (!query || typeof query !== 'object' || Array.isArray(query)) {
+      throw new InvalidArgumentError('Query must be a valid object');
+    }
+    
+    // Get all documents as array for QueryEngine
+    const documents = this.findAllDocuments();
+    
+    // Create QueryEngine instance if not already created
+    if (!this._queryEngine) {
+      this._queryEngine = new QueryEngine();
+    }
+    
+    try {
+      // Execute query and return all results
+      const results = this._queryEngine.executeQuery(documents, query);
+      
+      this._logger.debug('Query executed by findMultipleByQuery', { 
+        queryString: JSON.stringify(query), 
+        resultCount: results.length 
+      });
+      
+      return results;
+      
+    } catch (error) {
+      // Convert QueryEngine errors to appropriate types
+      if (error.name === 'InvalidQueryError') {
+        throw error; // Re-throw as-is
+      }
+      
+      this._logger.error('Query execution failed in findMultipleByQuery', { 
+        error: error.message, 
+        query: JSON.stringify(query) 
+      });
+      
+      throw new InvalidQueryError('Query execution failed: ' + error.message);
+    }
+  }
+  
+  /**
+   * Count documents matching query using QueryEngine
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {number} Count of matching documents
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  countByQuery(query) {
+    // Validate query
+    if (!query || typeof query !== 'object' || Array.isArray(query)) {
+      throw new InvalidArgumentError('Query must be a valid object');
+    }
+    
+    // Get all documents as array for QueryEngine
+    const documents = this.findAllDocuments();
+    
+    // Create QueryEngine instance if not already created
+    if (!this._queryEngine) {
+      this._queryEngine = new QueryEngine();
+    }
+    
+    try {
+      // Execute query and return count
+      const results = this._queryEngine.executeQuery(documents, query);
+      
+      this._logger.debug('Query executed by countByQuery', { 
+        queryString: JSON.stringify(query), 
+        resultCount: results.length 
+      });
+      
+      return results.length;
+      
+    } catch (error) {
+      // Convert QueryEngine errors to appropriate types
+      if (error.name === 'InvalidQueryError') {
+        throw error; // Re-throw as-is
+      }
+      
+      this._logger.error('Query execution failed in countByQuery', { 
+        error: error.message, 
+        query: JSON.stringify(query) 
+      });
+      
+      throw new InvalidQueryError('Query execution failed: ' + error.message);
+    }
+  }
+
   /**
    * Generate unique document ID
    * @private
