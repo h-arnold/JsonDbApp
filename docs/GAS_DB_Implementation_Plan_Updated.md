@@ -105,165 +105,132 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 ### Objectives
 
-- Implement MongoDB-compatible query engine with comparison and logical operators
-- Enhance DocumentOperations and Collection methods to support full filter parameters
-- Remove Section 5 limitations and provide complete query functionality
-- Support field-based queries, nested object access, and complex filter combinations
-- Maintain SOLID principles in all components
+- Implement basic MongoDB-compatible query engine aligned with PRD section 4.3
+- Enhance DocumentOperations and Collection methods to support required filter parameters
+- Remove Section 5 limitations and provide essential query functionality
+- Support field-based queries and simple nested field access
 
 ### Implementation Steps
 
 1. **Query Engine Implementation** *(Core Component - SRP)*
-   - Create QueryEngine class with document matching logic
-   - Implement field access and value comparison utilities (including nested fields)
-   - Support MongoDB-compatible query validation and normalisation
-   - Create query optimisation for performance
+   - Create QueryEngine class with essential document matching logic
+   - Implement basic field access and value comparison utilities
+   - Support simple MongoDB-compatible query validation
    - Apply Interface Segregation with focused methods
    - Ensure testability through dependency injection
 
-2. **Comparison Operators** *(OCP - Extensible Operator Pattern)*
+2. **Basic Comparison Operators** *(As specified in PRD 4.3)*
    - Implement `$eq` operator (equality) - default when no operator specified
    - Implement `$gt` operator (greater than)
    - Implement `$lt` operator (less than)
-   - Implement `$gte` operator (greater than or equal)
-   - Implement `$lte` operator (less than or equal)
-   - Implement `$ne` operator (not equal)
-   - Support all data types (string, number, boolean, Date, null)
-   - Design for extensibility to allow new operators without modifying existing code
+   - Support common data types (string, number, boolean, Date)
 
-3. **Logical Operators** *(OCP - Extensible Operator Pattern)*
+3. **Simple Logical Operators** *(As specified in PRD 4.3)*
    - Implement `$and` operator (logical AND) - default for multiple fields
    - Implement `$or` operator (logical OR)
-   - Support nested logical conditions and operator combinations
-   - Implement query optimisation for complex logical structures
-   - Design for extensibility to allow new logical operators
+   - Support basic nested logical conditions
 
-4. **DocumentOperations Enhancement** *(DIP & SRP Integration)*
-   - Remove filter limitations from all methods
+4. **DocumentOperations Enhancement**
    - Add `findByQuery(query)` method with QueryEngine integration
-   - Add focused, single-responsibility methods for query operations
-   - Enable updateByQuery, deleteByQuery and countByQuery with QueryEngine
-   - Maintain clean interface with Collection while delegating query logic
-   - Apply Dependency Inversion by receiving QueryEngine via constructor/method
+   - Add methods for querying with simplified comparison operators
+   - Integrate QueryEngine for all filtering operations
 
-5. **Collection API Enhancement** *(ISP - Clear Method Contracts)*
-   - Remove filter limitations from all MongoDB-compatible methods:
-     - `find(filter)` - support all MongoDB query patterns
-     - `findOne(filter)` - support all MongoDB query patterns
-     - `updateOne(filter, update)` - support all MongoDB query patterns for filter
-     - `deleteOne(filter)` - support all MongoDB query patterns
-     - `countDocuments(filter)` - support all MongoDB query patterns
+5. **Collection API Enhancement**
+   - Update MongoDB-compatible methods:
+     - `find(filter)` - support basic query patterns
+     - `findOne(filter)` - support field-based queries
+     - `updateOne(filter, update)` - support field matching for filter
+     - `deleteOne(filter)` - support field matching
+     - `countDocuments(filter)` - support field matching
    - Remove "not yet implemented" error messages
-   - Add comprehensive query validation and error handling
-   - Maintain MongoDB-compatible return values and behaviour
-   - Delegate complex query functionality to DocumentOperations
+   - Add basic query validation
 
-### Component Design Principles
+### Error Handling Strategy
+- Create specialized `InvalidQueryError` for query issues
+- Implement validation for query structure before execution
+- Add clear error messages for unsupported operators
 
-**Single Responsibility Principle:**
-- QueryEngine only responsible for evaluating if documents match queries
-- Each operator type (comparison, logical) has focused implementation
-- DocumentOperations responsible for applying queries to document collections
-- Collection maintains MongoDB-compatible interface without query logic
-
-**Open/Closed Principle:**
-- Operator registry pattern for adding new operators without modifying code
-- Query structure handling designed for extension without modification
-- Collection methods designed to work with any valid query patterns
-
-**Dependency Inversion Principle:**
-- QueryEngine injected into DocumentOperations rather than created internally
-- Components depend on interfaces rather than concrete implementations
-- Collection depends on DocumentOperations interface, not implementation details
-
-### Supported Query Patterns (Section 6)
+### Supported Query Patterns (Section 6 MVP)
 
 **Field-based queries:**
 - `{ name: "John" }` - exact field match
 - `{ age: 25 }` - exact numeric match
-- `{ "user.email": "john@example.com" }` - nested field access
+- `{ "user.email": "john@example.com" }` - simple nested field access
 
-**Comparison operators:**
-- `{ age: { $gt: 18 } }` - greater than
-- `{ price: { $lte: 100 } }` - less than or equal
-- `{ status: { $ne: "inactive" } }` - not equal
-- `{ created: { $gte: new Date("2023-01-01") } }` - date comparisons
+**Basic comparison operators (PRD 4.3):**
+- `{ field: { $eq: value } }` - equals
+- `{ field: { $gt: value } }` - greater than
+- `{ field: { $lt: value } }` - less than
 
-**Logical operators:**
-- `{ $and: [{ age: { $gt: 18 } }, { status: "active" }] }` - explicit AND
-- `{ $or: [{ type: "admin" }, { type: "moderator" }] }` - logical OR
+**Simple logical operators (PRD 4.3):**
+- `{ $and: [ {condition1}, {condition2} ] }` - logical AND
+- `{ $or: [ {condition1}, {condition2} ] }` - logical OR
 - `{ age: { $gt: 18 }, status: "active" }` - implicit AND (multiple fields)
-
-**Complex combinations:**
-- `{ $or: [{ age: { $lt: 18 } }, { $and: [{ age: { $gte: 65 } }, { status: "retired" }] }] }`
 
 ### Test Cases
 
-1. **Query Engine Tests** (15 test cases)
-   - Test basic document matching against various query patterns
-   - Test field access utilities (including deeply nested fields)
-   - Test query validation and normalisation
-   - Test performance with complex queries
-   - Test operator extensibility
+1. **Query Engine Tests** (12 test cases)
+   - Test basic document matching against simple query patterns
+   - Test field access utilities (including basic nested fields)
+   - Test query validation
 
-2. **Comparison Operator Tests** (18 test cases)
-   - Test `$eq` with all data types (string, number, boolean, Date, null, undefined)
-   - Test `$gt`/`$gte` with numbers, dates, and strings
-   - Test `$lt`/`$lte` with numbers, dates, and strings
-   - Test `$ne` with all data types
-   - Test operator combinations and edge cases
+2. **Comparison Operator Tests** (9 test cases)
+   - Test `$eq` with common data types
+   - Test `$gt`/`$lt` with numbers and dates
+   - Test direct field comparison (implicit $eq)
 
-3. **Logical Operator Tests** (12 test cases)
-   - Test `$and` with multiple conditions and nested operators
-   - Test `$or` with multiple conditions and nested operators
-   - Test implicit AND behaviour (multiple fields)
-   - Test complex nested logical operator combinations
+3. **Logical Operator Tests** (8 test cases)
+   - Test `$and` with multiple conditions
+   - Test `$or` with multiple conditions
+   - Test implicit AND behavior (multiple fields)
 
-4. **DocumentOperations Enhancement Tests** (10 test cases)
-   - Test new query methods with dependency injection
-   - Test findByQuery with various query patterns
-   - Test updateByQuery and deleteByQuery with field-based queries
-   - Test countByQuery accuracy with complex filters
-   - Test proper delegation to QueryEngine
+4. **DocumentOperations Enhancement Tests** (8 test cases)
+   - Test `findByQuery` with various query patterns
+   - Test integration with QueryEngine
 
-5. **Collection API Enhancement Tests** (15 test cases)
-   - Test `find(filter)` with full MongoDB query support
-   - Test `findOne(filter)` with complex query objects
+5. **Collection API Enhancement Tests** (10 test cases)
+   - Test `find(filter)` and `findOne(filter)` with field matching
    - Test `updateOne(filter, doc)` with field-based filters
-   - Test `deleteOne(filter)` with comparison and logical operators
-   - Test `countDocuments(filter)` with all query patterns
-   - Test error handling for malformed queries
+   - Test `deleteOne(filter)` with field matching
+   - Test `countDocuments(filter)` with field matching
+   - Test error handling for unsupported queries
 
 ### File Updates Required
 
 **New Files:**
-- `src/components/QueryEngine.js` - Core query evaluation component
-- `tests/unit/QueryEngineTest.js` - Comprehensive testing for query functionality
+- `src/components/QueryEngine.js` - Core query evaluation component (minimal MVP version)
+- `tests/unit/QueryEngineTest.js` - Testing for query functionality
 
 **Enhanced Files:**
 - `src/components/DocumentOperations.js` - Add query support, integrate QueryEngine
 - `src/core/Collection.js` - Remove Section 5 limitations, delegate to DocumentOperations
 - `tests/unit/DocumentOperationsTest.js` - Add query-based operation tests
-- `tests/unit/CollectionTest.js` - Add full MongoDB query compatibility tests
+- `tests/unit/CollectionTest.js` - Add query compatibility tests
 
 ### Implementation Sequence
 
 1. Implement and test QueryEngine with core functionality
-2. Add comparison operators with tests
-3. Add logical operators with tests
+2. Add basic comparison operators with tests
+3. Add simple logical operators with tests
 4. Enhance DocumentOperations with QueryEngine integration
 5. Update Collection API to remove limitations
-6. Run all integration tests to verify system behavior
 
 ### Completion Criteria
 
-- All test cases pass (70 total: 15 + 18 + 12 + 10 + 15)
-- QueryEngine correctly evaluates document matches using MongoDB-compatible syntax
-- All operators work correctly with appropriate data types
-- DocumentOperations integrates with QueryEngine via dependency injection
-- Collection API provides full MongoDB query compatibility
+- All test cases pass (47 total: 12 + 9 + 8 + 8 + 10)
+- QueryEngine correctly evaluates document matches using basic MongoDB-compatible syntax
+- Basic operators work correctly with common data types
+- DocumentOperations integrates with QueryEngine
+- Collection API provides essential MongoDB query compatibility as specified in PRD 4.3
 - System follows SOLID principles with clear separation of concerns
-- All Section 5 "not yet implemented" limitations are removed
+- All Section 5 limitations are removed
+
+### Future Enhancements (Post-MVP)
+- Additional comparison operators ($lte, $gte, $ne)
+- Advanced query optimization
+- Array query operators
+- Comprehensive edge case handling
+- Performance benchmarking
 
 ## Section 7: Update Engine and Document Modification
 
