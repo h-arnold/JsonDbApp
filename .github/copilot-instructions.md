@@ -72,6 +72,7 @@ methodName(param) {
 
 **Every class**: Constructor validates inputs, JSDoc on all methods, follows naming conventions and error handling patterns  
 **Every test**: Descriptive function names, Arrange-Act-Assert pattern, independent execution, mock dependencies
+**Create a new branch**: Create a new branch when implementing a new feature.
 
 Follow TDD process as outlined in Core Principles.
 
