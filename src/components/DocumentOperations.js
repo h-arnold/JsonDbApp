@@ -238,15 +238,9 @@ class DocumentOperations {
    * Find first document matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
    * @returns {Object|null} First matching document or null if none found
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findByQuery(query) {
-    // Validate query argument type
-    if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be a valid object');
-    }
-    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -255,47 +249,24 @@ class DocumentOperations {
       this._queryEngine = new QueryEngine();
     }
     
-    try {
-      // Execute query and return first result
-      const results = this._queryEngine.executeQuery(documents, query);
-      
-      this._logger.debug('Query executed by findByQuery', { 
-        queryString: JSON.stringify(query), 
-        resultCount: results.length 
-      });
-      
-      return results.length > 0 ? results[0] : null;
-      
-    } catch (error) {
-      // QueryEngine should throw InvalidQueryError for malformed queries
-      // Let it propagate naturally for proper error type handling
-      if (error.name === 'InvalidQueryError' || error instanceof ErrorHandler.ErrorTypes.INVALID_QUERY) {
-        throw error; // Re-throw as-is
-      }
-      
-      this._logger.error('Query execution failed in findByQuery', { 
-        error: error.message, 
-        query: JSON.stringify(query) 
-      });
-      
-      // Wrap other errors as InvalidQueryError
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, 'Query execution failed: ' + error.message);
-    }
+    // Let QueryEngine handle all validation and execution
+    const results = this._queryEngine.executeQuery(documents, query);
+    
+    this._logger.debug('Query executed by findByQuery', { 
+      queryString: JSON.stringify(query), 
+      resultCount: results.length 
+    });
+    
+    return results.length > 0 ? results[0] : null;
   }
   
   /**
    * Find multiple documents matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
    * @returns {Array<Object>} Array of matching documents (empty array if none found)
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findMultipleByQuery(query) {
-    // Validate query argument type
-    if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be a valid object');
-    }
-    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -304,47 +275,24 @@ class DocumentOperations {
       this._queryEngine = new QueryEngine();
     }
     
-    try {
-      // Execute query and return all results
-      const results = this._queryEngine.executeQuery(documents, query);
-      
-      this._logger.debug('Query executed by findMultipleByQuery', { 
-        queryString: JSON.stringify(query), 
-        resultCount: results.length 
-      });
-      
-      return results;
-      
-    } catch (error) {
-      // QueryEngine should throw InvalidQueryError for malformed queries
-      // Let it propagate naturally for proper error type handling
-      if (error.name === 'InvalidQueryError' || error instanceof ErrorHandler.ErrorTypes.INVALID_QUERY) {
-        throw error; // Re-throw as-is
-      }
-      
-      this._logger.error('Query execution failed in findMultipleByQuery', { 
-        error: error.message, 
-        query: JSON.stringify(query) 
-      });
-      
-      // Wrap other errors as InvalidQueryError
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, 'Query execution failed: ' + error.message);
-    }
+    // Let QueryEngine handle all validation and execution
+    const results = this._queryEngine.executeQuery(documents, query);
+    
+    this._logger.debug('Query executed by findMultipleByQuery', { 
+      queryString: JSON.stringify(query), 
+      resultCount: results.length 
+    });
+    
+    return results;
   }
   
   /**
    * Count documents matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
    * @returns {number} Count of matching documents
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   countByQuery(query) {
-    // Validate query argument type
-    if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be a valid object');
-    }
-    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -353,32 +301,15 @@ class DocumentOperations {
       this._queryEngine = new QueryEngine();
     }
     
-    try {
-      // Execute query and return count
-      const results = this._queryEngine.executeQuery(documents, query);
-      
-      this._logger.debug('Query executed by countByQuery', { 
-        queryString: JSON.stringify(query), 
-        resultCount: results.length 
-      });
-      
-      return results.length;
-      
-    } catch (error) {
-      // QueryEngine should throw InvalidQueryError for malformed queries
-      // Let it propagate naturally for proper error type handling
-      if (error.name === 'InvalidQueryError' || error instanceof ErrorHandler.ErrorTypes.INVALID_QUERY) {
-        throw error; // Re-throw as-is
-      }
-      
-      this._logger.error('Query execution failed in countByQuery', { 
-        error: error.message, 
-        query: JSON.stringify(query) 
-      });
-      
-      // Wrap other errors as InvalidQueryError
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, 'Query execution failed: ' + error.message);
-    }
+    // Let QueryEngine handle all validation and execution
+    const results = this._queryEngine.executeQuery(documents, query);
+    
+    this._logger.debug('Query executed by countByQuery', { 
+      queryString: JSON.stringify(query), 
+      resultCount: results.length 
+    });
+    
+    return results.length;
   }
 
   /**

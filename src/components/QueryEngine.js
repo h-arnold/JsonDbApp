@@ -6,7 +6,10 @@
  * - Field-based queries with exact matching
  * - Basic comparison operators ($eq, $gt, $lt) 
  * - Simple nested field access using dot notation
- * - Query validation and error handling
+ * - Comprehensive query validation and error handling
+ * 
+ * Security: All queries are validated for structure and operators to prevent
+ * malicious queries and ensure consistent error handling.
  * 
  * Follows SOLID principles with single responsibility for query evaluation.
  * Designed for testability with dependency injection support.
@@ -20,11 +23,11 @@ class QueryEngine {
   /**
    * Creates a new QueryEngine instance
    * @param {Object} config - Optional configuration object
+   * @param {number} [config.maxNestedDepth=10] - Maximum allowed query nesting depth
    */
   constructor(config = {}) {
     this._logger = GASDBLogger.createComponentLogger('QueryEngine');
     this._config = {
-      validateQueries: config.validateQueries !== false,
       supportedOperators: ['$eq', '$gt', '$lt', '$and', '$or'],
       maxNestedDepth: config.maxNestedDepth || 10
     };
@@ -40,13 +43,8 @@ class QueryEngine {
    * @throws {InvalidQueryError} When query is invalid
    */
   executeQuery(documents, query) {
-    if (!Array.isArray(documents)) {
-      throw new InvalidArgumentError('Documents parameter must be an array');
-    }
-
-    if (!query || typeof query !== 'object') {
-      throw new InvalidQueryError('Query must be a valid object');
-    }
+    // Validate all inputs and query structure
+    this._validateQuery(documents, query);
 
     this._logger.debug('Executing query', { 
       documentCount: documents.length, 
@@ -56,11 +54,6 @@ class QueryEngine {
     // Empty query matches all documents
     if (Object.keys(query).length === 0) {
       return documents.slice(); // Return copy to prevent mutation
-    }
-
-    // Validate query structure
-    if (this._config.validateQueries) {
-      this._validateQuery(query);
     }
 
     // Filter documents based on query
@@ -267,13 +260,52 @@ class QueryEngine {
 
   /**
    * Validate query structure and operators
+   * @param {Array} documents - Documents array to validate  
    * @param {Object} query - Query object to validate
-   * @throws {InvalidQueryError} When query is invalid
+   * @throws {InvalidArgumentError} When inputs are invalid
+   * @throws {InvalidQueryError} When query structure or operators are invalid
    * @private
    */
-  _validateQuery(query) {
+  _validateQuery(documents, query) {
+    // First: Validate basic input types (fail fast)
+    this._validateQueryInputs(documents, query);
+
+    // Second: Always validate query structure for security and robustness
     this._validateQueryDepth(query, 0);
     this._validateOperators(query);
+  }
+
+  /**
+   * Validate basic input types for executeQuery
+   * @param {Array} documents - Documents array to validate
+   * @param {Object} query - Query object to validate
+   * @throws {InvalidArgumentError} When inputs are invalid
+   * @private
+   */
+  _validateQueryInputs(documents, query) {
+    if (!Array.isArray(documents)) {
+      throw new InvalidArgumentError('documents', documents, 'Documents parameter must be an array');
+    }
+
+    if (query === null) {
+      throw new InvalidArgumentError('query', query, 'Query cannot be null');
+    }
+    
+    if (query === undefined) {
+      throw new InvalidArgumentError('query', query, 'Query cannot be undefined');
+    }
+    
+    if (typeof query === 'string') {
+      throw new InvalidArgumentError('query', query, 'Query cannot be a string');
+    }
+    
+    if (Array.isArray(query)) {
+      throw new InvalidArgumentError('query', query, 'Query cannot be an array');
+    }
+    
+    if (typeof query !== 'object') {
+      throw new InvalidArgumentError('query', query, 'Query must be a valid object');
+    }
   }
 
   /**
