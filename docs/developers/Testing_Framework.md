@@ -259,7 +259,7 @@ The main framework orchestrator.
 new TestFramework()
 ```
 
-Creates a new TestFramework instance with empty test suites, results tracking, and environment validation.
+Creates a new TestFramework instance, initialising collections for test suites, results, resource file tracking, and setting initial environment validation status.
 
 #### Methods
 
@@ -310,6 +310,17 @@ Creates a new TestFramework instance with empty test suites, results tracking, a
 
 - **Parameters**: `fileId` (string) - The file ID to track for cleanup
 - **Description**: Tracks a file for automatic cleanup after tests
+
+##### getTestSuites()
+
+- **Returns**: Map of test suite names to TestSuite instances
+- **Description**: Gets registered test suites (primarily for backward compatibility or internal use)
+
+##### hasTestSuite(name)
+
+- **Parameters**: `name` (string) - Name of the test suite
+- **Returns**: boolean
+- **Description**: Checks if a test suite with the given name is registered
 
 #### Static Assertion Methods
 
@@ -589,6 +600,11 @@ new TestResults()
 
 - **Returns**: String with detailed test report
 - **Description**: Gets a comprehensive report with all test details organised by suite
+
+##### logComprehensiveResults(loggerFunction)
+
+- **Parameters**: `loggerFunction` (function, optional) - The logger function to use (e.g., `console.log`). Defaults to `console.log`.
+- **Description**: Logs the comprehensive test results, typically to the console, handling potential truncation issues by logging in parts.
 
 ## Global Convenience Functions
 
