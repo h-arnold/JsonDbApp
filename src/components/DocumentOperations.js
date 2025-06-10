@@ -22,29 +22,29 @@ class DocumentOperations {
   /**
    * Creates a new DocumentOperations instance
    * @param {Object} collection - Collection reference for document storage
-   * @throws {InvalidArgumentError} When collection is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
    */
   constructor(collection) {
     // Validate collection reference
     if (!collection) {
-      throw new InvalidArgumentError('collection', collection, 'Collection reference is required');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection reference is required');
     }
     
     if (typeof collection !== 'object') {
-      throw new InvalidArgumentError('collection', collection, 'Collection must be an object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must be an object');
     }
     
     // Validate collection has required properties and methods
     if (!collection.hasOwnProperty('_documents') || typeof collection._documents !== 'object') {
-      throw new InvalidArgumentError('collection', collection, 'Collection must have _documents property');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _documents property');
     }
     
     if (typeof collection._markDirty !== 'function') {
-      throw new InvalidArgumentError('collection', collection, 'Collection must have _markDirty method');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _markDirty method');
     }
     
     if (typeof collection._updateMetadata !== 'function') {
-      throw new InvalidArgumentError('collection', collection, 'Collection must have _updateMetadata method');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _updateMetadata method');
     }
     
     this._collection = collection;
@@ -55,8 +55,8 @@ class DocumentOperations {
    * Insert a document with automatic or provided ID
    * @param {Object} doc - Document to insert
    * @returns {Object} Inserted document with _id
-   * @throws {InvalidArgumentError} When document is invalid
-   * @throws {ConflictError} When document ID already exists
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When document is invalid
+   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When document ID already exists
    */
   insertDocument(doc) {
     // Validate document
@@ -71,12 +71,12 @@ class DocumentOperations {
     } else {
       // Validate provided ID
       if (typeof documentToInsert._id !== 'string' || documentToInsert._id.trim() === '') {
-        throw new InvalidArgumentError('_id', documentToInsert._id, 'Document ID must be a non-empty string');
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('_id', documentToInsert._id, 'Document ID must be a non-empty string');
       }
       
       // Check for duplicate ID
       if (this._collection._documents[documentToInsert._id]) {
-        throw new ConflictError('document', documentToInsert._id, 'Document with this ID already exists');
+        throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR('document', documentToInsert._id, 'Document with this ID already exists');
       }
     }
     
@@ -96,12 +96,12 @@ class DocumentOperations {
    * Find document by ID
    * @param {string} id - Document ID to find
    * @returns {Object|null} Found document or null if not found
-   * @throws {InvalidArgumentError} When ID is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
    */
   findDocumentById(id) {
     // Validate ID
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
     }
     
     const document = this._collection._documents[id];
@@ -139,17 +139,17 @@ class DocumentOperations {
    * @param {string} id - Document ID to update
    * @param {Object} updateData - Data to update document with
    * @returns {Object} Update result { acknowledged: boolean, modifiedCount: number }
-   * @throws {InvalidArgumentError} When parameters are invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    */
   updateDocument(id, updateData) {
     // Validate ID
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
     }
     
     // Validate update data
     if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
-      throw new InvalidArgumentError('updateData', updateData, 'Update data must be an object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateData', updateData, 'Update data must be an object');
     }
     
     // Check if document exists
@@ -183,12 +183,12 @@ class DocumentOperations {
    * Delete document by ID
    * @param {string} id - Document ID to delete
    * @returns {Object} Delete result { acknowledged: boolean, deletedCount: number }
-   * @throws {InvalidArgumentError} When ID is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
    */
   deleteDocument(id) {
     // Validate ID
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
     }
     
     // Check if document exists
@@ -222,12 +222,12 @@ class DocumentOperations {
    * Check if document exists by ID
    * @param {string} id - Document ID to check
    * @returns {boolean} True if document exists, false otherwise
-   * @throws {InvalidArgumentError} When ID is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
    */
   documentExists(id) {
     // Validate ID
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new InvalidArgumentError('id', id, 'Document ID must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
     }
     
     return this._collection._documents.hasOwnProperty(id);
@@ -260,29 +260,29 @@ class DocumentOperations {
    * Validate document structure and content
    * @private
    * @param {Object} doc - Document to validate
-   * @throws {InvalidArgumentError} When document is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When document is invalid
    */
   _validateDocument(doc) {
     // Check if document is provided
     if (!doc) {
-      throw new InvalidArgumentError('doc', doc, 'Document is required');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Document is required');
     }
     
     // Check if document is an object
     if (typeof doc !== 'object' || Array.isArray(doc)) {
-      throw new InvalidArgumentError('doc', doc, 'Document must be an object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Document must be an object');
     }
     
     // Check for forbidden fields (reserved prefixes)
     for (const field in doc) {
       if (field.startsWith('__')) {
-        throw new InvalidArgumentError('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
       }
     }
     
     // Validate _id field if present
     if (doc._id !== undefined && (typeof doc._id !== 'string' || doc._id.trim() === '')) {
-      throw new InvalidArgumentError('doc._id', doc._id, 'Document _id must be a non-empty string if provided');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', doc._id, 'Document _id must be a non-empty string if provided');
     }
     
     // Additional validation could be added here for:

@@ -72,6 +72,12 @@ class FileOperations {
           error: parseError.message 
         });
         throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
+        
+        this._logger.error('Failed to parse JSON content', { 
+          fileId, 
+          error: parseError.message 
+        });
+        throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
       }
     }, `readFile(${fileId})`);
   }
