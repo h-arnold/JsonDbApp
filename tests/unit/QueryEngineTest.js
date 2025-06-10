@@ -781,7 +781,7 @@ function createQueryEngineEdgeCasesTestSuite() {
         _id: "doc" + i,
         index: i,
         group: i % 10,
-        active: i % 2 === 0
+        active: i % 3 === 0  // Changed from i % 2 === 0 to i % 3 === 0
       });
     }
     const query = { group: 5, active: true };
