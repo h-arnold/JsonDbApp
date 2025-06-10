@@ -109,16 +109,19 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 - Enhance DocumentOperations and Collection methods to support full filter parameters
 - Remove Section 5 limitations and provide complete query functionality
 - Support field-based queries, nested object access, and complex filter combinations
+- Maintain SOLID principles in all components
 
 ### Implementation Steps
 
-1. **Query Engine Implementation**
+1. **Query Engine Implementation** *(Core Component - SRP)*
    - Create QueryEngine class with document matching logic
    - Implement field access and value comparison utilities (including nested fields)
    - Support MongoDB-compatible query validation and normalisation
    - Create query optimisation for performance
+   - Apply Interface Segregation with focused methods
+   - Ensure testability through dependency injection
 
-2. **Comparison Operators**
+2. **Comparison Operators** *(OCP - Extensible Operator Pattern)*
    - Implement `$eq` operator (equality) - default when no operator specified
    - Implement `$gt` operator (greater than)
    - Implement `$lt` operator (less than)
@@ -126,23 +129,24 @@ The implementation will use Google Apps Script with clasp for testing, and assum
    - Implement `$lte` operator (less than or equal)
    - Implement `$ne` operator (not equal)
    - Support all data types (string, number, boolean, Date, null)
+   - Design for extensibility to allow new operators without modifying existing code
 
-3. **Logical Operators**
+3. **Logical Operators** *(OCP - Extensible Operator Pattern)*
    - Implement `$and` operator (logical AND) - default for multiple fields
    - Implement `$or` operator (logical OR)
    - Support nested logical conditions and operator combinations
    - Implement query optimisation for complex logical structures
+   - Design for extensibility to allow new logical operators
 
-4. **DocumentOperations Enhancement** *(Remove Section 5 limitations)*
+4. **DocumentOperations Enhancement** *(DIP & SRP Integration)*
    - Remove filter limitations from all methods
-   - Enable full query support in `findOneByFilter(query)`
-   - Enable full query support in `findByFilter(query)`
-   - Enable full query support in `updateByFilter(query, update)`
-   - Enable full query support in `deleteByFilter(query)`
-   - Enable full query support in `countByFilter(query)`
-   - Integrate QueryEngine for all filtering operations
+   - Add `findByQuery(query)` method with QueryEngine integration
+   - Add focused, single-responsibility methods for query operations
+   - Enable updateByQuery, deleteByQuery and countByQuery with QueryEngine
+   - Maintain clean interface with Collection while delegating query logic
+   - Apply Dependency Inversion by receiving QueryEngine via constructor/method
 
-5. **Collection API Enhancement** *(Remove Section 5 limitations)*
+5. **Collection API Enhancement** *(ISP - Clear Method Contracts)*
    - Remove filter limitations from all MongoDB-compatible methods:
      - `find(filter)` - support all MongoDB query patterns
      - `findOne(filter)` - support all MongoDB query patterns
@@ -152,30 +156,45 @@ The implementation will use Google Apps Script with clasp for testing, and assum
    - Remove "not yet implemented" error messages
    - Add comprehensive query validation and error handling
    - Maintain MongoDB-compatible return values and behaviour
+   - Delegate complex query functionality to DocumentOperations
+
+### Component Design Principles
+
+**Single Responsibility Principle:**
+- QueryEngine only responsible for evaluating if documents match queries
+- Each operator type (comparison, logical) has focused implementation
+- DocumentOperations responsible for applying queries to document collections
+- Collection maintains MongoDB-compatible interface without query logic
+
+**Open/Closed Principle:**
+- Operator registry pattern for adding new operators without modifying code
+- Query structure handling designed for extension without modification
+- Collection methods designed to work with any valid query patterns
+
+**Dependency Inversion Principle:**
+- QueryEngine injected into DocumentOperations rather than created internally
+- Components depend on interfaces rather than concrete implementations
+- Collection depends on DocumentOperations interface, not implementation details
 
 ### Supported Query Patterns (Section 6)
 
 **Field-based queries:**
-
 - `{ name: "John" }` - exact field match
 - `{ age: 25 }` - exact numeric match
 - `{ "user.email": "john@example.com" }` - nested field access
 
 **Comparison operators:**
-
 - `{ age: { $gt: 18 } }` - greater than
 - `{ price: { $lte: 100 } }` - less than or equal
 - `{ status: { $ne: "inactive" } }` - not equal
 - `{ created: { $gte: new Date("2023-01-01") } }` - date comparisons
 
 **Logical operators:**
-
 - `{ $and: [{ age: { $gt: 18 } }, { status: "active" }] }` - explicit AND
 - `{ $or: [{ type: "admin" }, { type: "moderator" }] }` - logical OR
 - `{ age: { $gt: 18 }, status: "active" }` - implicit AND (multiple fields)
 
 **Complex combinations:**
-
 - `{ $or: [{ age: { $lt: 18 } }, { $and: [{ age: { $gte: 65 } }, { status: "retired" }] }] }`
 
 ### Test Cases
@@ -185,6 +204,7 @@ The implementation will use Google Apps Script with clasp for testing, and assum
    - Test field access utilities (including deeply nested fields)
    - Test query validation and normalisation
    - Test performance with complex queries
+   - Test operator extensibility
 
 2. **Comparison Operator Tests** (18 test cases)
    - Test `$eq` with all data types (string, number, boolean, Date, null, undefined)
@@ -200,11 +220,11 @@ The implementation will use Google Apps Script with clasp for testing, and assum
    - Test complex nested logical operator combinations
 
 4. **DocumentOperations Enhancement Tests** (10 test cases)
-   - Test removal of Section 5 filter limitations
-   - Test `findOneByFilter()` with all supported query patterns
-   - Test `findByFilter()` with complex queries
-   - Test `updateByFilter()` and `deleteByFilter()` with field-based queries
-   - Test `countByFilter()` accuracy with various filters
+   - Test new query methods with dependency injection
+   - Test findByQuery with various query patterns
+   - Test updateByQuery and deleteByQuery with field-based queries
+   - Test countByQuery accuracy with complex filters
+   - Test proper delegation to QueryEngine
 
 5. **Collection API Enhancement Tests** (15 test cases)
    - Test `find(filter)` with full MongoDB query support
@@ -217,27 +237,32 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 ### File Updates Required
 
 **New Files:**
-
-- `src/components/QueryEngine.js`
-- `tests/unit/QueryEngineTest.js`
+- `src/components/QueryEngine.js` - Core query evaluation component
+- `tests/unit/QueryEngineTest.js` - Comprehensive testing for query functionality
 
 **Enhanced Files:**
-
-- `src/components/DocumentOperations.js` - Remove filter limitations, integrate QueryEngine
-- `src/core/Collection.js` - Remove Section 5 limitations, enable full query support
-- `tests/unit/DocumentOperationsTest.js` - Add comprehensive filtering tests
+- `src/components/DocumentOperations.js` - Add query support, integrate QueryEngine
+- `src/core/Collection.js` - Remove Section 5 limitations, delegate to DocumentOperations
+- `tests/unit/DocumentOperationsTest.js` - Add query-based operation tests
 - `tests/unit/CollectionTest.js` - Add full MongoDB query compatibility tests
+
+### Implementation Sequence
+
+1. Implement and test QueryEngine with core functionality
+2. Add comparison operators with tests
+3. Add logical operators with tests
+4. Enhance DocumentOperations with QueryEngine integration
+5. Update Collection API to remove limitations
+6. Run all integration tests to verify system behavior
 
 ### Completion Criteria
 
 - All test cases pass (70 total: 15 + 18 + 12 + 10 + 15)
-- Query engine matches documents using full MongoDB-compatible syntax
-- All comparison operators work correctly with appropriate data types
-- Logical operators support complex nested conditions
-- DocumentOperations supports unlimited query complexity
-- Collection API methods provide full MongoDB query compatibility
-- QueryEngine integrates seamlessly with existing components
-- Performance remains acceptable for typical query complexity
+- QueryEngine correctly evaluates document matches using MongoDB-compatible syntax
+- All operators work correctly with appropriate data types
+- DocumentOperations integrates with QueryEngine via dependency injection
+- Collection API provides full MongoDB query compatibility
+- System follows SOLID principles with clear separation of concerns
 - All Section 5 "not yet implemented" limitations are removed
 
 ## Section 7: Update Engine and Document Modification

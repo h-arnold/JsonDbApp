@@ -4,6 +4,42 @@
 
 This document contains updated class diagrams for the Google Apps Script Database (GAS DB) library, optimized for minimal Drive API usage and adherence to SOLID principles. The diagrams reflect the separation of concerns for Collection and FileService components in the MVP.
 
+## SOLID and DRY Principles Implementation
+
+### Single Responsibility Principle (SRP)
+Each class in the system has a clearly defined responsibility:
+- **Collection**: API interface with MongoDB-compatible methods
+- **DocumentOperations**: Document-level CRUD operations
+- **CollectionMetadata**: Collection statistics and timestamp management
+- **FileService**: File system interaction abstraction
+- **QueryEngine**: Document filtering and query evaluation
+- **UpdateEngine**: Document modification operations
+
+### Open/Closed Principle (OCP)
+- **QueryEngine**: Designed with operator pattern for extension without modification
+- **UpdateEngine**: Structured to allow adding new update operators
+- **ErrorHandler**: Error types system can be extended with new errors
+
+### Liskov Substitution Principle (LSP)
+- **Error hierarchy**: All specific errors extend GASDBError
+- **Component interfaces**: Components rely on interface contracts, not implementations
+
+### Interface Segregation Principle (ISP)
+- **DocumentOperations**: Focused interface for document manipulation
+- **FileService**: Clean interface separated from implementation details
+- **CollectionMetadata**: Cohesive interface for metadata operations only
+
+### Dependency Inversion Principle (DIP)
+- **Dependency injection**: Components receive dependencies via constructor
+- **Abstract dependencies**: Components depend on interfaces, not concrete implementations
+- **Configuration objects**: Used to decouple configuration from implementation
+
+### DRY (Don't Repeat Yourself)
+- **Centralized error handling**: Common validation in ErrorHandler
+- **Component separation**: Clear boundaries prevent duplicated functionality
+- **IdGenerator**: Single source for all ID generation operations
+- **Logger**: Unified logging implementation
+
 ## Main Classes
 
 ### Database Class Diagram
@@ -60,20 +96,20 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |               Collection                 |
 +------------------------------------------+
-| - _name: String                          |
+| - _name: String                          | ← SRP: Collection API interface
 | - _driveFileId: String                   |
-| - _database: Database                    |
-| - _fileService: FileService              |
+| - _database: Database                    | ← DIP: Depends on Database interface
+| - _fileService: FileService              | ← DIP: Depends on FileService interface
 | - _logger: GASDBLogger                   |
 | - _loaded: Boolean                       |
 | - _dirty: Boolean                        |
 | - _documents: Object                     |
-| - _collectionMetadata: CollectionMetadata|
-| - _documentOperations: DocumentOperations|
+| - _collectionMetadata: CollectionMetadata| ← DIP: Composition instead of inheritance
+| - _documentOperations: DocumentOperations| ← DIP: Composition instead of inheritance
 +------------------------------------------+
-| + constructor(name, driveFileId, database, fileService) |
-| + insertOne(doc: Object): Object         |
-| + findOne(filter: Object): Object|null   |
+| + constructor(name, driveFileId, database, fileService) | ← DIP: Dependencies injected
+| + insertOne(doc: Object): Object         | ← SRP: MongoDB-compatible API
+| + findOne(filter: Object): Object|null   | ← ISP: Focused methods
 | + find(filter: Object): Array<Object>    |
 | + updateOne(filter: Object, update: Object): Object |
 | + deleteOne(filter: Object): Object      |
@@ -97,19 +133,19 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |          DocumentOperations              |
 +------------------------------------------+
-| - _collection: Collection                |
+| - _collection: Collection                | ← DIP: Depends on Collection interface 
 | - _logger: GASDBLogger                   |
 +------------------------------------------+
-| + constructor(collection: Collection)    |
-| + insertDocument(doc: Object): Object    |
+| + constructor(collection: Collection)    | ← DIP: Dependency injected
+| + insertDocument(doc: Object): Object    | ← SRP: Document manipulation only
 | + findDocumentById(id: String): Object|null|
-| + findAllDocuments(): Array<Object>      |
+| + findAllDocuments(): Array<Object>      | ← ISP: Focused document operations
 | + updateDocument(id: String, updateData: Object): Object |
 | + deleteDocument(id: String): Object     |
 | + countDocuments(): Number               |
 | + documentExists(id: String): Boolean    |
-| - _generateDocumentId(): String          |
-| - _validateDocument(doc: Object): void   |
+| - _generateDocumentId(): String          | ← DRY: Reusable ID generation
+| - _validateDocument(doc: Object): void   | ← DRY: Centralized validation
 +------------------------------------------+
 ```
 
@@ -187,9 +223,9 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |             QueryEngine                  |
 +------------------------------------------+
-| + executeQuery(docs, query): Array<Object> |
-| - evaluateComparison(doc, field, operator, value): Boolean |
-| - evaluateLogical(doc, operator, conditions): Boolean |
+| + executeQuery(docs, query): Array<Object> | ← SRP: Query processing only
+| - evaluateComparison(doc, field, operator, value): Boolean | 
+| - evaluateLogical(doc, operator, conditions): Boolean | ← OCP: Operators can be extended
 | - evaluateElementOperator(doc, field, operator, value): Boolean |
 +------------------------------------------+
 ```
@@ -200,9 +236,9 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |             UpdateEngine                 |
 +------------------------------------------+
-| + executeUpdate(doc, update): Object     |
+| + executeUpdate(doc, update): Object     | ← SRP: Update processing only
 | - applySetOperator(doc, fields): void    |
-| - applyUnsetOperator(doc, fields): void  |
+| - applyUnsetOperator(doc, fields): void  | ← OCP: New operators can be added
 | - applyIncOperator(doc, fields): void    |
 | - applyRenameOperator(doc, fields): void |
 | - applyArrayOperators(doc, operator, field, value): void |
@@ -364,7 +400,6 @@ This document contains updated class diagrams for the Google Apps Script Databas
 ```
 
 ## Updated Class Relationships
-
 ```
                    +-------------+
                    |  Database   |
