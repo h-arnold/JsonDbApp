@@ -367,10 +367,35 @@ const MockQueryData = {
       ...this.getTestProducts(),
       ...this.getEdgeCaseDocuments()
     ];
+  },
+
+  /**
+   * Generates a large dataset for performance testing
+   * @param {number} count - Number of documents to generate
+   * @returns {Array} Array of test documents
+   */
+  getLargeDataset(count = 100) {
+    const documents = [];
+    const categories = ['test', 'performance', 'bulk', 'demo'];
+    const statuses = ['active', 'inactive', 'pending'];
+    
+    for (let i = 0; i < count; i++) {
+      documents.push({
+        _id: `large_doc_${i}`,
+        name: `Document ${i}`,
+        category: categories[i % categories.length],
+        status: statuses[i % statuses.length],
+        index: i,
+        value: Math.floor(Math.random() * 1000),
+        timestamp: new Date(),
+        metadata: {
+          generated: true,
+          batch: Math.floor(i / 10),
+          priority: i % 5
+        }
+      });
+    }
+    
+    return documents;
   }
 };
-
-// For Node.js compatibility
-if (typeof module !== 'undefined') {
-  module.exports = MockQueryData;
-}

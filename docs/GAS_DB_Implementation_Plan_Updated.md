@@ -11,18 +11,18 @@
 | **Section 3** | ✅ **COMPLETE** | 100% | 36/36 | 100% | File service, Drive API integration |
 | **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
 | **Section 5** | ✅ **COMPLETE** | 100% | 61/61 | 100% | CollectionMetadata ✅, DocumentOperations ✅, Collection ✅ |
-| **Section 6** | ✅ **COMPLETE** | 100% | 40/40 | 100% | QueryEngine with comparison and logical operators ✅ |
+| **Section 6** | 🟡 **IN PROGRESS** | 53% | 40/75 | 53% | QueryEngine ✅, API enhancements pending |
 | **Sections 7-9** | ⏳ **PENDING** | 0% | - | - | Awaiting Section 6 completion |
 
 **Total Tests Implemented:** 187 tests across 6 sections  
-**Tests Passing:** 187/187 (100% overall)  
-**Current Status:** 🎉 **Section 6 Complete** - QueryEngine with full comparison and logical operator support
+**Tests Passing:** 187/187 (100% of implemented tests)  
+**Section 6 Status:** 🟡 **QueryEngine Complete (40/40) - API Enhancements Pending (35 tests)**
 
 ## Section 6: Query Engine and Document Filtering
 
-### ✅ **Status: COMPLETE - ALL FUNCTIONALITY IMPLEMENTED**
+### 🟡 **Status: CORE ENGINE COMPLETE - API ENHANCEMENTS PENDING**
 
-**Implementation Completed:**
+**QueryEngine Implementation Complete:**
 - ✅ **QueryEngine Class** - Core document matching with MongoDB-compatible syntax
 - ✅ **Field-based Queries** - Direct field matching with dot notation support
 - ✅ **Comparison Operators** - `$eq`, `$gt`, `$lt` for strings, numbers, booleans, dates
@@ -32,15 +32,15 @@
 - ✅ **Nested Field Access** - Dot notation queries (e.g., `"profile.yearsOfService"`)
 - ✅ **Error Handling** - Comprehensive validation and clear error messages
 
-**Test Results:**
+**QueryEngine Test Results:**
 - **Total Tests:** 40 tests
 - **Passing:** 40/40 (100% pass rate)
 - **All Test Suites:** QueryEngine Basic (12/12), Comparison Operators (9/9), Logical Operators (8/8), Error Handling (5/5), Edge Cases (6/6)
 
-**TDD Journey Completed:**
-- **RED Phase:** Fixed tests to fail for correct logic reasons rather than validation errors
-- **GREEN Phase:** Implemented logical operators with proper recognition and processing
-- **REFACTOR Phase:** Clean, well-documented implementation following SOLID principles
+**API Enhancements Still Required:**
+- ❌ **DocumentOperations Enhancement** - Add QueryEngine integration methods
+- ❌ **Collection API Enhancement** - Remove Section 5 limitations, support field-based queries
+- ❌ **Integration Tests** - Verify end-to-end query functionality through Collection API
 
 **Key Technical Achievements:**
 
@@ -143,34 +143,150 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 **Tests:** 61/61 passing (100%) - 19 CollectionMetadata + 22 DocumentOperations + 20 Collection
 
-## Section 7: Update Engine and Document Modification
+## Section 6: Query Engine and Document Filtering
+
+### 🟡 **Status: GREEN PHASE COMPLETE (COMPARISON OPERATORS) - LOGICAL OPERATORS PENDING**
+
+**Green Phase (Comparison Operators):** ✅ QueryEngine class implemented with comparison operators only  
+**Next Phase:** Implement logical operators (`$and`, `$or`) to complete Section 6  
+**Test Results:** 34/40 passing (85% pass rate - expected for comparison operators only)  
+
+### Green Phase Summary (✅ COMPLETED - COMPARISON OPERATORS)
+
+**Implementation Completed:**
+- ✅ **QueryEngine Class** - Core document matching with MongoDB-compatible syntax
+- ✅ **Field-based Queries** - Direct field matching with dot notation support
+- ✅ **Comparison Operators** - `$eq`, `$gt`, `$lt` for strings, numbers, booleans, dates
+- ✅ **Implicit AND** - Multi-field queries work correctly (e.g., `{age: 30, active: true}`)
+- ✅ **Query Validation** - Proper error handling for unsupported operators
+- ✅ **Nested Field Access** - Dot notation queries (e.g., `"profile.yearsOfService"`)
+
+**Test Execution Results:**
+- **Total Tests:** 40 tests
+- **Passing:** 34/40 (85% pass rate)
+- **Expected Failures:** 6 logical operator tests properly failing with "Unsupported operator" errors
+- **Execution Time:** 135ms (excellent performance)
+
+**Test Results Breakdown:**
+- ✅ **QueryEngine Basic Functionality** (12/12) - 100% - Core functionality working
+- ✅ **QueryEngine Comparison Operators** (9/9) - 100% - All comparison operators implemented
+- ❌ **QueryEngine Logical Operators** (2/8) - 25% - Only implicit AND works, explicit `$and`/`$or` properly rejected
+- ✅ **QueryEngine Error Handling** (5/5) - 100% - Validation correctly catching unsupported operators
+- ✅ **QueryEngine Edge Cases** (6/6) - 100% - Including performance test with corrected data
+
+### 🚨 **CRITICAL INVESTIGATION FINDINGS (2025-06-10)**
+
+**Investigation Completed:** `quickTest.js` execution revealed fundamental implementation flaws in logical operator handling.
+
+**Key Findings:**
+
+1. **Validation Bug:** Even with `$and`/`$or` in `supportedOperators` array, validation still rejects them with "Unsupported operator" errors
+2. **Execution Logic Flaw:** `_matchDocument` method treats ALL top-level keys as field names, including logical operators
+3. **Test Logic Issue:** Original logical operator tests were incorrectly designed, checking wrong criteria
+
+**Specific Problems Identified:**
+
+- **Line 77-84 in QueryEngine.js:** `_matchDocument` treats `$and` as field name instead of logical operator
+- **Query `{$and: [...]}` processed as:** Look for field named "$and" in document (returns `undefined`)
+- **Result:** `undefined !== array` → query fails even when conditions should match
+
+**Evidence from Investigation:**
+
+```javascript
+Processing field: "$and"
+Field value from document: {} (undefined)
+Query value: "[{\"active\":true},{\"age\":{\"$gt\":25}}]" (array)
+Field matches: false
+```
+
+**Current Status:**
+
+- ✅ **Implicit AND** works correctly (multi-field queries)
+- ❌ **Explicit $and/$or** completely broken (treats operators as field names)
+- ❌ **Validation** has bugs even with operators in supported list
+
+### Remaining Work for Section 6 Completion
+
+**PRIORITY 1: DocumentOperations Enhancement (RED-GREEN-REFACTOR)**
+
+Implement QueryEngine integration in `DocumentOperations.js`:
+- Add `findByQuery(query)` method with QueryEngine integration
+- Add `findMultipleByQuery(query)` method for multiple document retrieval
+- Add `countByQuery(query)` method for query-based counting
+- Integrate QueryEngine validation and error handling
+- Maintain existing ID-based methods for backwards compatibility
+
+**PRIORITY 2: Collection API Enhancement (RED-GREEN-REFACTOR)**
+
+Update `Collection.js` MongoDB-compatible methods:
+- Remove Section 5 limitations from `find(filter)`, `findOne(filter)`, `updateOne(filter, update)`, `deleteOne(filter)`, `countDocuments(filter)`
+- Add field-based query support through DocumentOperations integration
+- Maintain backwards compatibility with existing `{_id: "id"}` and `{}` patterns
+- Add comprehensive query validation with clear error messages
+- Ensure proper delegation to DocumentOperations for all query operations
+
+**PRIORITY 3: Integration Testing (RED-GREEN-REFACTOR)**
+
+Comprehensive end-to-end testing:
+- Test full query pipeline from Collection → DocumentOperations → QueryEngine
+- Verify MongoDB compatibility across all Collection methods
+- Test error propagation and validation
+- Performance testing with realistic data sets
 
 ### Objectives
 
-- Implement basic update engine with MongoDB-compatible operators
-- Add advanced update capabilities to DocumentOperations (beyond simple replacement)
-- Enhance Collection API to support MongoDB-style update operations
-- Support field modification and removal operators
-- Complete MongoDB-compatible update functionality
+- Implement basic MongoDB-compatible query engine aligned with PRD section 4.3
+- Enhance DocumentOperations and Collection methods to support required filter parameters
+- Remove Section 5 limitations and provide essential query functionality
+- Support field-based queries and simple nested field access
 
 ### Implementation Steps
 
-1. **Update Engine Implementation**
-   - Create UpdateEngine class with document modification logic
-   - Implement field access and modification utilities
-   - Create update validation and sanitization
+1. **Query Engine Implementation** *(Core Component - SRP)*
+   - Create QueryEngine class with essential document matching logic
+   - Implement basic field access and value comparison utilities
+   - Support simple MongoDB-compatible query validation
+   - Apply Interface Segregation with focused methods
+   - Ensure testability through dependency injection
 
-2. **Field Modification Operators**
-   - Implement `$set` operator (set field values)
-   - Support nested field updates and array element updates
+2. **Basic Comparison Operators** *(As specified in PRD 4.3)*
+   - Implement `$eq` operator (equality) - default when no operator specified
+   - Implement `$gt` operator (greater than)
+   - Implement `$lt` operator (less than)
+   - Support common data types (string, number, boolean, Date)
 
-3. **Field Removal Operators**
-   - Implement `$unset` operator (remove fields)
-   - Handle array element removal
+3. **Simple Logical Operators** *(As specified in PRD 4.3)*
+   - Implement `$and` operator (logical AND) - default for multiple fields
+   - Implement `$or` operator (logical OR)
+   - Support basic nested logical conditions
 
-4. **Array Update Operators**
-   - Implement `$push` operator (add elements to array)
-   - Support array position updates
+4. **DocumentOperations Enhancement**
+   - Add `findByQuery(query)` method with QueryEngine integration
+   - Add methods for querying with simplified comparison operators
+   - Integrate QueryEngine for all filtering operations
+
+5. **Collection API Enhancement**
+   - Update MongoDB-compatible methods:
+     - `find(filter)` - support basic query patterns
+     - `findOne(filter)` - support field-based queries
+     - `updateOne(filter, update)` - support field matching for filter
+     - `deleteOne(filter)` - support field matching
+     - `countDocuments(filter)` - support field matching
+   - Remove "not yet implemented" error messages
+   - Add basic query validation
+
+6. **Test Data Preparation** *(COMPLETED)*
+   - Created comprehensive test data in `MockQueryData.js`
+   - Contains rich document structures with various data types
+   - Includes user documents, product documents, and edge case documents
+   - Supports testing of nested fields, arrays, and complex query patterns
+   - Designed to validate all query functionality including comparison and logical operators
+
+### Error Handling Strategy
+
+- Create specialized `InvalidQueryError` for query issues
+- Implement validation for query structure before execution
+- Add clear error messages for unsupported operators
 
 ### Supported Query Patterns (Section 6 MVP)
 
@@ -194,31 +310,70 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 ### Test Cases
 
-1. **Query Engine Tests** (12 test cases)
+1. **Query Engine Tests** (12 test cases) - ✅ **COMPLETED**
    - Test basic document matching against simple query patterns
    - Test field access utilities (including basic nested fields)
    - Test query validation
 
-2. **Comparison Operator Tests** (9 test cases)
+2. **Comparison Operator Tests** (9 test cases) - ✅ **COMPLETED**
    - Test `$eq` with common data types
    - Test `$gt`/`$lt` with numbers and dates
    - Test direct field comparison (implicit $eq)
 
-3. **Logical Operator Tests** (8 test cases)
+3. **Logical Operator Tests** (8 test cases) - ✅ **COMPLETED**
    - Test `$and` with multiple conditions
    - Test `$or` with multiple conditions
    - Test implicit AND behavior (multiple fields)
 
-4. **DocumentOperations Enhancement Tests** (8 test cases)
-   - Test `findByQuery` with various query patterns
-   - Test integration with QueryEngine
+4. **Error Handling Tests** (5 test cases) - ✅ **COMPLETED**
+   - Test malformed query validation
+   - Test unsupported operator detection
+   - Test comprehensive error messaging
 
-5. **Collection API Enhancement Tests** (10 test cases)
-   - Test `find(filter)` and `findOne(filter)` with field matching
-   - Test `updateOne(filter, doc)` with field-based filters
-   - Test `deleteOne(filter)` with field matching
-   - Test `countDocuments(filter)` with field matching
-   - Test error handling for unsupported queries
+5. **Edge Cases Tests** (6 test cases) - ✅ **COMPLETED**
+   - Test performance with large document sets
+   - Test boundary conditions and null handling
+
+6. **DocumentOperations Enhancement Tests** (12 test cases) - ❌ **PENDING**
+   - Test `findByQuery(query)` with field-based queries: `{name: "John"}`, `{age: {$gt: 25}}`
+   - Test `findByQuery(query)` with logical queries: `{$and: [...]}`, `{$or: [...]}`
+   - Test `findByQuery(query)` with nested field queries: `{"profile.age": 30}`
+   - Test `findMultipleByQuery(query)` returning multiple matching documents
+   - Test `countByQuery(query)` returning accurate counts for various queries
+   - Test QueryEngine integration error handling and validation
+   - Test empty result handling for non-matching queries
+   - Test large result sets and performance
+   - Test backwards compatibility with existing ID-based methods
+   - Test query validation and error propagation
+   - Test memory efficiency with complex queries
+   - Test concurrent access patterns
+
+7. **Collection API Enhancement Tests** (15 test cases) - ❌ **PENDING**
+   - Test `find(filter)` with field queries replacing "not yet implemented" errors
+   - Test `find(filter)` with comparison operators: `{age: {$gt: 25}}`
+   - Test `find(filter)` with logical operators: `{$and: [...]}`, `{$or: [...]}`
+   - Test `findOne(filter)` with field-based queries instead of ID-only
+   - Test `findOne(filter)` returning first match for multiple matches
+   - Test `updateOne(filter, update)` with field matching for filter
+   - Test `updateOne(filter, update)` with query-based document selection
+   - Test `deleteOne(filter)` with field matching instead of ID-only
+   - Test `deleteOne(filter)` with complex query filters
+   - Test `countDocuments(filter)` with field matching instead of empty filter only
+   - Test `countDocuments(filter)` accuracy with various query types
+   - Test backwards compatibility with existing `{_id: "id"}` and `{}` patterns
+   - Test error handling for invalid queries with clear error messages
+   - Test query validation at Collection API level
+   - Test end-to-end performance from Collection → DocumentOperations → QueryEngine
+
+8. **Integration Tests** (8 test cases) - ❌ **PENDING**
+   - Test complete query pipeline: Collection API → DocumentOperations → QueryEngine
+   - Test error propagation through all layers
+   - Test performance with realistic data volumes (1000+ documents)
+   - Test concurrent query execution
+   - Test memory management with complex nested queries
+   - Test MongoDB compatibility verification across all query types
+   - Test backwards compatibility with Section 5 patterns
+   - Test robustness with malformed or edge case queries
 
 ### File Updates Required
 
@@ -244,13 +399,16 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 ### Completion Criteria
 
-- All test cases pass (47 total: 12 + 9 + 8 + 8 + 10)
-- QueryEngine correctly evaluates document matches using basic MongoDB-compatible syntax
-- Basic operators work correctly with common data types
-- DocumentOperations integrates with QueryEngine
+- All test cases pass (75 total: 40 QueryEngine ✅ + 12 DocumentOperations + 15 Collection API + 8 Integration)
+- QueryEngine correctly evaluates document matches using basic MongoDB-compatible syntax ✅
+- Basic operators work correctly with common data types ✅
+- DocumentOperations integrates with QueryEngine and provides query-based methods
 - Collection API provides essential MongoDB query compatibility as specified in PRD 4.3
-- System follows SOLID principles with clear separation of concerns
-- All Section 5 limitations are removed
+- System follows SOLID principles with clear separation of concerns ✅
+- All Section 5 limitations are removed from Collection methods
+- End-to-end query pipeline functions correctly: Collection → DocumentOperations → QueryEngine
+- Backwards compatibility maintained for existing ID-based and empty filter patterns
+- Performance acceptable for realistic document volumes (1000+ documents)
 
 ### Future Enhancements (Post-MVP)
 
@@ -494,6 +652,4 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 
 Sections 1-5 provide a solid MVP foundation using TDD methodology. The current architecture efficiently handles basic MongoDB-compatible operations while clearly documenting limitations that will be addressed in Sections 6-9. The delegation pattern and optimized file service ensure good performance within Google Apps Script constraints.
 
-**Ready for Section 6:** Query Engine implementation to remove field-based query limitations.
-
----
+**Ready for Section 6:** Query Engine implementation to remove field-based query limitations
