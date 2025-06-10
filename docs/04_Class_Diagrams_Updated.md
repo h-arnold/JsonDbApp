@@ -60,29 +60,34 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |               Collection                 |
 +------------------------------------------+
-| - name: String                           |
-| - driveFileId: String                    |
-| - db: Database                           |
-| - docOps: DocumentOperations             |
-| - metadata: CollectionMetadata           |
-| - isDirty: Boolean                       |
-| - isLoaded: Boolean                      |
+| - _name: String                          |
+| - _driveFileId: String                   |
+| - _database: Database                    |
+| - _fileService: FileService              |
+| - _logger: GASDBLogger                   |
+| - _loaded: Boolean                       |
+| - _dirty: Boolean                        |
+| - _documents: Object                     |
+| - _collectionMetadata: CollectionMetadata|
+| - _documentOperations: DocumentOperations|
 +------------------------------------------+
-| + findOne(query): Object                 |
-| + find(query): Array<Object>             |
-| + insertOne(doc): Object                 |
-| + insertMany(docs): Array<Object>        |
-| + updateOne(query, update): Object       |
-| + updateMany(query, update): Object      |
-| + deleteOne(query): Object               |
-| + deleteMany(query): Object              |
-| + countDocuments(query): Number          |
-| - loadData(): void                       |
-| - saveData(): void                       |
-| - acquireLock(): Lock                    |
-| - releaseLock(lock): void                |
-| - markDirty(): void                      |
-| - ensureLoaded(): void                   |
+| + constructor(name, driveFileId, database, fileService) |
+| + insertOne(doc: Object): Object         |
+| + findOne(filter: Object): Object|null   |
+| + find(filter: Object): Array<Object>    |
+| + updateOne(filter: Object, update: Object): Object |
+| + deleteOne(filter: Object): Object      |
+| + countDocuments(filter: Object): Number |
+| + getName(): String                      |
+| + getMetadata(): Object                  |
+| + isDirty(): Boolean                     |
+| + save(): void                           |
+| - _ensureLoaded(): void                  |
+| - _loadData(): void                      |
+| - _saveData(): void                      |
+| - _markDirty(): void                     |
+| - _updateMetadata(changes: Object): void |
+| - _validateFilter(filter: Object, operation: String): void |
 +------------------------------------------+
 ```
 
@@ -92,16 +97,19 @@ This document contains updated class diagrams for the Google Apps Script Databas
 +------------------------------------------+
 |          DocumentOperations              |
 +------------------------------------------+
-| - collection: Collection                 |
-| - queryEngine: QueryEngine               |
-| - updateEngine: UpdateEngine             |
+| - _collection: Collection                |
+| - _logger: GASDBLogger                   |
 +------------------------------------------+
-| + findDocument(query): Object            |
-| + findDocuments(query): Array<Object>    |
-| + insertDocument(doc): Object            |
-| + updateDocument(query, update): Object  |
-| + deleteDocument(query): Object          |
-| + countMatchingDocuments(query): Number  |
+| + constructor(collection: Collection)    |
+| + insertDocument(doc: Object): Object    |
+| + findDocumentById(id: String): Object|null|
+| + findAllDocuments(): Array<Object>      |
+| + updateDocument(id: String, updateData: Object): Object |
+| + deleteDocument(id: String): Object     |
+| + countDocuments(): Number               |
+| + documentExists(id: String): Boolean    |
+| - _generateDocumentId(): String          |
+| - _validateDocument(doc: Object): void   |
 +------------------------------------------+
 ```
 
@@ -115,10 +123,13 @@ This document contains updated class diagrams for the Google Apps Script Databas
 | + lastUpdated: Date                      |
 | + documentCount: Number                  |
 +------------------------------------------+
+| + constructor(initialMetadata?: Object)  |
 | + updateLastModified(): void             |
 | + incrementDocumentCount(): void         |
 | + decrementDocumentCount(): void         |
-| + setDocumentCount(count): void          |
+| + setDocumentCount(count: Number): void  |
+| + toObject(): Object                     |
+| + clone(): CollectionMetadata            |
 +------------------------------------------+
 ```
 
@@ -477,43 +488,3 @@ Collection            FileService           FileOperations         FileCache
   | file data              |                      |                    |
   |                        |                      |                    |
 ```
-
-## Drive API Optimization Details
-
-### FileService Caching
-
-The FileService now explicitly separates file operations from caching:
-
-- FileOperations handles direct Drive API calls
-- FileCache manages in-memory storage of file content
-- FileService orchestrates these components
-
-### Collection Component Separation
-
-The Collection class now delegates responsibilities:
-
-- DocumentOperations handles CRUD operations on documents
-- CollectionMetadata manages collection statistics and metadata
-- Collection orchestrates these components while maintaining a simple API
-
-This separation improves:
-
-- Code maintainability through focused components
-- Testability by allowing component mocking
-- Future extensibility without major refactoring
-
-### Batch Operations
-
-The system continues to support batch operations to minimize Drive API calls:
-
-- insertMany() performs a single write for multiple documents
-- updateMany() performs a single write after multiple updates
-- deleteMany() performs a single write after multiple deletions
-
-### Metadata Management
-
-Metadata management is now more explicitly handled:
-
-- CollectionMetadata provides methods for metadata manipulation
-- Collection coordinates metadata updates with document operations
-- Periodic synchronization ensures index metadata stays current
