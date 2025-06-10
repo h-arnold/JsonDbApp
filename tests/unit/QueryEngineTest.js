@@ -240,7 +240,10 @@ function createQueryEngineBasicTestSuite() {
     // Assert
     TestFramework.assertNotNull(results, 'Results should not be null');
     TestFramework.assertTrue(Array.isArray(results), 'Results should be an array');
-    // Should handle undefined field gracefully
+    // Should match documents where the 'orders' field is undefined/missing
+    results.forEach(function(doc) {
+      TestFramework.assertTrue(doc.orders === undefined, 'All returned documents should have undefined orders field');
+    });
   });
   
   return suite;
