@@ -25,7 +25,7 @@ class QueryEngine {
     this._logger = GASDBLogger.createComponentLogger('QueryEngine');
     this._config = {
       validateQueries: config.validateQueries !== false,
-      supportedOperators: ['$eq', '$gt', '$lt'],
+      supportedOperators: ['$eq', '$gt', '$lt', '$and', '$or'],
       maxNestedDepth: config.maxNestedDepth || 10
     };
     
@@ -81,8 +81,19 @@ class QueryEngine {
    * @private
    */
   _matchDocument(document, query) {
-    // Handle field-based queries (implicit AND for multiple fields)
     const queryFields = Object.keys(query);
+
+    // Handle logical operators first
+    for (const field of queryFields) {
+      if (field === '$and') {
+        return this._matchLogicalAnd(document, query[field]);
+      }
+      if (field === '$or') {
+        return this._matchLogicalOr(document, query[field]);
+      }
+    }
+
+    // Handle field-based queries (implicit AND for multiple fields)
     for (const field of queryFields) {
       if (!this._matchField(document, field, query[field])) {
         return false;
@@ -315,5 +326,59 @@ class QueryEngine {
     }
 
     return operators;
+  }
+
+  /**
+   * Handle $and logical operator
+   * @param {Object} document - Document to test
+   * @param {Array} conditions - Array of conditions that must all match
+   * @returns {boolean} True if all conditions match
+   * @private
+   */
+  _matchLogicalAnd(document, conditions) {
+    if (!Array.isArray(conditions)) {
+      throw new InvalidQueryError('$and operator requires an array of conditions');
+    }
+
+    // Empty $and array should match all documents (MongoDB behaviour)
+    if (conditions.length === 0) {
+      return true;
+    }
+
+    // All conditions must match
+    for (const condition of conditions) {
+      if (!this._matchDocument(document, condition)) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  /**
+   * Handle $or logical operator
+   * @param {Object} document - Document to test
+   * @param {Array} conditions - Array of conditions where at least one must match
+   * @returns {boolean} True if any condition matches
+   * @private
+   */
+  _matchLogicalOr(document, conditions) {
+    if (!Array.isArray(conditions)) {
+      throw new InvalidQueryError('$or operator requires an array of conditions');
+    }
+
+    // Empty $or array should match no documents (MongoDB behaviour)
+    if (conditions.length === 0) {
+      return false;
+    }
+
+    // At least one condition must match
+    for (const condition of conditions) {
+      if (this._matchDocument(document, condition)) {
+        return true;
+      }
+    }
+
+    return false;
   }
 }
