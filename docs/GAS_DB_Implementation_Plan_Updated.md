@@ -142,18 +142,75 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 - ✅ **QueryEngine Error Handling** (5/5) - 100% - Validation correctly catching unsupported operators
 - ✅ **QueryEngine Edge Cases** (6/6) - 100% - Including performance test with corrected data
 
+### 🚨 **CRITICAL INVESTIGATION FINDINGS (2025-06-10)**
+
+**Investigation Completed:** `quickTest.js` execution revealed fundamental implementation flaws in logical operator handling.
+
+**Key Findings:**
+
+1. **Validation Bug:** Even with `$and`/`$or` in `supportedOperators` array, validation still rejects them with "Unsupported operator" errors
+2. **Execution Logic Flaw:** `_matchDocument` method treats ALL top-level keys as field names, including logical operators
+3. **Test Logic Issue:** Original logical operator tests were incorrectly designed, checking wrong criteria
+
+**Specific Problems Identified:**
+
+- **Line 77-84 in QueryEngine.js:** `_matchDocument` treats `$and` as field name instead of logical operator
+- **Query `{$and: [...]}` processed as:** Look for field named "$and" in document (returns `undefined`)
+- **Result:** `undefined !== array` → query fails even when conditions should match
+
+**Evidence from Investigation:**
+
+```javascript
+Processing field: "$and"
+Field value from document: {} (undefined)
+Query value: "[{\"active\":true},{\"age\":{\"$gt\":25}}]" (array)
+Field matches: false
+```
+
+**Current Status:**
+
+- ✅ **Implicit AND** works correctly (multi-field queries)
+- ❌ **Explicit $and/$or** completely broken (treats operators as field names)
+- ❌ **Validation** has bugs even with operators in supported list
+
 ### Remaining Work for Section 6 Completion
 
-**Logical Operators Implementation Needed:**
+**PRIORITY 1: Fix Test Suite (Proper RED Phase)**
+
+- Review and correct logical operator test cases to check actual query results
+- Ensure tests verify correct document matching, not just "no errors thrown"
+- Add comprehensive test coverage for nested logical conditions
+- **Expected outcome:** Pass rate will DROP as more tests fail for correct reasons
+
+**PRIORITY 2: Fix Core Implementation Flaw (GREEN Phase)**
+
+- **Rewrite `_matchDocument` method** to handle logical operators as operators, not field names
+- Add logical operator recognition logic before field processing
+- Implement recursive query processing for nested conditions
+
+**PRIORITY 3: Implement Logical Operators (Complete GREEN Phase)**
+
 - `$and` operator - explicit logical AND with array of conditions
 - `$or` operator - explicit logical OR with array of conditions  
 - Integration of logical operators with comparison operators
 - Support for nested logical conditions
 
-**Expected Impact of Logical Operators:**
-- Will bring pass rate from 85% to 100% (34/40 → 40/40)
-- Will remove all "Unsupported operator" errors for `$and`/`$or`
-- Will complete full MongoDB-compatible query syntax for Section 6
+**Expected TDD Sequence:**
+
+**Phase 1: Fix Tests (Proper RED Phase)**
+- Pass rate will likely DROP from 85% to ~60-70% (34/40 → ~24-28/40)
+- More logical operator tests will fail when they check actual query results
+- Tests will fail for the RIGHT reasons (incorrect results, not validation errors)
+
+**Phase 2: Implement Functionality (GREEN Phase)**
+- Pass rate will RISE to 100% (→ 40/40) once logical operators are properly implemented
+- All "Unsupported operator" errors will be resolved
+- Full MongoDB-compatible query syntax achieved
+
+**Why Pass Rate Goes Down First:**
+- Current failing tests only fail due to validation errors
+- When tests are fixed to check actual results, the broken implementation will cause more failures
+- This is the correct TDD RED→GREEN→REFACTOR cycle
 
 ### Objectives
 
