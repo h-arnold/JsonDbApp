@@ -64,6 +64,15 @@ class FileOperations {
         this._logger.debug('File content parsed successfully', { fileId });
         return parsedContent;
       } catch (parseError) {
+        // Check if this is a double-parsing attempt using centralized utility
+        ErrorHandler.detectDoubleParsing(content, parseError, 'FileOperations.readFile');
+        
+        this._logger.error('Failed to parse JSON content', { 
+          fileId, 
+          error: parseError.message 
+        });
+        throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
+        
         this._logger.error('Failed to parse JSON content', { 
           fileId, 
           error: parseError.message 

@@ -27,49 +27,106 @@ const DATABASE_TEST_DATA = {
 };
 
 /**
- * Setup function for Database tests
+ * Setup database test environment
  */
-function createDatabaseSetupTestSuite() {
-  const suite = new TestSuite('Database Setup - Create Test Environment');
+function setupDatabaseTestEnvironment() {
+  const logger = GASDBLogger.createComponentLogger('Database-Setup');
   
-  suite.addTest('should create test folder for Database tests', function() {
-    // Arrange
-    const logger = GASDBLogger.createComponentLogger('Database-Setup');
+  try {
+    const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
+    DATABASE_TEST_DATA.testFolderId = folder.getId();
+    DATABASE_TEST_DATA.createdFolderIds.push(DATABASE_TEST_DATA.testFolderId);
     
-    // Act
+    // Prepare test configuration
+    DATABASE_TEST_DATA.testConfig = {
+      rootFolderId: DATABASE_TEST_DATA.testFolderId,
+      autoCreateCollections: true,
+      lockTimeout: 30000,
+      cacheEnabled: true,
+      logLevel: 'INFO',
+      masterIndexKey: 'GASDB_MASTER_INDEX_TEST_DB'
+    };
+    
+    logger.info('Created test folder for Database', { 
+      folderId: DATABASE_TEST_DATA.testFolderId, 
+      name: DATABASE_TEST_DATA.testFolderName,
+      config: DATABASE_TEST_DATA.testConfig
+    });
+    
+  } catch (error) {
+    logger.error('Failed to create test folder for Database', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Clean up database test environment
+ */
+function cleanupDatabaseTestEnvironment() {
+  const logger = GASDBLogger.createComponentLogger('Database-Cleanup');
+  let cleanedFiles = 0;
+  let failedFiles = 0;
+  let cleanedFolders = 0;
+  let failedFolders = 0;
+  
+  // Clean up created test files
+  DATABASE_TEST_DATA.createdFileIds.forEach(fileId => {
     try {
-      const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
-      DATABASE_TEST_DATA.testFolderId = folder.getId();
-      DATABASE_TEST_DATA.createdFolderIds.push(DATABASE_TEST_DATA.testFolderId);
-      
-      // Prepare test configuration
-      DATABASE_TEST_DATA.testConfig = {
-        rootFolderId: DATABASE_TEST_DATA.testFolderId,
-        autoCreateCollections: true,
-        lockTimeout: 30000,
-        cacheEnabled: true,
-        logLevel: 'INFO',
-        masterIndexKey: 'GASDB_MASTER_INDEX_TEST_DB'
-      };
-      
-      // Assert
-      TestFramework.assertDefined(DATABASE_TEST_DATA.testFolderId, 'Test folder should be created');
-      TestFramework.assertTrue(DATABASE_TEST_DATA.testFolderId.length > 0, 'Folder ID should not be empty');
-      TestFramework.assertNotNull(DATABASE_TEST_DATA.testConfig, 'Test config should be prepared');
-      
-      logger.info('Created test folder for Database', { 
-        folderId: DATABASE_TEST_DATA.testFolderId, 
-        name: DATABASE_TEST_DATA.testFolderName,
-        config: DATABASE_TEST_DATA.testConfig
-      });
-      
+      const file = DriveApp.getFileById(fileId);
+      file.setTrashed(true);
+      cleanedFiles++;
     } catch (error) {
-      logger.error('Failed to create test folder for Database', { error: error.message });
-      throw error;
+      failedFiles++;
+      logger.warn('Failed to delete file', { fileId, error: error.message });
     }
   });
   
-  return suite;
+  // Clean up created test folders
+  DATABASE_TEST_DATA.createdFolderIds.forEach(folderId => {
+    try {
+      const folder = DriveApp.getFolderById(folderId);
+      folder.setTrashed(true);
+      cleanedFolders++;
+    } catch (error) {
+      failedFolders++;
+      logger.warn('Failed to delete folder', { folderId, error: error.message });
+    }
+  });
+  
+  // Clean up test master index entries
+  try {
+    const masterIndexKey = DATABASE_TEST_DATA.testConfig?.masterIndexKey;
+    if (masterIndexKey) {
+      PropertiesService.getScriptProperties().deleteProperty(masterIndexKey);
+      logger.info('Cleaned up test master index', { key: masterIndexKey });
+    }
+    
+    // Clean up other test keys
+    const testKeys = ['GASDB_MASTER_INDEX_TEST_DB', 'GASDB_MASTER_INDEX_TEST_INTEGRATION'];
+    testKeys.forEach(key => {
+      try {
+        PropertiesService.getScriptProperties().deleteProperty(key);
+        logger.info('Cleaned up test property', { key: key });
+      } catch (error) {
+        // Ignore errors - property might not exist
+      }
+    });
+    
+    // Reset test data arrays and database reference at the very end only
+    DATABASE_TEST_DATA.createdFileIds = [];
+    DATABASE_TEST_DATA.createdFolderIds = [];
+    DATABASE_TEST_DATA.testDatabase = null;
+    
+  } catch (error) {
+    logger.warn('Some cleanup operations failed', { error: error.message });
+  }
+  
+  logger.info('Database test cleanup completed', { 
+    cleanedFiles, 
+    failedFiles, 
+    cleanedFolders, 
+    failedFolders 
+  });
 }
 
 /**
@@ -126,6 +183,9 @@ function createDatabaseInitializationTestSuite() {
       // Track created file for clean-up
       DATABASE_TEST_DATA.testIndexFileId = database.indexFileId;
       DATABASE_TEST_DATA.createdFileIds.push(database.indexFileId);
+      
+      // Store the initialised database for reuse in other test suites
+      DATABASE_TEST_DATA.testDatabase = database;
       
     } catch (error) {
       throw new Error('Database.initialise() not implemented: ' + error.message);
@@ -446,16 +506,16 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
   const suite = new TestSuite('Database Master Index Integration');
 
   suite.addTest('should integrate with master index on initialisation', function() {
-    // Arrange
-    const masterIndexKey = DATABASE_TEST_DATA.testConfig.masterIndexKey;
+    // Arrange - use a unique master index key for this test to avoid conflicts
+    const uniqueMasterIndexKey = 'GASDB_MASTER_INDEX_TEST_INIT_' + new Date().getTime();
     const existingData = {
       collections: {
         existingCollection: { name: 'existingCollection', fileId: 'mock-file-id', documentCount: 2 }
       }
     };
-    PropertiesService.getScriptProperties().setProperty(masterIndexKey, JSON.stringify(existingData));
+    PropertiesService.getScriptProperties().setProperty(uniqueMasterIndexKey, JSON.stringify(existingData));
     const config = Object.assign({}, DATABASE_TEST_DATA.testConfig);
-    config.masterIndexKey = masterIndexKey;
+    config.masterIndexKey = uniqueMasterIndexKey;
 
     // Act
     const database = new Database(config);
@@ -467,17 +527,27 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
       collections.includes('existingCollection'),
       'Database should load collections from MasterIndex on initialise'
     );
+    
+    // Clean up the unique master index key
+    try {
+      PropertiesService.getScriptProperties().deleteProperty(uniqueMasterIndexKey);
+    } catch (error) {
+      // Ignore cleanup errors
+    }
   });
 
   suite.addTest('should co-ordinate collection operations with master index', function() {
-    // Arrange
-    const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
+    // Arrange - use a fresh database instance with unique master index key for this test
+    const uniqueConfig = Object.assign({}, DATABASE_TEST_DATA.testConfig);
+    uniqueConfig.masterIndexKey = 'GASDB_MASTER_INDEX_TEST_COORDINATION_' + new Date().getTime();
+    
+    const database = new Database(uniqueConfig);
     database.initialise();
     const collectionName = 'coordinationTest';
 
     // Act
     const collObj = database.createCollection(collectionName);
-    const masterIndex = new MasterIndex({ masterIndexKey: DATABASE_TEST_DATA.testConfig.masterIndexKey });
+    const masterIndex = new MasterIndex({ masterIndexKey: uniqueConfig.masterIndexKey });
     const miCollections = masterIndex.getCollections();
 
     // Assert
@@ -490,85 +560,15 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
       miCollections[collectionName].fileId,
       'Drive file IDs should match between Database and MasterIndex'
     );
-  });
-
-  return suite;
-}
-
-/**
- * Cleanup function for Database tests
- */
-function createDatabaseCleanupTestSuite() {
-  const suite = new TestSuite('Database Cleanup - Remove Test Resources');
-  
-  suite.addTest('should clean up test files and folders', function() {
-    // Arrange
-    const logger = GASDBLogger.createComponentLogger('Database-Cleanup');
-    let cleanedFiles = 0;
-    let failedFiles = 0;
-    let cleanedFolders = 0;
-    let failedFolders = 0;
     
-    // Act - Clean up created test files
-    DATABASE_TEST_DATA.createdFileIds.forEach(fileId => {
-      try {
-        const file = DriveApp.getFileById(fileId);
-        file.setTrashed(true);
-        cleanedFiles++;
-      } catch (error) {
-        failedFiles++;
-        logger.warn('Failed to delete file', { fileId, error: error.message });
-      }
-    });
-    
-    // Clean up created test folders
-    DATABASE_TEST_DATA.createdFolderIds.forEach(folderId => {
-      try {
-        const folder = DriveApp.getFolderById(folderId);
-        folder.setTrashed(true);
-        cleanedFolders++;
-      } catch (error) {
-        failedFolders++;
-        logger.warn('Failed to delete folder', { folderId, error: error.message });
-      }
-    });
-    
-    // Clean up test master index entries
+    // Clean up the unique master index key
     try {
-      const masterIndexKey = DATABASE_TEST_DATA.testConfig?.masterIndexKey;
-      if (masterIndexKey) {
-        PropertiesService.getScriptProperties().deleteProperty(masterIndexKey);
-        logger.info('Cleaned up test master index', { key: masterIndexKey });
-      }
-      
-      // Clean up other test keys
-      const testKeys = ['GASDB_MASTER_INDEX_TEST_DB', 'GASDB_MASTER_INDEX_TEST_INTEGRATION'];
-      testKeys.forEach(key => {
-        try {
-          PropertiesService.getScriptProperties().deleteProperty(key);
-          logger.info('Cleaned up test property', { key: key });
-        } catch (error) {
-          // Ignore errors - property might not exist
-        }
-      });
+      PropertiesService.getScriptProperties().deleteProperty(uniqueConfig.masterIndexKey);
     } catch (error) {
-      logger.warn('Failed to clean up master index', { error: error.message });
+      // Ignore cleanup errors
     }
-    
-    // Assert
-    logger.info('Database cleanup summary', { 
-      cleanedFiles: cleanedFiles, 
-      failedFiles: failedFiles,
-      cleanedFolders: cleanedFolders,
-      failedFolders: failedFolders,
-      totalFiles: DATABASE_TEST_DATA.createdFileIds.length,
-      totalFolders: DATABASE_TEST_DATA.createdFolderIds.length
-    });
-    
-    TestFramework.assertEquals(failedFiles, 0, 'All test files should be cleaned up successfully');
-    TestFramework.assertEquals(failedFolders, 0, 'All test folders should be cleaned up successfully');
   });
-  
+
   return suite;
 }
 
@@ -580,23 +580,30 @@ function runDatabaseTests() {
   try {
     GASDBLogger.info('Starting Database Test Execution');
     
-    // Register all test suites using global convenience functions
-    registerTestSuite(createDatabaseSetupTestSuite());
-    registerTestSuite(createDatabaseInitializationTestSuite());
-    registerTestSuite(createCollectionManagementTestSuite());
-    registerTestSuite(createIndexFileStructureTestSuite());
-    registerTestSuite(createDatabaseMasterIndexIntegrationTestSuite());
-    registerTestSuite(createDatabaseCleanupTestSuite());
+    // Setup test environment once for all suites
+    setupDatabaseTestEnvironment();
     
-    // Run all tests
-    const results = runAllTests();
-    
-    GASDBLogger.info('Database Test Execution Complete');
-    
-    return results;
+    try {
+      // Register all test suites using global convenience functions
+      registerTestSuite(createDatabaseInitializationTestSuite());
+      registerTestSuite(createCollectionManagementTestSuite());
+      registerTestSuite(createIndexFileStructureTestSuite());
+      registerTestSuite(createDatabaseMasterIndexIntegrationTestSuite());
+      
+      // Run all tests
+      const results = runAllTests();
+      
+      return results;
+      
+    } finally {
+      // Always clean up test environment
+      cleanupDatabaseTestEnvironment();
+    }
     
   } catch (error) {
     GASDBLogger.error('Failed to execute Database tests', { error: error.message, stack: error.stack });
     throw error;
+  } finally {
+    GASDBLogger.info('Database Test Execution Complete');
   }
 }

@@ -104,7 +104,7 @@ function createIdGeneratorTestSuite() {
 
 ### Test with Setup and Cleanup
 
-Here's an example from the Database tests showing resource management:
+Here's an example showing proper use of lifecycle hooks for resource management:
 
 ```javascript
 // Global test data storage
@@ -115,32 +115,79 @@ const DATABASE_TEST_DATA = {
   createdFolderIds: []
 };
 
-function createDatabaseSetupTestSuite() {
-  const suite = new TestSuite('Database Setup - Create Test Environment');
+/**
+ * Setup database test environment
+ */
+function setupDatabaseTestEnvironment() {
+  const logger = GASDBLogger.createComponentLogger('Database-Setup');
   
-  suite.addTest('should create test folder for Database tests', function() {
+  try {
+    const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
+    DATABASE_TEST_DATA.testFolderId = folder.getId();
+    DATABASE_TEST_DATA.createdFolderIds.push(DATABASE_TEST_DATA.testFolderId);
+    
+    logger.info('Created test folder for Database', { 
+      folderId: DATABASE_TEST_DATA.testFolderId, 
+      name: DATABASE_TEST_DATA.testFolderName
+    });
+    
+  } catch (error) {
+    logger.error('Failed to create test folder for Database', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Clean up database test environment
+ */
+function cleanupDatabaseTestEnvironment() {
+  const logger = GASDBLogger.createComponentLogger('Database-Cleanup');
+  
+  // Clean up created test files and folders
+  DATABASE_TEST_DATA.createdFileIds.forEach(fileId => {
+    try {
+      const file = DriveApp.getFileById(fileId);
+      file.setTrashed(true);
+    } catch (error) {
+      logger.warn('Failed to delete file', { fileId, error: error.message });
+    }
+  });
+  
+  DATABASE_TEST_DATA.createdFolderIds.forEach(folderId => {
+    try {
+      const folder = DriveApp.getFolderById(folderId);
+      folder.setTrashed(true);
+    } catch (error) {
+      logger.warn('Failed to delete folder', { folderId, error: error.message });
+    }
+  });
+  
+  logger.info('Database test cleanup completed');
+}
+
+function createDatabaseTestSuite() {
+  const suite = new TestSuite('Database Tests');
+  
+  // Setup test environment before all tests in this suite
+  suite.setBeforeAll(function() {
+    setupDatabaseTestEnvironment();
+  });
+  
+  // Clean up after all tests in this suite
+  suite.setAfterAll(function() {
+    cleanupDatabaseTestEnvironment();
+  });
+  
+  suite.addTest('should create database correctly', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('Database-Setup');
+    const config = { rootFolderId: DATABASE_TEST_DATA.testFolderId };
     
     // Act
-    try {
-      const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
-      DATABASE_TEST_DATA.testFolderId = folder.getId();
-      DATABASE_TEST_DATA.createdFolderIds.push(DATABASE_TEST_DATA.testFolderId);
-      
-      // Assert
-      TestFramework.assertDefined(DATABASE_TEST_DATA.testFolderId, 'Test folder should be created');
-      TestFramework.assertTrue(DATABASE_TEST_DATA.testFolderId.length > 0, 'Folder ID should not be empty');
-      
-      logger.info('Created test folder for Database', { 
-        folderId: DATABASE_TEST_DATA.testFolderId, 
-        name: DATABASE_TEST_DATA.testFolderName
-      });
-      
-    } catch (error) {
-      logger.error('Failed to create test folder for Database', { error: error.message });
-      throw error;
-    }
+    const database = new Database(config);
+    
+    // Assert
+    TestFramework.assertNotNull(database, 'Database should be created');
+    TestFramework.assertEquals(config.rootFolderId, database.config.rootFolderId, 'Config should match');
   });
   
   return suite;
@@ -449,6 +496,15 @@ Static assertion methods for test validation.
   - `message` (string, optional) - Custom error message
 - **Throws**: Error if string doesn't match regex
 - **Description**: Asserts that a string matches a regular expression
+
+##### assertArrayEquals(expected, actual, message)
+
+- **Parameters**:
+  - `expected` (Array) - The expected array
+  - `actual` (Array) - The actual array
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if arrays are not equal (different lengths or elements)
+- **Description**: Asserts that two arrays are equal by comparing length and element-wise equality using strict equality (===)
 
 ### TestResult Class
 

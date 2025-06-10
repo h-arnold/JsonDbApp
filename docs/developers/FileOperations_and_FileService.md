@@ -23,6 +23,7 @@ new FileOperations(logger?: GASDBLogger)
 - `logger` (optional): component‐scoped logger; if omitted, a default is created.
 
 **Example:**
+
 ```javascript
 // Create with default logger
 const fileOps = new FileOperations();
@@ -41,12 +42,13 @@ Read and parse JSON content.
 - **Parameters**  
   - `fileId`: Drive file ID.  
 - **Returns**  
-  - Parsed JSON object.  
+  - **Parsed JSON object** (not a string - already parsed).  
 - **Throws**  
   - `InvalidArgumentError` if `fileId` missing.  
   - `FileNotFoundError`, `PermissionDeniedError`, `InvalidFileFormatError`, `FileIOError`.
 
 **Example:**
+
 ```javascript
 const fileOps = new FileOperations();
 
@@ -54,6 +56,13 @@ try {
   const data = fileOps.readFile('1a2b3c4d5e6f7g8h9i0j');
   console.log('File content:', data);
   // Expected output: { collection: 'users', documents: [...], metadata: {...} }
+  
+  // ❌ DON'T do this - data is already parsed:
+  // const parsed = JSON.parse(data); // This will fail!
+  
+  // ✅ DO this - use the object directly:
+  console.log('Collection name:', data.collection);
+  
 } catch (error) {
   if (error instanceof FileNotFoundError) {
     console.log('File does not exist');
@@ -75,6 +84,7 @@ Overwrite existing file content.
   - `InvalidArgumentError`, `FileNotFoundError`, `PermissionDeniedError`, `FileIOError`.
 
 **Example:**
+
 ```javascript
 const fileOps = new FileOperations();
 const updatedData = {
@@ -112,6 +122,7 @@ Create new JSON file.
   - `InvalidArgumentError`, `PermissionDeniedError`, `FileIOError`.
 
 **Example:**
+
 ```javascript
 const fileOps = new FileOperations();
 const initialData = {
@@ -150,6 +161,7 @@ Soft-delete via trash.
   - `InvalidArgumentError`, `FileNotFoundError`, `PermissionDeniedError`, `FileIOError`.
 
 **Example:**
+
 ```javascript
 const fileOps = new FileOperations();
 
@@ -178,6 +190,7 @@ Check existence & not trashed.
   - `true` if accessible, else `false`.
 
 **Example:**
+
 ```javascript
 const fileOps = new FileOperations();
 
@@ -204,6 +217,7 @@ Fetch file metadata.
   - `InvalidArgumentError`, `FileNotFoundError`, `PermissionDeniedError`, `FileIOError`.
 
 **Example:**
+
 ```javascript
 const fileOps = new FileOperations();
 
@@ -254,6 +268,7 @@ new FileService(fileOps: FileOperations, logger: GASDBLogger)
 - **Throws** `ConfigurationError` if missing dependencies.
 
 **Example:**
+
 ```javascript
 const logger = GASDBLogger.createComponentLogger('MyApp');
 const fileOps = new FileOperations(logger);
@@ -269,17 +284,24 @@ Returns JSON, using cache if enabled.
 - **Parameters**  
   - `fileId`: Drive file ID.  
 - **Returns**  
-  - Parsed JSON object.  
+  - **Parsed JSON object** (not a string - already parsed by underlying FileOperations).  
 - **Throws**  
   - Same as underlying `readFile`.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
 // First read hits Drive API
 const data1 = fileService.readFile('1a2b3c4d5e6f7g8h9i0j');
 console.log('First read:', data1);
+
+// ❌ DON'T do this - data1 is already a parsed object:
+// const parsed = JSON.parse(data1); // This will fail!
+
+// ✅ DO this - use the object directly:
+console.log('Collection name:', data1.collection);
 
 // Second read may use cache
 const data2 = fileService.readFile('1a2b3c4d5e6f7g8h9i0j');
@@ -299,6 +321,7 @@ Writes and updates cache.
   - Underlying write exceptions.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 const updatedData = {
@@ -327,6 +350,7 @@ Creates file and caches.
   - New file ID.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 const newCollectionData = {
@@ -355,6 +379,7 @@ Deletes file and clears cache entry.
   - `true` if successful.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -375,6 +400,7 @@ if (exists) {
 Checks cache first, then Drive.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -392,6 +418,7 @@ const cachedExists = fileService.fileExists('recently-read-file-id');
 Proxy to `FileOperations.getFileMetadata`.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -405,6 +432,7 @@ console.log(`Last modified: ${metadata.modifiedTime}`);
 Read multiple files; returns `null` for failures. Logs warnings.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 const fileIds = ['file1', 'file2', 'invalid-id', 'file4'];
@@ -431,6 +459,7 @@ console.log('Successful reads:', successfulReads.length);
 Fetch metadata in batch with same error handling.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 const fileIds = ['file1', 'file2', 'file3'];
@@ -459,6 +488,7 @@ console.log('Most recent file:', mostRecent.name);
 Empty the in-memory cache.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -478,6 +508,7 @@ console.log('Cache after:', statsAfter); // { size: 0, maxSize: 50, enabled: tru
 Inspect cache state.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -500,6 +531,7 @@ if (stats.size === stats.maxSize) {
 Enable or disable caching. Disabling clears existing cache.
 
 **Example:**
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -526,6 +558,7 @@ console.log('Caching enabled:', stats.enabled);
 ## Usage Examples
 
 ### Basic File Operations
+
 ```javascript
 const logger = GASDBLogger.createComponentLogger('MyApp');
 const fileOps = new FileOperations(logger);
@@ -543,6 +576,7 @@ const multiple = fileService.batchReadFiles(['id1','id2','bad-id']);
 ```
 
 ### Collection Management Example
+
 ```javascript
 const logger = GASDBLogger.createComponentLogger('Database');
 const fileOps = new FileOperations(logger);
@@ -577,6 +611,7 @@ fileService.writeFile(collectionFileId, collectionData);
 ```
 
 ### Error Handling Pattern
+
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
@@ -607,7 +642,61 @@ const data = await safeFileOperation('file123', (id) => fileService.readFile(id)
 
 ## Notes
 
-- **Retries**: FileOperations retries transient I/O errors up to `_maxRetries` times.  
+- **Retries**: FileOperations retries transient I/O errors up to `_maxRetries` times.
+
+## ⚠️ Important: JSON Parsing Behaviour
+
+**Both FileOperations and FileService automatically parse JSON** and return JavaScript objects, not strings.
+
+### Common Mistake to Avoid
+
+```javascript
+// ❌ WRONG - This will cause "object Object is not valid JSON" errors:
+const fileContent = fileService.readFile(fileId);
+const data = JSON.parse(fileContent); // fileContent is already an object!
+
+// ✅ CORRECT - Use the parsed object directly:
+const data = fileService.readFile(fileId); // data is already a JavaScript object
+console.log(data.collection); // Access properties directly
+```
+
+### Why This Happens
+
+1. **FileOperations.readFile()** calls `JSON.parse()` internally and returns the parsed object
+2. **FileService.readFile()** passes through the already-parsed object from FileOperations  
+3. **Collection and other components** should use the object directly, not parse it again
+
+### Automatic Detection
+
+The system now automatically detects double-parsing attempts and provides helpful error messages:
+
+```javascript
+// If you accidentally do this:
+const data = fileService.readFile(fileId);
+const parsed = JSON.parse(data); // This will throw a helpful OperationError
+
+// The error message will include:
+// "Attempted to JSON.parse() an already-parsed object in [context]. 
+//  FileOperations and FileService return parsed JavaScript objects, not JSON strings.
+//  Use the returned object directly instead of calling JSON.parse() on it.
+//  Common fix: Change "JSON.parse(fileService.readFile(id))" to "fileService.readFile(id)""
+```
+
+This detection is provided by `ErrorHandler.detectDoubleParsing()` and can be used by any component.
+
+### Migration Note
+
+If you have existing code that expects JSON strings, you can use:
+
+```javascript
+// If you need the raw JSON string for some reason:
+const fileOps = new FileOperations();
+const rawString = JSON.stringify(fileOps.readFile(fileId));
+
+// But typically, just use the object directly:
+const data = fileOps.readFile(fileId);
+```  
+
 - **Cache**: FileService cache follows simple LRU; size capped at `_maxCacheSize`.  
 - **Errors**: All methods throw consistent GAS-DB error types for easy catch blocks.
 - **Performance**: Use FileService for frequent operations; use FileOperations for direct control.

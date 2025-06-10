@@ -173,4 +173,32 @@ class AssertionUtilities {
       throw new Error(error);
     }
   }
+  
+  /**
+   * Assert that two arrays are equal by comparing length and elements
+   * @param {Array} expected - The expected array
+   * @param {Array} actual - The actual array
+   * @param {string} message - Optional error message
+   */
+  static assertArrayEquals(expected, actual, message = '') {
+    if (!Array.isArray(expected)) {
+      throw new Error('First argument must be an array');
+    }
+    
+    if (!Array.isArray(actual)) {
+      throw new Error('Second argument must be an array');
+    }
+    
+    if (expected.length !== actual.length) {
+      const error = message || `Expected array length ${expected.length}, but got ${actual.length}`;
+      throw new Error(error);
+    }
+    
+    for (let i = 0; i < expected.length; i++) {
+      if (expected[i] !== actual[i]) {
+        const error = message || `Arrays differ at index ${i}: expected ${expected[i]}, but got ${actual[i]}`;
+        throw new Error(error);
+      }
+    }
+  }
 }
