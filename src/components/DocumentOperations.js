@@ -228,7 +228,7 @@ class DocumentOperations {
   documentExists(id) {
     // Validate ID
     if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new InvalidArgumentError('Document ID is required and must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
     }
     
     return this._collection._documents.hasOwnProperty(id);
@@ -242,9 +242,9 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findByQuery(query) {
-    // Validate query
+    // Validate query argument type
     if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new InvalidArgumentError('Query must be a valid object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be a valid object');
     }
     
     // Get all documents as array for QueryEngine
@@ -267,8 +267,9 @@ class DocumentOperations {
       return results.length > 0 ? results[0] : null;
       
     } catch (error) {
-      // Convert QueryEngine errors to appropriate types
-      if (error.name === 'InvalidQueryError') {
+      // QueryEngine should throw InvalidQueryError for malformed queries
+      // Let it propagate naturally for proper error type handling
+      if (error.name === 'InvalidQueryError' || error instanceof ErrorHandler.ErrorTypes.INVALID_QUERY) {
         throw error; // Re-throw as-is
       }
       
@@ -277,7 +278,8 @@ class DocumentOperations {
         query: JSON.stringify(query) 
       });
       
-      throw new InvalidQueryError('Query execution failed: ' + error.message);
+      // Wrap other errors as InvalidQueryError
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, 'Query execution failed: ' + error.message);
     }
   }
   
@@ -289,9 +291,9 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findMultipleByQuery(query) {
-    // Validate query
+    // Validate query argument type
     if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new InvalidArgumentError('Query must be a valid object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be a valid object');
     }
     
     // Get all documents as array for QueryEngine
@@ -314,8 +316,9 @@ class DocumentOperations {
       return results;
       
     } catch (error) {
-      // Convert QueryEngine errors to appropriate types
-      if (error.name === 'InvalidQueryError') {
+      // QueryEngine should throw InvalidQueryError for malformed queries
+      // Let it propagate naturally for proper error type handling
+      if (error.name === 'InvalidQueryError' || error instanceof ErrorHandler.ErrorTypes.INVALID_QUERY) {
         throw error; // Re-throw as-is
       }
       
@@ -324,7 +327,8 @@ class DocumentOperations {
         query: JSON.stringify(query) 
       });
       
-      throw new InvalidQueryError('Query execution failed: ' + error.message);
+      // Wrap other errors as InvalidQueryError
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, 'Query execution failed: ' + error.message);
     }
   }
   
@@ -336,9 +340,9 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   countByQuery(query) {
-    // Validate query
+    // Validate query argument type
     if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new InvalidArgumentError('Query must be a valid object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be a valid object');
     }
     
     // Get all documents as array for QueryEngine
@@ -361,8 +365,9 @@ class DocumentOperations {
       return results.length;
       
     } catch (error) {
-      // Convert QueryEngine errors to appropriate types
-      if (error.name === 'InvalidQueryError') {
+      // QueryEngine should throw InvalidQueryError for malformed queries
+      // Let it propagate naturally for proper error type handling
+      if (error.name === 'InvalidQueryError' || error instanceof ErrorHandler.ErrorTypes.INVALID_QUERY) {
         throw error; // Re-throw as-is
       }
       
@@ -371,7 +376,8 @@ class DocumentOperations {
         query: JSON.stringify(query) 
       });
       
-      throw new InvalidQueryError('Query execution failed: ' + error.message);
+      // Wrap other errors as InvalidQueryError
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, 'Query execution failed: ' + error.message);
     }
   }
 
