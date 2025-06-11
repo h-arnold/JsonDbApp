@@ -19,6 +19,12 @@
       - [1.2.2.3. Custom Generator Creation](#1223-custom-generator-creation)
       - [1.2.2.4. Usage Examples](#1224-usage-examples)
       - [1.2.2.5. Best Practices](#1225-best-practices)
+    - [1.2.3. ObjectUtils](#123-objectutils)
+      - [1.2.3.1. Core Methods](#1231-core-methods)
+      - [1.2.3.2. Deep Cloning](#1232-deep-cloning)
+      - [1.2.3.3. Date String Conversion](#1233-date-string-conversion)
+      - [1.2.3.4. Usage Examples](#1234-usage-examples)
+      - [1.2.3.5. Best Practices](#1235-best-practices)
   - [1.3. Integration Patterns](#13-integration-patterns)
     - [1.3.1. Component Integration](#131-component-integration)
     - [1.3.2. Standardized Error Flow](#132-standardized-error-flow)
@@ -26,6 +32,7 @@
     - [1.4.1. Logger Configuration](#141-logger-configuration)
     - [1.4.2. Error Handler Configuration](#142-error-handler-configuration)
     - [1.4.3. ID Generator Configuration](#143-id-generator-configuration)
+    - [1.4.4. ObjectUtils Configuration](#144-objectutils-configuration)
   - [1.5. Performance Considerations](#15-performance-considerations)
   - [1.6. Migration and Versioning](#16-migration-and-versioning)
     - [1.6.1. Component Dependencies](#161-component-dependencies)
@@ -33,7 +40,7 @@
 
 ## 1.1. Overview
 
-The GAS DB infrastructure provides essential utilities for logging, error management, and ID generation. These components are designed specifically for Google Apps Script environments and support the core database functionality.
+The GAS DB infrastructure provides essential utilities for logging, error management, ID generation, and object manipulation. These components are designed specifically for Google Apps Script environments and support the core database functionality.
 
 ## 1.2. Logger (GASDBLogger)
 
@@ -284,6 +291,150 @@ if (IdGenerator.isValidUUID(documentId)) {
    }
    ```
 
+---
+
+### 1.2.3. ObjectUtils
+
+**Location:** `src/utils/ObjectUtils.js`
+
+Provides utilities for object manipulation with Date preservation, essential for handling complex data structures and maintaining Date object integrity during JSON serialisation operations.
+
+#### 1.2.3.1. Core Methods
+
+| Method | Description |
+|--------|-------------|
+| `deepClone(obj)` | Create deep copy preserving Date instances and object structure |
+| `convertDateStringsToObjects(obj)` | Convert ISO date strings to Date objects recursively |
+
+#### 1.2.3.2. Deep Cloning
+
+The `deepClone` method creates independent copies of complex objects while preserving:
+
+- **Date Objects:** Maintains Date instances with accurate time values
+- **Nested Structures:** Handles deeply nested objects and arrays
+- **Independence:** Ensures modifications to cloned objects don't affect originals
+- **Type Preservation:** Maintains primitive types and object references
+
+**Supported Data Types:**
+- Primitives: `null`, `undefined`, `string`, `number`, `boolean`
+- Complex Types: `Date`, `Array`, `Object`
+- Nested Structures: Unlimited depth for objects and arrays
+
+#### 1.2.3.3. Date String Conversion
+
+The `convertDateStringsToObjects` method provides intelligent conversion of ISO date strings:
+
+- **ISO Detection:** Identifies valid ISO 8601 format strings (`YYYY-MM-DDTHH:mm:ss.sssZ`)
+- **Selective Conversion:** Only converts valid ISO strings, leaves others unchanged
+- **In-Place Modification:** Modifies original object structure
+- **Recursive Processing:** Handles nested objects and arrays
+
+**ISO Date Format Requirements:**
+- Complete date-time format: `2023-06-15T10:30:00.000Z`
+- Timezone indicator: Must end with `Z`
+- Optional milliseconds: Supports both `.sssZ` and `Z` endings
+- Valid date values: Validates month, day, hour, minute, second ranges
+
+#### 1.2.3.4. Usage Examples
+
+```javascript
+// Deep cloning with Date preservation
+const originalDoc = {
+  _id: 'doc123',
+  created: new Date('2023-06-15T10:30:00.000Z'),
+  user: {
+    name: 'John Doe',
+    profile: {
+      lastLogin: new Date('2024-06-11T10:00:00.000Z'),
+      preferences: ['theme-dark', 'lang-en']
+    }
+  },
+  tags: ['important', 'archived']
+};
+
+const clonedDoc = ObjectUtils.deepClone(originalDoc);
+// clonedDoc is completely independent with Date objects preserved
+
+// Converting date strings from JSON parsing
+const jsonData = {
+  event: {
+    startTime: '2023-06-15T10:30:00.000Z', // Will be converted to Date
+    endTime: '2023-06-15 12:30:00',        // Will remain string (invalid ISO)
+    participants: [
+      {
+        joined: '2023-06-15T10:35:00.000Z', // Will be converted to Date
+        name: 'Alice'                       // Will remain string
+      }
+    ]
+  }
+};
+
+ObjectUtils.convertDateStringsToObjects(jsonData);
+// jsonData.event.startTime is now a Date object
+// jsonData.event.participants[0].joined is now a Date object
+
+// Working with FileOperations integration
+const documentData = {
+  metadata: { created: new Date(), version: 1 },
+  content: { title: 'Document', lastModified: new Date() }
+};
+
+// Before saving to Drive (preserves Dates through JSON)
+fileOps.writeFile(fileId, documentData);
+
+// After reading from Drive (converts ISO strings back to Dates)
+const loadedData = fileOps.readFile(fileId);
+// loadedData now has proper Date objects restored
+```
+
+#### 1.2.3.5. Best Practices
+
+1. **Use deepClone for object independence:**
+
+   ```javascript
+   // Create independent copy before modifications
+   const workingCopy = ObjectUtils.deepClone(originalDocument);
+   workingCopy.user.name = 'Updated Name'; // Original remains unchanged
+   ```
+
+2. **Apply date conversion after JSON operations:**
+
+   ```javascript
+   // After parsing JSON or reading from Drive
+   const parsedData = JSON.parse(jsonString);
+   ObjectUtils.convertDateStringsToObjects(parsedData);
+   ```
+
+3. **Handle FileOperations integration:**
+
+   ```javascript
+   // Reading data with automatic date conversion
+   const rawData = fileOps.readFile(fileId);
+   // Date strings automatically converted by FileOperations using ObjectUtils
+   ```
+
+4. **Validate data integrity:**
+
+   ```javascript
+   // Verify Date objects after conversion
+   if (document.created instanceof Date) {
+     // Safe to use Date methods
+     const age = Date.now() - document.created.getTime();
+   }
+   ```
+
+5. **Performance considerations:**
+
+   ```javascript
+   // Clone only when necessary for independence
+   const backup = ObjectUtils.deepClone(criticalData);
+   
+   // Use direct references for read-only operations
+   const readOnlyView = criticalData; // No cloning needed
+   ```
+
+---
+
 ## 1.3. Integration Patterns
 
 ### 1.3.1. Component Integration
@@ -314,6 +465,17 @@ class Database {
         ErrorHandler.handleError(error, `Database.${operationName}`, true);
       }
     }, { instanceId: this.instanceId });
+  }
+  
+  cloneDocumentSafely(document) {
+    // Use ObjectUtils for safe document cloning with Date preservation
+    return ObjectUtils.deepClone(document);
+  }
+  
+  processFileData(fileData) {
+    // Convert ISO date strings from JSON to Date objects
+    ObjectUtils.convertDateStringsToObjects(fileData);
+    return fileData;
   }
 }
 ```
@@ -384,12 +546,42 @@ const debugIdGenerator = IdGenerator.createCustomGenerator({
 });
 ```
 
+### 1.4.4. ObjectUtils Configuration
+
+```javascript
+// ObjectUtils is stateless and requires no configuration
+// Methods are called directly on the class
+
+// Example integration with FileOperations
+class FileOperations {
+  readFile(fileId) {
+    const rawData = this._readFromDrive(fileId);
+    const parsedData = JSON.parse(rawData);
+    
+    // Automatically convert ISO date strings to Date objects
+    ObjectUtils.convertDateStringsToObjects(parsedData);
+    return parsedData;
+  }
+  
+  writeFile(fileId, data) {
+    // Create independent copy to avoid modifying original
+    const dataToWrite = ObjectUtils.deepClone(data);
+    const jsonString = JSON.stringify(dataToWrite);
+    return this._writeToDrive(fileId, jsonString);
+  }
+}
+```
+
 ## 1.5. Performance Considerations
 
 1. **Logging:** Use appropriate log levels to avoid performance impact in production
 2. **Error Handling:** Error context objects are JSON serialized, avoid large objects
 3. **ID Generation:** UUID generation uses Google Apps Script utilities for optimal performance
 4. **Validation:** Input validation is performed early to fail fast
+5. **ObjectUtils:** Deep cloning and date conversion have performance implications for large objects
+   - Use `deepClone` judiciously for large nested structures
+   - `convertDateStringsToObjects` modifies objects in-place for efficiency
+   - Consider object size and nesting depth when using these utilities
 
 ## 1.6. Migration and Versioning
 
@@ -400,6 +592,7 @@ All infrastructure components are designed to be stable and backwards compatible
 - **GASDBLogger:** Self-contained, no dependencies
 - **ErrorHandler:** Uses GASDBLogger for error logging
 - **IdGenerator:** Self-contained, uses Google Apps Script Utilities when available
+- **ObjectUtils:** Self-contained, no dependencies
 
 ### 1.6.2. Extension Points
 
@@ -408,7 +601,8 @@ These components can be extended for future functionality:
 1. **Custom Log Destinations:** Extend GASDBLogger to support additional output targets
 2. **Additional Error Types:** Add new error classes that extend GASDBError
 3. **New ID Strategies:** Add additional generation methods to IdGenerator
+4. **Object Manipulation:** Add additional utility methods to ObjectUtils for specialized data handling
 
 ---
 
-*This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments.*
+*This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (GASDBLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability.*

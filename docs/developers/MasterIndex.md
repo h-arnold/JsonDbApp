@@ -51,6 +51,7 @@ The `MasterIndex` class manages cross-instance coordination for GAS DB using Scr
 
 **Integration with Database Class:**
 The `Database` class delegates collection operations to `MasterIndex`:
+
 - Collection creation, access, and deletion
 - Collection listing and metadata retrieval
 - Backup synchronisation to Drive-based index files

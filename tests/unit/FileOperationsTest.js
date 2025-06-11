@@ -324,6 +324,69 @@ function createFileOperationsErrorHandlingTestSuite() {
     }
   });
   
+  suite.addTest('should handle corrupted files with partial JSON and date strings', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-ErrorHandling');
+    const fileOps = new FileOperations(logger);
+    
+    // Create a file with corrupted JSON that contains what looks like dates
+    const corruptedFileName = 'corrupted-with-dates-' + new Date().getTime() + '.json';
+    const folder = DriveApp.getFolderById(FILEOPERATIONS_TEST_DATA.testFolderId);
+    const corruptedContent = '{ "created": "2023-06-15T10:30:00.000Z", "data": { "incomplete"'; // Truncated JSON
+    const corruptedFile = folder.createFile(corruptedFileName, corruptedContent, 'application/json');
+    const corruptedFileId = corruptedFile.getId();
+    FILEOPERATIONS_TEST_DATA.createdFileIds.push(corruptedFileId);
+    
+    // Act & Assert
+    TestFramework.assertThrows(function() {
+      fileOps.readFile(corruptedFileId);
+    }, ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT, 'Should throw InvalidFileFormatError for corrupted JSON with dates');
+  });
+  
+  suite.addTest('should handle files with invalid JSON that could trigger double-parsing detection', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-ErrorHandling');
+    const fileOps = new FileOperations(logger);
+    
+    // Create a file with content that might trigger double-parsing detection
+    const doubleParseFileName = 'double-parse-test-' + new Date().getTime() + '.json';
+    const folder = DriveApp.getFolderById(FILEOPERATIONS_TEST_DATA.testFolderId);
+    const doubleParseContent = '"{\\"already\\": \\"stringified\\", \\"date\\": \\"2023-06-15T10:30:00.000Z\\"}"'; // Already stringified JSON
+    const doubleParseFile = folder.createFile(doubleParseFileName, doubleParseContent, 'application/json');
+    const doubleParseFileId = doubleParseFile.getId();
+    FILEOPERATIONS_TEST_DATA.createdFileIds.push(doubleParseFileId);
+    
+    // Act & Assert - This should trigger double-parsing detection
+    let caughtError = null;
+    try {
+      fileOps.readFile(doubleParseFileId);
+    } catch (error) {
+      caughtError = error;
+    }
+    
+    // Should throw InvalidFileFormatError (since the content is a string when parsed, not an object)
+    TestFramework.assertDefined(caughtError, 'Should throw an error for double-stringified content');
+    TestFramework.assertTrue(caughtError instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT, 'Should throw InvalidFileFormatError');
+  });
+  
+  suite.addTest('should handle empty files gracefully without date processing', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-ErrorHandling');
+    const fileOps = new FileOperations(logger);
+    
+    // Create an empty file
+    const emptyFileName = 'empty-file-test-' + new Date().getTime() + '.json';
+    const folder = DriveApp.getFolderById(FILEOPERATIONS_TEST_DATA.testFolderId);
+    const emptyFile = folder.createFile(emptyFileName, '', 'application/json');
+    const emptyFileId = emptyFile.getId();
+    FILEOPERATIONS_TEST_DATA.createdFileIds.push(emptyFileId);
+    
+    // Act & Assert
+    TestFramework.assertThrows(function() {
+      fileOps.readFile(emptyFileId);
+    }, ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT, 'Should throw InvalidFileFormatError for empty file');
+  });
+  
   return suite;
 }
 
@@ -472,6 +535,7 @@ function registerFileOperationsTests() {
   const testFramework = new TestFramework();
   testFramework.registerTestSuite(createFileOperationsSetupTestSuite());
   testFramework.registerTestSuite(createFileOperationsFunctionalityTestSuite());
+  testFramework.registerTestSuite(createFileOperationsDateHandlingTestSuite());
   testFramework.registerTestSuite(createFileOperationsErrorHandlingTestSuite());
   testFramework.registerTestSuite(createFileOperationsEdgeCasesTestSuite());
   testFramework.registerTestSuite(createFileOperationsCleanupTestSuite());
@@ -492,6 +556,7 @@ function runFileOperationsTests() {
     const results = [];
     results.push(testFramework.runTestSuite('FileOperations Setup - Create Test Files'));
     results.push(testFramework.runTestSuite('FileOperations Functionality'));
+    results.push(testFramework.runTestSuite('FileOperations Date Handling'));
     results.push(testFramework.runTestSuite('FileOperations Error Handling'));
     results.push(testFramework.runTestSuite('FileOperations Edge Cases'));
     results.push(testFramework.runTestSuite('FileOperations Cleanup - Remove Test Files'));
@@ -509,4 +574,251 @@ function runFileOperationsTests() {
     GASDBLogger.error('Failed to execute FileOperations tests', { error: error.message, stack: error.stack });
     throw error;
   }
+}
+
+/**
+ * FileOperations Date Handling Tests
+ * Tests JSON serialisation/deserialisation with Date objects
+ */
+function createFileOperationsDateHandlingTestSuite() {
+  const suite = new TestSuite('FileOperations Date Handling');
+  
+  suite.addTest('should preserve Date objects through write-read cycle', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testDate = new Date('2023-06-15T10:30:00.000Z');
+    const testData = {
+      created: testDate,
+      updated: new Date('2024-01-01T00:00:00.000Z'),
+      metadata: {
+        lastAccess: new Date('2024-06-11T15:45:30.123Z')
+      },
+      documents: [
+        { 
+          _id: 'doc1', 
+          joinDate: new Date('2020-03-15T08:00:00.000Z'),
+          lastLogin: new Date('2024-06-10T14:25:00.000Z')
+        }
+      ]
+    };
+    
+    // Act - Write data with Date objects
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    
+    // Read data back
+    const result = fileOps.readFile(FILEOPERATIONS_TEST_DATA.testFileId);
+    
+    // Assert - Verify Date objects are preserved
+    TestFramework.assertTrue(result.created instanceof Date, 'Top-level created should be Date object');
+    TestFramework.assertTrue(result.updated instanceof Date, 'Top-level updated should be Date object');
+    TestFramework.assertTrue(result.metadata.lastAccess instanceof Date, 'Nested lastAccess should be Date object');
+    TestFramework.assertTrue(result.documents[0].joinDate instanceof Date, 'Array element joinDate should be Date object');
+    TestFramework.assertTrue(result.documents[0].lastLogin instanceof Date, 'Array element lastLogin should be Date object');
+    
+    // Verify actual date values are correct
+    TestFramework.assertEquals(result.created.getTime(), testDate.getTime(), 'Created date value should match');
+    TestFramework.assertEquals(result.documents[0].joinDate.getFullYear(), 2020, 'JoinDate year should be preserved');
+    TestFramework.assertEquals(result.metadata.lastAccess.getMilliseconds(), 123, 'Milliseconds should be preserved');
+  });
+  
+  suite.addTest('should store Date objects as ISO strings in actual file content', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testDate = new Date('2023-12-25T12:00:00.000Z');
+    const testData = {
+      eventDate: testDate,
+      description: 'Test event'
+    };
+    
+    // Act - Write data with Date object
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    
+    // Read raw file content directly (bypassing FileOperations parsing)
+    const rawFile = DriveApp.getFileById(FILEOPERATIONS_TEST_DATA.testFileId);
+    const rawContent = rawFile.getBlob().getDataAsString();
+    const rawParsed = JSON.parse(rawContent);
+    
+    // Assert - Verify Date is stored as ISO string in file
+    TestFramework.assertTrue(typeof rawParsed.eventDate === 'string', 'Date should be stored as string in file');
+    TestFramework.assertEquals(rawParsed.eventDate, testDate.toISOString(), 'Stored date should match ISO string');
+    TestFramework.assertTrue(rawParsed.eventDate.includes('2023-12-25T12:00:00.000Z'), 'Should contain expected ISO format');
+  });
+  
+  suite.addTest('should handle arrays with multiple Date objects', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testData = {
+      events: [
+        { date: new Date('2023-01-01T00:00:00.000Z'), type: 'start' },
+        { date: new Date('2023-06-01T12:00:00.000Z'), type: 'middle' },
+        { date: new Date('2023-12-31T23:59:59.999Z'), type: 'end' }
+      ],
+      milestones: [
+        new Date('2023-03-15T09:30:00.000Z'),
+        new Date('2023-09-22T16:45:00.000Z')
+      ]
+    };
+    
+    // Act
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    const result = fileOps.readFile(FILEOPERATIONS_TEST_DATA.testFileId);
+    
+    // Assert
+    TestFramework.assertTrue(Array.isArray(result.events), 'Events should remain an array');
+    TestFramework.assertTrue(Array.isArray(result.milestones), 'Milestones should remain an array');
+    
+    // Check each event date
+    result.events.forEach((event, index) => {
+      TestFramework.assertTrue(event.date instanceof Date, `Event ${index} date should be Date object`);
+    });
+    
+    // Check milestone dates
+    result.milestones.forEach((milestone, index) => {
+      TestFramework.assertTrue(milestone instanceof Date, `Milestone ${index} should be Date object`);
+    });
+    
+    // Verify specific values
+    TestFramework.assertEquals(result.events[0].date.getFullYear(), 2023, 'First event year should be 2023');
+    TestFramework.assertEquals(result.events[2].date.getMonth(), 11, 'Last event month should be December (11)');
+    TestFramework.assertEquals(result.milestones[0].getMonth(), 2, 'First milestone month should be March (2)');
+  });
+  
+  suite.addTest('should handle deeply nested Date objects', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testData = {
+      user: {
+        profile: {
+          personal: {
+            birthDate: new Date('1990-05-15T00:00:00.000Z'),
+            preferences: {
+              timeZone: 'UTC',
+              lastUpdated: new Date('2024-06-11T10:00:00.000Z')
+            }
+          },
+          professional: {
+            startDate: new Date('2015-09-01T09:00:00.000Z'),
+            certifications: [
+              {
+                name: 'GCP',
+                obtainedDate: new Date('2020-12-01T00:00:00.000Z'),
+                expiryDate: new Date('2023-12-01T00:00:00.000Z')
+              }
+            ]
+          }
+        }
+      }
+    };
+    
+    // Act
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    const result = fileOps.readFile(FILEOPERATIONS_TEST_DATA.testFileId);
+    
+    // Assert - Check deeply nested dates
+    TestFramework.assertTrue(result.user.profile.personal.birthDate instanceof Date, 'Deeply nested birthDate should be Date');
+    TestFramework.assertTrue(result.user.profile.personal.preferences.lastUpdated instanceof Date, 'Deeply nested lastUpdated should be Date');
+    TestFramework.assertTrue(result.user.profile.professional.startDate instanceof Date, 'Deeply nested startDate should be Date');
+    TestFramework.assertTrue(result.user.profile.professional.certifications[0].obtainedDate instanceof Date, 'Array element date should be Date');
+    TestFramework.assertTrue(result.user.profile.professional.certifications[0].expiryDate instanceof Date, 'Array element expiry should be Date');
+    
+    // Verify values
+    TestFramework.assertEquals(result.user.profile.personal.birthDate.getFullYear(), 1990, 'Birth year should be preserved');
+    TestFramework.assertEquals(result.user.profile.professional.startDate.getFullYear(), 2015, 'Start year should be preserved');
+  });
+  
+  suite.addTest('should handle mixed Date objects and ISO strings correctly', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testData = {
+      actualDate: new Date('2023-06-15T10:30:00.000Z'),
+      isoString: '2023-06-15T10:30:00.000Z',
+      notADate: '2023-not-a-date',
+      regularString: 'just a string',
+      number: 12345,
+      boolean: true,
+      nullValue: null
+    };
+    
+    // Act
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    const result = fileOps.readFile(FILEOPERATIONS_TEST_DATA.testFileId);
+    
+    // Assert
+    TestFramework.assertTrue(result.actualDate instanceof Date, 'Actual Date object should remain Date');
+    TestFramework.assertTrue(result.isoString instanceof Date, 'Valid ISO string should become Date');
+    TestFramework.assertTrue(typeof result.notADate === 'string', 'Invalid date string should remain string');
+    TestFramework.assertTrue(typeof result.regularString === 'string', 'Regular string should remain string');
+    TestFramework.assertTrue(typeof result.number === 'number', 'Number should remain number');
+    TestFramework.assertTrue(typeof result.boolean === 'boolean', 'Boolean should remain boolean');
+    TestFramework.assertTrue(result.nullValue === null, 'Null should remain null');
+    
+    // Verify date values match
+    TestFramework.assertEquals(result.actualDate.getTime(), result.isoString.getTime(), 'Date objects should have same time value');
+  });
+  
+  suite.addTest('should handle edge cases with invalid date-like strings', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testData = {
+      validDate: new Date('2023-06-15T10:30:00.000Z'),
+      almostDate1: '2023-13-32T25:70:70.000Z', // Invalid month, day, hour, minute, second
+      almostDate2: '2023-06-15T10:30:00', // Missing Z
+      almostDate3: '2023/06/15 10:30:00', // Wrong format
+      almostDate4: 'Thu Jun 15 2023 10:30:00 GMT+0000', // Different date format
+      notDate: 'this is not a date at all',
+      empty: '',
+      undefined: undefined
+    };
+    
+    // Act
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    const result = fileOps.readFile(FILEOPERATIONS_TEST_DATA.testFileId);
+    
+    // Assert
+    TestFramework.assertTrue(result.validDate instanceof Date, 'Valid date should be Date object');
+    TestFramework.assertTrue(typeof result.almostDate1 === 'string', 'Invalid ISO string should remain string');
+    TestFramework.assertTrue(typeof result.almostDate2 === 'string', 'Incomplete ISO string should remain string');
+    TestFramework.assertTrue(typeof result.almostDate3 === 'string', 'Wrong format should remain string');
+    TestFramework.assertTrue(typeof result.almostDate4 === 'string', 'Different format should remain string');
+    TestFramework.assertTrue(typeof result.notDate === 'string', 'Non-date string should remain string');
+    TestFramework.assertTrue(typeof result.empty === 'string', 'Empty string should remain string');
+    TestFramework.assertTrue(result.undefined === undefined, 'Undefined should remain undefined');
+  });
+  
+  suite.addTest('should handle Date objects with various time zones and precision', function() {
+    // Arrange
+    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const fileOps = new FileOperations(logger);
+    const testData = {
+      utcDate: new Date('2023-06-15T10:30:00.000Z'),
+      preciseDate: new Date('2023-06-15T10:30:00.123Z'),
+      noMilliseconds: new Date('2023-06-15T10:30:00Z'),
+      oldDate: new Date('1970-01-01T00:00:00.000Z'),
+      futureDate: new Date('2099-12-31T23:59:59.999Z')
+    };
+    
+    // Act
+    fileOps.writeFile(FILEOPERATIONS_TEST_DATA.testFileId, testData);
+    const result = fileOps.readFile(FILEOPERATIONS_TEST_DATA.testFileId);
+    
+    // Assert - All should be Date objects
+    Object.keys(testData).forEach(key => {
+      TestFramework.assertTrue(result[key] instanceof Date, `${key} should be Date object`);
+      TestFramework.assertEquals(result[key].getTime(), testData[key].getTime(), `${key} time should match exactly`);
+    });
+    
+    // Verify specific precision
+    TestFramework.assertEquals(result.preciseDate.getMilliseconds(), 123, 'Milliseconds should be preserved exactly');
+    TestFramework.assertEquals(result.noMilliseconds.getMilliseconds(), 0, 'Zero milliseconds should be preserved');
+    TestFramework.assertEquals(result.oldDate.getFullYear(), 1970, 'Historic date year should be preserved');
+    TestFramework.assertEquals(result.futureDate.getFullYear(), 2099, 'Future date year should be preserved');
+  });
+  
+  return suite;
 }

@@ -22,6 +22,8 @@
     - [Configuration Cloning](#configuration-cloning)
     - [Configuration Serialization](#configuration-serialization)
   - [Integration with Database](#integration-with-database)
+  - [Component-Level Configuration](#component-level-configuration)
+    - [QueryEngine Configuration](#queryengine-configuration)
   - [Best Practices](#best-practices)
 
 ## Overview
@@ -278,6 +280,36 @@ try {
 }
 ```
 
+## Component-Level Configuration
+
+While `DatabaseConfig` handles database-wide settings, individual components may have their own configuration options:
+
+### QueryEngine Configuration
+
+The QueryEngine accepts its own configuration object independently of DatabaseConfig:
+
+```javascript
+// QueryEngine has its own configuration
+const queryEngine = new QueryEngine({
+  maxNestedDepth: 15  // Override default of 10
+});
+
+// DatabaseConfig and QueryEngine configurations are separate
+const dbConfig = new DatabaseConfig({
+  logLevel: 'DEBUG',
+  lockTimeout: 20000
+});
+
+const db = new Database(dbConfig);
+// Collections use the QueryEngine internally with their own configuration
+```
+
+**QueryEngine Options:**
+
+- `maxNestedDepth` (Number, default: 10): Maximum allowed query nesting depth for security
+
+**Security Note:** QueryEngine always validates all queries for structure and supported operators to prevent malicious queries, regardless of configuration.
+
 ## Best Practices
 
 1. **Validate early:** Create DatabaseConfig instances explicitly to catch errors
@@ -288,3 +320,5 @@ try {
 6. **Sensible logging levels:** Use DEBUG for development, INFO/WARN for production
 7. **Document custom settings:** Comment why specific values were chosen
 8. **Test configuration validation:** Include config validation in your tests
+9. **Security-first design:** All components prioritise security over optional performance optimisations
+10. **Component separation:** Each component manages its own configuration appropriate to its responsibilities

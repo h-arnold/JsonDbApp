@@ -49,6 +49,7 @@ class DocumentOperations {
     
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
+    this._queryEngine = null; // Lazy-loaded QueryEngine instance
   }
   
   /**
@@ -63,7 +64,7 @@ class DocumentOperations {
     this._validateDocument(doc);
     
     // Create a copy to avoid modifying the original
-    const documentToInsert = JSON.parse(JSON.stringify(doc));
+    const documentToInsert = ObjectUtils.deepClone(doc);
     
     // Generate ID if not provided
     if (!documentToInsert._id) {
@@ -108,7 +109,7 @@ class DocumentOperations {
     
     if (document) {
       // Return a copy to prevent external modification
-      return JSON.parse(JSON.stringify(document));
+      return ObjectUtils.deepClone(document);
     }
     
     return null;
@@ -125,7 +126,7 @@ class DocumentOperations {
     for (const documentId in this._collection._documents) {
       if (this._collection._documents.hasOwnProperty(documentId)) {
         // Return copies to prevent external modification
-        documents.push(JSON.parse(JSON.stringify(this._collection._documents[documentId])));
+        documents.push(ObjectUtils.deepClone(this._collection._documents[documentId]));
       }
     }
     
@@ -233,6 +234,84 @@ class DocumentOperations {
     return this._collection._documents.hasOwnProperty(id);
   }
   
+  /**
+   * Find first document matching query using QueryEngine
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {Object|null} First matching document or null if none found
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  findByQuery(query) {
+    // Get all documents as array for QueryEngine
+    const documents = this.findAllDocuments();
+    
+    // Create QueryEngine instance if not already created
+    if (!this._queryEngine) {
+      this._queryEngine = new QueryEngine();
+    }
+    
+    // Let QueryEngine handle all validation and execution
+    const results = this._queryEngine.executeQuery(documents, query);
+    
+    this._logger.debug('Query executed by findByQuery', { 
+      queryString: JSON.stringify(query), 
+      resultCount: results.length 
+    });
+    
+    return results.length > 0 ? results[0] : null;
+  }
+  
+  /**
+   * Find multiple documents matching query using QueryEngine
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {Array<Object>} Array of matching documents (empty array if none found)
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  findMultipleByQuery(query) {
+    // Get all documents as array for QueryEngine
+    const documents = this.findAllDocuments();
+    
+    // Create QueryEngine instance if not already created
+    if (!this._queryEngine) {
+      this._queryEngine = new QueryEngine();
+    }
+    
+    // Let QueryEngine handle all validation and execution
+    const results = this._queryEngine.executeQuery(documents, query);
+    
+    this._logger.debug('Query executed by findMultipleByQuery', { 
+      queryString: JSON.stringify(query), 
+      resultCount: results.length 
+    });
+    
+    return results;
+  }
+  
+  /**
+   * Count documents matching query using QueryEngine
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {number} Count of matching documents
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  countByQuery(query) {
+    // Get all documents as array for QueryEngine
+    const documents = this.findAllDocuments();
+    
+    // Create QueryEngine instance if not already created
+    if (!this._queryEngine) {
+      this._queryEngine = new QueryEngine();
+    }
+    
+    // Let QueryEngine handle all validation and execution
+    const results = this._queryEngine.executeQuery(documents, query);
+    
+    this._logger.debug('Query executed by countByQuery', { 
+      queryString: JSON.stringify(query), 
+      resultCount: results.length 
+    });
+    
+    return results.length;
+  }
+
   /**
    * Generate unique document ID
    * @private

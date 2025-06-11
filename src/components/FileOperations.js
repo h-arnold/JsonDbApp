@@ -61,22 +61,32 @@ class FileOperations {
       // Parse JSON - let InvalidFileFormatError bubble up to retry logic
       try {
         const parsedContent = JSON.parse(content);
+        
+        // Validate that parsed content is an object or array (not a primitive string, number, etc.)
+        if (parsedContent === null || (typeof parsedContent !== 'object')) {
+          throw new InvalidFileFormatError(fileId, 'JSON object or array', `Expected object/array but got ${typeof parsedContent}`);
+        }
+        
+        // Convert ISO date strings to Date objects at file boundary
+        ObjectUtils.convertDateStringsToObjects(parsedContent);
+        
         this._logger.debug('File content parsed successfully', { fileId });
         return parsedContent;
       } catch (parseError) {
         // Check if this is a double-parsing attempt using centralized utility
+        if (parseError instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT) {
+          // Re-throw our own validation errors
+          throw parseError;
+        }
+        
         ErrorHandler.detectDoubleParsing(content, parseError, 'FileOperations.readFile');
         
         this._logger.error('Failed to parse JSON content', { 
           fileId, 
           error: parseError.message 
         });
-        throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
         
-        this._logger.error('Failed to parse JSON content', { 
-          fileId, 
-          error: parseError.message 
-        });
+        // Reintroduce throw to propagate the error
         throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
       }
     }, `readFile(${fileId})`);
