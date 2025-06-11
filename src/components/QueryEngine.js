@@ -202,6 +202,20 @@ class QueryEngine {
       return true;
     }
 
+    // Handle array contains operation (MongoDB style)
+    // If document value is an array and query value is not, check if array contains the query value
+    if (Array.isArray(docValue) && !Array.isArray(queryValue)) {
+      return docValue.includes(queryValue);
+    }
+
+    // Handle array equality
+    if (Array.isArray(docValue) && Array.isArray(queryValue)) {
+      if (docValue.length !== queryValue.length) {
+        return false;
+      }
+      return docValue.every((item, index) => this._equalityComparison(item, queryValue[index]));
+    }
+
     // Standard equality
     return docValue === queryValue;
   }
