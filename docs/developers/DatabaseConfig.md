@@ -23,6 +23,7 @@
     - [Configuration Serialization](#configuration-serialization)
   - [Integration with Database](#integration-with-database)
   - [Component-Level Configuration](#component-level-configuration)
+    - [QueryEngine Configuration](#queryengine-configuration)
   - [Best Practices](#best-practices)
 
 ## Overview
@@ -304,6 +305,7 @@ const db = new Database(dbConfig);
 ```
 
 **QueryEngine Options:**
+
 - `maxNestedDepth` (Number, default: 10): Maximum allowed query nesting depth for security
 
 **Security Note:** QueryEngine always validates all queries for structure and supported operators to prevent malicious queries, regardless of configuration.
