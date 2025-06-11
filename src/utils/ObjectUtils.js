@@ -48,7 +48,21 @@ class ObjectUtils {
    * @returns {*} Object with ISO date strings converted to Date instances
    */
   static convertDateStringsToObjects(obj) {
-    if (!obj || typeof obj !== 'object') {
+    // Handle primitives and null/undefined
+    if (obj === null || obj === undefined) {
+      return obj;
+    }
+    
+    // Handle string primitives - check if they're ISO date strings
+    if (typeof obj === 'string') {
+      if (ObjectUtils._isISODateString(obj)) {
+        return new Date(obj);
+      }
+      return obj;
+    }
+    
+    // Handle non-object types (numbers, booleans, etc.)
+    if (typeof obj !== 'object') {
       return obj;
     }
     
@@ -88,8 +102,8 @@ class ObjectUtils {
    * @returns {boolean} True if it's an ISO date string
    */
   static _isISODateString(str) {
-    // ISO date pattern: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ssZ
-    const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z?$/;
+    // ISO date pattern: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ssZ (Z is required)
+    const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
     return isoDatePattern.test(str) && !isNaN(Date.parse(str));
   }
 }
