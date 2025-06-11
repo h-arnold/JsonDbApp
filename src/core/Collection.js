@@ -1,30 +1,30 @@
 /**
  * Collection.js - MongoDB-Compatible Collection Implementation
  * 
- * Provides MongoDB-compatible API for collection operations with Section 5 limitations:
- * - Basic CRUD operations with limited filter support
+ * Provides MongoDB-compatible API for collection operations with QueryEngine support:
+ * - Full CRUD operations with field-based query support
  * - Lazy loading from Google Drive
- * - Integration with CollectionMetadata and DocumentOperations
+ * - Integration with CollectionMetadata, DocumentOperations, and QueryEngine
  * - File persistence through FileService
  * 
- * Section 5 Limitations (to be removed in Section 6-7):
- * - findOne(filter): supports {} and {_id: "id"} only
- * - find(filter): supports {} only
- * - updateOne(filter, update): supports {_id: "id"} only, document replacement only
- * - deleteOne(filter): supports {_id: "id"} only
- * - countDocuments(filter): supports {} only
+ * Enhanced in Section 6 with QueryEngine integration:
+ * - findOne(filter): supports {}, {_id: "id"}, and field-based queries
+ * - find(filter): supports {} and field-based queries
+ * - updateOne(filter, update): supports field-based filters, document replacement only
+ * - deleteOne(filter): supports field-based filters
+ * - countDocuments(filter): supports {} and field-based queries
  * 
- * Part of Section 5: Collection Components and Basic CRUD Operations
+ * Note: Update operators ($set, $push, etc.) require Section 7 Update Engine
  */
 
 /**
- * Collection - MongoDB-compatible collection with Section 5 limitations
+ * Collection - MongoDB-compatible collection with QueryEngine support
  * 
- * Coordinates CollectionMetadata and DocumentOperations to provide:
+ * Coordinates CollectionMetadata, DocumentOperations, and QueryEngine to provide:
  * - MongoDB-standard method signatures
  * - Lazy loading and memory management
  * - File persistence and dirty tracking
- * - Clear error messages for unsupported features
+ * - Field-based query support through QueryEngine
  */
 class Collection {
   /**
@@ -195,11 +195,11 @@ class Collection {
   }
 
   /**
-   * Validates filter object for Section 5 support
+   * Validates filter object structure
    * @private
    * @param {Object} filter - Filter to validate
    * @param {string} operation - Operation name for error messages
-   * @throws {OperationError} For unsupported filters
+   * @throws {InvalidArgumentError} For invalid filter structure
    */
   _validateFilter(filter, operation) {
     if (!filter || typeof filter !== 'object' || Array.isArray(filter)) {
@@ -208,29 +208,12 @@ class Collection {
     
     const filterKeys = Object.keys(filter);
     
-    // Empty filter {} is always supported
-    if (filterKeys.length === 0) {
-      return;
-    }
-    
-    // Check if it's an _id filter
-    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+    // Validate _id filter value if present
+    if (filterKeys.includes('_id')) {
       const idValue = filter._id;
       if (!idValue || typeof idValue !== 'string' || idValue.trim() === '') {
         throw new InvalidArgumentError('filter._id', idValue, 'ID filter value must be a non-empty string');
       }
-      return;
-    }
-    
-    // All other filters are unsupported in Section 5
-    if (operation === 'find' || operation === 'findOne') {
-      throw new OperationError('Field-based queries not yet implemented - requires Section 6 Query Engine');
-    } else if (operation === 'updateOne' || operation === 'deleteOne') {
-      throw new OperationError('Field-based queries not yet implemented - requires Section 6 Query Engine');
-    } else if (operation === 'countDocuments') {
-      throw new OperationError('Field-based queries not yet implemented - requires Section 6 Query Engine');
-    } else {
-      throw new OperationError('Advanced queries not yet implemented - requires Section 6 Query Engine');
     }
   }
 
@@ -257,10 +240,10 @@ class Collection {
   }
 
   /**
-   * Find a single document by filter (Section 5: limited support)
-   * @param {Object} filter - Query filter ({} or {_id: "id"} only)
+   * Find a single document by filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries, _id queries, and empty filter)
    * @returns {Object|null} Document object or null
-   * @throws {OperationError} For unsupported filters
+   * @throws {InvalidArgumentError} For invalid filters
    */
   findOne(filter = {}) {
     this._ensureLoaded();
@@ -274,20 +257,20 @@ class Collection {
       return allDocs.length > 0 ? allDocs[0] : null;
     }
     
-    // ID filter {_id: "id"}
+    // ID filter {_id: "id"} - use direct lookup for performance
     if (filterKeys.length === 1 && filterKeys[0] === '_id') {
       return this._documentOperations.findDocumentById(filter._id);
     }
     
-    // Should not reach here due to _validateFilter, but safety check
-    throw new OperationError('Unsupported filter pattern for findOne');
+    // Field-based or complex queries - use QueryEngine
+    return this._documentOperations.findByQuery(filter);
   }
 
   /**
-   * Find multiple documents by filter (Section 5: limited support)
-   * @param {Object} filter - Query filter ({} only)
+   * Find multiple documents by filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries and empty filter)
    * @returns {Array} Array of document objects
-   * @throws {OperationError} For unsupported filters
+   * @throws {InvalidArgumentError} For invalid filters
    */
   find(filter = {}) {
     this._ensureLoaded();
@@ -295,21 +278,22 @@ class Collection {
     
     const filterKeys = Object.keys(filter);
     
-    // Only empty filter {} is supported in Section 5
+    // Empty filter {} - return all documents
     if (filterKeys.length === 0) {
       return this._documentOperations.findAllDocuments();
     }
     
-    // Should not reach here due to _validateFilter, but safety check
-    throw new OperationError('Unsupported filter pattern for find');
+    // Field-based or complex queries - use QueryEngine
+    return this._documentOperations.findMultipleByQuery(filter);
   }
 
   /**
-   * Update a single document by filter (Section 5: limited support)
-   * @param {Object} filter - Query filter ({_id: "id"} only)
-   * @param {Object} update - Document replacement (no operators)
+   * Update a single document by filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries and _id queries)
+   * @param {Object} update - Document replacement (no operators in current version)
    * @returns {Object} {matchedCount: number, modifiedCount: number, acknowledged: boolean}
-   * @throws {OperationError} For unsupported filters or update operators
+   * @throws {InvalidArgumentError} For invalid parameters
+   * @throws {OperationError} For unsupported update operators
    */
   updateOne(filter, update) {
     this._ensureLoaded();
@@ -320,7 +304,7 @@ class Collection {
       throw new InvalidArgumentError('update', update, 'Update must be an object');
     }
     
-    // Check for update operators (not supported in Section 5)
+    // Check for update operators (not supported in current version)
     const updateKeys = Object.keys(update);
     for (const key of updateKeys) {
       if (key.startsWith('$')) {
@@ -330,7 +314,7 @@ class Collection {
     
     const filterKeys = Object.keys(filter);
     
-    // Only ID filter {_id: "id"} is supported
+    // ID filter {_id: "id"} - use direct update for performance
     if (filterKeys.length === 1 && filterKeys[0] === '_id') {
       const result = this._documentOperations.updateDocument(filter._id, update);
       
@@ -346,15 +330,37 @@ class Collection {
       };
     }
     
-    // Should not reach here due to _validateFilter, but safety check
-    throw new OperationError('Unsupported filter pattern for updateOne');
+    // Field-based or complex queries - find first matching document then update
+    const matchingDoc = this._documentOperations.findByQuery(filter);
+    
+    if (!matchingDoc) {
+      return {
+        matchedCount: 0,
+        modifiedCount: 0,
+        acknowledged: true
+      };
+    }
+    
+    // Update the found document by ID
+    const result = this._documentOperations.updateDocument(matchingDoc._id, update);
+    
+    if (result.modifiedCount > 0) {
+      this._updateMetadata();
+      this._markDirty();
+    }
+    
+    return {
+      matchedCount: 1,
+      modifiedCount: result.modifiedCount,
+      acknowledged: true
+    };
   }
 
   /**
-   * Delete a single document by filter (Section 5: limited support)
-   * @param {Object} filter - Query filter ({_id: "id"} only)
+   * Delete a single document by filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries and _id queries)
    * @returns {Object} {deletedCount: number, acknowledged: boolean}
-   * @throws {OperationError} For unsupported filters
+   * @throws {InvalidArgumentError} For invalid filters
    */
   deleteOne(filter) {
     this._ensureLoaded();
@@ -362,7 +368,7 @@ class Collection {
     
     const filterKeys = Object.keys(filter);
     
-    // Only ID filter {_id: "id"} is supported
+    // ID filter {_id: "id"} - use direct delete for performance
     if (filterKeys.length === 1 && filterKeys[0] === '_id') {
       const result = this._documentOperations.deleteDocument(filter._id);
       
@@ -377,15 +383,35 @@ class Collection {
       };
     }
     
-    // Should not reach here due to _validateFilter, but safety check
-    throw new OperationError('Unsupported filter pattern for deleteOne');
+    // Field-based or complex queries - find first matching document then delete
+    const matchingDoc = this._documentOperations.findByQuery(filter);
+    
+    if (!matchingDoc) {
+      return {
+        deletedCount: 0,
+        acknowledged: true
+      };
+    }
+    
+    // Delete the found document by ID
+    const result = this._documentOperations.deleteDocument(matchingDoc._id);
+    
+    if (result.deletedCount > 0) {
+      this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+      this._markDirty();
+    }
+    
+    return {
+      deletedCount: result.deletedCount,
+      acknowledged: true
+    };
   }
 
   /**
-   * Count documents by filter (Section 5: limited support)
-   * @param {Object} filter - Query filter ({} only)
+   * Count documents by filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries and empty filter)
    * @returns {number} Document count
-   * @throws {OperationError} For unsupported filters
+   * @throws {InvalidArgumentError} For invalid filters
    */
   countDocuments(filter = {}) {
     this._ensureLoaded();
@@ -393,13 +419,13 @@ class Collection {
     
     const filterKeys = Object.keys(filter);
     
-    // Only empty filter {} is supported in Section 5
+    // Empty filter {} - count all documents
     if (filterKeys.length === 0) {
       return this._documentOperations.countDocuments();
     }
     
-    // Should not reach here due to _validateFilter, but safety check
-    throw new OperationError('Unsupported filter pattern for countDocuments');
+    // Field-based or complex queries - use QueryEngine
+    return this._documentOperations.countByQuery(filter);
   }
 
   /**

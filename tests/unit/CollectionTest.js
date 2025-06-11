@@ -351,7 +351,7 @@ function createCollectionFindOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act & Assert - Should fail in Red phase
+    // Collection API now supports field-based queries with QueryEngine
     const collection = new Collection(
       'findOneUnsupportedTestCollection',
       fileId,
@@ -359,10 +359,17 @@ function createCollectionFindOperationsTestSuite() {
       COLLECTION_TEST_DATA.testFileService
     );
     
-    // Test unsupported field-based query - should throw with Section 6 message
-    TestFramework.assertThrows(() => {
-      collection.findOne({ name: 'Test' });
-    }, OperationError, 'Should throw OperationError for field-based query');
+    // Insert test document
+    collection.insertOne({ name: 'Test', value: 100 });
+    
+    // Test field-based query - should work with QueryEngine
+    const result = collection.findOne({ name: 'Test' });
+    TestFramework.assertNotNull(result, 'Should find document by field-based query');
+    TestFramework.assertEquals('Test', result.name, 'Should return correct document');
+    
+    // Test non-matching query
+    const noResult = collection.findOne({ name: 'NonExistent' });
+    TestFramework.assertNull(noResult, 'Should return null for non-matching query');
   });
   
   suite.addTest('testCollectionFindEmpty', function() {
@@ -410,7 +417,7 @@ function createCollectionFindOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act & Assert - Should fail in Red phase
+    // Collection API now supports field-based queries with QueryEngine
     const collection = new Collection(
       'findUnsupportedTestCollection',
       fileId,
@@ -418,10 +425,18 @@ function createCollectionFindOperationsTestSuite() {
       COLLECTION_TEST_DATA.testFileService
     );
     
-    // Test unsupported field-based query - should throw with Section 6 message
-    TestFramework.assertThrows(() => {
-      collection.find({ name: 'Test' });
-    }, OperationError, 'Should throw OperationError for field-based query in find');
+    // Insert test documents
+    collection.insertOne({ name: 'Test', value: 100 });
+    collection.insertOne({ name: 'Other', value: 200 });
+    
+    // Test field-based query - should work with QueryEngine
+    const results = collection.find({ name: 'Test' });
+    TestFramework.assertEquals(1, results.length, 'Should find 1 document by field-based query');
+    TestFramework.assertEquals('Test', results[0].name, 'Should return correct document');
+    
+    // Test non-matching query
+    const noResults = collection.find({ name: 'NonExistent' });
+    TestFramework.assertEquals(0, noResults.length, 'Should return empty array for non-matching query');
   });
   
   // RED PHASE: Collection API Enhancement Tests - Field-based queries
@@ -534,6 +549,12 @@ function createCollectionFindOperationsTestSuite() {
     
     // Test date comparison
     const recentDocs = collection.find({ joinDate: { $gt: new Date('2020-06-01') } });
+    // Debug: Check what we actually found
+    if (recentDocs.length !== 1) {
+      console.log('Date comparison test failing. Found documents:', recentDocs);
+      console.log('Expected: Bob with joinDate 2021-03-20');
+      console.log('Query date:', new Date('2020-06-01'));
+    }
     TestFramework.assertEquals(1, recentDocs.length, 'Should find 1 document with recent join date');
     TestFramework.assertEquals('Bob', recentDocs[0].name, 'Should find Bob');
   });
@@ -608,7 +629,7 @@ function createCollectionUpdateOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act & Assert - Should fail in Red phase
+    // Collection API now supports field-based queries with QueryEngine
     const collection = new Collection(
       'updateOneUnsupportedFilterTestCollection',
       fileId,
@@ -616,10 +637,19 @@ function createCollectionUpdateOperationsTestSuite() {
       COLLECTION_TEST_DATA.testFileService
     );
     
-    // Test unsupported field-based filter - should throw with Section 6 message
-    TestFramework.assertThrows(() => {
-      collection.updateOne({ name: 'Test' }, { name: 'Updated' });
-    }, OperationError, 'Should throw OperationError for field-based filter in updateOne');
+    // Insert test document
+    collection.insertOne({ name: 'Test', value: 100 });
+    
+    // Test field-based filter - should work with QueryEngine
+    const updateResult = collection.updateOne({ name: 'Test' }, { name: 'Updated', value: 200 });
+    TestFramework.assertEquals(1, updateResult.matchedCount, 'Should match 1 document by field-based filter');
+    TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should modify 1 document');
+    TestFramework.assertTrue(updateResult.acknowledged, 'Operation should be acknowledged');
+    
+    // Verify update worked
+    const updatedDoc = collection.findOne({ name: 'Updated' });
+    TestFramework.assertNotNull(updatedDoc, 'Should find updated document');
+    TestFramework.assertEquals(200, updatedDoc.value, 'Should have updated value');
   });
   
   suite.addTest('testCollectionUpdateOneUnsupportedOperators', function() {
@@ -843,7 +873,7 @@ function createCollectionDeleteOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act & Assert - Should fail in Red phase
+    // Collection API now supports field-based queries with QueryEngine
     const collection = new Collection(
       'deleteOneUnsupportedFilterTestCollection',
       fileId,
@@ -851,10 +881,19 @@ function createCollectionDeleteOperationsTestSuite() {
       COLLECTION_TEST_DATA.testFileService
     );
     
-    // Test unsupported field-based filter - should throw with Section 6 message
-    TestFramework.assertThrows(() => {
-      collection.deleteOne({ name: 'Test' });
-    }, OperationError, 'Should throw OperationError for field-based filter in deleteOne');
+    // Insert test documents
+    collection.insertOne({ name: 'Test', value: 100 });
+    collection.insertOne({ name: 'Other', value: 200 });
+    
+    // Test field-based filter - should work with QueryEngine
+    const deleteResult = collection.deleteOne({ name: 'Test' });
+    TestFramework.assertEquals(1, deleteResult.deletedCount, 'Should delete 1 document by field-based filter');
+    TestFramework.assertTrue(deleteResult.acknowledged, 'Operation should be acknowledged');
+    
+    // Verify delete worked
+    const remainingDocs = collection.find({});
+    TestFramework.assertEquals(1, remainingDocs.length, 'Should have 1 document remaining');
+    TestFramework.assertEquals('Other', remainingDocs[0].name, 'Remaining document should be Other');
   });
   
   // RED PHASE: Collection API Enhancement Tests - Field-based delete filters
@@ -1056,7 +1095,7 @@ function createCollectionCountOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act & Assert - Should fail in Red phase
+    // Collection API now supports field-based queries with QueryEngine
     const collection = new Collection(
       'countDocumentsUnsupportedFilterTestCollection',
       fileId,
@@ -1064,10 +1103,18 @@ function createCollectionCountOperationsTestSuite() {
       COLLECTION_TEST_DATA.testFileService
     );
     
-    // Test unsupported field-based filter - should throw with Section 6 message
-    TestFramework.assertThrows(() => {
-      collection.countDocuments({ name: 'Test' });
-    }, OperationError, 'Should throw OperationError for field-based filter in countDocuments');
+    // Insert test documents
+    collection.insertOne({ name: 'Test', value: 100 });
+    collection.insertOne({ name: 'Other', value: 200 });
+    collection.insertOne({ name: 'Test', value: 300 });
+    
+    // Test field-based filter - should work with QueryEngine
+    const count = collection.countDocuments({ name: 'Test' });
+    TestFramework.assertEquals(2, count, 'Should count 2 documents by field-based filter');
+    
+    // Test non-matching filter
+    const noMatchCount = collection.countDocuments({ name: 'NonExistent' });
+    TestFramework.assertEquals(0, noMatchCount, 'Should count 0 documents for non-matching filter');
   });
   
   // RED PHASE: Collection API Enhancement Tests - Field-based count filters

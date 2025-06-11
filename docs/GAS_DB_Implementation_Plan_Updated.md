@@ -201,36 +201,6 @@ The implementation will use Google Apps Script with clasp for testing, and assum
 - ✅ **QueryEngine Error Handling** (5/5) - 100% - Validation correctly catching unsupported operators
 - ✅ **QueryEngine Edge Cases** (6/6) - 100% - Including performance test with corrected data
 
-### 🚨 **CRITICAL INVESTIGATION FINDINGS (2025-06-10)**
-
-**Investigation Completed:** `quickTest.js` execution revealed fundamental implementation flaws in logical operator handling.
-
-**Key Findings:**
-
-1. **Validation Bug:** Even with `$and`/`$or` in `supportedOperators` array, validation still rejects them with "Unsupported operator" errors
-2. **Execution Logic Flaw:** `_matchDocument` method treats ALL top-level keys as field names, including logical operators
-3. **Test Logic Issue:** Original logical operator tests were incorrectly designed, checking wrong criteria
-
-**Specific Problems Identified:**
-
-- **Line 77-84 in QueryEngine.js:** `_matchDocument` treats `$and` as field name instead of logical operator
-- **Query `{$and: [...]}` processed as:** Look for field named "$and" in document (returns `undefined`)
-- **Result:** `undefined !== array` → query fails even when conditions should match
-
-**Evidence from Investigation:**
-
-```javascript
-Processing field: "$and"
-Field value from document: {} (undefined)
-Query value: "[{\"active\":true},{\"age\":{\"$gt\":25}}]" (array)
-Field matches: false
-```
-
-**Current Status:**
-
-- ✅ **Implicit AND** works correctly (multi-field queries)
-- ❌ **Explicit $and/$or** completely broken (treats operators as field names)
-- ❌ **Validation** has bugs even with operators in supported list
 
 ### Remaining Work for Section 6 Completion
 
