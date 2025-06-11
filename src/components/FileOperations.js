@@ -85,6 +85,8 @@ class FileOperations {
           fileId, 
           error: parseError.message 
         });
+        
+        // Reintroduce throw to propagate the error
         throw new InvalidFileFormatError(fileId, 'JSON', parseError.message);
       }
     }, `readFile(${fileId})`);
