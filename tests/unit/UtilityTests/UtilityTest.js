@@ -5,6 +5,7 @@
  * - GASDBLoggerTest.js (logging functionality)
  * - ErrorHandlerTest.js (error handling and validation)
  * - IdGeneratorTest.js (ID generation and validation)
+ * - ObjectUtilsTest.js (object manipulation and date preservation)
  * 
  * This wrapper imports and runs the individual test suites while keeping
  * the test files separate and focused on their respective classes.
@@ -23,6 +24,7 @@ function createUtilityTestFramework() {
   testFramework.registerTestSuite(createGASDBLoggerTestSuite());  // from GASDBLoggerTest.js
   testFramework.registerTestSuite(createErrorHandlerTestSuite()); // from ErrorHandlerTest.js
   testFramework.registerTestSuite(createIdGeneratorTestSuite());  // from IdGeneratorTest.js
+  testFramework.registerTestSuite(createObjectUtilsTestSuite());  // from ObjectUtilsTest.js
   
   return testFramework;
 }
@@ -86,4 +88,8 @@ function runUtilityErrorHandlerTests() {
 
 function runUtilityIdGeneratorTests() {
   return runIdGeneratorTests(); // from IdGeneratorTest.js
+}
+
+function runUtilityObjectUtilsTests() {
+  return runObjectUtilsTests(); // from ObjectUtilsTest.js
 }
