@@ -12,7 +12,10 @@ FileOperations is a low-level component that interacts directly with the DriveAp
 
 - Provides reliable read/write/create/delete operations.  
 - Handles retries with exponential backoff.  
-- Translates Drive errors into GAS-DB-specific error types.
+- Translates Drive errors into GAS-DB-specific error types.  
+- **JSON serialisation boundary**: Performs JSON parsing only on read operations and JSON.stringify only on write operations.  
+- **Date handling**: Automatically converts ISO date strings to Date objects after parsing.  
+- **Double-parsing protection**: Detects and prevents attempts to parse already-parsed objects.
 
 ### Constructor
 
@@ -37,15 +40,20 @@ const fileOps = new FileOperations(logger);
 
 #### readFile(fileId: string): Object
 
-Read and parse JSON content.
+Read and parse JSON content. **Performs JSON.parse() internally and returns a parsed JavaScript object**.
 
 - **Parameters**  
   - `fileId`: Drive file ID.  
 - **Returns**  
-  - **Parsed JSON object** (not a string - already parsed).  
+  - **Parsed JavaScript object** (not a JSON string).  
 - **Throws**  
   - `InvalidArgumentError` if `fileId` missing.  
   - `FileNotFoundError`, `PermissionDeniedError`, `InvalidFileFormatError`, `FileIOError`.
+
+**Key Points:**
+- JSON parsing occurs at the file boundary only
+- ISO date strings are automatically converted to Date objects
+- Double-parsing is detected and prevented with helpful error messages
 
 **Example:**
 
@@ -58,10 +66,15 @@ try {
   // Expected output: { collection: 'users', documents: [...], metadata: {...} }
   
   // ❌ DON'T do this - data is already parsed:
-  // const parsed = JSON.parse(data); // This will fail!
+  // const parsed = JSON.parse(data); // This will fail with helpful error!
   
   // ✅ DO this - use the object directly:
   console.log('Collection name:', data.collection);
+  
+  // Date objects are automatically converted from ISO strings
+  if (data.metadata && data.metadata.created instanceof Date) {
+    console.log('Created:', data.metadata.created.toLocaleDateString());
+  }
   
 } catch (error) {
   if (error instanceof FileNotFoundError) {
@@ -71,17 +84,23 @@ try {
   }
   throw error;
 }
+}
 ```
 
 #### writeFile(fileId: string, data: Object): void
 
-Overwrite existing file content.
+Overwrite existing file content. **Performs JSON.stringify() internally on the provided object**.
 
 - **Parameters**  
   - `fileId`: Drive file ID.  
-  - `data`: JSON‐serialisable object.  
+  - `data`: JavaScript object to serialise as JSON.  
 - **Throws**  
   - `InvalidArgumentError`, `FileNotFoundError`, `PermissionDeniedError`, `FileIOError`.
+
+**Key Points:**
+- JSON serialisation occurs at the file boundary only  
+- Pass JavaScript objects directly, not JSON strings
+- Date objects are preserved during serialisation
 
 **Example:**
 
@@ -91,7 +110,7 @@ const updatedData = {
   collection: 'users',
   metadata: {
     version: 2,
-    updated: new Date().toISOString()
+    updated: new Date() // Date object will be serialised to ISO string
   },
   documents: [
     { _id: 'user1', name: 'John Doe', email: 'john@example.com' },
@@ -100,7 +119,12 @@ const updatedData = {
 };
 
 try {
+  // ✅ DO this - pass the object directly:
   fileOps.writeFile('1a2b3c4d5e6f7g8h9i0j', updatedData);
+  
+  // ❌ DON'T do this - don't stringify beforehand:
+  // fileOps.writeFile('1a2b3c4d5e6f7g8h9i0j', JSON.stringify(updatedData));
+  
   console.log('File updated successfully');
 } catch (error) {
   console.error('Failed to write file:', error.message);
@@ -110,16 +134,21 @@ try {
 
 #### createFile(fileName: string, data: Object, folderId?: string): string
 
-Create new JSON file.
+Create new JSON file. **Performs JSON.stringify() internally on the provided object**.
 
 - **Parameters**  
   - `fileName`: name of the file.  
-  - `data`: initial object to serialize.  
+  - `data`: JavaScript object to serialise as initial content.  
   - `folderId` (optional): parent folder ID; defaults to root.  
 - **Returns**  
   - New Drive file ID.  
 - **Throws**  
   - `InvalidArgumentError`, `PermissionDeniedError`, `FileIOError`.
+
+**Key Points:**
+- JSON serialisation occurs at the file boundary only  
+- Pass JavaScript objects directly, not JSON strings
+- Date objects are automatically serialised to ISO strings
 
 **Example:**
 
@@ -129,20 +158,24 @@ const initialData = {
   collection: 'products',
   metadata: {
     version: 1,
-    created: new Date().toISOString(),
-    updated: new Date().toISOString()
+    created: new Date(), // Will be serialised to ISO string
+    updated: new Date()
   },
   documents: []
 };
 
 try {
-  // Create in root folder
+  // ✅ DO this - pass the object directly:
   const fileId = fileOps.createFile('products.json', initialData);
   console.log('Created file with ID:', fileId);
 
   // Create in specific folder
   const folderFileId = fileOps.createFile('users.json', initialData, 'folder123');
   console.log('Created file in folder with ID:', folderFileId);
+  
+  // ❌ DON'T do this - don't stringify beforehand:
+  // const fileId = fileOps.createFile('products.json', JSON.stringify(initialData));
+  
 } catch (error) {
   console.error('Failed to create file:', error.message);
   throw error;
@@ -244,8 +277,10 @@ try {
 
 ### Private Methods
 
-- `_handleDriveApiError(error, operation, fileId)`: maps Drive errors to GAS-DB errors.  
-- `_retryOperation(fn, operationName)`: retries transient failures with exponential backoff.
+- `_handleDriveApiError(error, operation, fileId)`: maps Drive errors to GAS-DB errors, called only for Drive API failures.  
+- `_retryOperation(fn, operationName)`: retries transient failures with exponential backoff, excludes non-retryable errors.
+
+**Implementation Note:** Drive API errors and JSON parsing errors are handled separately to ensure appropriate error classification and retry behaviour.
 
 ---
 
@@ -279,46 +314,62 @@ const fileService = new FileService(fileOps, logger);
 
 #### readFile(fileId: string): Object
 
-Returns JSON, using cache if enabled.
+Returns parsed JavaScript object, using cache if enabled.
 
 - **Parameters**  
   - `fileId`: Drive file ID.  
 - **Returns**  
-  - **Parsed JSON object** (not a string - already parsed by underlying FileOperations).  
+  - **Parsed JavaScript object** (not a JSON string - already parsed by underlying FileOperations).  
 - **Throws**  
   - Same as underlying `readFile`.
+
+**Key Points:**
+- Object is already parsed by FileOperations.readFile()
+- Cache stores parsed objects, not JSON strings
+- Date objects are preserved in cache
 
 **Example:**
 
 ```javascript
 const fileService = new FileService(fileOps, logger);
 
-// First read hits Drive API
+// First read hits Drive API and performs JSON.parse()
 const data1 = fileService.readFile('1a2b3c4d5e6f7g8h9i0j');
 console.log('First read:', data1);
 
 // ❌ DON'T do this - data1 is already a parsed object:
-// const parsed = JSON.parse(data1); // This will fail!
+// const parsed = JSON.parse(data1); // This will fail with helpful error!
 
 // ✅ DO this - use the object directly:
 console.log('Collection name:', data1.collection);
 
-// Second read may use cache
+// Second read may use cache (still returns parsed object)
 const data2 = fileService.readFile('1a2b3c4d5e6f7g8h9i0j');
 console.log('Second read (cached):', data2);
 
-// Both results are identical
+// Both results are identical objects
 console.log('Data identical:', JSON.stringify(data1) === JSON.stringify(data2));
+
+// Date objects are preserved
+if (data1.metadata && data1.metadata.created instanceof Date) {
+  console.log('Date object preserved:', data1.metadata.created.toISOString());
+}
 ```
 
 #### writeFile(fileId: string, data: Object): void
 
-Writes and updates cache.
+Writes JavaScript object and updates cache.
 
 - **Parameters**  
-  - `fileId`, `data`.  
+  - `fileId`: Drive file ID to write to.  
+  - `data`: JavaScript object to write (will be JSON.stringify'd by FileOperations).  
 - **Throws**  
   - Underlying write exceptions.
+
+**Key Points:**
+- FileOperations.writeFile() handles JSON.stringify() internally
+- Cache is updated with the provided object
+- Pass objects directly, not JSON strings
 
 **Example:**
 
@@ -328,26 +379,39 @@ const updatedData = {
   collection: 'users',
   metadata: {
     version: 3,
-    updated: new Date().toISOString()
+    updated: new Date() // Date object will be serialised automatically
   },
   documents: [
     { _id: 'user1', name: 'John Updated', email: 'john.new@example.com' }
   ]
 };
 
+// ✅ DO this - pass the object directly:
 fileService.writeFile('1a2b3c4d5e6f7g8h9i0j', updatedData);
 
 // Subsequent reads will return updated data from cache
 const readBack = fileService.readFile('1a2b3c4d5e6f7g8h9i0j');
 console.log('Updated data:', readBack.documents[0].name); // 'John Updated'
+
+// ❌ DON'T do this - don't stringify beforehand:
+// fileService.writeFile('1a2b3c4d5e6f7g8h9i0j', JSON.stringify(updatedData));
 ```
 
 #### createFile(fileName: string, data: Object, folderId?: string): string
 
-Creates file and caches.
+Creates file and caches the JavaScript object.
 
+- **Parameters**  
+  - `fileName`: name of the file.  
+  - `data`: JavaScript object for initial content.  
+  - `folderId` (optional): parent folder ID.  
 - **Returns**  
   - New file ID.
+
+**Key Points:**
+- FileOperations.createFile() handles JSON.stringify() internally
+- Created object is immediately cached as a JavaScript object
+- Pass objects directly, not JSON strings
 
 **Example:**
 
@@ -357,18 +421,22 @@ const newCollectionData = {
   collection: 'orders',
   metadata: {
     version: 1,
-    created: new Date().toISOString(),
-    updated: new Date().toISOString()
+    created: new Date(), // Date will be serialised to ISO string in file
+    updated: new Date()
   },
   documents: []
 };
 
+// ✅ DO this - pass the object directly:
 const newFileId = fileService.createFile('orders.json', newCollectionData);
 console.log('Created file ID:', newFileId);
 
-// File is automatically cached, immediate reads are fast
+// File is automatically cached as JavaScript object, immediate reads are fast
 const cachedData = fileService.readFile(newFileId);
 console.log('Immediately readable:', cachedData.collection); // 'orders'
+
+// Date objects are preserved in cache
+console.log('Date preserved:', cachedData.metadata.created instanceof Date);
 ```
 
 #### deleteFile(fileId: string): boolean
@@ -587,8 +655,8 @@ const collectionData = {
   collection: 'users',
   metadata: {
     version: 1,
-    created: new Date().toISOString(),
-    updated: new Date().toISOString(),
+    created: new Date(), // Date object will be serialised to ISO string
+    updated: new Date(),
     documentCount: 0
   },
   documents: []
@@ -601,11 +669,11 @@ collectionData.documents.push({
   _id: 'user1',
   name: 'John Doe',
   email: 'john@example.com',
-  createdAt: new Date().toISOString()
+  createdAt: new Date() // Date object preserved
 });
 
 collectionData.metadata.documentCount = collectionData.documents.length;
-collectionData.metadata.updated = new Date().toISOString();
+collectionData.metadata.updated = new Date(); // Update with new Date object
 
 fileService.writeFile(collectionFileId, collectionData);
 ```
@@ -640,35 +708,77 @@ async function safeFileOperation(fileId, operation) {
 const data = await safeFileOperation('file123', (id) => fileService.readFile(id));
 ```
 
+## Architecture Notes
+
+### JSON Serialisation Boundary Design
+
+The current implementation enforces a clear architectural principle: **JSON serialisation occurs only at file boundaries**.
+
+- **FileOperations.readFile()**: Raw Drive content → JSON.parse() → Date conversion → JavaScript object
+- **FileOperations.writeFile()/createFile()**: JavaScript object → JSON.stringify() → Drive storage
+- **FileService cache**: Stores JavaScript objects, not JSON strings
+- **All other components**: Work exclusively with JavaScript objects
+
+### Error Handling Separation
+
+Drive API errors and JSON parsing errors are handled separately:
+
+- **Drive API errors**: Caught and mapped to specific GAS-DB error types (FileNotFoundError, PermissionDeniedError, etc.)
+- **JSON parsing errors**: Handled with double-parsing detection and clear error messages
+- **Retry logic**: Only retries transient errors, excludes parsing and permission errors
+
+### Performance Optimisations
+
+- **Date conversion**: Performed once at file boundary using `ObjectUtils.convertDateStringsToObjects()`
+- **Exponential backoff**: Prevents API quota exhaustion during transient failures
+- **Cache efficiency**: FileService stores parsed objects to avoid repeated JSON operations
+- **Selective retries**: Non-retryable errors (parsing, permissions) fail fast
+
+### Implementation Benefits
+
+1. **Type safety**: Components work with strongly-typed JavaScript objects
+2. **Performance**: Eliminates redundant JSON operations
+3. **Debugging**: Clear error messages for common serialisation mistakes
+4. **Consistency**: Uniform object handling across all components
+5. **Maintainability**: Single point of JSON handling reduces complexity
+
 ## Notes
 
 - **Retries**: FileOperations retries transient I/O errors up to `_maxRetries` times.
 
-## ⚠️ Important: JSON Parsing Behaviour
+## ⚠️ Important: JSON Serialisation Architecture
 
-**Both FileOperations and FileService automatically parse JSON** and return JavaScript objects, not strings.
+**FileOperations and FileService enforce clear JSON serialisation boundaries:**
 
-### Common Mistake to Avoid
+### JSON Processing Flow
+
+1. **On Read**: FileOperations.readFile() calls `JSON.parse()` and returns JavaScript objects
+2. **Date Conversion**: ISO date strings are automatically converted to Date objects using `ObjectUtils.convertDateStringsToObjects()`
+3. **On Write**: FileOperations.writeFile()/createFile() call `JSON.stringify()` internally
+4. **Cache Storage**: FileService stores parsed JavaScript objects, not JSON strings
+
+### Common Mistakes to Avoid
 
 ```javascript
-// ❌ WRONG - This will cause "object Object is not valid JSON" errors:
+// ❌ WRONG - This will cause "Unexpected token 'o'" or similar errors:
 const fileContent = fileService.readFile(fileId);
 const data = JSON.parse(fileContent); // fileContent is already an object!
 
-// ✅ CORRECT - Use the parsed object directly:
-const data = fileService.readFile(fileId); // data is already a JavaScript object
+// ❌ WRONG - Don't stringify before writing:
+const data = { collection: 'users', documents: [] };
+fileService.writeFile(fileId, JSON.stringify(data)); // writeFile does this internally!
+
+// ✅ CORRECT - Use objects directly:
+const data = fileService.readFile(fileId); // Returns JavaScript object
 console.log(data.collection); // Access properties directly
+
+const newData = { collection: 'users', documents: [] };
+fileService.writeFile(fileId, newData); // Pass object, not string
 ```
 
-### Why This Happens
+### Automatic Double-Parsing Detection
 
-1. **FileOperations.readFile()** calls `JSON.parse()` internally and returns the parsed object
-2. **FileService.readFile()** passes through the already-parsed object from FileOperations  
-3. **Collection and other components** should use the object directly, not parse it again
-
-### Automatic Detection
-
-The system now automatically detects double-parsing attempts and provides helpful error messages:
+The system automatically detects double-parsing attempts and provides helpful error messages via `ErrorHandler.detectDoubleParsing()`:
 
 ```javascript
 // If you accidentally do this:
@@ -676,25 +786,45 @@ const data = fileService.readFile(fileId);
 const parsed = JSON.parse(data); // This will throw a helpful OperationError
 
 // The error message will include:
-// "Attempted to JSON.parse() an already-parsed object in [context]. 
+// "Attempted to JSON.parse() an already-parsed object in FileOperations.readFile. 
 //  FileOperations and FileService return parsed JavaScript objects, not JSON strings.
 //  Use the returned object directly instead of calling JSON.parse() on it.
-//  Common fix: Change "JSON.parse(fileService.readFile(id))" to "fileService.readFile(id)""
+//  Common fix: Change 'JSON.parse(fileService.readFile(id))' to 'fileService.readFile(id)'"
 ```
 
-This detection is provided by `ErrorHandler.detectDoubleParsing()` and can be used by any component.
-
-### Migration Note
-
-If you have existing code that expects JSON strings, you can use:
+### Date Handling
 
 ```javascript
-// If you need the raw JSON string for some reason:
-const fileOps = new FileOperations();
-const rawString = JSON.stringify(fileOps.readFile(fileId));
+// When writing:
+const data = {
+  collection: 'users',
+  metadata: {
+    created: new Date(), // Date object
+    updated: new Date()
+  }
+};
+fileService.writeFile(fileId, data); // Dates serialised to ISO strings
 
-// But typically, just use the object directly:
+// When reading back:
+const readData = fileService.readFile(fileId);
+console.log(readData.metadata.created instanceof Date); // true - converted back to Date object
+```
+
+### Migration from String-Based Code
+
+If you have existing code that expects JSON strings:
+
+```javascript
+// Old pattern (no longer needed):
+const rawString = file.getBlob().getDataAsString();
+const data = JSON.parse(rawString);
+
+// New pattern (recommended):
+const data = fileOps.readFile(fileId); // Returns parsed object directly
+
+// If you specifically need a JSON string:
 const data = fileOps.readFile(fileId);
+const jsonString = JSON.stringify(data); // Manual conversion when needed
 ```  
 
 - **Cache**: FileService cache follows simple LRU; size capped at `_maxCacheSize`.  
