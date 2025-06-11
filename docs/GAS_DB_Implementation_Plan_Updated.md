@@ -48,8 +48,106 @@
 
 **API Enhancements Progress:**
 - ✅ **DocumentOperations Enhancement** - GREEN phase complete (12/12 tests passing, 100% success rate)
-- ✅ **Collection API Enhancement** - RED phase complete (20/20 tests failing as expected, ready for GREEN)
+- 🟡 **Collection API Enhancement** - NEARLY complete (39/40 tests passing, 97.5% success rate)
 - ❌ **Integration Tests** - Verify end-to-end query functionality through Collection API
+
+## 🚧 **Section 6.1: Architectural Enhancement - Date Serialization Fix**
+
+### **Status: PENDING IMPLEMENTATION**
+
+### **Issue Identified (June 11, 2025)**
+
+During Collection API Enhancement testing, a critical architectural issue was discovered regarding date handling:
+
+**Root Cause:** Date objects are being unnecessarily serialized/deserialized in multiple places within the codebase, causing Date objects to become strings and breaking comparison operations.
+
+**Current Problem Sources:**
+
+1. **DocumentOperations Deep Cloning**: `JSON.parse(JSON.stringify(doc))` in multiple methods (lines 67, 112, 129)
+2. **FileOperations JSON Parsing**: `JSON.parse()` doesn't restore Date objects from ISO strings
+3. **Multiple Conversion Points**: Collection-level date conversion attempts that don't address root cause
+
+**Test Failure Example:**
+
+```javascript
+// Test expectation: Date comparison should work
+const recentDocs = collection.find({ joinDate: { $gt: new Date('2020-06-01') } });
+
+// Actual result: Date objects become strings during serialization
+// "2021-03-20T00:00:00.000Z" > Date('2020-06-01') = false ❌
+```
+
+### **Architectural Principle: JSON Only at File Boundaries**
+
+**Goal:** Documents should exist as proper JavaScript objects with Date instances in memory, and only get serialized/deserialized at the Drive file I/O boundary.
+
+```
+Drive File → FileOperations → [JSON + Date Conversion] → Memory Objects
+Memory Objects → [Direct Manipulation] → FileOperations → Drive File
+                    ↑
+            No JSON operations in memory
+```
+
+### **Implementation Strategy**
+
+#### **Phase 1: Fix File I/O Boundary (FileOperations)**
+
+- **Location**: `src/components/FileOperations.js`
+- **Change**: Add date conversion after `JSON.parse()` in `readFile()` method
+- **Method**: Move existing `_convertDateStringsToObjects()` logic from Collection to FileOperations
+
+```javascript
+// In FileOperations.readFile()
+const parsedContent = JSON.parse(content);
+this._convertDateStringsToObjects(parsedContent); // ✅ Convert at boundary
+return parsedContent;
+```
+
+#### **Phase 2: Fix DocumentOperations Deep Cloning**
+
+- **Location**: `src/components/DocumentOperations.js`
+- **Problem Lines**: 67, 112, 129 - `JSON.parse(JSON.stringify(doc))`
+- **Solution**: Replace with proper object cloning that preserves Date objects
+
+```javascript
+// Replace this problematic pattern:
+const clonedDoc = JSON.parse(JSON.stringify(doc));  // ❌ Serializes dates
+
+// With this:
+const clonedDoc = this._deepClone(doc);  // ✅ Preserves dates
+```
+
+#### **Phase 3: Remove Collection-Level Date Conversion**
+
+- **Location**: `src/core/Collection.js`
+- **Remove**: `_convertDateStringsToObjects()` and `_isISODateString()` methods
+- **Reason**: No longer needed since dates are handled at file boundary
+
+#### **Phase 4: Implement Proper Deep Cloning Utility**
+
+- **Location**: Create `src/utils/ObjectUtils.js` or add to existing utility
+- **Purpose**: Date-preserving deep clone for DocumentOperations
+
+### **Benefits of This Approach**
+
+- ✅ **Single Point of Serialization**: Only at Drive file I/O boundary
+- ✅ **Consistent Memory State**: All objects have proper Date instances throughout memory operations
+- ✅ **No Surprise Serialization**: Eliminates hidden JSON operations in memory
+- ✅ **Performance**: Removes unnecessary serialization/deserialization cycles
+- ✅ **Future-Proof**: Any new components work with proper objects, no date handling required
+- ✅ **Architectural Clarity**: Clear separation between file I/O and memory operations
+
+### **Current Test Status**
+
+- **Collection API Enhancement**: 39/40 tests passing (97.5% success rate)
+- **Only Failing Test**: `testCollectionFindByComparisonOperators` due to date serialization issue
+- **Expected Result**: 40/40 tests passing (100% success rate) after fix
+
+### **Implementation Priority**: **HIGH**
+
+- **Impact**: Blocks Collection API Enhancement completion (final 2.5% of tests)
+- **Risk**: Low (isolated architectural fix)
+- **Effort**: Medium (3-4 methods to modify)
 
 **Key Technical Achievements:**
 
@@ -381,74 +479,97 @@ Comprehensive end-to-end testing:
 - `tests/unit/DocumentOperationsTest.js` - Add query-based operation tests
 - `tests/unit/CollectionTest.js` - Add query compatibility tests
 
-### Implementation Sequence
+## 🚧 **Section 6.1: Architectural Enhancement - Date Serialization Fix**
 
-1. Implement and test QueryEngine with core functionality
-2. Add basic comparison operators with tests
-3. Add simple logical operators with tests
-4. Enhance DocumentOperations with QueryEngine integration
-5. Update Collection API to remove limitations
+### **Status: PENDING IMPLEMENTATION**
 
-### Completion Criteria
+### **Issue Identified (June 11, 2025)**
 
-- All test cases pass (72 total: 40 QueryEngine ✅ + 12 DocumentOperations ✅ + 20 Collection API ✅ + 8 Integration)
-- QueryEngine correctly evaluates document matches using basic MongoDB-compatible syntax ✅
-- Basic operators work correctly with common data types ✅
-- DocumentOperations integrates with QueryEngine and provides query-based methods ✅
-- Collection API provides essential MongoDB query compatibility as specified in PRD 4.3
-- System follows SOLID principles with clear separation of concerns ✅
-- All Section 5 limitations are removed from Collection methods
-- End-to-end query pipeline functions correctly: Collection → DocumentOperations → QueryEngine
-- Backwards compatibility maintained for existing ID-based and empty filter patterns
-- Performance acceptable for realistic document volumes (1000+ documents)
+During Collection API Enhancement testing, a critical architectural issue was discovered regarding date handling:
 
-### 🎯 **DOCUMENTOPERATIONS ENHANCEMENT COMPLETION SUMMARY**
+**Root Cause:** Date objects are being unnecessarily serialized/deserialized in multiple places within the codebase, causing Date objects to become strings and breaking comparison operations.
 
-**Achievement:** Successfully implemented comprehensive MongoDB-compatible query support in DocumentOperations with 100% test pass rate.
+**Current Problem Sources:**
+1. **DocumentOperations Deep Cloning**: `JSON.parse(JSON.stringify(doc))` in multiple methods (lines 67, 112, 129)
+2. **FileOperations JSON Parsing**: `JSON.parse()` doesn't restore Date objects from ISO strings
+3. **Multiple Conversion Points**: Collection-level date conversion attempts that don't address root cause
 
-**Technical Implementation:**
-- **New Methods Added:** `findByQuery()`, `findMultipleByQuery()`, `countByQuery()`
-- **QueryEngine Integration:** Seamless delegation with proper error handling
-- **Validation Strategy:** Enhanced QueryEngine with comprehensive input and structure validation
-- **Error Architecture:** Clear distinction between `InvalidArgumentError` and `InvalidQueryError`
-- **Security Features:** Depth-limited recursion protection (max depth: 10)
-- **Performance:** Sub-1000ms execution for complex queries on 100+ document datasets
+**Test Failure Example:**
+```javascript
+// Test expectation: Date comparison should work
+const recentDocs = collection.find({ joinDate: { $gt: new Date('2020-06-01') } });
 
-**Query Support Matrix:**
-- ✅ **Field-Based:** `{name: "John"}`, `{age: 25}` - exact matching
-- ✅ **Comparison:** `{age: {$gt: 25}}`, `{score: {$lt: 90}}` - range queries  
-- ✅ **Logical:** `{$and: [...]}`, `{$or: [...]}` - compound conditions
-- ✅ **Nested Fields:** `{"profile.yearsOfService": 5}` - dot notation
-- ✅ **Implicit AND:** `{age: 30, active: true}` - multiple field matching
-- ✅ **Edge Cases:** Empty queries, null values, large datasets, malformed queries
+// Actual result: Date objects become strings during serialization
+// "2021-03-20T00:00:00.000Z" > Date('2020-06-01') = false ❌
+```
 
-**Test Results:**
-- **Total Tests:** 52 tests across DocumentOperations (12) + QueryEngine (40)
-- **Pass Rate:** 52/52 (100%) - Complete GREEN phase success
-- **Test Categories:** Constructor validation, CRUD operations, query methods, error handling
-- **Performance Tests:** Validated with 100+ document datasets under 1000ms execution
-- **Error Validation:** Comprehensive coverage of argument validation and query structure validation
+### **Architectural Principle: JSON Only at File Boundaries**
 
-**Architecture Quality:**
-- **Single Responsibility:** DocumentOperations focuses on document retrieval, QueryEngine handles query logic
-- **Fail-Fast Design:** Basic argument validation before complex query processing
-- **Clean Delegation:** No redundant validation - QueryEngine is authoritative for query validation
-- **Backwards Compatibility:** All existing ID-based methods unchanged and fully functional
+**Goal:** Documents should exist as proper JavaScript objects with Date instances in memory, and only get serialized/deserialized at the Drive file I/O boundary.
 
-**Security Enhancements:**
-- **Recursive Depth Protection:** Prevents stack overflow from deep query nesting
-- **Input Sanitization:** Comprehensive validation of query structure and operators
-- **Error Message Safety:** Clear error messages without exposing internal structure
+```
+Drive File → FileOperations → [JSON + Date Conversion] → Memory Objects
+Memory Objects → [Direct Manipulation] → FileOperations → Drive File
+                    ↑
+            No JSON operations in memory
+```
 
-**Next Phase:** Collection API Enhancement to expose these query capabilities through Collection methods (`find()`, `findOne()`, `updateOne()`, `deleteOne()`, `countDocuments()`).
+### **Implementation Strategy**
 
-### Future Enhancements (Post-MVP)
+#### **Phase 1: Fix File I/O Boundary (FileOperations)**
+- **Location**: `src/components/FileOperations.js`
+- **Change**: Add date conversion after `JSON.parse()` in `readFile()` method
+- **Method**: Move existing `_convertDateStringsToObjects()` logic from Collection to FileOperations
 
-- Additional comparison operators ($lte, $gte, $ne)
-- Advanced query optimization
-- Array query operators
-- Comprehensive edge case handling
-- Performance benchmarking
+```javascript
+// In FileOperations.readFile()
+const parsedContent = JSON.parse(content);
+this._convertDateStringsToObjects(parsedContent); // ✅ Convert at boundary
+return parsedContent;
+```
+
+#### **Phase 2: Fix DocumentOperations Deep Cloning**
+- **Location**: `src/components/DocumentOperations.js`
+- **Problem Lines**: 67, 112, 129 - `JSON.parse(JSON.stringify(doc))`
+- **Solution**: Replace with proper object cloning that preserves Date objects
+
+```javascript
+// Replace this problematic pattern:
+const clonedDoc = JSON.parse(JSON.stringify(doc));  // ❌ Serializes dates
+
+// With this:
+const clonedDoc = this._deepClone(doc);  // ✅ Preserves dates
+```
+
+#### **Phase 3: Remove Collection-Level Date Conversion**
+- **Location**: `src/core/Collection.js`
+- **Remove**: `_convertDateStringsToObjects()` and `_isISODateString()` methods
+- **Reason**: No longer needed since dates are handled at file boundary
+
+#### **Phase 4: Implement Proper Deep Cloning Utility**
+- **Location**: Create `src/utils/ObjectUtils.js` or add to existing utility
+- **Purpose**: Date-preserving deep clone for DocumentOperations
+
+### **Benefits of This Approach**
+
+- ✅ **Single Point of Serialization**: Only at Drive file I/O boundary
+- ✅ **Consistent Memory State**: All objects have proper Date instances throughout memory operations
+- ✅ **No Surprise Serialization**: Eliminates hidden JSON operations in memory
+- ✅ **Performance**: Removes unnecessary serialization/deserialization cycles
+- ✅ **Future-Proof**: Any new components work with proper objects, no date handling required
+- ✅ **Architectural Clarity**: Clear separation between file I/O and memory operations
+
+### **Current Test Status**
+- **Collection API Enhancement**: 39/40 tests passing (97.5% success rate)
+- **Only Failing Test**: `testCollectionFindByComparisonOperators` due to date serialization issue
+- **Expected Result**: 40/40 tests passing (100% success rate) after fix
+
+### **Implementation Priority**: **HIGH**
+- **Impact**: Blocks Collection API Enhancement completion (final 2.5% of tests)
+- **Risk**: Low (isolated architectural fix)
+- **Effort**: Medium (3-4 methods to modify)
+
+---
 
 ## Section 7: Update Engine and Document Modification
 

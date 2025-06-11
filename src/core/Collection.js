@@ -106,6 +106,8 @@ class Collection {
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
       
+      // Date conversion is now handled at FileOperations boundary
+      
       // Convert date strings back to Date objects for CollectionMetadata
       if (metadataObj.created && typeof metadataObj.created === 'string') {
         metadataObj.created = new Date(metadataObj.created);

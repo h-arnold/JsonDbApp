@@ -64,7 +64,7 @@ class DocumentOperations {
     this._validateDocument(doc);
     
     // Create a copy to avoid modifying the original
-    const documentToInsert = JSON.parse(JSON.stringify(doc));
+    const documentToInsert = ObjectUtils.deepClone(doc);
     
     // Generate ID if not provided
     if (!documentToInsert._id) {
@@ -109,7 +109,7 @@ class DocumentOperations {
     
     if (document) {
       // Return a copy to prevent external modification
-      return JSON.parse(JSON.stringify(document));
+      return ObjectUtils.deepClone(document);
     }
     
     return null;
@@ -126,7 +126,7 @@ class DocumentOperations {
     for (const documentId in this._collection._documents) {
       if (this._collection._documents.hasOwnProperty(documentId)) {
         // Return copies to prevent external modification
-        documents.push(JSON.parse(JSON.stringify(this._collection._documents[documentId])));
+        documents.push(ObjectUtils.deepClone(this._collection._documents[documentId]));
       }
     }
     

@@ -549,11 +549,22 @@ function createCollectionFindOperationsTestSuite() {
     
     // Test date comparison
     const recentDocs = collection.find({ joinDate: { $gt: new Date('2020-06-01') } });
-    // Debug: Check what we actually found
+    // Debug: Check what we actually found and the date types
     if (recentDocs.length !== 1) {
-      console.log('Date comparison test failing. Found documents:', recentDocs);
-      console.log('Expected: Bob with joinDate 2021-03-20');
-      console.log('Query date:', new Date('2020-06-01'));
+      console.log('Date comparison test failing. Found documents:', recentDocs.length);
+      console.log('All documents:');
+      const allDocs = collection.find({});
+      allDocs.forEach(doc => {
+        console.log(`  ${doc.name}: joinDate = ${doc.joinDate} (type: ${typeof doc.joinDate}) (instanceof Date: ${doc.joinDate instanceof Date})`);
+      });
+      console.log('Query date:', new Date('2020-06-01'), '(type:', typeof new Date('2020-06-01'), ')');
+      
+      // Check if our date conversion method is working
+      console.log('Expected: Bob (2021-03-20) should be > query date (2020-06-01)');
+      const bobDoc = allDocs.find(doc => doc.name === 'Bob');
+      if (bobDoc) {
+        console.log(`Bob's actual comparison: ${bobDoc.joinDate} > ${new Date('2020-06-01')} = ${bobDoc.joinDate > new Date('2020-06-01')}`);
+      }
     }
     TestFramework.assertEquals(1, recentDocs.length, 'Should find 1 document with recent join date');
     TestFramework.assertEquals('Bob', recentDocs[0].name, 'Should find Bob');
