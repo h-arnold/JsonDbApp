@@ -820,9 +820,11 @@ Collection relies on FileService for Drive persistence:
 
 ```javascript
 // Collection uses FileService internally
-const data = fileService.readFile(driveFileId); // Returns parsed JSON
-fileService.writeFile(driveFileId, collectionData); // Saves JSON
+const data = fileService.readFile(driveFileId); // Returns parsed object with Dates
+fileService.writeFile(driveFileId, collectionData); // Accepts object, handles JSON
 ```
+
+**Note**: JSON serialisation and Date conversion are handled automatically by the underlying FileOperations layer, not by Collection or FileService directly.
 
 ### Database Integration
 

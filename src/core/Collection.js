@@ -106,15 +106,7 @@ class Collection {
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
       
-      // Date conversion is now handled at FileOperations boundary
-      
-      // Convert date strings back to Date objects for CollectionMetadata
-      if (metadataObj.created && typeof metadataObj.created === 'string') {
-        metadataObj.created = new Date(metadataObj.created);
-      }
-      if (metadataObj.lastUpdated && typeof metadataObj.lastUpdated === 'string') {
-        metadataObj.lastUpdated = new Date(metadataObj.lastUpdated);
-      }
+      // Date conversion is handled automatically by FileOperations
       
       // Create CollectionMetadata instance
       this._collectionMetadata = new CollectionMetadata(metadataObj);
@@ -155,8 +147,7 @@ class Collection {
         metadata: this._collectionMetadata.toObject()
       };
       
-      const jsonContent = JSON.stringify(data, null, 2);
-      this._fileService.writeFile(this._driveFileId, jsonContent);
+      this._fileService.writeFile(this._driveFileId, data);
       
       this._dirty = false;
       this._logger.debug('Collection data saved successfully');
