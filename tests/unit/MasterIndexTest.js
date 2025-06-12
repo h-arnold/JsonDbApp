@@ -154,10 +154,10 @@ function createMasterIndexFunctionalityTestSuite() {
     
     // Assert - RED PHASE: This will fail until MasterIndex is updated
     TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'getCollection should return CollectionMetadata instance');
-    TestFramework.assertEquals(retrievedCollection.getName(), collectionName, 'CollectionMetadata should preserve name');
-    TestFramework.assertEquals(retrievedCollection.getFileId(), 'test-file-id', 'CollectionMetadata should preserve fileId');
-    TestFramework.assertEquals(retrievedCollection.getDocumentCount(), 5, 'CollectionMetadata should preserve documentCount');
-    TestFramework.assertEquals(retrievedCollection.getModificationToken(), 'test-token-123', 'CollectionMetadata should preserve modificationToken');
+    TestFramework.assertEquals(retrievedCollection.name, collectionName, 'CollectionMetadata should preserve name');
+    TestFramework.assertEquals(retrievedCollection.fileId, 'test-file-id', 'CollectionMetadata should preserve fileId');
+    TestFramework.assertEquals(retrievedCollection.documentCount, 5, 'CollectionMetadata should preserve documentCount');
+    TestFramework.assertEquals(retrievedCollection.modificationToken, 'test-token-123', 'CollectionMetadata should preserve modificationToken');
   });
 
   suite.addTest('should accept CollectionMetadata instance in addCollection', function() {
@@ -175,10 +175,10 @@ function createMasterIndexFunctionalityTestSuite() {
     
     // Assert
     TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'Should store and return CollectionMetadata instance');
-    TestFramework.assertEquals(retrievedCollection.getName(), collectionName, 'Should preserve metadata name');
-    TestFramework.assertEquals(retrievedCollection.getFileId(), 'test-file-id-2', 'Should preserve metadata fileId');
-    TestFramework.assertEquals(retrievedCollection.getDocumentCount(), 3, 'Should preserve metadata documentCount');
-    TestFramework.assertEquals(retrievedCollection.getModificationToken(), 'test-token-456', 'Should preserve metadata modificationToken');
+    TestFramework.assertEquals(retrievedCollection.name, collectionName, 'Should preserve metadata name');
+    TestFramework.assertEquals(retrievedCollection.fileId, 'test-file-id-2', 'Should preserve metadata fileId');
+    TestFramework.assertEquals(retrievedCollection.documentCount, 3, 'Should preserve metadata documentCount');
+    TestFramework.assertEquals(retrievedCollection.modificationToken, 'test-token-456', 'Should preserve metadata modificationToken');
   });
 
   suite.addTest('should return CollectionMetadata instances from getCollections', function() {
@@ -203,8 +203,8 @@ function createMasterIndexFunctionalityTestSuite() {
     // Assert - RED PHASE: This will fail until MasterIndex returns CollectionMetadata instances
     TestFramework.assertTrue(allCollections.collection1 instanceof CollectionMetadata, 'getCollections should return CollectionMetadata instances');
     TestFramework.assertTrue(allCollections.collection2 instanceof CollectionMetadata, 'getCollections should return CollectionMetadata instances');
-    TestFramework.assertEquals(allCollections.collection1.getName(), 'collection1', 'Should preserve collection1 name');
-    TestFramework.assertEquals(allCollections.collection2.getName(), 'collection2', 'Should preserve collection2 name');
+    TestFramework.assertEquals(allCollections.collection1.name, 'collection1', 'Should preserve collection1 name');
+    TestFramework.assertEquals(allCollections.collection2.name, 'collection2', 'Should preserve collection2 name');
   });
 
   suite.addTest('should preserve CollectionMetadata properties through persistence', function() {
@@ -232,11 +232,11 @@ function createMasterIndexFunctionalityTestSuite() {
     
     // Assert - RED PHASE: This will fail until persistence uses CollectionMetadata
     TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'Persisted collection should be CollectionMetadata instance');
-    TestFramework.assertEquals(retrievedCollection.getName(), collectionName, 'Should preserve name through persistence');
-    TestFramework.assertEquals(retrievedCollection.getFileId(), 'persist-file-id', 'Should preserve fileId through persistence');
-    TestFramework.assertEquals(retrievedCollection.getDocumentCount(), 7, 'Should preserve documentCount through persistence');
-    TestFramework.assertEquals(retrievedCollection.getModificationToken(), 'persist-token-789', 'Should preserve modificationToken through persistence');
-    TestFramework.assertNotNull(retrievedCollection.getLockStatus(), 'Should preserve lockStatus through persistence');
+    TestFramework.assertEquals(retrievedCollection.name, collectionName, 'Should preserve name through persistence');
+    TestFramework.assertEquals(retrievedCollection.fileId, 'persist-file-id', 'Should preserve fileId through persistence');
+    TestFramework.assertEquals(retrievedCollection.documentCount, 7, 'Should preserve documentCount through persistence');
+    TestFramework.assertEquals(retrievedCollection.modificationToken, 'persist-token-789', 'Should preserve modificationToken through persistence');
+    TestFramework.assertNotNull(retrievedCollection.lockStatus, 'Should preserve lockStatus through persistence');
   });
 
   suite.addTest('should update CollectionMetadata instance properties correctly', function() {
@@ -259,10 +259,10 @@ function createMasterIndexFunctionalityTestSuite() {
     
     // Assert - RED PHASE: This will fail until MasterIndex properly updates CollectionMetadata instances
     TestFramework.assertTrue(updatedCollection instanceof CollectionMetadata, 'Updated collection should remain CollectionMetadata instance');
-    TestFramework.assertEquals(updatedCollection.getDocumentCount(), 15, 'Should update documentCount');
-    TestFramework.assertEquals(updatedCollection.getModificationToken(), 'updated-token', 'Should update modificationToken');
-    TestFramework.assertEquals(updatedCollection.getName(), collectionName, 'Should preserve name during update');
-    TestFramework.assertEquals(updatedCollection.getFileId(), 'update-file-id', 'Should preserve fileId during update');
+    TestFramework.assertEquals(updatedCollection.documentCount, 15, 'Should update documentCount');
+    TestFramework.assertEquals(updatedCollection.modificationToken, 'updated-token', 'Should update modificationToken');
+    TestFramework.assertEquals(updatedCollection.name, collectionName, 'Should preserve name during update');
+    TestFramework.assertEquals(updatedCollection.fileId, 'update-file-id', 'Should preserve fileId during update');
   });
 
   return suite;
@@ -546,9 +546,9 @@ function createMasterIndexIntegrationTestSuite() {
     // Assert - RED PHASE: This will fail until CollectionMetadata supports lock status integration
     TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
     TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'Should return CollectionMetadata instance');
-    TestFramework.assertNotNull(retrievedCollection.getLockStatus(), 'CollectionMetadata should contain lock status');
-    TestFramework.assertTrue(retrievedCollection.getLockStatus().isLocked, 'CollectionMetadata should reflect locked state');
-    TestFramework.assertEquals(retrievedCollection.getLockStatus().lockedBy, operationId, 'CollectionMetadata should track operation ID');
+    TestFramework.assertNotNull(retrievedCollection.lockStatus, 'CollectionMetadata should contain lock status');
+    TestFramework.assertTrue(retrievedCollection.lockStatus.isLocked, 'CollectionMetadata should reflect locked state');
+    TestFramework.assertEquals(retrievedCollection.lockStatus.lockedBy, operationId, 'CollectionMetadata should track operation ID');
   });
 
   suite.addTest('should maintain CollectionMetadata integrity during conflict resolution', function() {
@@ -574,10 +574,10 @@ function createMasterIndexIntegrationTestSuite() {
     // Assert - RED PHASE: This will fail until conflict resolution preserves CollectionMetadata
     TestFramework.assertTrue(resolution.success, 'Conflict should be resolved');
     TestFramework.assertTrue(resolvedCollection instanceof CollectionMetadata, 'Resolved collection should remain CollectionMetadata instance');
-    TestFramework.assertEquals(resolvedCollection.getDocumentCount(), 8, 'Should apply conflict resolution updates');
-    TestFramework.assertNotEquals(resolvedCollection.getModificationToken(), 'original-token', 'Should generate new token during resolution');
-    TestFramework.assertEquals(resolvedCollection.getName(), collectionName, 'Should preserve name during conflict resolution');
-    TestFramework.assertEquals(resolvedCollection.getFileId(), 'conflict-file-id', 'Should preserve fileId during conflict resolution');
+    TestFramework.assertEquals(resolvedCollection.documentCount, 8, 'Should apply conflict resolution updates');
+    TestFramework.assertNotEquals(resolvedCollection.modificationToken, 'original-token', 'Should generate new token during resolution');
+    TestFramework.assertEquals(resolvedCollection.name, collectionName, 'Should preserve name during conflict resolution');
+    TestFramework.assertEquals(resolvedCollection.fileId, 'conflict-file-id', 'Should preserve fileId during conflict resolution');
   });
 
   suite.addTest('should handle CollectionMetadata in complete operation lifecycle with persistence', function() {
@@ -609,10 +609,10 @@ function createMasterIndexIntegrationTestSuite() {
     TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
     TestFramework.assertTrue(lockReleased, 'Lock should be released');
     TestFramework.assertTrue(persistedCollection instanceof CollectionMetadata, 'Persisted collection should be CollectionMetadata instance');
-    TestFramework.assertEquals(persistedCollection.getDocumentCount(), 12, 'Should persist updated metadata');
-    TestFramework.assertEquals(persistedCollection.getName(), collectionName, 'Should persist collection name');
-    TestFramework.assertEquals(persistedCollection.getFileId(), 'lifecycle-file-id', 'Should persist fileId');
-    TestFramework.assertFalse(persistedCollection.getLockStatus().isLocked, 'Lock should be released in persisted metadata');
+    TestFramework.assertEquals(persistedCollection.documentCount, 12, 'Should persist updated metadata');
+    TestFramework.assertEquals(persistedCollection.name, collectionName, 'Should persist collection name');
+    TestFramework.assertEquals(persistedCollection.fileId, 'lifecycle-file-id', 'Should persist fileId');
+    TestFramework.assertFalse(persistedCollection.lockStatus.isLocked, 'Lock should be released in persisted metadata');
   });
 
   return suite;

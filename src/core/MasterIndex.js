@@ -44,7 +44,7 @@ class MasterIndex {
   /**
    * Add a collection to the master index
    * @param {string} name - Collection name
-   * @param {Object} metadata - Collection metadata
+   * @param {Object|CollectionMetadata} metadata - Collection metadata or CollectionMetadata instance
    */
   addCollection(name, metadata) {
     if (!name || typeof name !== 'string') {
@@ -52,23 +52,43 @@ class MasterIndex {
     }
     
     return this._withScriptLock(() => {
-      const collectionData = {
-        name: name,
-        fileId: metadata.fileId || null,
-        created: metadata.created || new Date().toISOString(),
-        lastModified: metadata.lastModified || new Date().toISOString(),
-        documentCount: metadata.documentCount || 0,
-        modificationToken: metadata.modificationToken || this.generateModificationToken(),
-        lockStatus: null
-      };
+      let collectionMetadata;
       
-      this._data.collections[name] = collectionData;
+      // Handle both CollectionMetadata instances and plain objects
+      if (metadata instanceof CollectionMetadata) {
+        // If it's already a CollectionMetadata instance, use it directly
+        collectionMetadata = metadata;
+        // Ensure name and fileId match if provided
+        if (collectionMetadata.name !== name) {
+          collectionMetadata = new CollectionMetadata(name, collectionMetadata.fileId, metadata.toObject());
+        }
+      } else {
+        // Create CollectionMetadata from plain object
+        // Ensure dates are Date objects, not strings
+        const created = metadata.created ? 
+          (metadata.created instanceof Date ? metadata.created : new Date(metadata.created)) : 
+          new Date();
+        const lastUpdated = metadata.lastModified ? 
+          (metadata.lastModified instanceof Date ? metadata.lastModified : new Date(metadata.lastModified)) : 
+          new Date();
+          
+        collectionMetadata = new CollectionMetadata(name, metadata.fileId || null, {
+          created: created,
+          lastUpdated: lastUpdated,
+          documentCount: metadata.documentCount || 0,
+          modificationToken: metadata.modificationToken || this.generateModificationToken(),
+          lockStatus: null
+        });
+      }
+      
+      // Store the serialised form
+      this._data.collections[name] = collectionMetadata.toObject();
       this._data.lastUpdated = new Date().toISOString();
       
       // Track modification history
-      this._addToModificationHistory(name, 'ADD_COLLECTION', collectionData);
+      this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata.toObject());
       
-      return collectionData;
+      return collectionMetadata.toObject();
     });
   }
   
@@ -87,23 +107,32 @@ class MasterIndex {
   
   /**
    * Get all collections
-   * @returns {Object} Collections object
+   * @returns {Object} Collections object with CollectionMetadata instances
    */
   getCollections() {
-    return this._data.collections;
+    const collections = {};
+    Object.keys(this._data.collections).forEach(name => {
+      collections[name] = CollectionMetadata.fromObject(this._data.collections[name]);
+    });
+    return collections;
   }
   
   /**
    * Get a specific collection
    * @param {string} name - Collection name
-   * @returns {Object} Collection metadata
+   * @returns {CollectionMetadata|null} Collection metadata instance or null if not found
    */
   getCollection(name) {
     if (!name || typeof name !== 'string') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
     
-    return this._data.collections[name] || null;
+    const collectionData = this._data.collections[name];
+    if (!collectionData) {
+      return null;
+    }
+    
+    return CollectionMetadata.fromObject(collectionData);
   }
   
   /**
@@ -117,32 +146,54 @@ class MasterIndex {
     }
     
     return this._withScriptLock(() => {
-      const collection = this._data.collections[name];
-      if (!collection) {
+      const collectionData = this._data.collections[name];
+      if (!collectionData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
       }
       
-      // Apply updates
+      // Create CollectionMetadata instance from stored data
+      const collectionMetadata = CollectionMetadata.fromObject(collectionData);
+      
+      // Apply updates using CollectionMetadata methods where available
       Object.keys(updates).forEach(key => {
-        collection[key] = updates[key];
+        switch (key) {
+          case 'documentCount':
+            collectionMetadata.setDocumentCount(updates[key]);
+            break;
+          case 'modificationToken':
+            collectionMetadata.setModificationToken(updates[key]);
+            break;
+          case 'lockStatus':
+            collectionMetadata.setLockStatus(updates[key]);
+            break;
+          case 'lastModified':
+          case 'lastUpdated':
+            collectionMetadata.touch(); // Update lastUpdated
+            break;
+          default:
+            // For other fields, update directly in the stored data
+            collectionData[key] = updates[key];
+        }
       });
       
-      // Update lastModified only if not explicitly provided in updates
-      if (!updates.hasOwnProperty('lastModified')) {
-        collection.lastModified = new Date().toISOString();
+      // Update lastUpdated only if not explicitly provided in updates
+      if (!updates.hasOwnProperty('lastModified') && !updates.hasOwnProperty('lastUpdated')) {
+        collectionMetadata.touch();
       }
       
       // Generate new modification token if not provided
       if (!updates.modificationToken) {
-        collection.modificationToken = this.generateModificationToken();
+        collectionMetadata.setModificationToken(this.generateModificationToken());
       }
       
+      // Store the updated metadata back
+      this._data.collections[name] = collectionMetadata.toObject();
       this._data.lastUpdated = new Date().toISOString();
       
       // Track modification history
       this._addToModificationHistory(name, 'UPDATE_METADATA', updates);
       
-      return collection;
+      return collectionMetadata.toObject();
     });
   }
 
@@ -203,17 +254,20 @@ class MasterIndex {
       const expiresAt = new Date(now.getTime() + this._config.lockTimeout);
       
       const lockInfo = {
+        isLocked: true,
         lockedBy: operationId,
-        lockedAt: now.toISOString(),
-        expiresAt: expiresAt.toISOString()
+        lockedAt: now,
+        lockTimeout: expiresAt
       };
       
       // Store lock in both places for easier management
       this._data.locks[collectionName] = lockInfo;
       
-      // Also store in collection if it exists
+      // Also store in collection if it exists, using CollectionMetadata
       if (this._data.collections[collectionName]) {
-        this._data.collections[collectionName].lockStatus = lockInfo;
+        const collectionMetadata = CollectionMetadata.fromObject(this._data.collections[collectionName]);
+        collectionMetadata.setLockStatus(lockInfo);
+        this._data.collections[collectionName] = collectionMetadata.toObject();
       }
       
       this._data.lastUpdated = new Date().toISOString();
@@ -239,7 +293,7 @@ class MasterIndex {
     
     // Check if lock has expired
     const now = new Date();
-    const expiresAt = new Date(lockInfo.expiresAt);
+    const expiresAt = lockInfo.lockTimeout ? new Date(lockInfo.lockTimeout) : new Date(lockInfo.expiresAt);
     
     if (now >= expiresAt) {
       // Lock has expired, clean it up
@@ -343,21 +397,50 @@ class MasterIndex {
     strategy = strategy || 'LAST_WRITE_WINS';
     
     return this._withScriptLock(() => {
-      const collection = this._data.collections[collectionName];
-      if (!collection) {
+      const collectionData = this._data.collections[collectionName];
+      if (!collectionData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
       }
+      
+      // Create CollectionMetadata instance from stored data
+      const collectionMetadata = CollectionMetadata.fromObject(collectionData);
       
       let resolvedData;
       
       switch (strategy) {
         case 'LAST_WRITE_WINS':
-          // Apply new data and generate new token
+          // Apply new data using CollectionMetadata methods where possible
+          Object.keys(newData).forEach(key => {
+            switch (key) {
+              case 'documentCount':
+                collectionMetadata.setDocumentCount(newData[key]);
+                break;
+              case 'modificationToken':
+                collectionMetadata.setModificationToken(newData[key]);
+                break;
+              case 'lockStatus':
+                collectionMetadata.setLockStatus(newData[key]);
+                break;
+              case 'lastModified':
+              case 'lastUpdated':
+                collectionMetadata.touch();
+                break;
+              default:
+                // For other fields, we'll handle them in the final resolved data
+                break;
+            }
+          });
+          
+          // Generate new modification token and update timestamp
+          collectionMetadata.setModificationToken(this.generateModificationToken());
+          collectionMetadata.touch();
+          
+          // Create resolved data object
           resolvedData = {
-            ...collection,
-            ...newData,
-            modificationToken: this.generateModificationToken(),
-            lastModified: new Date().toISOString()
+            ...collectionMetadata.toObject(),
+            ...newData, // Apply any remaining fields
+            modificationToken: collectionMetadata.modificationToken,
+            lastModified: collectionMetadata.lastUpdated.toISOString()
           };
           break;
           
@@ -365,7 +448,7 @@ class MasterIndex {
           throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(`Unknown conflict resolution strategy: ${strategy}`);
       }
       
-      // Update the collection
+      // Update the collection with resolved data
       this._data.collections[collectionName] = resolvedData;
       this._data.lastUpdated = new Date().toISOString();
       
@@ -443,7 +526,14 @@ class MasterIndex {
     delete this._data.locks[collectionName];
     
     if (this._data.collections[collectionName]) {
-      this._data.collections[collectionName].lockStatus = null;
+      const collectionMetadata = CollectionMetadata.fromObject(this._data.collections[collectionName]);
+      collectionMetadata.setLockStatus({
+        isLocked: false,
+        lockedBy: null,
+        lockedAt: null,
+        lockTimeout: null
+      });
+      this._data.collections[collectionName] = collectionMetadata.toObject();
     }
   }
   
@@ -483,7 +573,7 @@ class MasterIndex {
     
     Object.keys(this._data.locks).forEach(collectionName => {
       const lockInfo = this._data.locks[collectionName];
-      const expiresAt = new Date(lockInfo.expiresAt);
+      const expiresAt = lockInfo.lockTimeout ? new Date(lockInfo.lockTimeout) : new Date(lockInfo.expiresAt);
       
       if (now >= expiresAt) {
         this._removeLock(collectionName);

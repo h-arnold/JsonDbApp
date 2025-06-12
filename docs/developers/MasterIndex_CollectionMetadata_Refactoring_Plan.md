@@ -41,27 +41,59 @@ CollectionMetadata needs these additional fields:
 
 **STATUS**: ✅ **COMPLETED** - All functionality implemented, 100% test pass rate achieved, ready for Phase 3
 
-### Phase 3: ✅ RED PHASE COMPLETED - Update MasterIndex to Use CollectionMetadata (Red-Green-Refactor)
+### Phase 3: 🟡 GREEN PHASE IN PROGRESS - Update MasterIndex to Use CollectionMetadata (Red-Green-Refactor)
 
-**STATUS**: ✅ **RED PHASE COMPLETED** - All 8 failing tests implemented and verified, ready for GREEN phase implementation
+**STATUS**: 🟡 **GREEN PHASE IN PROGRESS** - Major functionality implemented, minor issues remaining
 
-**Test Results Summary**:
-- **Total RED Phase Tests**: 8 tests implemented
-- **Expected Failures**: 8/8 tests failing as expected
-- **Existing Functionality**: 12/12 tests still passing (no regression)
-- **Overall Test Health**: 20 total tests, 12 passing, 8 failing (RED phase pattern ✓)
+**Current Progress Summary**:
+- **Total Tests**: 25 tests across 4 test suites
+- **Currently Passing**: 16/25 tests (64% pass rate) 
+- **Outstanding Issues**: 9 failing tests with 2 main root causes
 
-**RED Phase Test Coverage**:
-1. ✅ **getCollection returns CollectionMetadata** - Failing as expected
-2. ✅ **addCollection accepts CollectionMetadata** - Failing as expected  
-3. ✅ **getCollections returns CollectionMetadata instances** - Failing as expected
-4. ✅ **Persistence preserves CollectionMetadata** - Failing as expected
-5. ✅ **Updates maintain CollectionMetadata instances** - Failing as expected
-6. ✅ **CollectionMetadata integration with locking** - Failing as expected
-7. ✅ **CollectionMetadata integration with conflict resolution** - Failing as expected  
-8. ✅ **Complete CollectionMetadata lifecycle with persistence** - Failing as expected
+**GREEN Phase Progress by Test Suite**:
+1. ✅ **MasterIndex Functionality**: 8/10 passing (80% - Major Success!)
+   - ✅ Core CollectionMetadata integration working
+   - ✅ getCollection returns CollectionMetadata instances 
+   - ✅ addCollection accepts CollectionMetadata instances
+   - ✅ getCollections returns CollectionMetadata instances  
+   - ✅ Persistence preserves CollectionMetadata properties
+   - ❌ 2 tests failing due to missing `touch()` method
 
-**Key Achievement**: All failures are related to the central issue - MasterIndex currently works with plain objects instead of CollectionMetadata instances. No existing functionality has been broken.
+2. ✅ **Virtual Locking Mechanism**: 5/5 passing (100% - Complete!)
+   - ✅ All existing locking functionality preserved
+   - ✅ No regression in lock management
+
+3. 🟡 **Conflict Detection and Resolution**: 2/5 passing (40%)
+   - ❌ 3 tests failing due to missing `touch()` method in conflict resolution
+
+4. 🟡 **MasterIndex Integration**: 1/5 passing (20%)
+   - ❌ 4 tests failing due to missing `touch()` method and lock status integration
+
+**Outstanding Issues to Resolve**:
+
+1. **Missing `touch()` Method** (Primary Issue - 7 failing tests)
+   - CollectionMetadata class needs `touch()` method 
+   - Method should be alias for `updateLastModified()`
+   - Used in: updateCollectionMetadata(), resolveConflict()
+   - Impact: Updates and conflict resolution failing
+
+2. **Lock Status Integration** (Secondary Issue - 1 failing test)
+   - Test expects: `retrievedCollection.lockStatus` should not be null after acquiring lock
+   - Current: lockStatus is null in retrieved CollectionMetadata instances
+   - Issue: Lock integration with CollectionMetadata needs verification
+
+**Key Achievements**:
+- ✅ Core CollectionMetadata integration complete and working
+- ✅ getCollection/addCollection/getCollections all return proper CollectionMetadata instances
+- ✅ Persistence working correctly with CollectionMetadata
+- ✅ No regression in existing MasterIndex functionality
+- ✅ Direct property access (no getters) implemented correctly
+- ✅ Date handling resolved (ObjectUtils serialisation working)
+
+**Next Steps for GREEN Phase Completion**:
+1. Add `touch()` method to CollectionMetadata class
+2. Verify lock status integration with CollectionMetadata instances
+3. Run tests to confirm all 25 tests pass (expected 100% pass rate)
 
 ### Phase 2: ✅ GREEN COMPLETE - Extend CollectionMetadata (Red-Green-Refactor)
 
