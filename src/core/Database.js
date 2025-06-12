@@ -108,15 +108,6 @@ class Database {
   collection(name) {
     this._validateCollectionName(name);
     
-    // Auto-initialize database if not already initialized
-    if (!this.indexFileId) {
-      try {
-        this.initialise();
-      } catch (error) {
-        throw new Error(`Database auto-initialization failed: ${error.message}`);
-      }
-    }
-    
     // Check if collection already exists in memory
     if (this.collections.has(name)) {
       return this.collections.get(name);
