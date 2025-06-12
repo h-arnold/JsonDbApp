@@ -1,5 +1,28 @@
 # MasterIndex CollectionMetadata Refactoring Plan
 
+## Current Status Summary
+
+**🔴 PHASE 4 RED PHASE ACTIVE** - Integration tests have revealed critical gaps between the unit test implementations and integration requirements.
+
+### Issues Found During Integration Testing:
+
+1. **Critical API Gap**: `MasterIndex.getCollectionMetadata()` method is missing
+   - 11/13 integration tests failing due to this missing method
+   - Phase 3 unit tests passed but didn't catch the missing integration points
+
+2. **Database Test Setup Issues**: Database class not properly initializing for test scenarios
+   - 3/13 tests failing with "Database not initialised" errors
+   - Need proper mock setup for Database integration tests
+
+3. **Performance Concerns**: Operations taking significantly longer than expected
+   - 1/13 tests failing due to performance thresholds
+   - May need optimization or threshold adjustment
+
+### Next Steps:
+Focus on **Issue 4.1** first - implementing the missing MasterIndex API methods that the integration tests expect.
+
+---
+
 ## Overview
 
 Refactor `MasterIndex` to use `CollectionMetadata` class instead of manually managing metadata fields as plain JSON objects. This will eliminate code duplication, centralise metadata responsibility, and leverage existing validation in `CollectionMetadata`.
@@ -233,23 +256,69 @@ CollectionMetadata needs these additional fields:
 
 ### Phase 4: Integration and Cleanup (Red-Green-Refactor)
 
-#### Test 4.1: MasterIndex Internal Storage Format
+**STATUS**: 🔴 **RED PHASE ACTIVE** - Integration tests written, revealing critical implementation gaps
 
-**Red**: Write tests to ensure internal storage still works correctly with ObjectUtils
-**Green**: Ensure proper serialisation/deserialisation of CollectionMetadata with Date preservation
-**Refactor**: Optimise storage format
+**Current Test Results**: 0/13 tests passing (0% pass rate)
 
-#### Test 4.2: Backward Compatibility
+#### Critical Issues Identified:
 
-**Red**: Write tests to ensure existing functionality still works
-**Green**: Implement any necessary compatibility layers
-**Refactor**: Remove unnecessary compatibility code
+##### Issue 4.1: Missing MasterIndex API Methods 🔴 **HIGH PRIORITY**
+**Problem**: `masterIndex.getCollectionMetadata is not a function`
+**Root Cause**: MasterIndex class missing expected CollectionMetadata integration methods
+**Impact**: 11/13 tests failing due to missing API methods
 
-#### Test 4.3: End-to-End Integration
+**Required Actions**:
+- Verify MasterIndex class has `getCollectionMetadata()` method  
+- Ensure method returns CollectionMetadata instances (not plain objects)
+- Verify `addCollection()` method accepts CollectionMetadata instances
+- Check method signatures match test expectations
 
-**Red**: Write integration tests with Collection and Database classes
-**Green**: Ensure all components work together with consistent ObjectUtils usage
-**Refactor**: Final cleanup and optimisation
+##### Issue 4.2: Database Initialization Problems 🔴 **MEDIUM PRIORITY** 
+**Problem**: "Database not initialised - no index file"
+**Root Cause**: Test Database instances not properly initialized for testing
+**Impact**: 3/13 tests failing in Database integration suite
+
+**Required Actions**:
+- Create proper Database test setup with mock file initialization
+- Ensure Database can work with mock FileService for testing
+- Fix Database.loadIndex() to handle test scenarios
+
+##### Issue 4.3: Performance Regression 🟡 **LOW PRIORITY**
+**Problem**: Operations taking 11.8s instead of expected <5s
+**Root Cause**: Likely inefficient implementation or test environment overhead  
+**Impact**: 1/13 tests failing due to performance threshold
+
+**Required Actions**:
+- Profile CollectionMetadata operations for performance bottlenecks
+- Optimize bulk operations if needed
+- Consider adjusting performance thresholds for test environment
+
+#### Phase 4 Implementation Plan:
+
+##### Step 4A: Fix MasterIndex API (Critical)
+**Red**: ✅ Tests written - revealed missing methods
+**Green**: Implement missing `getCollectionMetadata()` and fix API consistency
+**Refactor**: Ensure clean, consistent MasterIndex API
+
+##### Step 4B: Fix Database Test Integration  
+**Red**: ✅ Tests written - revealed initialization issues
+**Green**: Implement proper Database test setup and mock integration
+**Refactor**: Clean up Database test patterns
+
+##### Step 4C: Performance Optimization
+**Red**: ✅ Tests written - revealed performance issues  
+**Green**: Optimize performance or adjust test thresholds
+**Refactor**: Ensure scalable implementation
+
+#### Test Suite Status:
+- ✅ **Test 4.1**: MasterIndex Internal Storage Format (Integration tests written)
+- ✅ **Test 4.2**: Backward Compatibility (Integration tests written)  
+- ✅ **Test 4.3**: End-to-End Integration (Integration tests written)
+
+#### Next Actions for Fresh Conversation:
+1. **Start with Issue 4.1**: Fix missing MasterIndex methods (`getCollectionMetadata`)
+2. **Then Issue 4.2**: Fix Database initialization for integration tests
+3. **Finally Issue 4.3**: Address performance if still needed after fixes
 
 ## Detailed Implementation Steps
 
@@ -457,7 +526,7 @@ Current ObjectUtils provides all required functionality:
 - ✅ **Phase 1**: ObjectUtils Integration (Completed)
 - ✅ **Phase 2**: CollectionMetadata Extension (Completed - 100% Success)  
 - ✅ **Phase 3**: MasterIndex Integration (Completed - 100% Success)
-- 📋 **Phase 4**: Integration Testing and Cleanup (Ready to Begin)
+- 🔴 **Phase 4**: Integration Testing and Cleanup (RED PHASE - Critical Issues Found)
 
 ## 🎉 REFACTORING SUCCESS SUMMARY
 
