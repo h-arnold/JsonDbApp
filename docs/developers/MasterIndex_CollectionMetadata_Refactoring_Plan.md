@@ -258,7 +258,7 @@ CollectionMetadata needs these additional fields:
 
 **STATUS**: 🟢 **SIGNIFICANT PROGRESS ACHIEVED** - Major issues resolved, final cleanup in progress
 
-**Current Test Results**: 9/13 tests passing (69.2% pass rate) - **Major improvement from 61.5%!**
+**Current Test Results**: 10/13 tests passing (76.9% pass rate) - **Major improvement from 69.2%!**
 
 #### ✅ Successfully Resolved Issues:
 
@@ -267,32 +267,32 @@ CollectionMetadata needs these additional fields:
 **Result**: `testCollectionMetadataSerialisationConsistency` now passing
 **Impact**: Lock state properly preserved through serialisation cycles
 
-#### Outstanding Issues to Resolve:
-
-##### Issue 4.3: Collection Object Missing Methods 🔴 **HIGH PRIORITY**
+##### ✅ Issue 4.3: Collection Object Missing Methods - RESOLVED
 **Problem**: `collection.insertOne is not a function` in Database integration tests
 **Root Cause**: `Database._createCollectionObject()` returns minimal placeholder object, not full Collection instance
+**Solution Applied**: Updated `Database._createCollectionObject()` to return `new Collection(name, driveFileId, this, this._fileService)`
+**Result**: No more "insertOne is not a function" errors - this issue is completely resolved
+
+#### Outstanding Issues to Resolve:
+
+##### Issue 4.6: Collection Metadata Loading Error 🔴 **HIGH PRIORITY**
+**Problem**: `Invalid argument: created` error when Collection tries to load data from Drive files
+**Root Cause**: Database creates collection files with metadata fields that don't match CollectionMetadata constructor expectations
 **Impact**: 2/3 tests failing in Database-MasterIndex Integration suite
-**Error**: "collection.insertOne is not a function", "collection1.insertOne is not a function"
+**Error**: "Operation failed: Collection data loading failed" when calling `collection.insertOne()`
 
 **Required Actions**:
-- Update `Database._createCollectionObject()` to return proper Collection instances
-- Ensure Collection class has `insertOne()` method implementation
-- Verify Collection integration with Database and MasterIndex
+- Fix metadata field name mismatch between Database file creation and CollectionMetadata constructor
+- Ensure Database uses `lastUpdated` instead of `lastModified` to match CollectionMetadata expectations
+- Verify CollectionMetadata constructor handles all fields created by Database
 
 ##### Issue 4.4: Lock Timeout Logic Inconsistent 🟡 **MEDIUM PRIORITY**
 **Problem**: Lock timeout test failing - 100ms timeout + 150ms sleep not working reliably
 **Root Cause**: Lock expiration logic may have timing issues or test environment overhead
-**Impact**: 1/3 tests failing in Lock Management suite
-**Error**: "Lock should be owned by second instance"
-
-**Required Actions**:
-- Debug lock timeout logic in `MasterIndex.acquireLock()` and `isLocked()` methods
-- Consider increasing timeout delays for more reliable testing
-- Verify lock cleanup is working correctly
+**Impact**: Currently passing in Lock Management suite (3/3), need to verify consistency
 
 ##### Issue 4.5: Performance Threshold Too Strict 🟡 **LOW PRIORITY**
-**Problem**: Performance test taking 23781ms instead of expected <5000ms
+**Problem**: Performance test taking 10489ms instead of expected <5000ms
 **Root Cause**: Test environment overhead or Drive API latency
 **Impact**: 1/2 tests failing in Performance suite
 
@@ -324,9 +324,9 @@ CollectionMetadata needs these additional fields:
 
 #### Next Actions (Priority Order):
 
-- ✅ **Fix Database initialisation** (Issue 4.2) - Resolved (integration tests now passing)
-- **Debug lock status serialisation** (Issue 4.1) - Will resolve 1 failing test  
-- **Adjust performance threshold** (Issue 4.3) - Will resolve 1 failing test
+1. ✅ **Fix Collection object methods** (Issue 4.3) - RESOLVED - Fixed Database._createCollectionObject() to return proper Collection instances
+2. **Fix Collection metadata loading** (Issue 4.6) - Will resolve 2 failing tests - Fix field name mismatch in Database file creation
+3. **Adjust performance threshold** (Issue 4.5) - Will resolve 1 failing test - Increase threshold to realistic value for GAS environment
 
 **Target**: Achieve 13/13 tests passing (100% pass rate)
 

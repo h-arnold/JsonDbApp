@@ -7,6 +7,7 @@
  * 
  * @class Database
  */
+
 class Database {
   
   /**
@@ -505,22 +506,15 @@ class Database {
   }
   
   /**
-   * Create a collection object (placeholder implementation)
-   * 
+   * Create a collection object (full Collection instance)
+   *
    * @param {string} name - Collection name
    * @param {string} driveFileId - Drive file ID
-   * @returns {Object} Collection object
+   * @returns {Collection} Collection instance
    * @private
    */
   _createCollectionObject(name, driveFileId) {
-    // Minimal collection object to satisfy tests
-    // Full Collection class will be implemented later
-    return {
-      name: name,
-      driveFileId: driveFileId,
-      db: this,
-      created: new Date().toISOString()
-    };
+    return new Collection(name, driveFileId, this, this._fileService);
   }
   
   /**
