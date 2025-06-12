@@ -324,9 +324,9 @@ CollectionMetadata needs these additional fields:
 
 #### Next Actions (Priority Order):
 
-1. **Fix Database initialisation** (Issue 4.2) - Will resolve 3 failing tests
-2. **Debug lock status serialisation** (Issue 4.1) - Will resolve 1 failing test  
-3. **Adjust performance threshold** (Issue 4.3) - Will resolve 1 failing test
+- ✅ **Fix Database initialisation** (Issue 4.2) - Resolved (integration tests now passing)
+- **Debug lock status serialisation** (Issue 4.1) - Will resolve 1 failing test  
+- **Adjust performance threshold** (Issue 4.3) - Will resolve 1 failing test
 
 **Target**: Achieve 13/13 tests passing (100% pass rate)
 
