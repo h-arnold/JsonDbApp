@@ -157,8 +157,8 @@ class CollectionMetadata {
       throw new InvalidArgumentError('lockStatus.lockedBy', lockStatus.lockedBy, 'Must be a string or null');
     }
 
-    if (lockStatus.lockedAt !== null && (!(lockStatus.lockedAt instanceof Date) || isNaN(lockStatus.lockedAt.getTime()))) {
-      throw new InvalidArgumentError('lockStatus.lockedAt', lockStatus.lockedAt, 'Must be a valid Date object or null');
+    if (lockStatus.lockedAt !== null && typeof lockStatus.lockedAt !== 'number') {
+      throw new InvalidArgumentError('lockStatus.lockedAt', lockStatus.lockedAt, 'Must be a number timestamp or null');
     }
 
     if (lockStatus.lockTimeout !== null && typeof lockStatus.lockTimeout !== 'number') {
@@ -211,6 +211,14 @@ class CollectionMetadata {
    */
   updateLastModified() {
     this.lastUpdated = new Date();
+  }
+
+  /**
+   * Alias for updateLastModified() - updates the lastModified timestamp to current time
+   * Used for touching/updating collection metadata without changing document count
+   */
+  touch() {
+    this.updateLastModified();
   }
 
   /**
@@ -276,8 +284,8 @@ class CollectionMetadata {
       result.lockStatus = {
         isLocked: this.lockStatus.isLocked,
         lockedBy: this.lockStatus.lockedBy,
-        lockedAt: this.lockStatus.lockedAt ? new Date(this.lockStatus.lockedAt.getTime()) : null,
-        lockTimeout: this.lockStatus.lockTimeout
+        lockedAt: this.lockStatus.lockedAt, // Keep as timestamp number
+        lockTimeout: this.lockStatus.lockTimeout // Keep as timestamp number
       };
     } else {
       result.lockStatus = null;
@@ -299,8 +307,8 @@ class CollectionMetadata {
       lockStatus: this.lockStatus ? {
         isLocked: this.lockStatus.isLocked,
         lockedBy: this.lockStatus.lockedBy,
-        lockedAt: this.lockStatus.lockedAt ? new Date(this.lockStatus.lockedAt.getTime()) : null,
-        lockTimeout: this.lockStatus.lockTimeout
+        lockedAt: this.lockStatus.lockedAt, // Keep as timestamp number
+        lockTimeout: this.lockStatus.lockTimeout // Keep as timestamp number
       } : null
     };
 

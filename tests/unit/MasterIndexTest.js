@@ -90,14 +90,14 @@ function createMasterIndexFunctionalityTestSuite() {
     // Act
     masterIndex.updateCollectionMetadata('updateTest', {
       documentCount: 10,
-      lastModified: '2025-06-02T10:00:00Z'
+      lastUpdated: '2025-06-02T10:00:00Z'
     });
     
     const collection = masterIndex.getCollection('updateTest');
     
     // Assert
     TestFramework.assertEquals(collection.documentCount, 10, 'Document count should be updated');
-    TestFramework.assertEquals(collection.lastModified, '2025-06-02T10:00:00Z', 'Last modified should be updated');
+    TestFramework.assertEquals(collection.lastUpdated.toISOString(), '2025-06-02T10:00:00.000Z', 'Last updated should be updated');
   });
 
   suite.addTest('should remove a collection and persist the removal', function() {

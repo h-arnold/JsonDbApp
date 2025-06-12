@@ -132,7 +132,39 @@ class MasterIndex {
       return null;
     }
     
-    return CollectionMetadata.fromObject(collectionData);
+    const collectionMetadata = CollectionMetadata.fromObject(collectionData);
+    
+    // Synchronize lock status from current locks
+    const currentLock = this._data.locks[name];
+    if (currentLock) {
+      // Check if lock is still valid (not expired)
+      const now = Date.now();
+      const expiresAt = currentLock.lockTimeout || currentLock.expiresAt;
+      
+      if (now < expiresAt) {
+        // Lock is still active, update the collection metadata with current lock status
+        collectionMetadata.setLockStatus(currentLock);
+      } else {
+        // Lock has expired, remove it and set collection to unlocked
+        this._removeLock(name);
+        collectionMetadata.setLockStatus({
+          isLocked: false,
+          lockedBy: null,
+          lockedAt: null,
+          lockTimeout: null
+        });
+      }
+    } else {
+      // No active lock, ensure collection shows as unlocked
+      collectionMetadata.setLockStatus({
+        isLocked: false,
+        lockedBy: null,
+        lockedAt: null,
+        lockTimeout: null
+      });
+    }
+    
+    return collectionMetadata;
   }
   
   /**
@@ -168,7 +200,9 @@ class MasterIndex {
             break;
           case 'lastModified':
           case 'lastUpdated':
-            collectionMetadata.touch(); // Update lastUpdated
+            // Set to specific timestamp if provided
+            const updateTime = updates[key] instanceof Date ? updates[key] : new Date(updates[key]);
+            collectionMetadata.lastUpdated = updateTime;
             break;
           default:
             // For other fields, update directly in the stored data
@@ -256,8 +290,8 @@ class MasterIndex {
       const lockInfo = {
         isLocked: true,
         lockedBy: operationId,
-        lockedAt: now,
-        lockTimeout: expiresAt
+        lockedAt: now.getTime(), // Use timestamp for consistency
+        lockTimeout: expiresAt.getTime() // Use timestamp for consistency
       };
       
       // Store lock in both places for easier management
@@ -292,8 +326,8 @@ class MasterIndex {
     }
     
     // Check if lock has expired
-    const now = new Date();
-    const expiresAt = lockInfo.lockTimeout ? new Date(lockInfo.lockTimeout) : new Date(lockInfo.expiresAt);
+    const now = Date.now();
+    const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
     
     if (now >= expiresAt) {
       // Lock has expired, clean it up
@@ -568,12 +602,12 @@ class MasterIndex {
    * @private
    */
   _internalCleanupExpiredLocks() {
-    const now = new Date();
+    const now = Date.now();
     let anyExpired = false;
     
     Object.keys(this._data.locks).forEach(collectionName => {
       const lockInfo = this._data.locks[collectionName];
-      const expiresAt = lockInfo.lockTimeout ? new Date(lockInfo.lockTimeout) : new Date(lockInfo.expiresAt);
+      const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
       
       if (now >= expiresAt) {
         this._removeLock(collectionName);
