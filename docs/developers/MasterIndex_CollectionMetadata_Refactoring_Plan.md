@@ -33,19 +33,17 @@ CollectionMetadata needs these additional fields:
 
 ## TDD Implementation Plan
 
-### Phase 1: ObjectUtils Integration for MasterIndex Serialisation (Red-Green-Refactor)
+### Phase 1: ✅ COMPLETED - ObjectUtils Integration for MasterIndex Serialisation 
 
-#### Test 1.1: MasterIndex Date Preservation Through Save/Load Cycles
+**STATUS**: ✅ **ALREADY IMPLEMENTED** - MasterIndex now uses `ObjectUtils.serialise()` and `ObjectUtils.deserialise()` methods
 
-**Red**: Write test expecting Date objects to survive MasterIndex save/load cycles
-**Green**: Update MasterIndex `save()` and `_loadFromScriptProperties()` to use ObjectUtils
-**Refactor**: Ensure consistent date handling pattern with FileOperations
+The following has been completed:
+- ✅ MasterIndex `save()` method uses `ObjectUtils.serialise(this._data)`
+- ✅ MasterIndex `_loadFromScriptProperties()` method uses `ObjectUtils.deserialise(dataString)`
+- ✅ Date preservation through save/load cycles is now automatic
+- ✅ Consistent serialisation pattern with FileOperations established
 
-#### Test 1.2: MasterIndex ObjectUtils Integration Pattern
-
-**Red**: Write tests verifying ObjectUtils usage in MasterIndex follows FileOperations pattern
-**Green**: Implement ObjectUtils integration in both save and load methods
-**Refactor**: Consolidate serialisation approach across codebase
+**No further work needed for Phase 1** - proceed directly to Phase 2.
 
 ### Phase 2: Extend CollectionMetadata (Red-Green-Refactor)
 
@@ -133,39 +131,46 @@ CollectionMetadata needs these additional fields:
 
 ## Detailed Implementation Steps
 
-### Step 1: Integrate ObjectUtils into MasterIndex
+### Step 1: ✅ COMPLETED - ObjectUtils Integration in MasterIndex
+
+**STATUS**: ✅ **ALREADY IMPLEMENTED**
+
+Both `MasterIndex` and `FileOperations` now use the centralised `ObjectUtils.serialise()` and `ObjectUtils.deserialise()` methods:
 
 ```javascript
-class MasterIndex {
-  save() {
-    try {
-      this._data.lastUpdated = new Date().toISOString();
-      const dataString = JSON.stringify(this._data);
-      PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
-    } catch (error) {
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
-    }
+// MasterIndex.save() - CURRENT IMPLEMENTATION
+save() {
+  try {
+    this._data.lastUpdated = new Date().toISOString();
+    const dataString = ObjectUtils.serialise(this._data);
+    PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
+  } catch (error) {
+    throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
   }
-  
-  _loadFromScriptProperties() {
-    try {
-      const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
-      if (dataString) {
-        const loadedData = JSON.parse(dataString);
-        // Convert ISO date strings back to Date objects (following FileOperations pattern)
-        ObjectUtils.convertDateStringsToObjects(loadedData);
-        
-        this._data = {
-          ...this._data,
-          ...loadedData
-        };
-      }
-    } catch (error) {
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
+}
+
+// MasterIndex._loadFromScriptProperties() - CURRENT IMPLEMENTATION
+_loadFromScriptProperties() {
+  try {
+    const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
+    if (dataString) {
+      const loadedData = ObjectUtils.deserialise(dataString);
+      this._data = {
+        ...this._data,
+        ...loadedData
+      };
     }
+  } catch (error) {
+    throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
   }
 }
 ```
+
+**Benefits Achieved**:
+- ✅ Date objects automatically preserved through serialisation cycles
+- ✅ Centralised serialisation logic in ObjectUtils
+- ✅ Consistent pattern with FileOperations
+- ✅ Eliminated duplicate JSON handling code
 
 ### Step 2: Extend CollectionMetadata Class
 
@@ -246,63 +251,53 @@ class MasterIndex {
 - `InvalidArgumentError` for CollectionMetadata validation
 - `CollectionNotFoundError` for missing collections
 
-## ObjectUtils Integration Summary
+### ObjectUtils Serialisation Integration Summary
 
-### Key Architectural Benefit
+### ✅ COMPLETED - Key Architectural Benefit Achieved
 
-Using `ObjectUtils` for MasterIndex serialisation **consolidates all serialisation logic** to a single utility class, ensuring consistent Date handling across the entire codebase:
+The centralised serialisation approach is **already implemented**. Both `MasterIndex` and `FileOperations` now use `ObjectUtils.serialise()` and `ObjectUtils.deserialise()` methods, ensuring **consistent Date handling across the entire codebase**:
 
-- **FileOperations**: Already uses ObjectUtils for Drive file serialisation/deserialisation
-- **MasterIndex**: Will use ObjectUtils for ScriptProperties serialisation/deserialisation  
-- **DocumentOperations**: Already uses ObjectUtils.deepClone() for in-memory operations
+- ✅ **FileOperations**: Uses ObjectUtils for Drive file serialisation/deserialisation
+- ✅ **MasterIndex**: Uses ObjectUtils for ScriptProperties serialisation/deserialisation  
+- ✅ **DocumentOperations**: Uses ObjectUtils.deepClone() for in-memory operations
 
-### Specific Changes Required
+### Current Implementation Status
 
-#### MasterIndex.save() Method
-
+#### ✅ MasterIndex.save() Method - IMPLEMENTED
 ```javascript
-// BEFORE (loses Date objects):
-const dataString = JSON.stringify(this._data);
-
-// AFTER (preserves Dates as ISO strings):
-const dataString = JSON.stringify(this._data); // Same - Dates auto-convert to ISO
+const dataString = ObjectUtils.serialise(this._data); // Dates auto-convert to ISO
 ```
 
-#### MasterIndex._loadFromScriptProperties() Method
-
+#### ✅ MasterIndex._loadFromScriptProperties() Method - IMPLEMENTED
 ```javascript
-// BEFORE (dates remain as ISO strings):
-const loadedData = JSON.parse(dataString);
-this._data = { ...this._data, ...loadedData };
-
-// AFTER (converts ISO strings back to Date objects):
-const loadedData = JSON.parse(dataString);
-ObjectUtils.convertDateStringsToObjects(loadedData); // Key addition
+const loadedData = ObjectUtils.deserialise(dataString); // Automatically converts ISO strings back to Date objects
 this._data = { ...this._data, ...loadedData };
 ```
 
-### Pattern Consistency
+### ✅ Pattern Consistency Achieved
 
-This creates **identical serialisation patterns** across all storage boundaries:
+**Identical serialisation patterns** now exist across all storage boundaries:
 
-1. **Drive Files** (FileOperations): `JSON.stringify()` → Drive → `JSON.parse()` + `ObjectUtils.convertDateStringsToObjects()`
-2. **ScriptProperties** (MasterIndex): `JSON.stringify()` → ScriptProperties → `JSON.parse()` + `ObjectUtils.convertDateStringsToObjects()`
+1. ✅ **Drive Files** (FileOperations): `ObjectUtils.serialise()` → Drive → `ObjectUtils.deserialise()`
+2. ✅ **ScriptProperties** (MasterIndex): `ObjectUtils.serialise()` → ScriptProperties → `ObjectUtils.deserialise()`
 
-### No ObjectUtils Extensions Needed
+### ✅ ObjectUtils Capabilities - Complete and Sufficient
 
-Current ObjectUtils capabilities are **complete and sufficient**:
+Current ObjectUtils provides all required functionality:
 
+- ✅ `serialise()` - JSON.stringify with automatic Date preservation
+- ✅ `deserialise()` - JSON.parse + automatic Date restoration
 - ✅ `deepClone()` - Date-preserving deep cloning
 - ✅ `convertDateStringsToObjects()` - ISO string to Date conversion  
 - ✅ `_isISODateString()` - ISO format validation
 
-### Benefits Achieved
+### ✅ Benefits Achieved
 
-1. **Eliminates Date serialisation bugs** in MasterIndex save/load cycles
-2. **Centralises serialisation responsibility** in ObjectUtils
-3. **Maintains architectural consistency** with existing FileOperations pattern
-4. **Zero breaking changes** - existing functionality preserved
-5. **Foundation for CollectionMetadata refactor** - dates properly handled
+1. ✅ **Date serialisation consistency** across all storage mechanisms
+2. ✅ **Centralised serialisation responsibility** in ObjectUtils
+3. ✅ **Architectural consistency** maintained
+4. ✅ **Zero breaking changes** - existing functionality preserved
+5. ✅ **Foundation ready** for CollectionMetadata refactor
 
 ## Testing Strategy
 
@@ -337,9 +332,32 @@ Current ObjectUtils capabilities are **complete and sufficient**:
 
 ## Implementation Timeline
 
-1. **Phase 1**: ObjectUtils Integration for MasterIndex Serialisation (TDD cycles 1.1-1.2)
+1. **Phase 1**: ✅ **COMPLETED** - ObjectUtils Integration for MasterIndex Serialisation 
 2. **Phase 2**: Extend CollectionMetadata (TDD cycles 2.1-2.5)
 3. **Phase 3**: Refactor MasterIndex to use CollectionMetadata (TDD cycles 3.1-3.5)  
 4. **Phase 4**: Integration and cleanup (TDD cycles 4.1-4.3)
 
-Each phase follows strict Red-Green-Refactor cycles with comprehensive testing.
+**Current Status**: Phase 1 complete. Ready to proceed with Phase 2 - extending CollectionMetadata.
+
+Each remaining phase follows strict Red-Green-Refactor cycles with comprehensive testing.
+
+## Important Notes
+
+### ✅ Serialisation Consolidation Complete
+
+The ObjectUtils serialisation consolidation has been **successfully implemented**:
+
+- ✅ **MasterIndex** now uses `ObjectUtils.serialise()` and `ObjectUtils.deserialise()`
+- ✅ **FileOperations** uses the same centralised serialisation methods
+- ✅ **Consistent Date handling** across all storage boundaries
+- ✅ **Code duplication eliminated** - all JSON logic centralised in ObjectUtils
+
+### Ready for CollectionMetadata Integration
+
+With the serialisation foundation complete, the refactor can now focus on:
+
+1. **Phase 2**: Extending CollectionMetadata with additional fields
+2. **Phase 3**: Integrating CollectionMetadata into MasterIndex  
+3. **Phase 4**: Final integration and cleanup
+
+**Key Advantage**: The consistent serialisation approach means CollectionMetadata instances will automatically have proper Date handling when stored/retrieved through MasterIndex, with no additional serialisation logic required.
