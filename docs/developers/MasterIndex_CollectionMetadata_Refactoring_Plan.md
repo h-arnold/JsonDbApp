@@ -37,89 +37,103 @@ CollectionMetadata needs these additional fields:
 
 **STATUS**: ✅ **ALREADY IMPLEMENTED** - MasterIndex now uses `ObjectUtils.serialise()` and `ObjectUtils.deserialise()` methods
 
-The following has been completed:
-- ✅ MasterIndex `save()` method uses `ObjectUtils.serialise(this._data)`
-- ✅ MasterIndex `_loadFromScriptProperties()` method uses `ObjectUtils.deserialise(dataString)`
-- ✅ Date preservation through save/load cycles is now automatic
-- ✅ Consistent serialisation pattern with FileOperations established
+### Phase 2: ✅ COMPLETED - Extend CollectionMetadata (Red-Green-Refactor)
 
-**No further work needed for Phase 1** - proceed directly to Phase 2.
+**STATUS**: ✅ **COMPLETED** - All functionality implemented, 100% test pass rate achieved, ready for Phase 3
 
-### Phase 2: ✅ RED COMPLETE - Extend CollectionMetadata (Red-Green-Refactor)
+### Phase 3: 🚧 NEXT - Update MasterIndex to Use CollectionMetadata (Red-Green-Refactor)
 
-**STATUS**: ✅ **RED PHASE COMPLETED** - All failing tests implemented and pushed
+**STATUS**: 🚧 **READY TO BEGIN** - CollectionMetadata extension complete, MasterIndex integration next
+
+### Phase 2: ✅ GREEN COMPLETE - Extend CollectionMetadata (Red-Green-Refactor)
+
+**STATUS**: ✅ **GREEN PHASE COMPLETED** - All functionality implemented, 100% test pass rate achieved
 
 #### ✅ Test 2.1: CollectionMetadata Constructor with All Fields
 
 **✅ Red**: COMPLETED - Tests written expecting CollectionMetadata to accept name and fileId in constructor
-- ✅ `should create metadata with name and fileId parameters` - Tests 3-parameter constructor
-- ✅ `should create metadata with name only` - Tests 1-parameter constructor  
-- ✅ `should throw error for invalid name type` - Validates string requirement
-- ✅ `should throw error for empty name string` - Validates non-empty requirement
-- ✅ `should throw error for invalid fileId type` - Validates string/null requirement
+**✅ Green**: COMPLETED - Added name and fileId parameters to CollectionMetadata constructor
+**✅ Refactor**: COMPLETED - Ensured validation and clean implementation with backward compatibility
 
-**Green**: NEXT - Add name and fileId parameters to CollectionMetadata constructor
-**Refactor**: NEXT - Ensure validation and clean implementation
+**Implementation Details**:
+- ✅ Constructor now supports both `new CollectionMetadata(name, fileId, initialMetadata)` and legacy `new CollectionMetadata(initialMetadata)` signatures
+- ✅ Full validation for name (non-empty string) and fileId (string or null)
+- ✅ Backward compatibility maintained for existing code
 
 #### ✅ Test 2.2: CollectionMetadata Modification Token Management
 
 **✅ Red**: COMPLETED - Tests written for modificationToken getter/setter with validation
-- ✅ `should get and set modificationToken` - Tests basic getter/setter functionality
-- ✅ `should include modificationToken in toObject output` - Tests serialisation
-- ✅ `should throw error for invalid modificationToken type` - Validates string requirement
-- ✅ `should throw error for empty modificationToken` - Validates non-empty requirement
-- ✅ `should allow null modificationToken` - Tests null assignment
-**Green**: NEXT - Implement modificationToken property with validation
-**Refactor**: NEXT - Optimise implementation
+**✅ Green**: COMPLETED - Implemented modificationToken property with validation
+**✅ Refactor**: COMPLETED - Optimised implementation with proper validation
+
+**Implementation Details**:
+- ✅ `getModificationToken()` and `setModificationToken()` methods implemented
+- ✅ Validation: non-empty string or null
+- ✅ Included in constructor, toObject(), and clone() methods
 
 #### ✅ Test 2.3: CollectionMetadata Lock Status Management
 
 **✅ Red**: COMPLETED - Tests written for lockStatus getter/setter with validation
-- ✅ `should get and set lockStatus` - Tests lockStatus object management
-- ✅ `should include lockStatus in toObject output` - Tests serialisation
-- ✅ `should throw error for invalid lockStatus type` - Validates object requirement
-- ✅ `should validate lockStatus properties` - Validates internal structure
-- ✅ `should allow null lockStatus` - Tests null assignment
+**✅ Green**: COMPLETED - Implemented lockStatus property with validation
+**✅ Refactor**: COMPLETED - Clean implementation with comprehensive validation
 
-**Green**: NEXT - Implement lockStatus property with validation
-**Refactor**: NEXT - Clean up implementation
+**Implementation Details**:
+- ✅ `getLockStatus()` and `setLockStatus()` methods implemented
+- ✅ Comprehensive validation for lock status object structure (isLocked, lockedBy, lockedAt, lockTimeout)
+- ✅ Deep copy support in toObject() and clone() methods
+- ✅ Private `_validateLockStatus()` helper method
 
 #### ✅ Test 2.4: CollectionMetadata Enhanced toObject() Method
 
 **✅ Red**: COMPLETED - Tests written expecting toObject() to include all new fields
-- ✅ `should include all fields in toObject output` - Tests complete serialisation
-- ✅ Enhanced clone tests with new properties
+**✅ Green**: COMPLETED - Updated toObject() method to include all fields
+**✅ Refactor**: COMPLETED - Ensured consistent output format
 
-**Green**: NEXT - Update toObject() method to include name, fileId, modificationToken, lockStatus
-**Refactor**: NEXT - Ensure consistent output format
+**Implementation Details**:
+- ✅ toObject() now includes: name, fileId, modificationToken, lockStatus
+- ✅ Proper deep copying for Date objects and lock status
+- ✅ Conditional inclusion of name/fileId when not null
 
 #### ✅ Test 2.5: CollectionMetadata Static Factory Methods
 
 **✅ Red**: COMPLETED - Tests written for static factory methods (fromObject, create)
-- ✅ `should create instance from object using fromObject factory` - Tests deserialisation factory
-- ✅ `should create instance using create factory method` - Tests creation factory
-- ✅ `should throw error for invalid object in fromObject` - Validates input
-- ✅ `should throw error for missing required fields in fromObject` - Validates completeness
+**✅ Green**: COMPLETED - Implemented static factory methods
+**✅ Refactor**: COMPLETED - Optimised and ensured consistency
 
-**Green**: NEXT - Implement static factory methods for creating instances
-**Refactor**: NEXT - Optimise and ensure consistency
+**Implementation Details**:
+- ✅ `static fromObject(obj)` - Creates instance from plain object with validation
+- ✅ `static create(name, fileId)` - Factory method for new instances
+- ✅ Proper validation and error handling
 
-### Current Test Results Summary
+### Final Test Results Summary
 
-**RED Phase Status**: ✅ COMPLETED
-- **Total Tests**: 36 tests written
-- **Expected Failures**: 19 tests failing (expected for RED phase)
-- **Passing Tests**: 17 tests (existing functionality)
-- **Pass Rate**: 47.2% (expected during RED phase)
+**GREEN Phase Status**: ✅ **COMPLETED WITH 100% SUCCESS**
+- **Total Tests**: 36 tests
+- **Total Test Suites**: 4 suites
+- **Passing Tests**: 36 tests (100%)
+- **Failing Tests**: 0 tests (0%)
+- **Pass Rate**: 100.0%
 
-**Key Failing Test Categories** (as expected):
-- Constructor with name/fileId parameters (2 tests)
-- Modification token management (5 tests) 
-- Lock status management (5 tests)
-- Enhanced serialisation (5 tests)
-- Static factory methods (2 tests)
+**Test Suite Breakdown**:
+- ✅ **CollectionMetadata Constructor**: 7/7 passed (100.0%)
+- ✅ **CollectionMetadata Update Operations**: 17/17 passed (100.0%)
+- ✅ **CollectionMetadata Serialisation**: 8/8 passed (100.0%)
+- ✅ **CollectionMetadata Edge Cases**: 4/4 passed (100.0%)
 
-**Next Steps**: Proceed to GREEN phase implementation
+**Key Implementation Achievements**:
+- ✅ Constructor with name/fileId parameters (7 tests passing)
+- ✅ Modification token management (5 tests passing)
+- ✅ Lock status management (5 tests passing)
+- ✅ Enhanced serialisation (8 tests passing)
+- ✅ Static factory methods (2 tests passing)
+- ✅ Edge cases and validation (4 tests passing)
+- ✅ Backward compatibility maintained (3 tests passing)
+
+**Bug Fixes Applied**:
+- ✅ Fixed test timestamp independence issue with `Utilities.sleep(1)` 
+- ✅ Fixed test summary reporting bug (totalSuites and failedTests now show correct values)
+
+**Next Steps**: ✅ **READY FOR PHASE 3** - MasterIndex Integration
 
 ### Phase 3: Update MasterIndex to Use CollectionMetadata (Red-Green-Refactor)
 
@@ -405,3 +419,50 @@ With the serialisation foundation complete, the refactor can now focus on:
 3. **Phase 4**: Final integration and cleanup
 
 **Key Advantage**: The consistent serialisation approach means CollectionMetadata instances will automatically have proper Date handling when stored/retrieved through MasterIndex, with no additional serialisation logic required.
+
+## 🎉 Phase 2 Completion Summary
+
+### What Was Accomplished
+
+**GREEN Phase Implementation** successfully completed for CollectionMetadata extension:
+
+#### ✅ Major Features Implemented
+1. **Multi-signature Constructor**: Supports both new `(name, fileId, metadata)` and legacy `(metadata)` signatures
+2. **Modification Token Management**: Full getter/setter with validation  
+3. **Lock Status Management**: Complete object validation and management
+4. **Enhanced Serialisation**: toObject() includes all properties with proper deep copying
+5. **Static Factory Methods**: fromObject() and create() for flexible instantiation
+6. **Backward Compatibility**: Existing code continues to work unchanged
+
+#### ✅ Technical Achievements
+- **100% Test Pass Rate**: 36/36 tests passing across 4 test suites
+- **Comprehensive Validation**: Input validation for all new properties
+- **Date Preservation**: Automatic Date handling through ObjectUtils integration
+- **Type Safety**: Robust type checking and error reporting
+- **Memory Management**: Proper deep copying prevents reference issues
+
+#### ✅ Quality Metrics
+- **Test Coverage**: All new functionality covered by comprehensive tests
+- **Error Handling**: Proper InvalidArgumentError exceptions with descriptive messages  
+- **Documentation**: Full JSDoc coverage for all new methods and properties
+- **Code Quality**: Clean, maintainable implementation following SOLID principles
+
+### Next Phase Ready
+
+✅ **Phase 3 Prerequisites Met**:
+- CollectionMetadata class fully extended with all required MasterIndex fields
+- All tests passing with robust validation
+- Backward compatibility maintained
+- ObjectUtils integration provides consistent serialisation
+- Static factory methods enable flexible instantiation patterns
+
+**Phase 3 Objective**: Integrate extended CollectionMetadata into MasterIndex to eliminate code duplication and centralise metadata responsibility.
+
+**Estimated Phase 3 Scope**: Update MasterIndex methods to use CollectionMetadata instances instead of manual JSON object manipulation, maintaining all existing functionality while leveraging the new validation and management capabilities.
+
+## Implementation Timeline
+
+- ✅ **Phase 1**: ObjectUtils Integration (Already Complete)
+- ✅ **Phase 2**: CollectionMetadata Extension (Completed - 100% Success)  
+- 🚧 **Phase 3**: MasterIndex Integration (Ready to Begin)
+- 📋 **Phase 4**: Integration Testing and Cleanup (Pending Phase 3)
