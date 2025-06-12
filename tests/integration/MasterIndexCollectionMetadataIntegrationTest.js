@@ -176,8 +176,7 @@ function testDatabaseMasterIndexIntegration() {
       });
       
       const database = new Database(config);
-      // Note: Database will auto-initialize when collection() is called
-      
+      database.initialise();
       // Act: Create collection through Database API
       const collection = database.collection('integration_collection');
       
@@ -217,7 +216,7 @@ function testDatabaseMasterIndexIntegration() {
       });
       
       const database = new Database(config);
-      // Note: Database will auto-initialize when collection() is called
+      database.initialise();
       const collection = database.collection('propagation_test');
       
       const masterIndex = database._masterIndex;
@@ -263,8 +262,7 @@ function testDatabaseMasterIndexIntegration() {
       });
       
       const database = new Database(config);
-      // Note: Database will auto-initialize when first collection() is called
-      
+      database.initialise();
       // Act: Create multiple collections and perform operations
       const collection1 = database.collection('multi_test_1');
       const collection2 = database.collection('multi_test_2');
