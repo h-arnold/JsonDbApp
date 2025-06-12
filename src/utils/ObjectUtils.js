@@ -106,4 +106,32 @@ class ObjectUtils {
     const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
     return isoDatePattern.test(str) && !isNaN(Date.parse(str));
   }
+
+  /**
+   * Serialise an object to JSON string with proper Date handling
+   * @param {*} obj - Object to serialise
+   * @returns {string} JSON string with Dates converted to ISO strings
+   */
+  static serialise(obj) {
+    return JSON.stringify(obj, null, 2);
+  }
+
+  /**
+   * Deserialise JSON string to object with Date restoration
+   * @param {string} jsonString - JSON string to deserialise
+   * @returns {*} Object with ISO date strings converted back to Date objects
+   * @throws {InvalidArgumentError} When jsonString is invalid JSON
+   */
+  static deserialise(jsonString) {
+    if (typeof jsonString !== 'string') {
+      throw new InvalidArgumentError('jsonString must be a string');
+    }
+    
+    try {
+      const parsed = JSON.parse(jsonString);
+      return ObjectUtils.convertDateStringsToObjects(parsed);
+    } catch (error) {
+      throw new InvalidArgumentError('jsonString must be valid JSON', jsonString, error.message);
+    }
+  }
 }

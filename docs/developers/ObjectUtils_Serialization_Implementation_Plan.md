@@ -9,16 +9,19 @@ Refactor serialization logic from `FileOperations` and planned `MasterIndex` cha
 ### Current Serialization Patterns
 
 **FileOperations** (existing):
+
 - **Write**: `JSON.stringify(data, null, 2)` - Dates auto-convert to ISO strings
 - **Read**: `JSON.parse(content)` + `ObjectUtils.convertDateStringsToObjects(parsedContent)`
 
 **MasterIndex** (planned refactoring):
+
 - **Save**: `JSON.stringify(this._data)` - Dates auto-convert to ISO strings  
 - **Load**: `JSON.parse(dataString)` + `ObjectUtils.convertDateStringsToObjects(loadedData)`
 
 ### Identified Duplication
 
 Both components implement identical serialization logic:
+
 1. Use `JSON.stringify()` for serialization (automatic Date → ISO string conversion)
 2. Use `JSON.parse()` + `ObjectUtils.convertDateStringsToObjects()` for deserialization
 
@@ -59,6 +62,7 @@ static deserialise(jsonString) {
 #### Test 1.1: ObjectUtils Serialise Method
 
 **Red**: Write test expecting `ObjectUtils.serialise()` to convert objects to JSON strings
+
 - Test with simple objects
 - Test with nested objects containing Dates
 - Test with arrays containing Dates
@@ -70,6 +74,7 @@ static deserialise(jsonString) {
 #### Test 1.2: ObjectUtils Deserialise Method
 
 **Red**: Write test expecting `ObjectUtils.deserialise()` to restore objects with Dates
+
 - Test JSON string parsing
 - Test Date restoration from ISO strings
 - Test nested object Date restoration
@@ -82,6 +87,7 @@ static deserialise(jsonString) {
 #### Test 1.3: ObjectUtils Round-trip Serialization
 
 **Red**: Write tests for complete serialise → deserialise cycles
+
 - Test Date preservation through round-trips
 - Test complex nested structures
 - Test edge cases (empty objects, arrays, etc.)
@@ -94,6 +100,7 @@ static deserialise(jsonString) {
 #### Test 2.1: FileOperations writeFile with ObjectUtils.serialise
 
 **Red**: Update FileOperationsTest to expect usage of `ObjectUtils.serialise()`
+
 - Mock ObjectUtils.serialise calls
 - Verify correct data passed to serialise method
 - Ensure existing functionality preserved
@@ -104,6 +111,7 @@ static deserialise(jsonString) {
 #### Test 2.2: FileOperations readFile with ObjectUtils.deserialise
 
 **Red**: Update FileOperationsTest to expect usage of `ObjectUtils.deserialise()`
+
 - Mock ObjectUtils.deserialise calls
 - Verify correct JSON string passed to deserialise method
 - Ensure Date restoration still works correctly
@@ -114,6 +122,7 @@ static deserialise(jsonString) {
 #### Test 2.3: FileOperations createFile with ObjectUtils.serialise
 
 **Red**: Update tests for `createFile()` method
+
 - Ensure ObjectUtils.serialise is used for initial data serialization
 
 **Green**: Refactor `FileOperations.createFile()` to use `ObjectUtils.serialise()`
@@ -124,6 +133,7 @@ static deserialise(jsonString) {
 #### Test 3.1: MasterIndex save with ObjectUtils.serialise
 
 **Red**: Write tests expecting MasterIndex.save() to use `ObjectUtils.serialise()`
+
 - Test serialization of master index data
 - Test Date preservation in metadata
 - Test error handling during serialization
@@ -134,6 +144,7 @@ static deserialise(jsonString) {
 #### Test 3.2: MasterIndex load with ObjectUtils.deserialise
 
 **Red**: Write tests expecting MasterIndex._loadFromScriptProperties() to use `ObjectUtils.deserialise()`
+
 - Test deserialization of stored data
 - Test Date restoration from ScriptProperties
 - Test backward compatibility with existing data
@@ -146,6 +157,7 @@ static deserialise(jsonString) {
 #### Test 4.1: End-to-End Date Preservation
 
 **Red**: Write integration tests verifying Date preservation across all storage boundaries
+
 - Test FileOperations → Drive → FileOperations date cycles
 - Test MasterIndex → ScriptProperties → MasterIndex date cycles
 - Test complex objects with nested dates
@@ -156,6 +168,7 @@ static deserialise(jsonString) {
 #### Test 4.2: Error Handling Consistency
 
 **Red**: Write tests for consistent error handling across all serialization points
+
 - Test invalid JSON handling
 - Test malformed date strings
 - Test serialization failures
@@ -166,12 +179,68 @@ static deserialise(jsonString) {
 #### Test 4.3: Performance and Backward Compatibility
 
 **Red**: Write tests to ensure no performance regression and backward compatibility
+
 - Test with existing data formats
 - Test performance with large objects
 - Test memory usage
 
 **Green**: Optimise implementation if needed
 **Refactor**: Final cleanup and optimisation
+
+## RED Phase Implementation Results
+
+**Date**: June 12, 2025  
+**Status**: ✅ COMPLETED - RED Phase Successful
+
+### Test Results Analysis
+
+**Total Tests**: 28 | **Passed**: 17 | **Failed**: 11 | **Pass Rate**: 60.7%
+
+#### Expected Failures (RED Phase) ✅
+- `testObjectUtilsSerialiseSimpleObjects` - ❌ "ObjectUtils.serialise should be a function"
+- `testObjectUtilsSerialiseWithDates` - ❌ "ObjectUtils.serialise is not a function"  
+- `testObjectUtilsSerialiseArraysWithDates` - ❌ "ObjectUtils.serialise is not a function"
+- `testObjectUtilsSerialiseNullUndefined` - ❌ "ObjectUtils.serialise is not a function"
+- `testObjectUtilsDeserialiseJsonString` - ❌ "ObjectUtils.deserialise should be a function"
+- `testObjectUtilsDeserialiseWithDateRestoration` - ❌ "ObjectUtils.deserialise is not a function"
+- `testObjectUtilsDeserialiseArraysWithDates` - ❌ "ObjectUtils.deserialise is not a function"
+- `testObjectUtilsRoundTripSerialisation` - ❌ "ObjectUtils.serialise is not a function"
+- `testObjectUtilsRoundTripComplexStructures` - ❌ "ObjectUtils.serialise is not a function"
+- `testObjectUtilsRoundTripWithNaNAndInfinity` - ❌ "ObjectUtils.serialise is not a function"
+
+#### Unexpected Failure ⚠️
+- `testObjectUtilsDeserialiseNonStringInput` - ❌ "Should throw InvalidArgumentError for number input"
+  - **Issue**: This test expects `ObjectUtils.deserialise()` to exist for input validation
+  - **Resolution**: Will be fixed when `deserialise` method is implemented
+
+#### Passing Tests ✅ 
+All existing ObjectUtils functionality continues to work:
+- `deepClone` methods (6 tests)
+- `convertDateStringsToObjects` methods (7 tests)  
+- `_isISODateString` validation (1 test)
+- Edge cases and special object types (3 tests)
+
+### Key Insights
+
+1. **Perfect RED Phase**: All serialization-related tests fail as expected since methods don't exist
+2. **Existing Functionality Preserved**: No regression in current ObjectUtils capabilities
+3. **Test Coverage Comprehensive**: Tests cover all planned functionality scenarios
+
+### Next Steps: GREEN Phase
+
+**Priority 1**: Implement `ObjectUtils.serialise()` method
+**Priority 2**: Implement `ObjectUtils.deserialise()` method  
+**Priority 3**: Verify all 28 tests pass (GREEN phase)
+**Priority 4**: Proceed to refactoring FileOperations and MasterIndex
+
+### Testing Strategy Refinement
+
+**Behavioural Testing Approach Confirmed**: 
+- No need to test internal method calls (mocking)
+- Existing FileOperations and MasterIndex tests will validate refactoring
+- Focus on ObjectUtils functionality and round-trip data integrity
+
+---
 
 ## Detailed Test Cases
 
@@ -277,6 +346,7 @@ function testMasterIndexBackwardCompatibilityWithExistingData() {
 **File**: `src/utils/ObjectUtils.js`
 
 Add two new static methods:
+
 - `serialise(obj)` - Wrapper around JSON.stringify with consistent formatting
 - `deserialise(jsonString)` - JSON.parse + convertDateStringsToObjects with error handling
 
@@ -285,6 +355,7 @@ Add two new static methods:
 **File**: `src/components/FileOperations.js`
 
 **Methods to update**:
+
 - `writeFile(fileId, data)` - Replace `JSON.stringify(data, null, 2)` with `ObjectUtils.serialise(data)`
 - `readFile(fileId)` - Replace `JSON.parse(content)` + `ObjectUtils.convertDateStringsToObjects(parsedContent)` with `ObjectUtils.deserialise(content)`
 - `createFile(fileName, data, folderId)` - Replace `JSON.stringify(data, null, 2)` with `ObjectUtils.serialise(data)`
@@ -294,12 +365,14 @@ Add two new static methods:
 **File**: `src/core/MasterIndex.js`
 
 **Methods to update**:
+
 - `save()` - Replace `JSON.stringify(this._data)` with `ObjectUtils.serialise(this._data)`
 - `_loadFromScriptProperties()` - Replace `JSON.parse(dataString)` + `ObjectUtils.convertDateStringsToObjects(loadedData)` with `ObjectUtils.deserialise(dataString)`
 
 ### Step 4: Update Test Files
 
 **Files to update**:
+
 - `tests/unit/UtilityTests/ObjectUtilsTest.js` - Add new test functions
 - `tests/unit/FileOperationsTest.js` - Update existing tests to verify ObjectUtils usage
 - `tests/unit/MasterIndexTest.js` - Update existing tests to verify ObjectUtils usage
@@ -390,3 +463,61 @@ Add two new static methods:
 ### Architecture Evolution
 
 This refactoring establishes ObjectUtils as the central serialisation authority, providing a foundation for future enhancements to data handling and storage optimisation across the entire GAS-DB system.
+
+## Implementation Status
+
+### ✅ Phase 1: RED Phase Complete (June 12, 2025)
+
+**Test Results**: 28 total tests, 17 passed, 11 failed (60.7% pass rate)
+
+**Status**: All expected serialization tests failing as planned. Ready for GREEN phase implementation.
+
+**Verification**:
+
+- All existing ObjectUtils functionality preserved (deepClone, convertDateStringsToObjects)
+- No regression in current capabilities
+- Test coverage comprehensive for all planned scenarios
+
+### 🔄 Phase 2: GREEN Phase (Next Step)
+
+**Objective**: Implement `ObjectUtils.serialise()` and `ObjectUtils.deserialise()` methods
+
+**Expected Outcome**: All 28 tests should pass (100% pass rate)
+
+**Implementation Target**:
+
+```javascript
+// Add to src/utils/ObjectUtils.js
+static serialise(obj) {
+  return JSON.stringify(obj, null, 2);
+}
+
+static deserialise(jsonString) {
+  if (typeof jsonString !== 'string') {
+    throw new InvalidArgumentError('jsonString must be a string');
+  }
+  const parsed = JSON.parse(jsonString);
+  return ObjectUtils.convertDateStringsToObjects(parsed);
+}
+```
+
+### 📋 Phase 3: FileOperations Refactoring (Planned)
+
+**Objective**: Replace direct JSON operations with ObjectUtils methods
+
+- Update `writeFile()`, `readFile()`, `createFile()` methods
+- Maintain all existing test compatibility
+
+### 📋 Phase 4: MasterIndex Refactoring (Planned)
+
+**Objective**: Replace ScriptProperties serialization with ObjectUtils methods
+
+- Update `save()` and `_loadFromScriptProperties()` methods
+- Ensure Date preservation in master index operations
+
+### 📋 Phase 5: Integration Testing (Planned)
+
+**Objective**: Verify end-to-end functionality
+
+- Run complete test suite to ensure no regressions
+- Validate FileOperations and MasterIndex continue working with new serialization
