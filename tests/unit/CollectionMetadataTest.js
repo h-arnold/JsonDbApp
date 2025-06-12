@@ -287,7 +287,7 @@ function createCollectionMetadataUpdateTestSuite() {
     const lockStatus = {
       isLocked: true,
       lockedBy: 'user123',
-      lockedAt: new Date(),
+      lockedAt: Date.now(),
       lockTimeout: 300000
     };
     
@@ -298,7 +298,7 @@ function createCollectionMetadataUpdateTestSuite() {
     const retrievedLockStatus = metadata.getLockStatus();
     TestFramework.assertEquals(retrievedLockStatus.isLocked, lockStatus.isLocked, 'Should return correct isLocked value');
     TestFramework.assertEquals(retrievedLockStatus.lockedBy, lockStatus.lockedBy, 'Should return correct lockedBy value');
-    TestFramework.assertEquals(retrievedLockStatus.lockedAt.getTime(), lockStatus.lockedAt.getTime(), 'Should return correct lockedAt timestamp');
+    TestFramework.assertEquals(retrievedLockStatus.lockedAt, lockStatus.lockedAt, 'Should return correct lockedAt timestamp');
     TestFramework.assertEquals(retrievedLockStatus.lockTimeout, lockStatus.lockTimeout, 'Should return correct lockTimeout value');
   });
   
@@ -355,7 +355,7 @@ function createCollectionMetadataUpdateTestSuite() {
     const initialLockStatus = {
       isLocked: true,
       lockedBy: 'user123',
-      lockedAt: new Date(),
+      lockedAt: Date.now(),
       lockTimeout: 300000
     };
     metadata.setLockStatus(initialLockStatus);
@@ -400,7 +400,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     const lockStatus = {
       isLocked: true,
       lockedBy: 'user123',
-      lockedAt: new Date(),
+      lockedAt: Date.now(),
       lockTimeout: 300000
     };
     
@@ -418,7 +418,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     TestFramework.assertTrue(metadataObject.hasOwnProperty('lockStatus'), 'toObject should include lockStatus property');
     TestFramework.assertEquals(metadataObject.lockStatus.isLocked, lockStatus.isLocked, 'toObject should include lockStatus.isLocked');
     TestFramework.assertEquals(metadataObject.lockStatus.lockedBy, lockStatus.lockedBy, 'toObject should include lockStatus.lockedBy');
-    TestFramework.assertEquals(metadataObject.lockStatus.lockedAt.getTime(), lockStatus.lockedAt.getTime(), 'toObject should include lockStatus.lockedAt');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockedAt, lockStatus.lockedAt, 'toObject should include lockStatus.lockedAt');
     TestFramework.assertEquals(metadataObject.lockStatus.lockTimeout, lockStatus.lockTimeout, 'toObject should include lockStatus.lockTimeout');
     TestFramework.assertTrue(metadataObject.created instanceof Date, 'toObject should include created Date');
     TestFramework.assertTrue(metadataObject.lastUpdated instanceof Date, 'toObject should include lastUpdated Date');
@@ -433,7 +433,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     const lockStatus = {
       isLocked: true,
       lockedBy: 'user123',
-      lockedAt: new Date(),
+      lockedAt: Date.now(),
       lockTimeout: 300000
     };
     
@@ -484,7 +484,7 @@ function createCollectionMetadataSerialisationTestSuite() {
       lockStatus: {
         isLocked: true,
         lockedBy: 'user123',
-        lockedAt: new Date('2024-01-02T01:00:00Z'),
+        lockedAt: new Date('2024-01-02T01:00:00Z').getTime(),
         lockTimeout: 300000
       }
     };
@@ -503,7 +503,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     const lockStatus = metadata.getLockStatus();
     TestFramework.assertEquals(lockStatus.isLocked, sourceObject.lockStatus.isLocked, 'Should set lockStatus.isLocked from object');
     TestFramework.assertEquals(lockStatus.lockedBy, sourceObject.lockStatus.lockedBy, 'Should set lockStatus.lockedBy from object');
-    TestFramework.assertEquals(lockStatus.lockedAt.getTime(), sourceObject.lockStatus.lockedAt.getTime(), 'Should set lockStatus.lockedAt from object');
+    TestFramework.assertEquals(lockStatus.lockedAt, sourceObject.lockStatus.lockedAt, 'Should set lockStatus.lockedAt from object');
     TestFramework.assertEquals(lockStatus.lockTimeout, sourceObject.lockStatus.lockTimeout, 'Should set lockStatus.lockTimeout from object');
   });
   
