@@ -78,7 +78,7 @@ class MasterIndex {
   save() {
     try {
       this._data.lastUpdated = new Date().toISOString();
-      const dataString = JSON.stringify(this._data);
+      const dataString = ObjectUtils.serialise(this._data);
       PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
     } catch (error) {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
@@ -422,7 +422,7 @@ class MasterIndex {
     try {
       const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
       if (dataString) {
-        const loadedData = JSON.parse(dataString);
+        const loadedData = ObjectUtils.deserialise(dataString);
         // Merge loaded data with defaults
         this._data = {
           ...this._data,

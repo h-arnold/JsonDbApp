@@ -416,6 +416,248 @@ function createObjectUtilsTestSuite() {
     });
   });
   
+  // ============= SERIALISATION TESTS (RED PHASE) =============
+  
+  suite.addTest('testObjectUtilsSerialiseSimpleObjects', function() {
+    // Test serialisation method exists
+    TestFramework.assertTrue(typeof ObjectUtils.serialise === 'function', 'ObjectUtils.serialise should be a function');
+    
+    // Test simple object serialisation
+    const simpleObj = { name: 'test', value: 42, active: true };
+    const serialised = ObjectUtils.serialise(simpleObj);
+    
+    TestFramework.assertEquals('string', typeof serialised, 'Should return a string');
+    
+    // Parse back to verify JSON validity
+    const parsed = JSON.parse(serialised);
+    TestFramework.assertEquals(simpleObj.name, parsed.name, 'String property should be preserved');
+    TestFramework.assertEquals(simpleObj.value, parsed.value, 'Number property should be preserved');
+    TestFramework.assertEquals(simpleObj.active, parsed.active, 'Boolean property should be preserved');
+  });
+  
+  suite.addTest('testObjectUtilsSerialiseWithDates', function() {
+    // Test Date object serialisation
+    const dateObj = {
+      created: new Date('2023-06-15T10:30:00.000Z'),
+      name: 'Test Document',
+      metadata: {
+        lastModified: new Date('2023-12-25T15:45:30.000Z')
+      }
+    };
+    
+    const serialised = ObjectUtils.serialise(dateObj);
+    TestFramework.assertEquals('string', typeof serialised, 'Should return a string');
+    
+    // Verify Dates are converted to ISO strings
+    const parsed = JSON.parse(serialised);
+    TestFramework.assertEquals('2023-06-15T10:30:00.000Z', parsed.created, 'Date should be converted to ISO string');
+    TestFramework.assertEquals('2023-12-25T15:45:30.000Z', parsed.metadata.lastModified, 'Nested date should be converted to ISO string');
+  });
+  
+  suite.addTest('testObjectUtilsSerialiseArraysWithDates', function() {
+    // Test array serialisation with dates
+    const arrayWithDates = [
+      new Date('2023-01-01T00:00:00.000Z'),
+      'string value',
+      42,
+      { timestamp: new Date('2023-12-31T23:59:59.999Z') }
+    ];
+    
+    const serialised = ObjectUtils.serialise(arrayWithDates);
+    TestFramework.assertEquals('string', typeof serialised, 'Should return a string');
+    
+    const parsed = JSON.parse(serialised);
+    TestFramework.assertTrue(Array.isArray(parsed), 'Should preserve array structure');
+    TestFramework.assertEquals('2023-01-01T00:00:00.000Z', parsed[0], 'Array date should be converted to ISO string');
+    TestFramework.assertEquals('2023-12-31T23:59:59.999Z', parsed[3].timestamp, 'Object date in array should be converted');
+  });
+  
+  suite.addTest('testObjectUtilsSerialiseNullUndefined', function() {
+    // Test null serialisation
+    const serialisedNull = ObjectUtils.serialise(null);
+    TestFramework.assertEquals('null', serialisedNull, 'Null should serialise to "null"');
+    
+    // Test undefined serialisation (undefined is not valid JSON)
+    const serialisedUndefined = ObjectUtils.serialise(undefined);
+    TestFramework.assertEquals('undefined', typeof serialisedUndefined, 'Undefined serialisation should be handled appropriately');
+    
+    // Test object with null and undefined properties
+    const objWithSpecialValues = {
+      nullProp: null,
+      undefinedProp: undefined,
+      name: 'test'
+    };
+    
+    const serialised = ObjectUtils.serialise(objWithSpecialValues);
+    const parsed = JSON.parse(serialised);
+    TestFramework.assertNull(parsed.nullProp, 'Null property should be preserved');
+    TestFramework.assertEquals('test', parsed.name, 'Regular property should be preserved');
+    // Note: undefined properties are typically omitted in JSON
+  });
+  
+  suite.addTest('testObjectUtilsDeserialiseJsonString', function() {
+    // Test deserialisation method exists
+    TestFramework.assertTrue(typeof ObjectUtils.deserialise === 'function', 'ObjectUtils.deserialise should be a function');
+    
+    // Test simple JSON string deserialisation
+    const jsonString = '{"name":"test","value":42,"active":true}';
+    const deserialised = ObjectUtils.deserialise(jsonString);
+    
+    TestFramework.assertEquals('object', typeof deserialised, 'Should return an object');
+    TestFramework.assertEquals('test', deserialised.name, 'String property should be restored');
+    TestFramework.assertEquals(42, deserialised.value, 'Number property should be restored');
+    TestFramework.assertEquals(true, deserialised.active, 'Boolean property should be restored');
+  });
+  
+  suite.addTest('testObjectUtilsDeserialiseWithDateRestoration', function() {
+    // Test JSON string with ISO dates
+    const jsonWithDates = '{"created":"2023-06-15T10:30:00.000Z","name":"Test","metadata":{"lastModified":"2023-12-25T15:45:30.000Z"}}';
+    const deserialised = ObjectUtils.deserialise(jsonWithDates);
+    
+    TestFramework.assertTrue(deserialised.created instanceof Date, 'ISO string should be converted to Date');
+    TestFramework.assertTrue(deserialised.metadata.lastModified instanceof Date, 'Nested ISO string should be converted to Date');
+    TestFramework.assertEquals('2023-06-15T10:30:00.000Z', deserialised.created.toISOString(), 'Date value should be preserved');
+    TestFramework.assertEquals('2023-12-25T15:45:30.000Z', deserialised.metadata.lastModified.toISOString(), 'Nested date value should be preserved');
+  });
+  
+  suite.addTest('testObjectUtilsDeserialiseArraysWithDates', function() {
+    // Test array deserialisation with date restoration
+    const jsonArray = '["2023-01-01T00:00:00.000Z","string value",42,{"timestamp":"2023-12-31T23:59:59.999Z"}]';
+    const deserialised = ObjectUtils.deserialise(jsonArray);
+    
+    TestFramework.assertTrue(Array.isArray(deserialised), 'Should restore as array');
+    TestFramework.assertTrue(deserialised[0] instanceof Date, 'Array ISO string should be converted to Date');
+    TestFramework.assertEquals('string value', deserialised[1], 'String should remain string');
+    TestFramework.assertEquals(42, deserialised[2], 'Number should remain number');
+    TestFramework.assertTrue(deserialised[3].timestamp instanceof Date, 'Object date in array should be converted');
+  });
+  
+  suite.addTest('testObjectUtilsDeserialiseInvalidJson', function() {
+    // Test invalid JSON handling
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise('invalid json string');
+    }, Error, 'Should throw error for invalid JSON');
+    
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise('{"incomplete": json}');
+    }, Error, 'Should throw error for malformed JSON');
+    
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise('{');
+    }, Error, 'Should throw error for incomplete JSON');
+  });
+  
+  suite.addTest('testObjectUtilsDeserialiseNonStringInput', function() {
+    // Test non-string input validation
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise(42);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for number input');
+    
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise({});
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for object input');
+    
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise(null);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for null input');
+    
+    TestFramework.assertThrows(() => {
+      ObjectUtils.deserialise(undefined);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for undefined input');
+  });
+  
+  suite.addTest('testObjectUtilsRoundTripSerialisation', function() {
+    // Test complete serialise → deserialise cycles
+    const originalData = {
+      user: {
+        name: 'John Doe',
+        created: new Date('2023-06-15T10:30:00.000Z'),
+        preferences: {
+          theme: 'dark',
+          lastLogin: new Date('2023-12-25T15:45:30.000Z')
+        }
+      },
+      tags: ['admin', 'premium'],
+      timestamps: [
+        new Date('2023-01-01T00:00:00.000Z'),
+        new Date('2023-12-31T23:59:59.999Z')
+      ],
+      metadata: {
+        version: '1.0.0',
+        build: new Date('2023-06-01T00:00:00.000Z')
+      }
+    };
+    
+    // Perform round-trip
+    const serialised = ObjectUtils.serialise(originalData);
+    const deserialised = ObjectUtils.deserialise(serialised);
+    
+    // Verify structure preservation
+    TestFramework.assertEquals(originalData.user.name, deserialised.user.name, 'String properties should be preserved');
+    TestFramework.assertArrayEquals(originalData.tags, deserialised.tags, 'Arrays should be preserved');
+    TestFramework.assertEquals(originalData.metadata.version, deserialised.metadata.version, 'Nested properties should be preserved');
+    
+    // Verify Date preservation
+    TestFramework.assertTrue(deserialised.user.created instanceof Date, 'Dates should be restored as Date instances');
+    TestFramework.assertEquals(originalData.user.created.getTime(), deserialised.user.created.getTime(), 'Date values should be preserved');
+    TestFramework.assertTrue(deserialised.user.preferences.lastLogin instanceof Date, 'Nested dates should be restored');
+    TestFramework.assertTrue(deserialised.timestamps[0] instanceof Date, 'Array dates should be restored');
+    TestFramework.assertEquals(originalData.timestamps[0].getTime(), deserialised.timestamps[0].getTime(), 'Array date values should be preserved');
+  });
+  
+  suite.addTest('testObjectUtilsRoundTripComplexStructures', function() {
+    // Test round-trip with edge cases
+    const complexData = {
+      nullValue: null,
+      undefinedValue: undefined,
+      emptyObject: {},
+      emptyArray: [],
+      nestedEmpty: { inner: { deeper: {} } },
+      mixedArray: [
+        null,
+        'string',
+        42,
+        true,
+        new Date('2023-06-15T10:30:00.000Z'),
+        { nested: new Date('2023-12-25T15:45:30.000Z') }
+      ]
+    };
+    
+    const serialised = ObjectUtils.serialise(complexData);
+    const deserialised = ObjectUtils.deserialise(serialised);
+    
+    // Test null/undefined handling (undefined will be lost in JSON)
+    TestFramework.assertNull(deserialised.nullValue, 'Null should be preserved');
+    
+    // Test empty structures
+    TestFramework.assertEquals('object', typeof deserialised.emptyObject, 'Empty object should be preserved');
+    TestFramework.assertTrue(Array.isArray(deserialised.emptyArray), 'Empty array should be preserved');
+    
+    // Test mixed array with dates
+    TestFramework.assertTrue(deserialised.mixedArray[4] instanceof Date, 'Date in mixed array should be restored');
+    TestFramework.assertTrue(deserialised.mixedArray[5].nested instanceof Date, 'Nested date in array should be restored');
+  });
+  
+  suite.addTest('testObjectUtilsRoundTripWithNaNAndInfinity', function() {
+    // Test handling of special numeric values
+    const specialNumbers = {
+      nanValue: NaN,
+      infinityValue: Infinity,
+      negativeInfinityValue: -Infinity,
+      normalNumber: 42.5
+    };
+    
+    // NaN and Infinity should be handled appropriately in JSON
+    const serialised = ObjectUtils.serialise(specialNumbers);
+    const parsed = JSON.parse(serialised);
+    
+    // Note: JSON converts NaN and Infinity to null
+    TestFramework.assertNull(parsed.nanValue, 'NaN should become null in JSON');
+    TestFramework.assertNull(parsed.infinityValue, 'Infinity should become null in JSON');
+    TestFramework.assertNull(parsed.negativeInfinityValue, '-Infinity should become null in JSON');
+    TestFramework.assertEquals(42.5, parsed.normalNumber, 'Normal numbers should be preserved');
+  });
+  
   // ============= EDGE CASES AND ERROR CONDITIONS =============
   
   suite.addTest('testObjectUtilsEdgeCases', function() {
