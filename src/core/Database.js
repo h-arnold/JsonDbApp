@@ -172,7 +172,7 @@ class Database {
         metadata: {
           name: name,
           created: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
+          lastUpdated: new Date().toISOString(),
           documentCount: 0,
           version: 1
         }
@@ -551,7 +551,7 @@ class Database {
           name: miCollection.name || name,
           fileId: miCollection.fileId,
           created: miCollection.created || new Date().toISOString(),
-          lastModified: miCollection.lastModified || new Date().toISOString(),
+          lastUpdated: miCollection.lastUpdated || new Date().toISOString(),
           documentCount: miCollection.documentCount || 0
         };
       }
@@ -587,7 +587,7 @@ class Database {
         name: name,
         fileId: driveFileId,
         created: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
         documentCount: 0
       };
       
@@ -646,7 +646,7 @@ class Database {
         name: name,
         fileId: driveFileId,
         created: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
+        lastUpdated: new Date().toISOString(),
         documentCount: 0
       });
       
