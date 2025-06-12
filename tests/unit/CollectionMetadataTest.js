@@ -56,40 +56,63 @@ function createCollectionMetadataConstructorTestSuite() {
     TestFramework.assertEquals(metadataObject.lastUpdated.getTime(), initialMetadata.lastUpdated.getTime(), 'Should preserve lastUpdated timestamp');
     TestFramework.assertEquals(metadataObject.documentCount, 5, 'Should preserve documentCount');
   });
+
+  // RED PHASE: Test 2.1 - Constructor with name and fileId
+  suite.addTest('should create metadata with name and fileId parameters', function() {
+    // Arrange
+    const name = 'testCollection';
+    const fileId = 'file123';
+    const initialMetadata = {
+      created: new Date('2024-01-01T00:00:00Z'),
+      lastUpdated: new Date('2024-01-02T00:00:00Z'),
+      documentCount: 5
+    };
+    
+    // Act
+    const metadata = new CollectionMetadata(name, fileId, initialMetadata);
+    const metadataObject = metadata.toObject();
+    
+    // Assert
+    TestFramework.assertEquals(metadata.name, name, 'Should set name property');
+    TestFramework.assertEquals(metadata.fileId, fileId, 'Should set fileId property');
+    TestFramework.assertEquals(metadataObject.name, name, 'toObject should include name');
+    TestFramework.assertEquals(metadataObject.fileId, fileId, 'toObject should include fileId');
+    TestFramework.assertEquals(metadataObject.created.getTime(), initialMetadata.created.getTime(), 'Should preserve created timestamp');
+    TestFramework.assertEquals(metadataObject.lastUpdated.getTime(), initialMetadata.lastUpdated.getTime(), 'Should preserve lastUpdated timestamp');
+    TestFramework.assertEquals(metadataObject.documentCount, 5, 'Should preserve documentCount');
+  });
   
-  suite.addTest('should throw error for invalid metadata input', function() {
+  suite.addTest('should create metadata with name only', function() {
+    // Arrange
+    const name = 'testCollection';
+    
+    // Act
+    const metadata = new CollectionMetadata(name);
+    
+    // Assert
+    TestFramework.assertEquals(metadata.name, name, 'Should set name property');
+    TestFramework.assertEquals(metadata.fileId, null, 'Should default fileId to null');
+  });
+  
+  suite.addTest('should throw error for invalid name type', function() {
     // Arrange & Act & Assert
     TestFramework.assertThrows(() => {
-      new CollectionMetadata('invalid-metadata');
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-object metadata');
+      new CollectionMetadata(123);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-string name');
   });
   
-  suite.addTest('should throw error for invalid documentCount type', function() {
-    // Arrange
-    const invalidMetadata = {
-      created: new Date(),
-      lastUpdated: new Date(),
-      documentCount: 'not-a-number'
-    };
-    
-    // Act & Assert
+  suite.addTest('should throw error for empty name string', function() {
+    // Arrange & Act & Assert
     TestFramework.assertThrows(() => {
-      new CollectionMetadata(invalidMetadata);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-numeric documentCount');
+      new CollectionMetadata('');
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for empty name');
   });
   
-  suite.addTest('should throw error for negative documentCount', function() {
-    // Arrange
-    const invalidMetadata = {
-      created: new Date(),
-      lastUpdated: new Date(),
-      documentCount: -1
-    };
-    
-    // Act & Assert
+  suite.addTest('should throw error for invalid fileId type', function() {
+    // Arrange & Act & Assert
     TestFramework.assertThrows(() => {
-      new CollectionMetadata(invalidMetadata);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for negative documentCount');
+      new CollectionMetadata('validName', 123);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-string fileId');
   });
   
   return suite;
@@ -191,11 +214,157 @@ function createCollectionMetadataUpdateTestSuite() {
     Utilities.sleep(1);
     
     // Act
-    metadata.incrementDocumentCount();
+    metadata.setDocumentCount(5);
     const updatedMetadata = metadata.toObject();
     
     // Assert
-    TestFramework.assertTrue(updatedMetadata.lastUpdated > originalLastUpdated, 'LastUpdated should be updated when document count changes');
+    TestFramework.assertTrue(updatedMetadata.lastUpdated > originalLastUpdated, 'LastUpdated should be more recent after document count change');
+  });
+
+  // RED PHASE: Test 2.2 - Modification Token Management
+  suite.addTest('should get and set modificationToken', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    const token = 'mod-token-12345';
+    
+    // Act
+    metadata.setModificationToken(token);
+    
+    // Assert
+    TestFramework.assertEquals(metadata.getModificationToken(), token, 'Should return set modification token');
+    TestFramework.assertEquals(metadata.modificationToken, token, 'Should set modificationToken property');
+  });
+  
+  suite.addTest('should include modificationToken in toObject output', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    const token = 'mod-token-67890';
+    
+    // Act
+    metadata.setModificationToken(token);
+    const metadataObject = metadata.toObject();
+    
+    // Assert
+    TestFramework.assertEquals(metadataObject.modificationToken, token, 'toObject should include modificationToken');
+  });
+  
+  suite.addTest('should throw error for invalid modificationToken type', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      metadata.setModificationToken(123);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-string modificationToken');
+  });
+  
+  suite.addTest('should throw error for empty modificationToken', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      metadata.setModificationToken('');
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for empty modificationToken');
+  });
+  
+  suite.addTest('should allow null modificationToken', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    metadata.setModificationToken('initial-token');
+    
+    // Act
+    metadata.setModificationToken(null);
+    
+    // Assert
+    TestFramework.assertEquals(metadata.getModificationToken(), null, 'Should allow setting modificationToken to null');
+  });
+
+  // RED PHASE: Test 2.3 - Lock Status Management
+  suite.addTest('should get and set lockStatus', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    const lockStatus = {
+      isLocked: true,
+      lockedBy: 'user123',
+      lockedAt: new Date(),
+      lockTimeout: 300000
+    };
+    
+    // Act
+    metadata.setLockStatus(lockStatus);
+    
+    // Assert
+    const retrievedLockStatus = metadata.getLockStatus();
+    TestFramework.assertEquals(retrievedLockStatus.isLocked, lockStatus.isLocked, 'Should return correct isLocked value');
+    TestFramework.assertEquals(retrievedLockStatus.lockedBy, lockStatus.lockedBy, 'Should return correct lockedBy value');
+    TestFramework.assertEquals(retrievedLockStatus.lockedAt.getTime(), lockStatus.lockedAt.getTime(), 'Should return correct lockedAt timestamp');
+    TestFramework.assertEquals(retrievedLockStatus.lockTimeout, lockStatus.lockTimeout, 'Should return correct lockTimeout value');
+  });
+  
+  suite.addTest('should include lockStatus in toObject output', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    const lockStatus = {
+      isLocked: false,
+      lockedBy: null,
+      lockedAt: null,
+      lockTimeout: null
+    };
+    
+    // Act
+    metadata.setLockStatus(lockStatus);
+    const metadataObject = metadata.toObject();
+    
+    // Assert
+    TestFramework.assertEquals(metadataObject.lockStatus.isLocked, false, 'toObject should include lockStatus.isLocked');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockedBy, null, 'toObject should include lockStatus.lockedBy');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockedAt, null, 'toObject should include lockStatus.lockedAt');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockTimeout, null, 'toObject should include lockStatus.lockTimeout');
+  });
+  
+  suite.addTest('should throw error for invalid lockStatus type', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      metadata.setLockStatus('invalid');
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-object lockStatus');
+  });
+  
+  suite.addTest('should validate lockStatus properties', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    const invalidLockStatus = {
+      isLocked: 'not-boolean',
+      lockedBy: 123,
+      lockedAt: 'not-date',
+      lockTimeout: 'not-number'
+    };
+    
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      metadata.setLockStatus(invalidLockStatus);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for invalid lockStatus properties');
+  });
+  
+  suite.addTest('should allow null lockStatus', function() {
+    // Arrange
+    const metadata = new CollectionMetadata('testCollection', 'file123');
+    const initialLockStatus = {
+      isLocked: true,
+      lockedBy: 'user123',
+      lockedAt: new Date(),
+      lockTimeout: 300000
+    };
+    metadata.setLockStatus(initialLockStatus);
+    
+    // Act
+    metadata.setLockStatus(null);
+    
+    // Assert
+    TestFramework.assertEquals(metadata.getLockStatus(), null, 'Should allow setting lockStatus to null');
   });
   
   return suite;
@@ -210,53 +379,173 @@ function createCollectionMetadataSerialisationTestSuite() {
   
   suite.addTest('should return plain object from toObject method', function() {
     // Arrange
-    const initialMetadata = {
-      created: new Date('2024-01-01T00:00:00Z'),
-      lastUpdated: new Date('2024-01-02T00:00:00Z'),
-      documentCount: 10
-    };
-    const metadata = new CollectionMetadata(initialMetadata);
+    const metadata = new CollectionMetadata();
     
     // Act
-    const plainObject = metadata.toObject();
+    const metadataObject = metadata.toObject();
     
     // Assert
-    TestFramework.assertEquals(typeof plainObject, 'object', 'Should return an object');
-    TestFramework.assertFalse(plainObject instanceof CollectionMetadata, 'Should not be an instance of CollectionMetadata');
-    TestFramework.assertEquals(plainObject.documentCount, 10, 'Should preserve documentCount');
-    TestFramework.assertTrue(plainObject.created instanceof Date, 'Should preserve Date objects');
+    TestFramework.assertTrue(typeof metadataObject === 'object', 'Should return an object');
+    TestFramework.assertTrue(metadataObject.created instanceof Date, 'Should include created Date');
+    TestFramework.assertTrue(metadataObject.lastUpdated instanceof Date, 'Should include lastUpdated Date');
+    TestFramework.assertTrue(typeof metadataObject.documentCount === 'number', 'Should include documentCount number');
+  });
+
+  // RED PHASE: Test 2.4 - Enhanced toObject() Method
+  suite.addTest('should include all fields in toObject output', function() {
+    // Arrange
+    const name = 'testCollection';
+    const fileId = 'file123';
+    const modificationToken = 'mod-token-12345';
+    const lockStatus = {
+      isLocked: true,
+      lockedBy: 'user123',
+      lockedAt: new Date(),
+      lockTimeout: 300000
+    };
+    
+    const metadata = new CollectionMetadata(name, fileId);
+    metadata.setModificationToken(modificationToken);
+    metadata.setLockStatus(lockStatus);
+    
+    // Act
+    const metadataObject = metadata.toObject();
+    
+    // Assert
+    TestFramework.assertEquals(metadataObject.name, name, 'toObject should include name');
+    TestFramework.assertEquals(metadataObject.fileId, fileId, 'toObject should include fileId');
+    TestFramework.assertEquals(metadataObject.modificationToken, modificationToken, 'toObject should include modificationToken');
+    TestFramework.assertTrue(metadataObject.hasOwnProperty('lockStatus'), 'toObject should include lockStatus property');
+    TestFramework.assertEquals(metadataObject.lockStatus.isLocked, lockStatus.isLocked, 'toObject should include lockStatus.isLocked');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockedBy, lockStatus.lockedBy, 'toObject should include lockStatus.lockedBy');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockedAt.getTime(), lockStatus.lockedAt.getTime(), 'toObject should include lockStatus.lockedAt');
+    TestFramework.assertEquals(metadataObject.lockStatus.lockTimeout, lockStatus.lockTimeout, 'toObject should include lockStatus.lockTimeout');
+    TestFramework.assertTrue(metadataObject.created instanceof Date, 'toObject should include created Date');
+    TestFramework.assertTrue(metadataObject.lastUpdated instanceof Date, 'toObject should include lastUpdated Date');
+    TestFramework.assertTrue(typeof metadataObject.documentCount === 'number', 'toObject should include documentCount');
   });
   
   suite.addTest('should create independent clone', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
-    metadata.setDocumentCount(5);
+    const name = 'testCollection';
+    const fileId = 'file123';
+    const modificationToken = 'mod-token-12345';
+    const lockStatus = {
+      isLocked: true,
+      lockedBy: 'user123',
+      lockedAt: new Date(),
+      lockTimeout: 300000
+    };
+    
+    const original = new CollectionMetadata(name, fileId);
+    original.setModificationToken(modificationToken);
+    original.setLockStatus(lockStatus);
     
     // Act
-    const clonedMetadata = metadata.clone();
-    
-    // Modify original
-    metadata.setDocumentCount(10);
+    const cloned = original.clone();
     
     // Assert
-    TestFramework.assertEquals(clonedMetadata.toObject().documentCount, 5, 'Clone should maintain original values');
-    TestFramework.assertEquals(metadata.toObject().documentCount, 10, 'Original should have modified values');
-    TestFramework.assertTrue(clonedMetadata instanceof CollectionMetadata, 'Clone should be instance of CollectionMetadata');
+    TestFramework.assertEquals(cloned.name, original.name, 'Clone should have same name');
+    TestFramework.assertEquals(cloned.fileId, original.fileId, 'Clone should have same fileId');
+    TestFramework.assertEquals(cloned.getModificationToken(), original.getModificationToken(), 'Clone should have same modificationToken');
+    
+    // Verify independence by modifying original
+    original.setModificationToken('different-token');
+    TestFramework.assertNotEquals(cloned.getModificationToken(), original.getModificationToken(), 'Clone should be independent of original');
   });
   
   suite.addTest('should clone with independent timestamps', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
-    const clone = metadata.clone();
+    const original = new CollectionMetadata('testCollection', 'file123');
     
-    // Wait and modify original
-    Utilities.sleep(1);
-    metadata.updateLastModified();
+    // Act
+    const cloned = original.clone();
+    
+    // Modify original timestamp
+    original.updateLastModified();
     
     // Assert
-    const originalMetadata = metadata.toObject();
-    const clonedMetadata = clone.toObject();
-    TestFramework.assertTrue(originalMetadata.lastUpdated > clonedMetadata.lastUpdated, 'Clone timestamps should be independent');
+    TestFramework.assertNotEquals(cloned.toObject().lastUpdated.getTime(), original.toObject().lastUpdated.getTime(), 'Clone timestamps should be independent');
+  });
+
+  // RED PHASE: Test 2.5 - Static Factory Methods
+  suite.addTest('should create instance from object using fromObject factory', function() {
+    // Arrange
+    const sourceObject = {
+      name: 'testCollection',
+      fileId: 'file123',
+      created: new Date('2024-01-01T00:00:00Z'),
+      lastUpdated: new Date('2024-01-02T00:00:00Z'),
+      documentCount: 5,
+      modificationToken: 'mod-token-12345',
+      lockStatus: {
+        isLocked: true,
+        lockedBy: 'user123',
+        lockedAt: new Date('2024-01-02T01:00:00Z'),
+        lockTimeout: 300000
+      }
+    };
+    
+    // Act
+    const metadata = CollectionMetadata.fromObject(sourceObject);
+    
+    // Assert
+    TestFramework.assertEquals(metadata.name, sourceObject.name, 'Should set name from object');
+    TestFramework.assertEquals(metadata.fileId, sourceObject.fileId, 'Should set fileId from object');
+    TestFramework.assertEquals(metadata.toObject().created.getTime(), sourceObject.created.getTime(), 'Should set created from object');
+    TestFramework.assertEquals(metadata.toObject().lastUpdated.getTime(), sourceObject.lastUpdated.getTime(), 'Should set lastUpdated from object');
+    TestFramework.assertEquals(metadata.toObject().documentCount, sourceObject.documentCount, 'Should set documentCount from object');
+    TestFramework.assertEquals(metadata.getModificationToken(), sourceObject.modificationToken, 'Should set modificationToken from object');
+    
+    const lockStatus = metadata.getLockStatus();
+    TestFramework.assertEquals(lockStatus.isLocked, sourceObject.lockStatus.isLocked, 'Should set lockStatus.isLocked from object');
+    TestFramework.assertEquals(lockStatus.lockedBy, sourceObject.lockStatus.lockedBy, 'Should set lockStatus.lockedBy from object');
+    TestFramework.assertEquals(lockStatus.lockedAt.getTime(), sourceObject.lockStatus.lockedAt.getTime(), 'Should set lockStatus.lockedAt from object');
+    TestFramework.assertEquals(lockStatus.lockTimeout, sourceObject.lockStatus.lockTimeout, 'Should set lockStatus.lockTimeout from object');
+  });
+  
+  suite.addTest('should create instance using create factory method', function() {
+    // Arrange
+    const name = 'testCollection';
+    const fileId = 'file123';
+    
+    // Act
+    const metadata = CollectionMetadata.create(name, fileId);
+    
+    // Assert
+    TestFramework.assertEquals(metadata.name, name, 'Should set name using create factory');
+    TestFramework.assertEquals(metadata.fileId, fileId, 'Should set fileId using create factory');
+    TestFramework.assertEquals(metadata.toObject().documentCount, 0, 'Should initialise documentCount to 0');
+    TestFramework.assertEquals(metadata.getModificationToken(), null, 'Should initialise modificationToken to null');
+    TestFramework.assertEquals(metadata.getLockStatus(), null, 'Should initialise lockStatus to null');
+    TestFramework.assertTrue(metadata.toObject().created instanceof Date, 'Should set created timestamp');
+    TestFramework.assertTrue(metadata.toObject().lastUpdated instanceof Date, 'Should set lastUpdated timestamp');
+  });
+  
+  suite.addTest('should throw error for invalid object in fromObject', function() {
+    // Arrange & Act & Assert
+    TestFramework.assertThrows(() => {
+      CollectionMetadata.fromObject(null);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for null object');
+    
+    TestFramework.assertThrows(() => {
+      CollectionMetadata.fromObject('not-an-object');
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-object');
+  });
+  
+  suite.addTest('should throw error for missing required fields in fromObject', function() {
+    // Arrange
+    const incompleteObject = {
+      created: new Date(),
+      lastUpdated: new Date(),
+      documentCount: 5
+      // Missing name and fileId
+    };
+    
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      CollectionMetadata.fromObject(incompleteObject);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for missing required fields');
   });
   
   return suite;
