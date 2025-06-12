@@ -23,7 +23,7 @@ class MasterIndex {
 
     this._data = {
       version: this._config.version,
-      lastUpdated: new Date(), // now stored as a Date object
+      lastUpdated: new Date(),
       collections: {},
       locks: {},
       modificationHistory: {}
@@ -83,13 +83,7 @@ class MasterIndex {
       
       // Store the serialised form
       this._data.collections[name] = collectionMetadata.toObject();
-      this._data.lastUpdated = new Date(); // use Date object
-      
-      // If lock status is provided, also store it in _data.locks for consistency
-      const lockStatus = collectionMetadata.getLockStatus();
-      if (lockStatus && lockStatus.isLocked) {
-        this._data.locks[name] = lockStatus;
-      }
+      this._data.lastUpdated = new Date();
       
       // Track modification history
       this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata.toObject());
@@ -103,7 +97,7 @@ class MasterIndex {
    */
   save() {
     try {
-      this._data.lastUpdated = new Date(); // store as Date object
+      this._data.lastUpdated = new Date();
       const dataString = ObjectUtils.serialise(this._data);
       PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
     } catch (error) {
@@ -228,7 +222,7 @@ class MasterIndex {
       
       // Store the updated metadata back
       this._data.collections[name] = collectionMetadata.toObject();
-      this._data.lastUpdated = new Date(); // use Date object
+      this._data.lastUpdated = new Date();
       
       // Track modification history
       this._addToModificationHistory(name, 'UPDATE_METADATA', updates);
@@ -236,7 +230,7 @@ class MasterIndex {
       return collectionMetadata.toObject();
     });
   }
-  
+
   /**
    * Remove a collection from the master index
    * @param {string} name - Collection name to remove
@@ -310,7 +304,7 @@ class MasterIndex {
         this._data.collections[collectionName] = collectionMetadata.toObject();
       }
       
-      this._data.lastUpdated = new Date(); // use Date object
+      this._data.lastUpdated = new Date();
       
       return true;
     });
@@ -480,7 +474,7 @@ class MasterIndex {
             ...collectionMetadata.toObject(),
             ...newData, // Apply any remaining fields
             modificationToken: collectionMetadata.modificationToken,
-            lastModified: collectionMetadata.lastUpdated // leave as Date object
+            lastModified: collectionMetadata.lastUpdated
           };
           break;
           
@@ -490,7 +484,7 @@ class MasterIndex {
       
       // Update the collection with resolved data
       this._data.collections[collectionName] = resolvedData;
-      this._data.lastUpdated = new Date(); // use Date object
+      this._data.lastUpdated = new Date();
       
       // Track conflict resolution in history
       this._addToModificationHistory(collectionName, 'CONFLICT_RESOLVED', {
@@ -584,4 +578,98 @@ class MasterIndex {
    * @param {Object} data - Operation data
    * @private
    */
-  _addToModificationHistory(collectionName, operation, d
+  _addToModificationHistory(collectionName, operation, data) {
+    if (!this._data.modificationHistory[collectionName]) {
+      this._data.modificationHistory[collectionName] = [];
+    }
+    
+    this._data.modificationHistory[collectionName].push({
+      operation: operation,
+      timestamp: new Date(),
+      data: data
+    });
+    
+    // Keep only last 50 entries to prevent excessive growth
+    if (this._data.modificationHistory[collectionName].length > 50) {
+      this._data.modificationHistory[collectionName] = 
+        this._data.modificationHistory[collectionName].slice(-50);
+    }
+  }
+  
+  /**
+   * Internal cleanup of expired locks (without ScriptLock wrapper to prevent deadlock)
+   * @returns {boolean} True if any locks were cleaned up
+   * @private
+   */
+  _internalCleanupExpiredLocks() {
+    const now = Date.now();
+    let anyExpired = false;
+    
+    Object.keys(this._data.locks).forEach(collectionName => {
+      const lockInfo = this._data.locks[collectionName];
+      const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
+      
+      if (now >= expiresAt) {
+        this._removeLock(collectionName);
+        anyExpired = true;
+      }
+    });
+    
+    if (anyExpired) {
+      this._data.lastUpdated = new Date();
+    }
+    
+    return anyExpired;
+  }
+  
+  /**
+   * Acquire Google Apps Script LockService lock
+   * @param {number} timeout - Lock timeout in milliseconds
+   * @returns {GoogleAppsScript.Lock.Lock} Lock instance
+   * @private
+   */
+  _acquireScriptLock(timeout = 10000) {
+    try {
+      const lock = LockService.getScriptLock();
+      const acquired = lock.tryLock(timeout);
+      
+      if (!acquired) {
+        throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT('MasterIndex ScriptLock', timeout);
+      }
+      
+      return lock;
+    } catch (error) {
+      if (error instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
+        throw error;
+      }
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('lock_acquisition', error.message);
+    }
+  }
+  
+  /**
+   * Execute operation with ScriptLock protection
+   * @param {Function} operation - Operation to execute
+   * @param {number} timeout - Lock timeout in milliseconds
+   * @returns {*} Operation result
+   * @private
+   */
+  _withScriptLock(operation, timeout = 10000) {
+    const lock = this._acquireScriptLock(timeout);
+    
+    try {
+      // Reload data from ScriptProperties to get latest state
+      this._loadFromScriptProperties();
+      
+      // Execute the operation
+      const result = operation();
+      
+      // Save updated data back to ScriptProperties
+      this.save();
+      
+      return result;
+    } finally {
+      // Always release the lock
+      lock.releaseLock();
+    }
+  }
+}

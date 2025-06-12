@@ -351,7 +351,7 @@ Both `MasterIndex` and `FileOperations` now use the centralised `ObjectUtils.ser
 // MasterIndex.save() - CURRENT IMPLEMENTATION
 save() {
   try {
-    this._data.lastUpdated = new Date().toISOString();
+    this._data.lastUpdated = new Date();
     const dataString = ObjectUtils.serialise(this._data);
     PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
   } catch (error) {

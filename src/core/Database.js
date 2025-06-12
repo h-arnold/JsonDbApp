@@ -171,8 +171,8 @@ class Database {
         documents: {},
         metadata: {
           name: name,
-          created: new Date().toISOString(),
-          lastUpdated: new Date().toISOString(),
+          created: new Date(),
+          lastUpdated: new Date(),
           documentCount: 0,
           version: 1
         }
@@ -363,7 +363,7 @@ class Database {
       }
       if (!indexData.lastUpdated) {
         this._logger.warn('Index file missing lastUpdated property, repairing');
-        indexData.lastUpdated = new Date().toISOString();
+        indexData.lastUpdated = new Date();
       }
       
       // Validate collections structure
@@ -446,8 +446,8 @@ class Database {
     const indexFileName = `database_index_${Date.now()}.json`;
     const initialIndexData = {
       collections: {},
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
+      created: new Date(),
+      lastUpdated: new Date(),
       version: 1
     };
     
@@ -540,7 +540,7 @@ class Database {
       // Create a new index data structure based on MasterIndex
       const backupData = {
         collections: {},
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date(),
         version: 1
       };
       
@@ -550,8 +550,8 @@ class Database {
         backupData.collections[name] = {
           name: miCollection.name || name,
           fileId: miCollection.fileId,
-          created: miCollection.created || new Date().toISOString(),
-          lastUpdated: miCollection.lastUpdated || new Date().toISOString(),
+          created: miCollection.created || new Date(),
+          lastUpdated: miCollection.lastUpdated || new Date(),
           documentCount: miCollection.documentCount || 0
         };
       }
@@ -586,12 +586,12 @@ class Database {
       indexData.collections[name] = {
         name: name,
         fileId: driveFileId,
-        created: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
+        created: new Date(),
+        lastUpdated: new Date(),
         documentCount: 0
       };
       
-      indexData.lastUpdated = new Date().toISOString();
+      indexData.lastUpdated = new Date();
       
       this._fileService.writeFile(this.indexFileId, indexData);
       
@@ -618,7 +618,7 @@ class Database {
       const indexData = this.loadIndex();
       
       delete indexData.collections[name];
-      indexData.lastUpdated = new Date().toISOString();
+      indexData.lastUpdated = new Date();
       
       this._fileService.writeFile(this.indexFileId, indexData);
       
@@ -645,8 +645,8 @@ class Database {
       this._masterIndex.addCollection(name, {
         name: name,
         fileId: driveFileId,
-        created: new Date().toISOString(),
-        lastUpdated: new Date().toISOString(),
+        created: new Date(),
+        lastUpdated: new Date(),
         documentCount: 0
       });
       
