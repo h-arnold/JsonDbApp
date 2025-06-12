@@ -461,6 +461,9 @@ function createCollectionMetadataSerialisationTestSuite() {
     // Act
     const cloned = original.clone();
     
+    // Wait a small amount to ensure timestamp difference
+    Utilities.sleep(1);
+    
     // Modify original timestamp
     original.updateLastModified();
     
@@ -704,11 +707,11 @@ function runCollectionMetadataTests() {
     cleanupCollectionMetadataTests();
     
     GASDBLogger.info('CollectionMetadata Test Execution Complete', {
-      totalSuites: results.suites?.length || 'unknown',
-      totalTests: results.results?.length || 'unknown',
-      passedTests: results.getPassed()?.length || 'unknown',
-      failedTests: results.getFailed()?.length || 'unknown',
-      success: results.results?.every(r => r.passed) || false
+      totalSuites: testFramework.testSuites.size,
+      totalTests: results.results.length,
+      passedTests: results.getPassed().length,
+      failedTests: results.getFailed().length,
+      success: results.results.every(r => r.passed)
     });
     
     return results;
