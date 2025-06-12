@@ -61,6 +61,8 @@ class Database {
           count: Object.keys(masterIndexCollections).length
         });
         
+
+        // Loop through the collections and load the metadata into memory
         for (const [name, collectionData] of Object.entries(masterIndexCollections)) {
           if (collectionData.fileId) {
             const collection = this._createCollectionObject(name, collectionData.fileId);
@@ -507,6 +509,9 @@ class Database {
   
   /**
    * Create a collection object (full Collection instance)
+   * 
+   * Note: Collections are lazy-loaded so this method doesn't load the full collection into memory
+   * until a CRUD operation on it is called.
    *
    * @param {string} name - Collection name
    * @param {string} driveFileId - Drive file ID
