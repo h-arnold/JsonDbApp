@@ -113,7 +113,7 @@ class ObjectUtils {
    * @returns {string} JSON string with Dates converted to ISO strings
    */
   static serialise(obj) {
-    return JSON.stringify(obj, null, 2);
+    return JSON.stringify(obj);
   }
 
   /**
@@ -127,11 +127,13 @@ class ObjectUtils {
       throw new InvalidArgumentError('jsonString must be a string');
     }
     
+    let parsed;
     try {
-      const parsed = JSON.parse(jsonString);
-      return ObjectUtils.convertDateStringsToObjects(parsed);
+      parsed = JSON.parse(jsonString);
     } catch (error) {
       throw new InvalidArgumentError('jsonString must be valid JSON', jsonString, error.message);
     }
+    
+    return ObjectUtils.convertDateStringsToObjects(parsed);
   }
 }
