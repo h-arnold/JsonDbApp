@@ -45,37 +45,81 @@ The following has been completed:
 
 **No further work needed for Phase 1** - proceed directly to Phase 2.
 
-### Phase 2: Extend CollectionMetadata (Red-Green-Refactor)
+### Phase 2: ✅ RED COMPLETE - Extend CollectionMetadata (Red-Green-Refactor)
 
-#### Test 2.1: CollectionMetadata Constructor with All Fields
+**STATUS**: ✅ **RED PHASE COMPLETED** - All failing tests implemented and pushed
 
-**Red**: Write test expecting CollectionMetadata to accept name and fileId in constructor
-**Green**: Add name and fileId parameters to CollectionMetadata constructor
-**Refactor**: Ensure validation and clean implementation
+#### ✅ Test 2.1: CollectionMetadata Constructor with All Fields
 
-#### Test 2.2: CollectionMetadata Modification Token Management
+**✅ Red**: COMPLETED - Tests written expecting CollectionMetadata to accept name and fileId in constructor
+- ✅ `should create metadata with name and fileId parameters` - Tests 3-parameter constructor
+- ✅ `should create metadata with name only` - Tests 1-parameter constructor  
+- ✅ `should throw error for invalid name type` - Validates string requirement
+- ✅ `should throw error for empty name string` - Validates non-empty requirement
+- ✅ `should throw error for invalid fileId type` - Validates string/null requirement
 
-**Red**: Write tests for modificationToken getter/setter with validation
-**Green**: Implement modificationToken property with validation
-**Refactor**: Optimise implementation
+**Green**: NEXT - Add name and fileId parameters to CollectionMetadata constructor
+**Refactor**: NEXT - Ensure validation and clean implementation
 
-#### Test 2.3: CollectionMetadata Lock Status Management
+#### ✅ Test 2.2: CollectionMetadata Modification Token Management
 
-**Red**: Write tests for lockStatus getter/setter with validation
-**Green**: Implement lockStatus property with validation
-**Refactor**: Clean up implementation
+**✅ Red**: COMPLETED - Tests written for modificationToken getter/setter with validation
+- ✅ `should get and set modificationToken` - Tests basic getter/setter functionality
+- ✅ `should include modificationToken in toObject output` - Tests serialisation
+- ✅ `should throw error for invalid modificationToken type` - Validates string requirement
+- ✅ `should throw error for empty modificationToken` - Validates non-empty requirement
+- ✅ `should allow null modificationToken` - Tests null assignment
+**Green**: NEXT - Implement modificationToken property with validation
+**Refactor**: NEXT - Optimise implementation
 
-#### Test 2.4: CollectionMetadata Enhanced toObject() Method
+#### ✅ Test 2.3: CollectionMetadata Lock Status Management
 
-**Red**: Write tests expecting toObject() to include all new fields
-**Green**: Update toObject() method to include name, fileId, modificationToken, lockStatus
-**Refactor**: Ensure consistent output format
+**✅ Red**: COMPLETED - Tests written for lockStatus getter/setter with validation
+- ✅ `should get and set lockStatus` - Tests lockStatus object management
+- ✅ `should include lockStatus in toObject output` - Tests serialisation
+- ✅ `should throw error for invalid lockStatus type` - Validates object requirement
+- ✅ `should validate lockStatus properties` - Validates internal structure
+- ✅ `should allow null lockStatus` - Tests null assignment
 
-#### Test 2.5: CollectionMetadata Static Factory Methods
+**Green**: NEXT - Implement lockStatus property with validation
+**Refactor**: NEXT - Clean up implementation
 
-**Red**: Write tests for static factory methods (fromObject, create)
-**Green**: Implement static factory methods for creating instances
-**Refactor**: Optimise and ensure consistency
+#### ✅ Test 2.4: CollectionMetadata Enhanced toObject() Method
+
+**✅ Red**: COMPLETED - Tests written expecting toObject() to include all new fields
+- ✅ `should include all fields in toObject output` - Tests complete serialisation
+- ✅ Enhanced clone tests with new properties
+
+**Green**: NEXT - Update toObject() method to include name, fileId, modificationToken, lockStatus
+**Refactor**: NEXT - Ensure consistent output format
+
+#### ✅ Test 2.5: CollectionMetadata Static Factory Methods
+
+**✅ Red**: COMPLETED - Tests written for static factory methods (fromObject, create)
+- ✅ `should create instance from object using fromObject factory` - Tests deserialisation factory
+- ✅ `should create instance using create factory method` - Tests creation factory
+- ✅ `should throw error for invalid object in fromObject` - Validates input
+- ✅ `should throw error for missing required fields in fromObject` - Validates completeness
+
+**Green**: NEXT - Implement static factory methods for creating instances
+**Refactor**: NEXT - Optimise and ensure consistency
+
+### Current Test Results Summary
+
+**RED Phase Status**: ✅ COMPLETED
+- **Total Tests**: 36 tests written
+- **Expected Failures**: 19 tests failing (expected for RED phase)
+- **Passing Tests**: 17 tests (existing functionality)
+- **Pass Rate**: 47.2% (expected during RED phase)
+
+**Key Failing Test Categories** (as expected):
+- Constructor with name/fileId parameters (2 tests)
+- Modification token management (5 tests) 
+- Lock status management (5 tests)
+- Enhanced serialisation (5 tests)
+- Static factory methods (2 tests)
+
+**Next Steps**: Proceed to GREEN phase implementation
 
 ### Phase 3: Update MasterIndex to Use CollectionMetadata (Red-Green-Refactor)
 
@@ -333,11 +377,11 @@ Current ObjectUtils provides all required functionality:
 ## Implementation Timeline
 
 1. **Phase 1**: ✅ **COMPLETED** - ObjectUtils Integration for MasterIndex Serialisation 
-2. **Phase 2**: Extend CollectionMetadata (TDD cycles 2.1-2.5)
-3. **Phase 3**: Refactor MasterIndex to use CollectionMetadata (TDD cycles 3.1-3.5)  
-4. **Phase 4**: Integration and cleanup (TDD cycles 4.1-4.3)
+2. **Phase 2**: ✅ **RED COMPLETED** - Extend CollectionMetadata (TDD cycles 2.1-2.5)
+3. **Phase 3**: **NEXT** - Refactor MasterIndex to use CollectionMetadata (TDD cycles 3.1-3.5)  
+4. **Phase 4**: **PENDING** - Integration and cleanup (TDD cycles 4.1-4.3)
 
-**Current Status**: Phase 1 complete. Ready to proceed with Phase 2 - extending CollectionMetadata.
+**Current Status**: Phase 2 RED complete. Ready to proceed with Phase 2 GREEN - implementing CollectionMetadata extensions.
 
 Each remaining phase follows strict Red-Green-Refactor cycles with comprehensive testing.
 
