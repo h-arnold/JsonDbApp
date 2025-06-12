@@ -113,7 +113,12 @@ class ObjectUtils {
    * @returns {string} JSON string with Dates converted to ISO strings
    */
   static serialise(obj) {
-    return JSON.stringify(obj);
+    return JSON.stringify(obj, (key, value) => {
+      if (value instanceof Date) {
+        return value.toISOString();
+      }
+      return value;
+    });
   }
 
   /**
