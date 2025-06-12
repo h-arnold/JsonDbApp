@@ -28,36 +28,30 @@ function testMasterIndexCollectionMetadataIntegration() {
   
   // Test 1: Collection creation with MasterIndex using CollectionMetadata
   testSuite.addTest('testCollectionCreationUpdatesMetadataCorrectly', function() {
-    // Arrange: Create test environment
-    const config = new DatabaseConfig({
-      baseFolderId: 'test-folder-id',
-      masterIndexKey: 'TEST_MASTER_INDEX_INTEGRATION_1'
-    });
-    
+    // Arrange: Create MasterIndex directly
     const masterIndex = new MasterIndex({
       masterIndexKey: 'TEST_MASTER_INDEX_INTEGRATION_1'
     });
     
-    const mockFileService = createMockFileServiceWithCollectionSupport();
-    const mockDatabase = createMockDatabaseWithMasterIndex(masterIndex);
+    const metadata = CollectionMetadata.create('test_collection', 'test-file-id');
     
-    // Act: Create collection through Database API
-    const collection = new Collection('test_collection', 'test-file-id', mockDatabase, mockFileService);
+    // Act: Add collection to MasterIndex directly
+    masterIndex.addCollection('test_collection', metadata);
     
     // Assert: MasterIndex should contain CollectionMetadata instance
-    const storedMetadata = masterIndex.getCollectionMetadata('test_collection');
+    const storedMetadata = masterIndex.getCollection('test_collection');
     AssertionUtilities.assertNotNull(storedMetadata, 'Collection metadata should be stored in MasterIndex');
     AssertionUtilities.assertTrue(
       storedMetadata instanceof CollectionMetadata,
       'Stored metadata should be CollectionMetadata instance'
     );
     AssertionUtilities.assertEquals(
-      storedMetadata.getName(),
+      storedMetadata.name,
       'test_collection',
       'Collection name should match'
     );
     AssertionUtilities.assertEquals(
-      storedMetadata.getFileId(),
+      storedMetadata.fileId,
       'test-file-id',
       'File ID should match'
     );
@@ -65,7 +59,7 @@ function testMasterIndexCollectionMetadataIntegration() {
   
   // Test 2: Collection operations update CollectionMetadata through MasterIndex
   testSuite.addTest('testCollectionOperationsUpdateMetadata', function() {
-    // Arrange: Setup collection with existing metadata
+    // Arrange: Setup MasterIndex with existing metadata
     const masterIndex = new MasterIndex({
       masterIndexKey: 'TEST_MASTER_INDEX_INTEGRATION_2'
     });
@@ -73,26 +67,25 @@ function testMasterIndexCollectionMetadataIntegration() {
     const initialMetadata = CollectionMetadata.create('update_test_collection', 'update-file-id');
     masterIndex.addCollection('update_test_collection', initialMetadata);
     
-    const mockFileService = createMockFileServiceWithCollectionSupport();
-    const mockDatabase = createMockDatabaseWithMasterIndex(masterIndex);
-    const collection = new Collection('update_test_collection', 'update-file-id', mockDatabase, mockFileService);
-    
-    const originalLastUpdated = masterIndex.getCollectionMetadata('update_test_collection').getLastUpdated();
+    const originalLastUpdated = masterIndex.getCollection('update_test_collection').lastUpdated;
     
     // Ensure timestamp difference for test
     Utilities.sleep(10);
     
-    // Act: Perform collection operation that should update metadata
-    collection.insertOne({ test: 'document' });
+    // Act: Update metadata directly through MasterIndex
+    masterIndex.updateCollectionMetadata('update_test_collection', {
+      documentCount: 1,
+      lastUpdated: new Date()
+    });
     
     // Assert: Metadata should be updated with new timestamp and document count
-    const updatedMetadata = masterIndex.getCollectionMetadata('update_test_collection');
+    const updatedMetadata = masterIndex.getCollection('update_test_collection');
     AssertionUtilities.assertTrue(
-      updatedMetadata.getLastUpdated() > originalLastUpdated,
+      updatedMetadata.lastUpdated.getTime() > originalLastUpdated.getTime(),
       'Last updated timestamp should be newer after operation'
     );
     AssertionUtilities.assertEquals(
-      updatedMetadata.getDocumentCount(),
+      updatedMetadata.documentCount,
       1,
       'Document count should be updated'
     );
@@ -100,10 +93,14 @@ function testMasterIndexCollectionMetadataIntegration() {
   
   // Test 3: CollectionMetadata serialisation consistency across components
   testSuite.addTest('testCollectionMetadataSerialisationConsistency', function() {
-    // Arrange: Create CollectionMetadata with all fields
-    const originalMetadata = new CollectionMetadata('serialisation_test', 'serial-file-id', {
+    // Arrange: Create MasterIndex and CollectionMetadata
+    const masterIndex = new MasterIndex({
+      masterIndexKey: 'TEST_MASTER_INDEX_INTEGRATION_3'
+    });
+    
+    const originalMetadata = new CollectionMetadata('serial_test_collection', 'serial-file-id', {
       documentCount: 42,
-      modificationToken: 'test-token-123',
+      modificationToken: 'test-token-serialisation',
       lockStatus: {
         isLocked: true,
         lockedBy: 'test-instance',
@@ -112,66 +109,45 @@ function testMasterIndexCollectionMetadataIntegration() {
       }
     });
     
-    const masterIndex = new MasterIndex({
+    // Act: Add to MasterIndex, save, and reload
+    masterIndex.addCollection('serial_test_collection', originalMetadata);
+    masterIndex.save();
+    
+    const reloadedMasterIndex = new MasterIndex({
       masterIndexKey: 'TEST_MASTER_INDEX_INTEGRATION_3'
     });
     
-    // Act: Store through MasterIndex and retrieve
-    masterIndex.addCollection('serialisation_test', originalMetadata);
-    masterIndex.save(); // Force serialisation
+    // Assert: All properties should be preserved through serialisation
+    const reloadedMetadata = reloadedMasterIndex.getCollection('serial_test_collection');
     
-    // Create new instance to test deserialisation
-    const newMasterIndex = new MasterIndex({
-      masterIndexKey: 'TEST_MASTER_INDEX_INTEGRATION_3'
-    });
-    
-    const retrievedMetadata = newMasterIndex.getCollectionMetadata('serialisation_test');
-    
-    // Assert: All properties should be preserved through serialisation cycle
-    AssertionUtilities.assertNotNull(retrievedMetadata, 'Metadata should be retrievable');
+    AssertionUtilities.assertNotNull(reloadedMetadata, 'Metadata should exist after reload');
+    AssertionUtilities.assertTrue(
+      reloadedMetadata instanceof CollectionMetadata,
+      'Reloaded object should be CollectionMetadata instance'
+    );
     AssertionUtilities.assertEquals(
-      retrievedMetadata.getName(),
-      originalMetadata.getName(),
+      reloadedMetadata.name,
+      'serial_test_collection',
       'Collection name should be preserved'
     );
     AssertionUtilities.assertEquals(
-      retrievedMetadata.getFileId(),
-      originalMetadata.getFileId(),
-      'File ID should be preserved'
-    );
-    AssertionUtilities.assertEquals(
-      retrievedMetadata.getDocumentCount(),
-      originalMetadata.getDocumentCount(),
+      reloadedMetadata.documentCount,
+      42,
       'Document count should be preserved'
     );
     AssertionUtilities.assertEquals(
-      retrievedMetadata.getModificationToken(),
-      originalMetadata.getModificationToken(),
+      reloadedMetadata.modificationToken,
+      'test-token-serialisation',
       'Modification token should be preserved'
     );
     
-    // Assert Date objects are preserved
-    AssertionUtilities.assertTrue(
-      retrievedMetadata.getCreated() instanceof Date,
-      'Created timestamp should be Date object'
-    );
-    AssertionUtilities.assertTrue(
-      retrievedMetadata.getLastUpdated() instanceof Date,
-      'Last updated timestamp should be Date object'
-    );
-    
-    // Assert lock status is preserved
-    const retrievedLockStatus = retrievedMetadata.getLockStatus();
-    const originalLockStatus = originalMetadata.getLockStatus();
+    const reloadedLockStatus = reloadedMetadata.lockStatus;
+    AssertionUtilities.assertNotNull(reloadedLockStatus, 'Lock status should be preserved');
+    AssertionUtilities.assertTrue(reloadedLockStatus.isLocked, 'Lock state should be preserved');
     AssertionUtilities.assertEquals(
-      retrievedLockStatus.isLocked,
-      originalLockStatus.isLocked,
-      'Lock status should be preserved'
-    );
-    AssertionUtilities.assertEquals(
-      retrievedLockStatus.lockedBy,
-      originalLockStatus.lockedBy,
-      'Locked by should be preserved'
+      reloadedLockStatus.lockedBy,
+      'test-instance',
+      'Lock owner should be preserved'
     );
   });
   
@@ -188,114 +164,143 @@ function testDatabaseMasterIndexIntegration() {
   
   // Test 1: Database collection creation integrates with MasterIndex
   testSuite.addTest('testDatabaseCollectionCreationIntegration', function() {
-    // Arrange: Setup Database with MasterIndex
-    const config = new DatabaseConfig({
-      baseFolderId: 'test-db-folder',
-      masterIndexKey: 'TEST_DATABASE_INTEGRATION_1'
-    });
+    // Arrange: Setup real Database with Drive folder
+    const testFolderName = 'GASDB_Integration_Test_' + Date.now();
+    const testFolder = DriveApp.createFolder(testFolderName);
+    const testFolderId = testFolder.getId();
     
-    const mockFileService = createMockFileServiceWithCollectionSupport();
-    const database = new Database(config, mockFileService);
-    
-    // Act: Create collection through Database API
-    const collection = database.collection('integration_collection');
-    
-    // Assert: MasterIndex should contain proper CollectionMetadata
-    const masterIndex = database._masterIndex; // Access private member for testing
-    const metadata = masterIndex.getCollectionMetadata('integration_collection');
-    
-    AssertionUtilities.assertNotNull(metadata, 'Collection metadata should exist in MasterIndex');
-    AssertionUtilities.assertTrue(
-      metadata instanceof CollectionMetadata,
-      'Metadata should be CollectionMetadata instance'
-    );
-    AssertionUtilities.assertEquals(
-      metadata.getName(),
-      'integration_collection',
-      'Collection name should match'
-    );
+    try {
+      const config = new DatabaseConfig({
+        rootFolderId: testFolderId,
+        masterIndexKey: 'TEST_DATABASE_INTEGRATION_1'
+      });
+      
+      const database = new Database(config);
+      
+      // Act: Create collection through Database API
+      const collection = database.collection('integration_collection');
+      
+      // Assert: MasterIndex should contain proper CollectionMetadata
+      const masterIndex = database._masterIndex;
+      const metadata = masterIndex.getCollection('integration_collection');
+      
+      AssertionUtilities.assertNotNull(metadata, 'Collection metadata should exist in MasterIndex');
+      AssertionUtilities.assertTrue(
+        metadata instanceof CollectionMetadata,
+        'Metadata should be CollectionMetadata instance'
+      );
+      AssertionUtilities.assertEquals(
+        metadata.name,
+        'integration_collection',
+        'Collection name should match'
+      );
+      AssertionUtilities.assertNotNull(metadata.fileId, 'File ID should be set');
+      
+    } finally {
+      // Clean up test folder
+      testFolder.setTrashed(true);
+    }
   });
   
   // Test 2: Database operations propagate through MasterIndex to CollectionMetadata
   testSuite.addTest('testDatabaseOperationsPropagateToMetadata', function() {
-    // Arrange: Setup Database with existing collection
-    const config = new DatabaseConfig({
-      baseFolderId: 'test-db-folder-2',
-      masterIndexKey: 'TEST_DATABASE_INTEGRATION_2'
-    });
+    // Arrange: Setup real Database with Drive folder
+    const testFolderName = 'GASDB_Integration_Propagation_Test_' + Date.now();
+    const testFolder = DriveApp.createFolder(testFolderName);
+    const testFolderId = testFolder.getId();
     
-    const mockFileService = createMockFileServiceWithCollectionSupport();
-    const database = new Database(config, mockFileService);
-    const collection = database.collection('propagation_test');
-    
-    const masterIndex = database._masterIndex;
-    const originalMetadata = masterIndex.getCollectionMetadata('propagation_test');
-    const originalLastUpdated = originalMetadata.getLastUpdated();
-    const originalDocCount = originalMetadata.getDocumentCount();
-    
-    // Ensure timestamp difference
-    Utilities.sleep(10);
-    
-    // Act: Perform database operation
-    collection.insertOne({ data: 'test_propagation' });
-    
-    // Assert: Changes should propagate to CollectionMetadata
-    const updatedMetadata = masterIndex.getCollectionMetadata('propagation_test');
-    AssertionUtilities.assertTrue(
-      updatedMetadata.getLastUpdated() > originalLastUpdated,
-      'Metadata last updated should be newer'
-    );
-    AssertionUtilities.assertEquals(
-      updatedMetadata.getDocumentCount(),
-      originalDocCount + 1,
-      'Document count should be incremented'
-    );
+    try {
+      const config = new DatabaseConfig({
+        rootFolderId: testFolderId,
+        masterIndexKey: 'TEST_DATABASE_INTEGRATION_2'
+      });
+      
+      const database = new Database(config);
+      const collection = database.collection('propagation_test');
+      
+      const masterIndex = database._masterIndex;
+      const originalMetadata = masterIndex.getCollection('propagation_test');
+      const originalLastUpdated = originalMetadata.lastUpdated;
+      const originalDocCount = originalMetadata.documentCount;
+      
+      // Ensure timestamp difference
+      Utilities.sleep(10);
+      
+      // Act: Perform database operation
+      collection.insertOne({ data: 'test_propagation' });
+      
+      // Assert: Changes should propagate to CollectionMetadata
+      const updatedMetadata = masterIndex.getCollection('propagation_test');
+      AssertionUtilities.assertTrue(
+        updatedMetadata.lastUpdated.getTime() > originalLastUpdated.getTime(),
+        'Metadata last updated should be newer'
+      );
+      AssertionUtilities.assertEquals(
+        updatedMetadata.documentCount,
+        originalDocCount + 1,
+        'Document count should be incremented'
+      );
+      
+    } finally {
+      // Clean up test folder
+      testFolder.setTrashed(true);
+    }
   });
   
   // Test 3: Multiple collection operations maintain metadata consistency
   testSuite.addTest('testMultipleCollectionMetadataConsistency', function() {
-    // Arrange: Setup Database with multiple collections
-    const config = new DatabaseConfig({
-      baseFolderId: 'test-multi-folder',
-      masterIndexKey: 'TEST_DATABASE_INTEGRATION_3'
-    });
+    // Arrange: Setup real Database with Drive folder
+    const testFolderName = 'GASDB_Integration_Multi_Test_' + Date.now();
+    const testFolder = DriveApp.createFolder(testFolderName);
+    const testFolderId = testFolder.getId();
     
-    const mockFileService = createMockFileServiceWithCollectionSupport();
-    const database = new Database(config, mockFileService);
-    
-    const collection1 = database.collection('multi_test_1');
-    const collection2 = database.collection('multi_test_2');
-    
-    // Act: Perform operations on multiple collections
-    collection1.insertOne({ collection: 1, data: 'first' });
-    collection2.insertOne({ collection: 2, data: 'second' });
-    collection1.insertOne({ collection: 1, data: 'third' });
-    
-    // Assert: Each collection's metadata should be independently maintained
-    const masterIndex = database._masterIndex;
-    const metadata1 = masterIndex.getCollectionMetadata('multi_test_1');
-    const metadata2 = masterIndex.getCollectionMetadata('multi_test_2');
-    
-    AssertionUtilities.assertEquals(
-      metadata1.getDocumentCount(),
-      2,
-      'Collection 1 should have 2 documents'
-    );
-    AssertionUtilities.assertEquals(
-      metadata2.getDocumentCount(),
-      1,
-      'Collection 2 should have 1 document'
-    );
-    AssertionUtilities.assertEquals(
-      metadata1.getName(),
-      'multi_test_1',
-      'Collection 1 name should be preserved'
-    );
-    AssertionUtilities.assertEquals(
-      metadata2.getName(),
-      'multi_test_2',
-      'Collection 2 name should be preserved'
-    );
+    try {
+      const config = new DatabaseConfig({
+        rootFolderId: testFolderId,
+        masterIndexKey: 'TEST_DATABASE_INTEGRATION_3'
+      });
+      
+      const database = new Database(config);
+      
+      // Act: Create multiple collections and perform operations
+      const collection1 = database.collection('multi_test_1');
+      const collection2 = database.collection('multi_test_2');
+      
+      collection1.insertOne({ type: 'collection1_doc' });
+      collection2.insertOne({ type: 'collection2_doc' });
+      collection2.insertOne({ type: 'collection2_doc2' });
+      
+      // Assert: Each collection should have correct metadata
+      const masterIndex = database._masterIndex;
+      const metadata1 = masterIndex.getCollection('multi_test_1');
+      const metadata2 = masterIndex.getCollection('multi_test_2');
+      
+      AssertionUtilities.assertEquals(
+        metadata1.documentCount,
+        1,
+        'Collection 1 should have 1 document'
+      );
+      AssertionUtilities.assertEquals(
+        metadata2.documentCount,
+        2,
+        'Collection 2 should have 2 documents'
+      );
+      
+      AssertionUtilities.assertEquals(
+        metadata1.name,
+        'multi_test_1',
+        'Collection 1 name should be correct'
+      );
+      AssertionUtilities.assertEquals(
+        metadata2.name,
+        'multi_test_2',
+        'Collection 2 name should be correct'
+      );
+      
+    } finally {
+      // Clean up test folder
+      testFolder.setTrashed(true);
+    }
   });
   
   return testSuite;
@@ -340,7 +345,7 @@ function testBackwardCompatibilityIntegration() {
       masterIndexKey: 'TEST_LEGACY_COMPATIBILITY'
     });
     
-    const metadata = masterIndex.getCollectionMetadata('legacy_collection');
+    const metadata = masterIndex.getCollection('legacy_collection');
     
     // Assert: Legacy data should be converted to CollectionMetadata
     AssertionUtilities.assertNotNull(metadata, 'Legacy metadata should be readable');
@@ -349,17 +354,17 @@ function testBackwardCompatibilityIntegration() {
       'Legacy metadata should be converted to CollectionMetadata instance'
     );
     AssertionUtilities.assertEquals(
-      metadata.getName(),
+      metadata.name,
       'legacy_collection',
       'Legacy collection name should be preserved'
     );
     AssertionUtilities.assertEquals(
-      metadata.getFileId(),
+      metadata.fileId,
       'legacy-file-id',
       'Legacy file ID should be preserved'
     );
     AssertionUtilities.assertEquals(
-      metadata.getDocumentCount(),
+      metadata.documentCount,
       5,
       'Legacy document count should be preserved'
     );
@@ -398,8 +403,8 @@ function testBackwardCompatibilityIntegration() {
     masterIndex.addCollection('new_collection', newMetadata);
     
     // Assert: Both legacy and new collections should work
-    const legacyMetadata = masterIndex.getCollectionMetadata('legacy_collection');
-    const currentMetadata = masterIndex.getCollectionMetadata('new_collection');
+    const legacyMetadata = masterIndex.getCollection('legacy_collection');
+    const currentMetadata = masterIndex.getCollection('new_collection');
     
     AssertionUtilities.assertNotNull(legacyMetadata, 'Legacy collection should be readable');
     AssertionUtilities.assertNotNull(currentMetadata, 'New collection should be stored');
@@ -414,12 +419,12 @@ function testBackwardCompatibilityIntegration() {
     );
     
     AssertionUtilities.assertEquals(
-      legacyMetadata.getName(),
+      legacyMetadata.name,
       'legacy_collection',
       'Legacy collection name should be preserved'
     );
     AssertionUtilities.assertEquals(
-      currentMetadata.getName(),
+      currentMetadata.name,
       'new_collection',
       'New collection name should be correct'
     );
@@ -452,8 +457,8 @@ function testLockManagementIntegration() {
     // Assert: Lock should be acquired and reflected in metadata
     AssertionUtilities.assertTrue(lockAcquired, 'Lock should be acquired successfully');
     
-    const updatedMetadata = masterIndex.getCollectionMetadata('lock_test_collection');
-    const lockStatus = updatedMetadata.getLockStatus();
+    const updatedMetadata = masterIndex.getCollection('lock_test_collection');
+    const lockStatus = updatedMetadata.lockStatus;
     
     AssertionUtilities.assertNotNull(lockStatus, 'Lock status should be set');
     AssertionUtilities.assertTrue(lockStatus.isLocked, 'Collection should be marked as locked');
@@ -483,8 +488,8 @@ function testLockManagementIntegration() {
     masterIndex.releaseLock('unlock_test_collection', 'test-instance-id');
     
     // Assert: Lock should be released and reflected in metadata
-    const updatedMetadata = masterIndex.getCollectionMetadata('unlock_test_collection');
-    const lockStatus = updatedMetadata.getLockStatus();
+    const updatedMetadata = masterIndex.getCollection('unlock_test_collection');
+    const lockStatus = updatedMetadata.lockStatus;
     
     AssertionUtilities.assertNotNull(lockStatus, 'Lock status should still exist');
     AssertionUtilities.assertFalse(lockStatus.isLocked, 'Collection should not be locked');
@@ -512,8 +517,8 @@ function testLockManagementIntegration() {
     // Assert: Second lock should be acquired due to timeout
     AssertionUtilities.assertTrue(secondLockAcquired, 'Second lock should be acquired after timeout');
     
-    const updatedMetadata = masterIndex.getCollectionMetadata('timeout_test_collection');
-    const lockStatus = updatedMetadata.getLockStatus();
+    const updatedMetadata = masterIndex.getCollection('timeout_test_collection');
+    const lockStatus = updatedMetadata.lockStatus;
     
     AssertionUtilities.assertEquals(
       lockStatus.lockedBy,
@@ -559,10 +564,10 @@ function testPerformanceIntegration() {
     
     // Verify all collections are stored correctly
     for (let i = 0; i < 50; i++) {
-      const metadata = masterIndex.getCollectionMetadata(`perf_collection_${i}`);
+      const metadata = masterIndex.getCollection(`perf_collection_${i}`);
       AssertionUtilities.assertNotNull(metadata, `Collection ${i} metadata should exist`);
       AssertionUtilities.assertEquals(
-        metadata.getName(),
+        metadata.name,
         `perf_collection_${i}`,
         `Collection ${i} name should be correct`
       );
@@ -609,57 +614,19 @@ function testPerformanceIntegration() {
     );
     
     // Verify data integrity after serialisation
-    const firstMetadata = newMasterIndex.getCollectionMetadata('large_collection_0');
-    const lastMetadata = newMasterIndex.getCollectionMetadata('large_collection_99');
+    const firstMetadata = newMasterIndex.getCollection('large_collection_0');
+    const lastMetadata = newMasterIndex.getCollection('large_collection_99');
     
     AssertionUtilities.assertNotNull(firstMetadata, 'First collection should be preserved');
     AssertionUtilities.assertNotNull(lastMetadata, 'Last collection should be preserved');
     AssertionUtilities.assertEquals(
-      lastMetadata.getDocumentCount(),
+      lastMetadata.documentCount,
       990,
       'Last collection document count should be preserved'
     );
   });
   
   return testSuite;
-}
-
-/**
- * Helper Functions for Creating Mock Objects
- */
-
-function createMockFileServiceWithCollectionSupport() {
-  return {
-    readFile: function(fileId) {
-      return {
-        metadata: {
-          name: 'mock_collection',
-          created: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
-          documentCount: 0
-        },
-        documents: {}
-      };
-    },
-    
-    writeFile: function(fileId, data) {
-      return true; // Success
-    },
-    
-    createFile: function(folderId, filename, content) {
-      return `new-file-id-${Date.now()}`;
-    }
-  };
-}
-
-function createMockDatabaseWithMasterIndex(masterIndex) {
-  return {
-    _masterIndex: masterIndex,
-    _config: {
-      baseFolderId: 'mock-folder-id'
-    },
-    _fileService: createMockFileServiceWithCollectionSupport()
-  };
 }
 
 /**

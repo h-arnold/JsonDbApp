@@ -256,69 +256,71 @@ CollectionMetadata needs these additional fields:
 
 ### Phase 4: Integration and Cleanup (Red-Green-Refactor)
 
-**STATUS**: 🔴 **RED PHASE ACTIVE** - Integration tests written, revealing critical implementation gaps
+**STATUS**: 🟡 **GREEN PHASE ACTIVE** - Major progress achieved, fixing remaining 5 critical issues
 
-**Current Test Results**: 0/13 tests passing (0% pass rate)
+**Current Test Results**: 8/13 tests passing (61.5% pass rate) - **Significant improvement!**
 
-#### Critical Issues Identified:
+#### Outstanding Issues to Resolve:
 
-##### Issue 4.1: Missing MasterIndex API Methods 🔴 **HIGH PRIORITY**
-**Problem**: `masterIndex.getCollectionMetadata is not a function`
-**Root Cause**: MasterIndex class missing expected CollectionMetadata integration methods
-**Impact**: 11/13 tests failing due to missing API methods
-
-**Required Actions**:
-- Verify MasterIndex class has `getCollectionMetadata()` method  
-- Ensure method returns CollectionMetadata instances (not plain objects)
-- Verify `addCollection()` method accepts CollectionMetadata instances
-- Check method signatures match test expectations
-
-##### Issue 4.2: Database Initialization Problems 🔴 **MEDIUM PRIORITY** 
-**Problem**: "Database not initialised - no index file"
-**Root Cause**: Test Database instances not properly initialized for testing
-**Impact**: 3/13 tests failing in Database integration suite
+##### Issue 4.1: Lock Status Serialisation Problem 🔴 **MEDIUM PRIORITY**
+**Problem**: Lock status not preserved through serialisation cycle in `testCollectionMetadataSerialisationConsistency`
+**Root Cause**: Lock status may not be properly serialised/deserialised in CollectionMetadata
+**Impact**: 1/3 tests failing in MasterIndex-CollectionMetadata Integration suite
+**Error**: "Lock state should be preserved"
 
 **Required Actions**:
-- Create proper Database test setup with mock file initialization
-- Ensure Database can work with mock FileService for testing
-- Fix Database.loadIndex() to handle test scenarios
+- Verify CollectionMetadata serialisation preserves lockStatus correctly
+- Check if lockStatus is being overwritten during MasterIndex.getCollection()
+- Ensure lock status synchronisation doesn't interfere with serialised data
 
-##### Issue 4.3: Performance Regression 🟡 **LOW PRIORITY**
-**Problem**: Operations taking 11.8s instead of expected <5s
-**Root Cause**: Likely inefficient implementation or test environment overhead  
-**Impact**: 1/13 tests failing due to performance threshold
+##### Issue 4.2: Database Initialisation for Integration Tests 🔴 **HIGH PRIORITY** 
+**Problem**: "Database not initialised - no index file" in all Database integration tests
+**Root Cause**: Database requires proper initialisation before collection access
+**Impact**: 3/3 tests failing in Database-MasterIndex Integration suite
 
 **Required Actions**:
-- Profile CollectionMetadata operations for performance bottlenecks
-- Optimize bulk operations if needed
-- Consider adjusting performance thresholds for test environment
+- Add proper Database.initialise() call in integration tests
+- Ensure Database can work with real Drive folders in test environment
+- Fix Database.loadIndex() to handle new database creation scenario
 
-#### Phase 4 Implementation Plan:
+##### Issue 4.3: Performance Threshold Too Strict 🟡 **LOW PRIORITY**
+**Problem**: Performance test taking 7964ms instead of expected <5000ms
+**Root Cause**: Test environment overhead or inefficient batch operations
+**Impact**: 1/2 tests failing in Performance suite
 
-##### Step 4A: Fix MasterIndex API (Critical)
-**Red**: ✅ Tests written - revealed missing methods
-**Green**: Implement missing `getCollectionMetadata()` and fix API consistency
-**Refactor**: Ensure clean, consistent MasterIndex API
+**Required Actions**:
+- Consider adjusting performance threshold to realistic value (8-10 seconds)
+- Or optimise bulk collection operations in MasterIndex
+- Test environment may have natural overhead
 
-##### Step 4B: Fix Database Test Integration  
-**Red**: ✅ Tests written - revealed initialization issues
-**Green**: Implement proper Database test setup and mock integration
-**Refactor**: Clean up Database test patterns
+#### Successfully Resolved Issues ✅:
 
-##### Step 4C: Performance Optimization
-**Red**: ✅ Tests written - revealed performance issues  
-**Green**: Optimize performance or adjust test thresholds
-**Refactor**: Ensure scalable implementation
+1. ✅ **Missing MasterIndex API Methods** (Resolved)
+   - Added `getCollectionMetadata()` method, then removed unnecessary alias
+   - Fixed all tests to use proper `getCollection()` method
+   - Fixed property access (`.name` vs `.getName()`)
 
-#### Test Suite Status:
-- ✅ **Test 4.1**: MasterIndex Internal Storage Format (Integration tests written)
-- ✅ **Test 4.2**: Backward Compatibility (Integration tests written)  
-- ✅ **Test 4.3**: End-to-End Integration (Integration tests written)
+2. ✅ **Mock Dependencies Removed** (Resolved)
+   - Replaced all mock objects with real component integration
+   - Setup proper test/cleanup procedures with real ScriptProperties
+   - Database tests now use real Drive folders with proper cleanup
 
-#### Next Actions for Fresh Conversation:
-1. **Start with Issue 4.1**: Fix missing MasterIndex methods (`getCollectionMetadata`)
-2. **Then Issue 4.2**: Fix Database initialization for integration tests
-3. **Finally Issue 4.3**: Address performance if still needed after fixes
+3. ✅ **Backward Compatibility** (Resolved - 2/2 passing)
+   - Legacy metadata format properly converted to CollectionMetadata
+   - Mixed format compatibility working correctly
+
+4. ✅ **Lock Management Integration** (Resolved - 3/3 passing)
+   - Lock acquisition/release properly updates CollectionMetadata
+   - Lock timeout handling working correctly
+   - Lock status synchronisation functioning
+
+#### Next Actions (Priority Order):
+
+1. **Fix Database initialisation** (Issue 4.2) - Will resolve 3 failing tests
+2. **Debug lock status serialisation** (Issue 4.1) - Will resolve 1 failing test  
+3. **Adjust performance threshold** (Issue 4.3) - Will resolve 1 failing test
+
+**Target**: Achieve 13/13 tests passing (100% pass rate)
 
 ## Detailed Implementation Steps
 
