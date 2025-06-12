@@ -481,7 +481,6 @@ const dataString = ObjectUtils.serialise(this._data); // Dates auto-convert to I
 #### ✅ MasterIndex._loadFromScriptProperties() Method - IMPLEMENTED
 ```javascript
 const loadedData = ObjectUtils.deserialise(dataString); // Automatically converts ISO strings back to Date objects
-this._data = { ...this._data, ...loadedData };
 ```
 
 ### ✅ Pattern Consistency Achieved
@@ -555,7 +554,7 @@ Current ObjectUtils provides all required functionality:
 - ✅ **Integration Working** - All core MasterIndex + CollectionMetadata functionality operational
 
 #### Next Steps (Priority Order):
-1. **Fix Collection object methods** (Issue 4.3) - Will resolve 2 failing tests
+1. **Fix Collection object methods** (Issue 4.3) - RESOLVED - Fixed Database._createCollectionObject() to return proper Collection instances
 2. **Debug lock timeout logic** (Issue 4.4) - Will resolve 1 failing test  
 3. **Adjust performance threshold** (Issue 4.5) - Will resolve 1 failing test
 
@@ -595,3 +594,20 @@ Current ObjectUtils provides all required functionality:
 
 ### Next Steps
 **Phase 4: Integration Testing and Cleanup** - Final validation and documentation updates
+
+## Phase 4 Issue Breakdown
+
+The remaining integration test failures can be grouped into three categories:
+
+1. **Lock-handling issues**
+   - `testCollectionMetadataSerialisationConsistency`
+   - `testLockTimeoutWithMetadata`
+
+2. **Metadata-propagation issues**
+   - `testDatabaseOperationsPropagateToMetadata`
+   - `testMultipleCollectionMetadataConsistency`
+
+3. **Performance threshold issue**
+   - `testMultipleCollectionPerformance`
+
+Next, we will diagnose the lock-handling issues by reviewing the lock acquisition, timeout and serialisation logic in `MasterIndex` and `CollectionMetadata`.

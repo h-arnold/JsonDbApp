@@ -107,8 +107,12 @@ class Collection {
       const metadataObj = data.metadata || {};
       
       
-      // Create CollectionMetadata instance
-      this._collectionMetadata = new CollectionMetadata(metadataObj);
+      // Create CollectionMetadata instance with name and fileId
+      this._collectionMetadata = new CollectionMetadata(
+        this._name,
+        this._driveFileId,
+        metadataObj
+      );
       
       // Create DocumentOperations instance with this collection as reference
       this._documentOperations = new DocumentOperations(this);
@@ -184,6 +188,15 @@ class Collection {
     
     this._collectionMetadata.updateLastModified();
     this._logger.debug('Collection metadata updated', { changes });
+
+    // Propagate metadata change to MasterIndex
+    if (this._database && this._database._masterIndex) {
+      // Push full metadata object for atomic replace
+      this._database._masterIndex.updateCollectionMetadata(
+        this._name,
+        this._collectionMetadata.toObject()
+      );
+    }
   }
 
   /**

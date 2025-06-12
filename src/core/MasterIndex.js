@@ -134,7 +134,7 @@ class MasterIndex {
     
     const collectionMetadata = CollectionMetadata.fromObject(collectionData);
     
-    // Synchronize lock status from current locks
+    // Synchronise lock status from current locks
     const currentLock = this._data.locks[name];
     if (currentLock) {
       // Check if lock is still valid (not expired)
@@ -183,7 +183,15 @@ class MasterIndex {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
       }
       
-      // Create CollectionMetadata instance from stored data
+      // Full replace if a complete metadata object is provided
+      if (updates && typeof updates === 'object' && updates.name) {
+        this._data.collections[name] = updates;
+        this._data.lastUpdated = new Date();
+        this._addToModificationHistory(name, 'FULL_METADATA_UPDATE', updates);
+        return updates;
+      }
+      
+      // Incremental updates using CollectionMetadata
       const collectionMetadata = CollectionMetadata.fromObject(collectionData);
       
       // Apply updates using CollectionMetadata methods where available
