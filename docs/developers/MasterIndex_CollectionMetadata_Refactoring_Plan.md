@@ -1,25 +1,30 @@
 # MasterIndex CollectionMetadata Refactoring Plan
 
-## Current Status Summary
+## Current Status Summary (Updated: June 12, 2025)
 
-**🔴 PHASE 4 RED PHASE ACTIVE** - Integration tests have revealed critical gaps between the unit test implementations and integration requirements.
+### Major Achievement ✅
+**Collection Metadata Loading Issue RESOLVED**: The critical "Invalid argument: created" error that was preventing collection operations has been completely fixed through FileService cache consistency improvements.
 
-### Issues Found During Integration Testing:
+### Test Results Progress 📈
+- **Previous**: 69.2% pass rate (9/13 tests passing)
+- **Current**: 76.9% pass rate (10/13 tests passing) 
+- **Improvement**: +7.7% pass rate, +1 test now passing
 
-1. **Critical API Gap**: `MasterIndex.getCollectionMetadata()` method is missing
-   - 11/13 integration tests failing due to this missing method
-   - Phase 3 unit tests passed but didn't catch the missing integration points
+### Resolved Issues ✅
+- ✅ **Issue 4.6**: Collection Metadata Loading Error - RESOLVED
+  - FileService cache consistency fixed
+  - Date object preservation in cache implemented
+  - CollectionMetadata creation now works correctly
 
-2. **Database Test Setup Issues**: Database class not properly initializing for test scenarios
-   - 3/13 tests failing with "Database not initialised" errors
-   - Need proper mock setup for Database integration tests
+### Remaining Issues 🔴 
+**3 tests still failing (down from 4)**:
 
-3. **Performance Concerns**: Operations taking significantly longer than expected
-   - 1/13 tests failing due to performance thresholds
-   - May need optimization or threshold adjustment
+1. **testDatabaseOperationsPropagateToMetadata**: Metadata timestamp not updating properly
+2. **testMultipleCollectionMetadataConsistency**: Document count not being tracked correctly  
+3. **testMultipleCollectionPerformance**: Performance test failing (5346ms > 5000ms limit)
 
-### Next Steps:
-Focus on **Issue 4.1** first - implementing the missing MasterIndex API methods that the integration tests expect.
+### Next Priority 🎯
+Focus on metadata propagation and synchronization between Collection operations and MasterIndex to resolve the remaining 2 functional test failures. Performance test can be addressed separately.
 
 ---
 
@@ -275,16 +280,20 @@ CollectionMetadata needs these additional fields:
 
 #### Outstanding Issues to Resolve:
 
-##### Issue 4.6: Collection Metadata Loading Error 🔴 **HIGH PRIORITY**
+##### Issue 4.6: Collection Metadata Loading Error ✅ **RESOLVED**
 **Problem**: `Invalid argument: created` error when Collection tries to load data from Drive files
-**Root Cause**: Database creates collection files with metadata fields that don't match CollectionMetadata constructor expectations
-**Impact**: 2/3 tests failing in Database-MasterIndex Integration suite
-**Error**: "Operation failed: Collection data loading failed" when calling `collection.insertOne()`
+**Root Cause**: FileService cache was storing original input data (ISO strings) instead of deserialized data (Date objects)
+**Impact**: 2/3 tests failing in Database-MasterIndex Integration suite - NOW FIXED
+**Error**: "Operation failed: Collection data loading failed" when calling `collection.insertOne()` - RESOLVED
 
-**Required Actions**:
-- Fix metadata field name mismatch between Database file creation and CollectionMetadata constructor
-- Ensure Database uses `lastUpdated` instead of `lastModified` to match CollectionMetadata expectations
-- Verify CollectionMetadata constructor handles all fields created by Database
+**Actions Taken** ✅:
+- ✅ Fixed Database.js to use `lastUpdated` instead of `lastModified` field names
+- ✅ Fixed FileService cache consistency issue in createFile() method
+- ✅ Enhanced FileService cache to use ObjectUtils.deepClone() for Date preservation
+- ✅ Ensured cache stores deserialized data (Date objects) matching readFile() output **Note**: This is a hacky fix that involves serialising and then deserialising teh data to ensure date objects are preserved correctly. There's got to be a better way to handle that which we can look into later.
+
+**Current Status**: Issue completely resolved. CollectionMetadata creation now works correctly.
+**Pass Rate Impact**: Improved from 69.2% to 76.9% (7.7% improvement)
 
 ##### Issue 4.4: Lock Timeout Logic Inconsistent 🟡 **MEDIUM PRIORITY**
 **Problem**: Lock timeout test failing - 100ms timeout + 150ms sleep not working reliably

@@ -106,7 +106,6 @@ class Collection {
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
       
-      // Date conversion is handled automatically by FileOperations
       
       // Create CollectionMetadata instance
       this._collectionMetadata = new CollectionMetadata(metadataObj);

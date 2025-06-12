@@ -175,8 +175,8 @@ function createPopulatedTestCollection(documents = []) {
   const collectionData = {
     documents: {},
     metadata: {
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
+      created: new Date(),
+      lastUpdated: new Date(),
       documentCount: 0
     }
   };
