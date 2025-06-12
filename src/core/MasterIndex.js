@@ -85,6 +85,12 @@ class MasterIndex {
       this._data.collections[name] = collectionMetadata.toObject();
       this._data.lastUpdated = new Date().toISOString();
       
+      // If lock status is provided, also store it in _data.locks for consistency
+      const lockStatus = collectionMetadata.getLockStatus();
+      if (lockStatus && lockStatus.isLocked) {
+        this._data.locks[name] = lockStatus;
+      }
+      
       // Track modification history
       this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata.toObject());
       

@@ -108,6 +108,15 @@ class Database {
   collection(name) {
     this._validateCollectionName(name);
     
+    // Auto-initialize database if not already initialized
+    if (!this.indexFileId) {
+      try {
+        this.initialise();
+      } catch (error) {
+        throw new Error(`Database auto-initialization failed: ${error.message}`);
+      }
+    }
+    
     // Check if collection already exists in memory
     if (this.collections.has(name)) {
       return this.collections.get(name);
@@ -338,8 +347,13 @@ class Database {
    * @throws {Error} When index file cannot be loaded or is corrupted
    */
   loadIndex() {
+    // Auto-initialize database if not already initialized
     if (!this.indexFileId) {
-      throw new Error('Database not initialised - no index file');
+      try {
+        this.initialise();
+      } catch (error) {
+        throw new Error(`Database auto-initialization failed while loading index: ${error.message}`);
+      }
     }
     
     try {
