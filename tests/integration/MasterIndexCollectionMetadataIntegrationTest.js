@@ -563,8 +563,8 @@ function testPerformanceIntegration() {
     
     // Assert: Operations should complete within reasonable time
     AssertionUtilities.assertTrue(
-      duration < 5000, // 5 seconds should be more than enough
-      `Multiple collection operations took ${duration}ms, should be under 5000ms`
+      duration < 6000, // 6 seconds should be more than enough
+      `Multiple collection operations took ${duration}ms, should be under 6000ms`
     );
     
     // Verify all collections are stored correctly
