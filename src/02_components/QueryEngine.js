@@ -346,7 +346,7 @@ class QueryEngine {
     }
 
     try {
-      ValidationUtils.validateObject(obj, 'queryObject');
+      Validate.object(obj, 'queryObject');
       if (!(obj instanceof Date)) {
         Object.values(obj).forEach(value => {
           this._validateQueryDepth(value, depth + 1);
