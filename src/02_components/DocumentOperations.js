@@ -369,4 +369,125 @@ class DocumentOperations {
     // - Field name restrictions
     // - Data type constraints
   }
+  
+  /**
+   * Apply update operators to a document by ID
+   * @param {string} id - Document identifier
+   * @param {Object} updateOps - MongoDB-style update operators
+   * @returns {Object} Update result { acknowledged: boolean, modifiedCount: number }
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operators are invalid
+   */
+  updateDocumentWithOperators(id, updateOps) {
+    // Validate ID
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
+    }
+    // Validate updateOps
+    if (!updateOps || typeof updateOps !== 'object' || Array.isArray(updateOps)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateOps', updateOps, 'Update operations must be an object');
+    }
+    // Check existence
+    const existing = this._collection._documents[id];
+    if (!existing) {
+      return { acknowledged: true, modifiedCount: 0 };
+    }
+    // Apply operators
+    if (!this._updateEngine) {
+      this._updateEngine = new UpdateEngine();
+    }
+    const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
+    // Persist
+    this._collection._documents[id] = updatedDoc;
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    this._logger.debug('Document updated with operators', { documentId: id, operators: updateOps });
+    return { acknowledged: true, modifiedCount: 1 };
+  }
+
+  /**
+   * Update documents matching a query using operators
+   * @param {Object} query - Filter criteria
+   * @param {Object} updateOps - MongoDB-style update operators
+   * @returns {number} Number of documents updated
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operators are invalid
+   * @throws {ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND} When no documents match
+   */
+  updateDocumentByQuery(query, updateOps) {
+    // Validate query
+    if (!query || typeof query !== 'object' || Array.isArray(query)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be an object');
+    }
+    // Validate updateOps
+    if (!updateOps || typeof updateOps !== 'object' || Array.isArray(updateOps)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateOps', updateOps, 'Update operations must be an object');
+    }
+    // Find matches
+    const matches = this.findMultipleByQuery(query);
+    if (matches.length === 0) {
+      throw new ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND(query, this._collection.name);
+    }
+    // Apply updates
+    matches.forEach(doc => this.updateDocumentWithOperators(doc._id, updateOps));
+    return matches.length;
+  }
+
+  /**
+   * Replace a single document by ID
+   * @param {string} id - Document identifier
+   * @param {Object} doc - Replacement document
+   * @returns {Object} Replace result { acknowledged: boolean, modifiedCount: number }
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   */
+  replaceDocument(id, doc) {
+    // Validate ID
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
+    }
+    // Validate doc
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Replacement document must be an object');
+    }
+    // Check existence
+    if (!this._collection._documents[id]) {
+      return { acknowledged: true, modifiedCount: 0 };
+    }
+    // Prepare replacement
+    const newDoc = ObjectUtils.deepClone(doc);
+    newDoc._id = id;
+    this._validateDocument(newDoc);
+    // Persist
+    this._collection._documents[id] = newDoc;
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    this._logger.debug('Document replaced by ID', { documentId: id });
+    return { acknowledged: true, modifiedCount: 1 };
+  }
+
+  /**
+   * Replace documents matching a query
+   * @param {Object} query - Filter criteria
+   * @param {Object} doc - Replacement document
+   * @returns {number} Number of documents replaced
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   */
+  replaceDocumentByQuery(query, doc) {
+    // Validate query
+    if (!query || typeof query !== 'object' || Array.isArray(query)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be an object');
+    }
+    // Validate doc
+    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Replacement document must be an object');
+    }
+    // Find matches
+    const matches = this.findMultipleByQuery(query);
+    if (matches.length === 0) {
+      return 0;
+    }
+    // Apply replacements
+    matches.forEach(d => this.replaceDocument(d._id, doc));
+    return matches.length;
+  }
 }
