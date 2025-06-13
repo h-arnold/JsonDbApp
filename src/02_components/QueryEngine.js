@@ -108,8 +108,13 @@ class QueryEngine {
     const documentValue = this._getFieldValue(document, fieldPath);
 
     // Handle operator objects
-    if (queryValue && typeof queryValue === 'object' && !Array.isArray(queryValue) && !(queryValue instanceof Date)) {
-      return this._matchOperators(documentValue, queryValue);
+    try {
+      ValidationUtils.validateObject(queryValue, 'queryValue');
+      if (!(queryValue instanceof Date)) {
+        return this._matchOperators(documentValue, queryValue);
+      }
+    } catch (e) {
+      // Not a plain object, fall through to direct comparison
     }
 
     // Direct value comparison (implicit $eq)
@@ -335,10 +340,15 @@ class QueryEngine {
       throw new InvalidQueryError(`Query nesting exceeds maximum depth of ${this._config.maxNestedDepth}`);
     }
 
-    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
-      Object.values(obj).forEach(value => {
-        this._validateQueryDepth(value, depth + 1);
-      });
+    try {
+      ValidationUtils.validateObject(obj, 'queryObject');
+      if (!(obj instanceof Date)) {
+        Object.values(obj).forEach(value => {
+          this._validateQueryDepth(value, depth + 1);
+        });
+      }
+    } catch (e) {
+      // Not a plain object, do nothing
     }
   }
 
@@ -363,15 +373,19 @@ class QueryEngine {
    * @private
    */
   _findOperators(obj, operators = []) {
-    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
-      Object.keys(obj).forEach(key => {
-        if (key.startsWith('$')) {
-          operators.push(key);
-        }
-        this._findOperators(obj[key], operators);
-      });
+    try {
+      ValidationUtils.validateObject(obj, 'queryObject');
+      if (!(obj instanceof Date)) {
+        Object.keys(obj).forEach(key => {
+          if (key.startsWith('$')) {
+            operators.push(key);
+          }
+          this._findOperators(obj[key], operators);
+        });
+      }
+    } catch (e) {
+      // Not a plain object, do nothing
     }
-
     return operators;
   }
 
@@ -398,26 +412,31 @@ class QueryEngine {
       throw new InvalidQueryError(`Operator validation depth exceeds maximum of ${this._config.maxNestedDepth}`);
     }
 
-    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
-      Object.keys(obj).forEach(key => {
-        if (key === '$and' || key === '$or') {
-          // Logical operators must have array values
-          if (!Array.isArray(obj[key])) {
-            throw new InvalidQueryError(`${key} operator requires an array of conditions`);
+    try {
+      ValidationUtils.validateObject(obj, 'queryObject');
+      if (!(obj instanceof Date)) {
+        Object.keys(obj).forEach(key => {
+          if (key === '$and' || key === '$or') {
+            // Logical operators must have array values
+            if (!Array.isArray(obj[key])) {
+              throw new InvalidQueryError(`${key} operator requires an array of conditions`);
+            }
+            // Recursively validate each condition in the array
+            obj[key].forEach(condition => {
+              this._validateOperatorValuesRecursive(condition, depth + 1);
+            });
+          } else if (key.startsWith('$')) {
+            // Other operators - can add specific validation here as needed
+            // For now, just recursively validate the value
+            this._validateOperatorValuesRecursive(obj[key], depth + 1);
+          } else {
+            // Regular field - validate its value
+            this._validateOperatorValuesRecursive(obj[key], depth + 1);
           }
-          // Recursively validate each condition in the array
-          obj[key].forEach(condition => {
-            this._validateOperatorValuesRecursive(condition, depth + 1);
-          });
-        } else if (key.startsWith('$')) {
-          // Other operators - can add specific validation here as needed
-          // For now, just recursively validate the value
-          this._validateOperatorValuesRecursive(obj[key], depth + 1);
-        } else {
-          // Regular field - validate its value
-          this._validateOperatorValuesRecursive(obj[key], depth + 1);
-        }
-      });
+        });
+      }
+    } catch (e) {
+      // Not a plain object, do nothing
     }
   }
 
