@@ -103,46 +103,157 @@ Following the completion of Section 6, a refactoring pull request was merged, in
    - Add `replaceOne(idOrFilter, doc)` for document replacement
    - Support both document replacement and operator-based updates
 
+### Integration and API Enhancements
+
+- Dependency Injection:
+  - `DocumentOperations` constructor accepts `UpdateEngine` and `FileService`.
+  - `Collection` constructor injects `DocumentOperations`, `MasterIndex` and `FileOperations`.
+
+- Update Flow:
+  1. **Retrieve**: `Collection.updateOne()` normalises `filterOrId` and delegates to `DocumentOperations`.
+  2. **Fetch Document**: `DocumentOperations.loadDocumentById(id)` loads the current document.
+  3. **Apply Operators**: Document passed to `UpdateEngine.applyOperators(document, updateOps)`.
+  4. **Persist Changes**: Modified document serialized via `ObjectUtils.serialise()` and saved through `FileService.saveDocument(collectionName, updatedDocument)`.
+  5. **MasterIndex Update**: On successful save, `MasterIndex.markCollectionUpdated(collectionName)`.
+  6. **Logging**: `GASDBLogger.info()` records the update event with details.
+
+- API Method Signatures:
+  - In `src/components/DocumentOperations.js`:
+
+    ```js
+    /**
+     * Apply update operators to a document by ID
+     * @param {string} id - Document identifier
+     * @param {Object} updateOps - MongoDB-style update operators
+     * @throws {InvalidQueryError} If operators are invalid
+     */
+    updateDocumentWithOperators(id, updateOps)
+
+    /**
+     * Update documents matching a query using operators
+     * @param {Object} query - Filter criteria
+     * @param {Object} updateOps - MongoDB-style update operators
+     * @returns {number} Number of documents updated
+     */
+    updateDocumentByQuery(query, updateOps)
+    ```
+
+  - In `src/core/Collection.js`:
+
+    ```js
+    /**
+     * Update a single document by ID or filter
+     * @param {string|Object} filterOrId - Document ID or filter criteria
+     * @param {Object} update - Operators or replacement document
+     */
+    updateOne(filterOrId, update)
+
+    /**
+     * Update multiple documents matching a filter
+     * @param {Object} filter - Filter criteria
+     * @param {Object} update - MongoDB-style update operators
+     * @returns {number} Number of documents updated
+     */
+    updateMany(filter, update)
+
+    /**
+     * Replace a single document by ID or filter
+     * @param {string|Object} filterOrId - Document ID or filter criteria
+     * @param {Object} doc - Replacement document
+     */
+    replaceOne(filterOrId, doc)
+    ```
+
+- Error Handling:
+  - Invalid or malformed update operators throw `InvalidQueryError` (`INVALID_QUERY`).
+  - Save conflicts or lock acquisition failures throw `LockTimeoutError` (`LOCK_TIMEOUT`).
+
 ### Test Cases
 
-1. **Update Engine Tests** (12 test cases)
-   - Test basic document modification with operators
-   - Test field access and modification utilities
-   - Test update validation and error handling
-   - Test nested field access and updates
+1. **UpdateEngine Tests** (12 cases)
 
-2. **Field Modification Tests** (20 test cases)
-   - Test `$set` with various data types (string, number, boolean, Date, object)
-   - Test `$inc` with positive and negative increments
-   - Test `$mul` with various multipliers
-   - Test `$min`/`$max` with numbers and dates
-   - Test nested field updates (e.g., "user.settings.theme")
-   - Test array element updates
+    - testUpdateEngineSetStringField
+    - testUpdateEngineSetCreatesDeepPath
+    - testUpdateEngineIncPositive
+    - testUpdateEngineIncNegative
+    - testUpdateEngineMulNumber
+    - testUpdateEngineMinNumeric
+    - testUpdateEngineMaxValue
+    - testUpdateEngineUnsetSimpleField
+    - testUpdateEngineUnsetNestedField
+    - testUpdateEnginePushArrayValue
+    - testUpdateEnginePullArrayValue
+    - testUpdateEngineAddToSetUnique
+    - testUpdateEngineInvalidOperatorThrows
 
-3. **Field Removal Tests** (8 test cases)
-   - Test `$unset` operator with various field types
-   - Test nested field removal
-   - Test document structure integrity after removal
-   - Test removal of non-existent fields
+2. **Field Modification Tests** (16 cases)
 
-4. **Array Update Tests** (15 test cases)
-   - Test `$push` with single and multiple values
-   - Test `$pull` with various match conditions
-   - Test `$addToSet` for unique value enforcement
-   - Test array position updates
-   - Test nested array operations
+    - testSetVariousDataTypes
+    - testSetOnNonExistentCreatesField
+    - testIncOnNonNumericThrows
+    - testMulOnNonNumericThrows
+    - testMinOnNonComparableThrows
+    - testMaxOnNonComparableThrows
+    - testNestedFieldUpdateDeepPath
+    - testMultipleOperatorsInSingleUpdate
+    - testOrderOfOperatorApplication
+    - testImmutableOriginalDocument
+    - testFieldTypePreservation
+    - testSetNullAndUndefinedBehaviour
+    - testIncExtremeValues
+    - testMinOnEqualValueNoChange
+    - testMaxOnEqualValueNoChange
+    - testEmptyUpdateObjectThrows
 
-5. **DocumentOperations Update Tests** (10 test cases) *(Advanced update capabilities)*
-   - Test `updateDocumentByQuery()` with various queries and updates
-   - Test `updateDocumentWithOperators()` functionality
-   - Test integration with UpdateEngine
-   - Test validation of update operations
+3. **Field Removal Tests** (6 cases)
 
-6. **Collection API Update Tests** (15 test cases) *(MongoDB-style updates)*
-   - Test `updateOne()` with update operators
-   - Test `updateMany()` for multiple documents
-   - Test `replaceOne()` for document replacement
-   - Test distinction between replacement and operator updates
+    - testUnsetSimpleField
+    - testUnsetNestedField
+    - testUnsetNonExistentFieldNoError
+    - testUnsetArrayElementByIndex
+    - testUnsetDeepNestedPath
+    - testDocumentStructureAfterUnset
+
+4. **Array Update Tests** (12 cases)
+
+    - testPushSingleValue
+    - testPushMultipleValues
+    - testPullByValueEquality
+    - testAddToSetUniqueOnly
+    - testAddToSetMultipleUnique
+    - testAddToSetDuplicatesIgnored
+    - testPushNestedArray
+    - testPullNestedArray
+    - testArrayPositionSpecifier
+    - testPushOnNonArrayThrows
+    - testPullOnNonArrayThrows
+    - testAddToSetOnNonArrayThrows
+
+5. **DocumentOperations Update Tests** (8 cases)
+
+    - testUpdateDocumentWithOperatorsById
+    - testUpdateDocumentByQuerySingleMatch
+    - testUpdateDocumentByQueryMultipleMatches
+    - testUpdateDocumentByQueryNoMatchesThrows
+    - testReplaceDocumentById
+    - testReplaceDocumentByQuery
+    - testDocumentOperationsIntegrationWithUpdateEngine
+    - testUpdateDocumentInvalidOperators
+
+6. **Collection API Update Tests** (12 cases)
+
+    - testCollectionUpdateOneById
+    - testCollectionUpdateOneByFilter
+    - testCollectionUpdateManyReturnsModifiedCount
+    - testCollectionReplaceOneById
+    - testCollectionReplaceOneByFilter
+    - testCollectionUpdateReturnsModifiedCount
+    - testCollectionReplaceCorrectDocument
+    - testCollectionUpdateWithNoMatches
+    - testCollectionUpdateWithMultipleOperators
+    - testCollectionErrorPropagation
+    - testCollectionLockingDuringUpdate
+    - testCollectionUpdateLogging
 
 ### File Updates Required
 
@@ -160,7 +271,7 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
 ### Completion Criteria
 
-- All test cases pass (80 total: 12 + 20 + 8 + 15 + 10 + 15)
+- All test cases pass
 - Update engine can modify documents using MongoDB-style operators
 - Field modification works with various data types and nested structures
 - Field removal maintains document integrity
@@ -168,6 +279,24 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 - DocumentOperations supports all advanced update methods
 - Collection API provides full MongoDB-compatible update functionality
 - UpdateEngine integrates seamlessly with existing components
+
+### TDD Implementation Ticklist for Section 7
+
+- [ ] Create `tests/unit/UpdateEngineTest.js` and write a failing test for the `$set` operator
+- [ ] Implement `$set` logic in `src/components/UpdateEngine.js` and verify the test turns green
+- [ ] Write a failing test for nested `$set` path support, then add nested-path handling
+- [ ] Add failing tests for `$inc` and `$mul`, implement both operators and confirm green
+- [ ] Add failing tests for `$min` and `$max`, implement both operators and confirm green
+- [ ] Write failing test for `$unset` operator, implement removal logic and verify
+- [ ] Write failing tests for array operators (`$push`, `$pull`, `$addToSet`), implement them and confirm pass
+- [ ] Refactor `UpdateEngine` internal helpers (`_accessPath`, `_validateOperator`) for clarity and ensure all tests remain green
+- [ ] Write failing tests in `tests/unit/DocumentOperationsTest.js` for `updateDocumentWithOperators`, then implement in `src/components/DocumentOperations.js`
+- [ ] Write failing tests for `updateDocumentByQuery`, implement method and confirm green
+- [ ] Inject `UpdateEngine` into `DocumentOperations` constructor, update DI setup and ensure tests pass
+- [ ] Write failing tests in `tests/unit/CollectionTest.js` for `updateOne`, implement API in `src/core/Collection.js` and pass tests
+- [ ] Write failing tests for `updateMany` and `replaceOne`, implement methods and verify green
+- [ ] Add tests to verify `MasterIndex.markCollectionUpdated` and `GASDBLogger` are called during updates, implement logging/metadata update and confirm
+- [ ] Run the full test suite, refactor any code for readability or duplication, and ensure 100% pass before proceeding
 
 ## Section 8: Cross-Instance Coordination
 
