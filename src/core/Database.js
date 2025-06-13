@@ -7,6 +7,7 @@
  * 
  * @class Database
  */
+
 class Database {
   
   /**
@@ -60,6 +61,8 @@ class Database {
           count: Object.keys(masterIndexCollections).length
         });
         
+
+        // Loop through the collections and load the metadata into memory
         for (const [name, collectionData] of Object.entries(masterIndexCollections)) {
           if (collectionData.fileId) {
             const collection = this._createCollectionObject(name, collectionData.fileId);
@@ -170,8 +173,8 @@ class Database {
         documents: {},
         metadata: {
           name: name,
-          created: new Date().toISOString(),
-          lastModified: new Date().toISOString(),
+          created: new Date(),
+          lastUpdated: new Date(),
           documentCount: 0,
           version: 1
         }
@@ -338,8 +341,13 @@ class Database {
    * @throws {Error} When index file cannot be loaded or is corrupted
    */
   loadIndex() {
+    // Auto-initialise database if not already initialised
     if (!this.indexFileId) {
-      throw new Error('Database not initialised - no index file');
+      try {
+        this.initialise();
+      } catch (error) {
+        throw new Error(`Database auto-initialization failed while loading index: ${error.message}`);
+      }
     }
     
     try {
@@ -357,7 +365,7 @@ class Database {
       }
       if (!indexData.lastUpdated) {
         this._logger.warn('Index file missing lastUpdated property, repairing');
-        indexData.lastUpdated = new Date().toISOString();
+        indexData.lastUpdated = new Date();
       }
       
       // Validate collections structure
@@ -440,8 +448,8 @@ class Database {
     const indexFileName = `database_index_${Date.now()}.json`;
     const initialIndexData = {
       collections: {},
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
+      created: new Date(),
+      lastUpdated: new Date(),
       version: 1
     };
     
@@ -500,22 +508,18 @@ class Database {
   }
   
   /**
-   * Create a collection object (placeholder implementation)
+   * Create a collection object (full Collection instance)
    * 
+   * Note: Collections are lazy-loaded so this method doesn't load the full collection into memory
+   * until a CRUD operation on it is called.
+   *
    * @param {string} name - Collection name
    * @param {string} driveFileId - Drive file ID
-   * @returns {Object} Collection object
+   * @returns {Collection} Collection instance
    * @private
    */
   _createCollectionObject(name, driveFileId) {
-    // Minimal collection object to satisfy tests
-    // Full Collection class will be implemented later
-    return {
-      name: name,
-      driveFileId: driveFileId,
-      db: this,
-      created: new Date().toISOString()
-    };
+    return new Collection(name, driveFileId, this, this._fileService);
   }
   
   /**
@@ -541,7 +545,7 @@ class Database {
       // Create a new index data structure based on MasterIndex
       const backupData = {
         collections: {},
-        lastUpdated: new Date().toISOString(),
+        lastUpdated: new Date(),
         version: 1
       };
       
@@ -551,8 +555,8 @@ class Database {
         backupData.collections[name] = {
           name: miCollection.name || name,
           fileId: miCollection.fileId,
-          created: miCollection.created || new Date().toISOString(),
-          lastModified: miCollection.lastModified || new Date().toISOString(),
+          created: miCollection.created || new Date(),
+          lastUpdated: miCollection.lastUpdated || new Date(),
           documentCount: miCollection.documentCount || 0
         };
       }
@@ -587,12 +591,12 @@ class Database {
       indexData.collections[name] = {
         name: name,
         fileId: driveFileId,
-        created: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
+        created: new Date(),
+        lastUpdated: new Date(),
         documentCount: 0
       };
       
-      indexData.lastUpdated = new Date().toISOString();
+      indexData.lastUpdated = new Date();
       
       this._fileService.writeFile(this.indexFileId, indexData);
       
@@ -619,7 +623,7 @@ class Database {
       const indexData = this.loadIndex();
       
       delete indexData.collections[name];
-      indexData.lastUpdated = new Date().toISOString();
+      indexData.lastUpdated = new Date();
       
       this._fileService.writeFile(this.indexFileId, indexData);
       
@@ -646,8 +650,8 @@ class Database {
       this._masterIndex.addCollection(name, {
         name: name,
         fileId: driveFileId,
-        created: new Date().toISOString(),
-        lastModified: new Date().toISOString(),
+        created: new Date(),
+        lastUpdated: new Date(),
         documentCount: 0
       });
       

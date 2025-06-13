@@ -19,11 +19,11 @@ class MasterIndex {
       version: config.version || 1
     };
     
-    this._logger = GASDBLogger.createComponentLogger('MasterIndex'); // Initialize logger
+    this._logger = GASDBLogger.createComponentLogger('MasterIndex'); // Initialise logger
 
     this._data = {
       version: this._config.version,
-      lastUpdated: new Date().toISOString(),
+      lastUpdated: new Date(),
       collections: {},
       locks: {},
       modificationHistory: {}
@@ -42,33 +42,66 @@ class MasterIndex {
   }
   
   /**
-   * Add a collection to the master index
+   * @private
+   * Internal logic for adding a single collection without repeated ScriptLock overhead
    * @param {string} name - Collection name
-   * @param {Object} metadata - Collection metadata
+   * @param {Object|CollectionMetadata} metadata - Collection metadata or instance
+   * @returns {Object} Serialized collection metadata
+   * @throws {InvalidArgumentError} If name is invalid
    */
-  addCollection(name, metadata) {
+  _addCollectionInternal(name, metadata) {
     if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('Collection name must be a non-empty string');
     }
-    
-    return this._withScriptLock(() => {
-      const collectionData = {
-        name: name,
-        fileId: metadata.fileId || null,
-        created: metadata.created || new Date().toISOString(),
-        lastModified: metadata.lastModified || new Date().toISOString(),
+    let collectionMetadata;
+    if (metadata instanceof CollectionMetadata) {
+      collectionMetadata = metadata;
+      if (collectionMetadata.name !== name) {
+        collectionMetadata = new CollectionMetadata(name, collectionMetadata.fileId, metadata);
+      }
+    } else {
+      const created = metadata.created instanceof Date ? metadata.created : new Date(metadata.created || Date.now());
+      const lastUpdated = metadata.lastModified instanceof Date ? metadata.lastModified : new Date(metadata.lastModified || Date.now());
+      collectionMetadata = new CollectionMetadata(name, metadata.fileId || null, {
+        created: created,
+        lastUpdated: lastUpdated,
         documentCount: metadata.documentCount || 0,
         modificationToken: metadata.modificationToken || this.generateModificationToken(),
         lockStatus: null
-      };
-      
-      this._data.collections[name] = collectionData;
-      this._data.lastUpdated = new Date().toISOString();
-      
-      // Track modification history
-      this._addToModificationHistory(name, 'ADD_COLLECTION', collectionData);
-      
-      return collectionData;
+      });
+    }
+    this._data.collections[name] = collectionMetadata;
+    this._data.lastUpdated = new Date();
+    this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata);
+    return collectionMetadata;
+  }
+  
+  /**
+   * Add a collection to the master index with locking
+   * @param {string} name - Collection name
+   * @param {Object|CollectionMetadata} metadata - Collection metadata or instance
+   * @returns {Object} Serialized collection metadata
+   */
+  addCollection(name, metadata) {
+    return this._withScriptLock(() => this._addCollectionInternal(name, metadata));
+  }
+  
+  /**
+   * Bulk add multiple collections under a single lock
+   * @param {Object<string, Object|CollectionMetadata>} collectionsMap - Map of name to metadata
+   * @returns {Object[]} Array of serialized metadata objects
+   * @throws {InvalidArgumentError} When collectionsMap is invalid
+   */
+  addCollections(collectionsMap) {
+    if (!collectionsMap || typeof collectionsMap !== 'object') {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collectionsMap must be a non-empty object');
+    }
+    return this._withScriptLock(() => {
+      const results = [];
+      Object.entries(collectionsMap).forEach(([name, meta]) => {
+        results.push(this._addCollectionInternal(name, meta));
+      });
+      return results;
     });
   }
   
@@ -77,8 +110,8 @@ class MasterIndex {
    */
   save() {
     try {
-      this._data.lastUpdated = new Date().toISOString();
-      const dataString = JSON.stringify(this._data);
+      this._data.lastUpdated = new Date();
+      const dataString = ObjectUtils.serialise(this._data);
       PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
     } catch (error) {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
@@ -87,23 +120,52 @@ class MasterIndex {
   
   /**
    * Get all collections
-   * @returns {Object} Collections object
+   * @returns {Object} Collections object with CollectionMetadata instances
    */
   getCollections() {
-    return this._data.collections;
+    const collections = {};
+    Object.keys(this._data.collections).forEach(name => {
+      collections[name] = this._data.collections[name];
+    });
+    return collections;
   }
   
   /**
    * Get a specific collection
    * @param {string} name - Collection name
-   * @returns {Object} Collection metadata
+   * @returns {CollectionMetadata|null} Collection metadata instance or null if not found
    */
   getCollection(name) {
     if (!name || typeof name !== 'string') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
     
-    return this._data.collections[name] || null;
+    const rawData = this._data.collections[name];
+    if (!rawData) {
+      return null;
+    }
+    // Ensure we have a CollectionMetadata instance (revived or created)
+    const collectionMetadata = rawData instanceof CollectionMetadata
+      ? rawData
+      : new CollectionMetadata(rawData);
+    
+    // Synchronise lock status from current locks
+    const currentLock = this._data.locks[name];
+    if (currentLock) {
+      // Check if lock is still valid (not expired)
+      const now = Date.now();
+      const expiresAt = currentLock.lockTimeout || currentLock.expiresAt;
+      
+      if (now < expiresAt) {
+        // Lock is still active, update metadata
+        collectionMetadata.setLockStatus(currentLock);
+      } else {
+        // Lock expired, remove it
+        this._removeLock(name);
+      }
+    }
+    
+    return collectionMetadata;
   }
   
   /**
@@ -115,34 +177,68 @@ class MasterIndex {
     if (!name || typeof name !== 'string') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
-    
+
     return this._withScriptLock(() => {
-      const collection = this._data.collections[name];
-      if (!collection) {
+      const rawData = this._data.collections[name];
+      if (!rawData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
       }
+
+      // Full replace if a complete metadata object is provided
+      if (updates && typeof updates === 'object' && updates.name) {
+        const newMetadata = updates instanceof CollectionMetadata
+          ? updates
+          : new CollectionMetadata(updates);
+        this._data.collections[name] = newMetadata;
+        this._data.lastUpdated = new Date();
+        this._addToModificationHistory(name, 'FULL_METADATA_UPDATE', newMetadata);
+        return newMetadata;
+      }
+
+      // Instantiate CollectionMetadata for incremental updates
+      const collectionMetadata = new CollectionMetadata(rawData);
       
-      // Apply updates
+      // Apply updates using CollectionMetadata methods where available
       Object.keys(updates).forEach(key => {
-        collection[key] = updates[key];
+        switch (key) {
+          case 'documentCount':
+            collectionMetadata.setDocumentCount(updates[key]);
+            break;
+          case 'modificationToken':
+            collectionMetadata.setModificationToken(updates[key]);
+            break;
+          case 'lockStatus':
+            collectionMetadata.setLockStatus(updates[key]);
+            break;
+          case 'lastModified':
+          case 'lastUpdated':
+            // Set specific timestamp if provided
+            collectionMetadata.lastUpdated = updates[key] instanceof Date ? updates[key] : new Date(updates[key]);
+            break;
+          default:
+            // For other fields, update directly on metadata instance
+            collectionMetadata[key] = updates[key];
+        }
       });
       
-      // Update lastModified only if not explicitly provided in updates
-      if (!updates.hasOwnProperty('lastModified')) {
-        collection.lastModified = new Date().toISOString();
+      // Update lastUpdated only if not explicitly provided
+      if (!updates.hasOwnProperty('lastModified') && !updates.hasOwnProperty('lastUpdated')) {
+        collectionMetadata.touch();
       }
       
       // Generate new modification token if not provided
       if (!updates.modificationToken) {
-        collection.modificationToken = this.generateModificationToken();
+        collectionMetadata.setModificationToken(this.generateModificationToken());
       }
       
-      this._data.lastUpdated = new Date().toISOString();
+      // Store the updated metadata instance directly
+      this._data.collections[name] = collectionMetadata;
+      this._data.lastUpdated = new Date();
       
       // Track modification history
       this._addToModificationHistory(name, 'UPDATE_METADATA', updates);
       
-      return collection;
+      return this._data.collections[name];
     });
   }
 
@@ -203,20 +299,23 @@ class MasterIndex {
       const expiresAt = new Date(now.getTime() + this._config.lockTimeout);
       
       const lockInfo = {
+        isLocked: true,
         lockedBy: operationId,
-        lockedAt: now.toISOString(),
-        expiresAt: expiresAt.toISOString()
+        lockedAt: now.getTime(), // Use timestamp for consistency
+        lockTimeout: expiresAt.getTime() // Use timestamp for consistency
       };
       
       // Store lock in both places for easier management
       this._data.locks[collectionName] = lockInfo;
       
-      // Also store in collection if it exists
+      // Also store in collection if it exists, using CollectionMetadata
       if (this._data.collections[collectionName]) {
-        this._data.collections[collectionName].lockStatus = lockInfo;
+        const collectionMetadata = this._data.collections[collectionName];
+        collectionMetadata.setLockStatus(lockInfo);
+        this._data.collections[collectionName] = collectionMetadata;
       }
       
-      this._data.lastUpdated = new Date().toISOString();
+      this._data.lastUpdated = new Date();
       
       return true;
     });
@@ -238,8 +337,8 @@ class MasterIndex {
     }
     
     // Check if lock has expired
-    const now = new Date();
-    const expiresAt = new Date(lockInfo.expiresAt);
+    const now = Date.now();
+    const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
     
     if (now >= expiresAt) {
       // Lock has expired, clean it up
@@ -335,52 +434,57 @@ class MasterIndex {
     if (!collectionName || typeof collectionName !== 'string') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
-    
     if (!newData || typeof newData !== 'object') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('New data must be an object');
     }
-    
     strategy = strategy || 'LAST_WRITE_WINS';
-    
+
     return this._withScriptLock(() => {
-      const collection = this._data.collections[collectionName];
-      if (!collection) {
+      const collectionData = this._data.collections[collectionName];
+      if (!collectionData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
       }
-      
-      let resolvedData;
-      
+
+      // Always use a CollectionMetadata instance
+      const collectionMetadata = collectionData instanceof CollectionMetadata
+        ? collectionData
+        : new CollectionMetadata(collectionData);
+
       switch (strategy) {
         case 'LAST_WRITE_WINS':
-          // Apply new data and generate new token
-          resolvedData = {
-            ...collection,
-            ...newData,
-            modificationToken: this.generateModificationToken(),
-            lastModified: new Date().toISOString()
-          };
-          break;
-          
+          // Apply new data using CollectionMetadata methods where possible
+          Object.keys(newData).forEach(key => {
+            switch (key) {
+              case 'documentCount':
+                collectionMetadata.setDocumentCount(newData[key]);
+                break;
+              case 'modificationToken':
+                collectionMetadata.setModificationToken(newData[key]);
+                break;
+              case 'lockStatus':
+                collectionMetadata.setLockStatus(newData[key]);
+                break;
+              default:
+                break;
+            }
+          });
+          collectionMetadata.setModificationToken(this.generateModificationToken());
+          collectionMetadata.touch();
+
+          // Store the updated instance
+          this._data.collections[collectionName] = collectionMetadata;
+          this._data.lastUpdated = new Date();
+          this._addToModificationHistory(collectionName, 'CONFLICT_RESOLVED', {
+            strategy,
+            newData,
+            resolvedToken: collectionMetadata.getModificationToken()
+          });
+
+          return { success: true, data: collectionMetadata, strategy };
+
         default:
           throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(`Unknown conflict resolution strategy: ${strategy}`);
       }
-      
-      // Update the collection
-      this._data.collections[collectionName] = resolvedData;
-      this._data.lastUpdated = new Date().toISOString();
-      
-      // Track conflict resolution in history
-      this._addToModificationHistory(collectionName, 'CONFLICT_RESOLVED', {
-        strategy: strategy,
-        newData: newData,
-        resolvedToken: resolvedData.modificationToken
-      });
-      
-      return {
-        success: true,
-        data: resolvedData,
-        strategy: strategy
-      };
     });
   }
   
@@ -422,7 +526,7 @@ class MasterIndex {
     try {
       const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
       if (dataString) {
-        const loadedData = JSON.parse(dataString);
+        const loadedData = ObjectUtils.deserialise(dataString);
         // Merge loaded data with defaults
         this._data = {
           ...this._data,
@@ -443,7 +547,11 @@ class MasterIndex {
     delete this._data.locks[collectionName];
     
     if (this._data.collections[collectionName]) {
-      this._data.collections[collectionName].lockStatus = null;
+      const instance = this._data.collections[collectionName] instanceof CollectionMetadata
+        ? this._data.collections[collectionName]
+        : new CollectionMetadata(this._data.collections[collectionName]);
+      instance.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
+      this._data.collections[collectionName] = instance;
     }
   }
   
@@ -461,7 +569,7 @@ class MasterIndex {
     
     this._data.modificationHistory[collectionName].push({
       operation: operation,
-      timestamp: new Date().toISOString(),
+      timestamp: new Date(),
       data: data
     });
     
@@ -478,12 +586,12 @@ class MasterIndex {
    * @private
    */
   _internalCleanupExpiredLocks() {
-    const now = new Date();
+    const now = Date.now();
     let anyExpired = false;
     
     Object.keys(this._data.locks).forEach(collectionName => {
       const lockInfo = this._data.locks[collectionName];
-      const expiresAt = new Date(lockInfo.expiresAt);
+      const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
       
       if (now >= expiresAt) {
         this._removeLock(collectionName);
@@ -492,7 +600,7 @@ class MasterIndex {
     });
     
     if (anyExpired) {
-      this._data.lastUpdated = new Date().toISOString();
+      this._data.lastUpdated = new Date();
     }
     
     return anyExpired;
@@ -533,9 +641,8 @@ class MasterIndex {
     const lock = this._acquireScriptLock(timeout);
     
     try {
-      // Reload data from ScriptProperties to get latest state
-      this._loadFromScriptProperties();
-      
+      // Skipping reload on each operation for in-memory performance
+      // this.loadFromScriptProperties(); //Keeping that here because I have a feeling that this may cause consistency issues if the data is changed by another instance
       // Execute the operation
       const result = operation();
       

@@ -58,17 +58,14 @@ class FileOperations {
         this._handleDriveApiError(driveError, 'readFile', fileId);
       }
       
-      // Parse JSON - let InvalidFileFormatError bubble up to retry logic
+      // Parse JSON and convert dates - let InvalidFileFormatError bubble up to retry logic
       try {
-        const parsedContent = JSON.parse(content);
+        const parsedContent = ObjectUtils.deserialise(content);
         
         // Validate that parsed content is an object or array (not a primitive string, number, etc.)
         if (parsedContent === null || (typeof parsedContent !== 'object')) {
           throw new InvalidFileFormatError(fileId, 'JSON object or array', `Expected object/array but got ${typeof parsedContent}`);
         }
-        
-        // Convert ISO date strings to Date objects at file boundary
-        ObjectUtils.convertDateStringsToObjects(parsedContent);
         
         this._logger.debug('File content parsed successfully', { fileId });
         return parsedContent;
@@ -112,7 +109,7 @@ class FileOperations {
     return this._retryOperation(() => {
       try {
         const file = DriveApp.getFileById(fileId);
-        const jsonContent = JSON.stringify(data, null, 2);
+        const jsonContent = ObjectUtils.serialise(data);
         
         file.setContent(jsonContent);
         
@@ -147,7 +144,7 @@ class FileOperations {
     
     return this._retryOperation(() => {
       try {
-        const jsonContent = JSON.stringify(data, null, 2);
+        const jsonContent = ObjectUtils.serialise(data);
         let newFile;
         
         if (folderId) {

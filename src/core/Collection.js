@@ -102,21 +102,24 @@ class Collection {
         throw new OperationError('Invalid file structure', 'Collection file must contain a JSON object');
       }
       
-      // Initialize documents and metadata with defaults
+      // Initialise documents and metadata with defaults
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
       
-      // Date conversion is handled automatically by FileOperations
       
-      // Create CollectionMetadata instance
-      this._collectionMetadata = new CollectionMetadata(metadataObj);
+      // Create CollectionMetadata instance with name and fileId
+      this._collectionMetadata = new CollectionMetadata(
+        this._name,
+        this._driveFileId,
+        metadataObj
+      );
       
       // Create DocumentOperations instance with this collection as reference
       this._documentOperations = new DocumentOperations(this);
       
       this._logger.debug('Collection data loaded successfully', { 
         documentCount: Object.keys(this._documents).length,
-        metadata: this._collectionMetadata.toObject()
+        metadata: this._collectionMetadata.toJSON()
       });
       
     } catch (error) {
@@ -144,7 +147,7 @@ class Collection {
       
       const data = {
         documents: this._documents,
-        metadata: this._collectionMetadata.toObject()
+        metadata: this._collectionMetadata.toJSON()
       };
       
       this._fileService.writeFile(this._driveFileId, data);
@@ -185,6 +188,15 @@ class Collection {
     
     this._collectionMetadata.updateLastModified();
     this._logger.debug('Collection metadata updated', { changes });
+
+    // Propagate metadata change to MasterIndex
+    if (this._database && this._database._masterIndex) {
+      // Push full metadata object for atomic replace
+      this._database._masterIndex.updateCollectionMetadata(
+        this._name,
+        this._collectionMetadata.toJSON()
+      );
+    }
   }
 
   /**
@@ -435,7 +447,7 @@ class Collection {
    */
   getMetadata() {
     this._ensureLoaded();
-    return this._collectionMetadata.toObject();
+    return this._collectionMetadata;
   }
 
   /**

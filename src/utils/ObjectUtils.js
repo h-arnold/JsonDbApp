@@ -3,7 +3,7 @@
  * 
  * Provides utilities for deep cloning objects while preserving Date instances
  * and other complex objects. Used throughout the codebase to avoid JSON 
- * serialization/deserialization that converts Dates to strings.
+ * serialisation/deserialisation that converts Dates to strings.
  */
 
 /**
@@ -105,5 +105,62 @@ class ObjectUtils {
     // ISO date pattern: YYYY-MM-DDTHH:mm:ss.sssZ or YYYY-MM-DDTHH:mm:ssZ (Z is required)
     const isoDatePattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{3})?Z$/;
     return isoDatePattern.test(str) && !isNaN(Date.parse(str));
+  }
+
+  /**
+   * Registry of classes for JSON reviving
+   * @private
+   */
+  static get _classRegistry() {
+    return {
+      CollectionMetadata,
+      DatabaseConfig
+    };
+  }
+
+  /**
+   * JSON reviver function to restore class instances and Dates
+   * @param {string} key - Property key
+   * @param {*} value - Parsed value
+   * @returns {*} Revived value or original
+   * @private
+   */
+  static _reviver(key, value) {
+    if (value && typeof value === 'object') {
+      // Class instances
+      const type = value.__type;
+      if (typeof type === 'string' && ObjectUtils._classRegistry[type]) {
+        return ObjectUtils._classRegistry[type].fromJSON(value);
+      }
+    }
+    // Fallback: convert ISO date strings
+    return ObjectUtils.convertDateStringsToObjects(value);
+  }
+
+  /**
+   * Serialise an object to JSON string using toJSON hooks
+   * @param {*} obj - Object to serialise
+   * @param {number|string} [space] - Indentation for pretty-print
+   * @returns {string} JSON string
+   */
+  static serialise(obj, space) {
+    return JSON.stringify(obj, null, space);
+  }
+
+  /**
+   * Deserialise JSON string to object with class revival and Date restoration
+   * @param {string} jsonString - JSON string to deserialise
+   * @returns {*} Revived object
+   * @throws {InvalidArgumentError} When jsonString is invalid JSON
+   */
+  static deserialise(jsonString) {
+    if (typeof jsonString !== 'string') {
+      throw new InvalidArgumentError('jsonString', jsonString, 'Must be a string');
+    }
+    try {
+      return JSON.parse(jsonString, ObjectUtils._reviver);
+    } catch (error) {
+      throw new InvalidArgumentError('jsonString', jsonString, 'Invalid JSON: ' + error.message);
+    }
   }
 }

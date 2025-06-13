@@ -128,29 +128,24 @@ function createDatabaseConfigValidationTestSuite() {
   const suite = new TestSuite('DatabaseConfig Validation');
   
   suite.addTest('should validate lock timeout parameter', function() {
-    // Act & Assert - Test invalid lock timeout values
-    try {
-      // Test negative lock timeout
-      TestFramework.assertThrows(() => {
-        new DatabaseConfig({ lockTimeout: -1000 });
-      }, Error, 'Should throw error for negative lock timeout');
-      
-      // Test zero lock timeout (should be allowed according to documentation: "Zero means no timeout")
-      const zeroTimeoutConfig = new DatabaseConfig({ lockTimeout: 0 });
-      TestFramework.assertEquals(zeroTimeoutConfig.lockTimeout, 0, 'Zero lock timeout should be accepted as no timeout');
-      
-      // Test non-numeric lock timeout
-      TestFramework.assertThrows(() => {
-        new DatabaseConfig({ lockTimeout: 'invalid' });
-      }, Error, 'Should throw error for non-numeric lock timeout');
-      
-      // Test valid lock timeout should work
-      const validConfig = new DatabaseConfig({ lockTimeout: 30000 });
-      TestFramework.assertEquals(validConfig.lockTimeout, 30000, 'Valid lock timeout should be accepted');
-      
-    } catch (error) {
-      throw new Error('DatabaseConfig lock timeout validation not implemented: ' + error.message);
-    }
+    // Non-number timeout
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ lockTimeout: 'invalid' });
+    }, Error, 'Should throw error for non-number lockTimeout');
+
+    // Negative timeout
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ lockTimeout: -1 });
+    }, Error, 'Should throw error for negative lockTimeout');
+
+    // Below minimum threshold
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ lockTimeout: 499 });
+    }, Error, 'Should throw error for lockTimeout < 500ms');
+
+    // Minimum valid timeout
+    const cfg = new DatabaseConfig({ lockTimeout: 500 });
+    TestFramework.assertEquals(cfg.lockTimeout, 500, 'lockTimeout should be accepted at minimum value');
   });
   
   suite.addTest('should validate log level parameter', function() {
@@ -299,4 +294,35 @@ function runDatabaseConfigTests() {
     GASDBLogger.error('Failed to execute DatabaseConfig tests', { error: error.message, stack: error.stack });
     throw error;
   }
+}
+
+function testDatabaseConfigLockTimeoutValidation() {
+  const testSuite = new TestSuite('DatabaseConfig lockTimeout validation');
+
+  testSuite.addTest('testValidMinimumLockTimeout', function() {
+    const config = new DatabaseConfig({ lockTimeout: 500 });
+    AssertionUtilities.assertEquals(
+      config.lockTimeout,
+      500,
+      'lockTimeout should be set to 500ms'
+    );
+  });
+
+  testSuite.addTest('testTooLowLockTimeoutThrowsError', function() {
+    try {
+      new DatabaseConfig({ lockTimeout: 499 });
+      AssertionUtilities.fail('Constructor should throw error for lockTimeout < 500');
+    } catch (e) {
+      AssertionUtilities.assertTrue(
+        e instanceof Error,
+        'Error should be thrown for invalid lockTimeout'
+      );
+      AssertionUtilities.assertTrue(
+        /at least 500ms/.test(e.message),
+        'Error message should indicate minimum lock timeout requirement'
+      );
+    }
+  });
+
+  return testSuite;
 }

@@ -55,7 +55,8 @@ class FileService {
     // Check cache first if enabled
     if (this._cacheEnabled && this._cache.has(fileId)) {
       this._logger.debug('File content retrieved from cache', { fileId });
-      return this._cache.get(fileId);
+      // Return a deep copy to preserve Date objects and avoid reference issues
+      return ObjectUtils.deepClone(this._cache.get(fileId));
     }
     
     const content = this._fileOps.readFile(fileId);
@@ -114,9 +115,14 @@ class FileService {
     
     const newFileId = this._fileOps.createFile(fileName, data, folderId);
     
-    // Add to cache if enabled
+    // Add to cache if enabled - cache the data as it would be returned by readFile()
+    // This ensures cache consistency between write and read operations
     if (this._cacheEnabled) {
-      this._addToCache(newFileId, data);
+      // Simulate the round-trip through serialization/deserialization to ensure
+      // cached data matches what readFile() would return
+      const serialized = ObjectUtils.serialise(data);
+      const deserializedData = ObjectUtils.deserialise(serialized);
+      this._addToCache(newFileId, deserializedData);
     }
     
     return newFileId;
@@ -308,7 +314,9 @@ class FileService {
       this._logger.debug('Removed oldest cache entry', { removedKey: oldestKey });
     }
     
-    this._cache.set(fileId, content);
+    // Store a deep copy to preserve Date objects and avoid reference issues
+    const cachedContent = ObjectUtils.deepClone(content);
+    this._cache.set(fileId, cachedContent);
     this._logger.debug('Content added to cache', { 
       fileId, 
       cacheSize: this._cache.size 
