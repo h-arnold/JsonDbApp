@@ -81,8 +81,8 @@ class MasterIndex {
         });
       }
       
-      // Store the serialised form
-      this._data.collections[name] = collectionMetadata.toObject();
+      // Store the CollectionMetadata instance directly for JSON reviver support
+      this._data.collections[name] = collectionMetadata;
       this._data.lastUpdated = new Date();
       
       // Track modification history
@@ -127,12 +127,14 @@ class MasterIndex {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
     
-    const collectionData = this._data.collections[name];
-    if (!collectionData) {
+    const rawData = this._data.collections[name];
+    if (!rawData) {
       return null;
     }
-    
-    const collectionMetadata = collectionData;
+    // Ensure we have a CollectionMetadata instance (revived or created)
+    const collectionMetadata = rawData instanceof CollectionMetadata
+      ? rawData
+      : CollectionMetadata.fromObject(rawData);
     
     // Synchronise lock status from current locks
     const currentLock = this._data.locks[name];
@@ -156,12 +158,7 @@ class MasterIndex {
       }
     } else {
       // No active lock, ensure collection shows as unlocked
-      collectionMetadata.setLockStatus({
-        isLocked: false,
-        lockedBy: null,
-        lockedAt: null,
-        lockTimeout: null
-      });
+      collectionMetadata.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
     }
     
     return collectionMetadata;
@@ -178,8 +175,8 @@ class MasterIndex {
     }
     
     return this._withScriptLock(() => {
-      const collectionData = this._data.collections[name];
-      if (!collectionData) {
+      const rawData = this._data.collections[name];
+      if (!rawData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
       }
       
@@ -191,8 +188,8 @@ class MasterIndex {
         return updates;
       }
       
-      // Incremental updates using CollectionMetadata
-      const collectionMetadata = collectionData;
+      // Instantiate CollectionMetadata for incremental updates
+      const collectionMetadata = CollectionMetadata.fromObject(rawData);
       
       // Apply updates using CollectionMetadata methods where available
       Object.keys(updates).forEach(key => {
@@ -208,17 +205,16 @@ class MasterIndex {
             break;
           case 'lastModified':
           case 'lastUpdated':
-            // Set to specific timestamp if provided
-            const updateTime = updates[key] instanceof Date ? updates[key] : new Date(updates[key]);
-            collectionMetadata.lastUpdated = updateTime;
+            // Set specific timestamp if provided
+            collectionMetadata.lastUpdated = updates[key] instanceof Date ? updates[key] : new Date(updates[key]);
             break;
           default:
-            // For other fields, update directly in the stored data
-            collectionData[key] = updates[key];
+            // For other fields, update directly on metadata instance
+            collectionMetadata[key] = updates[key];
         }
       });
       
-      // Update lastUpdated only if not explicitly provided in updates
+      // Update lastUpdated only if not explicitly provided
       if (!updates.hasOwnProperty('lastModified') && !updates.hasOwnProperty('lastUpdated')) {
         collectionMetadata.touch();
       }
@@ -228,14 +224,14 @@ class MasterIndex {
         collectionMetadata.setModificationToken(this.generateModificationToken());
       }
       
-      // Store the updated metadata back
-      this._data.collections[name] = collectionMetadata.toObject();
+      // Store the updated metadata instance directly
+      this._data.collections[name] = collectionMetadata;
       this._data.lastUpdated = new Date();
       
       // Track modification history
       this._addToModificationHistory(name, 'UPDATE_METADATA', updates);
       
-      return collectionMetadata.toObject();
+      return this._data.collections[name];
     });
   }
 
@@ -568,14 +564,11 @@ class MasterIndex {
     delete this._data.locks[collectionName];
     
     if (this._data.collections[collectionName]) {
-      const collectionMetadata = this._data.collections[collectionName];
-      collectionMetadata.setLockStatus({
-        isLocked: false,
-        lockedBy: null,
-        lockedAt: null,
-        lockTimeout: null
-      });
-      this._data.collections[collectionName] = collectionMetadata;
+      const instance = this._data.collections[collectionName] instanceof CollectionMetadata
+        ? this._data.collections[collectionName]
+        : CollectionMetadata.fromObject(this._data.collections[collectionName]);
+      instance.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
+      this._data.collections[collectionName] = instance;
     }
   }
   
