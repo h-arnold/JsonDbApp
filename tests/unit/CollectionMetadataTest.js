@@ -27,10 +27,12 @@ function createCollectionMetadataConstructorTestSuite() {
   
   suite.addTest('should create metadata with default values when no input provided', function() {
     // Arrange & Act
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     const metadataObject = metadata;
     
     // Assert
+    TestFramework.assertEquals(metadataObject.name, 'testCollection', 'Should set provided name');
+    TestFramework.assertEquals(metadataObject.fileId, 'testFileId', 'Should set provided fileId');
     TestFramework.assertTrue(metadataObject.hasOwnProperty('created'), 'Should have created timestamp');
     TestFramework.assertTrue(metadataObject.hasOwnProperty('lastUpdated'), 'Should have lastUpdated timestamp');
     TestFramework.assertTrue(metadataObject.hasOwnProperty('documentCount'), 'Should have documentCount property');
@@ -42,6 +44,8 @@ function createCollectionMetadataConstructorTestSuite() {
   suite.addTest('should create metadata with provided initial values', function() {
     // Arrange
     const initialMetadata = {
+      name: 'testCollection',
+      fileId: 'testFileId',
       created: new Date('2024-01-01T00:00:00Z'),
       lastUpdated: new Date('2024-01-02T00:00:00Z'),
       documentCount: 5
@@ -52,6 +56,8 @@ function createCollectionMetadataConstructorTestSuite() {
     const metadataObject = metadata;
     
     // Assert
+    TestFramework.assertEquals(metadataObject.name, 'testCollection', 'Should preserve name');
+    TestFramework.assertEquals(metadataObject.fileId, 'testFileId', 'Should preserve fileId');
     TestFramework.assertEquals(metadataObject.created.getTime(), initialMetadata.created.getTime(), 'Should preserve created timestamp');
     TestFramework.assertEquals(metadataObject.lastUpdated.getTime(), initialMetadata.lastUpdated.getTime(), 'Should preserve lastUpdated timestamp');
     TestFramework.assertEquals(metadataObject.documentCount, 5, 'Should preserve documentCount');
@@ -82,16 +88,11 @@ function createCollectionMetadataConstructorTestSuite() {
     TestFramework.assertEquals(metadataObject.documentCount, 5, 'Should preserve documentCount');
   });
   
-  suite.addTest('should create metadata with name only', function() {
-    // Arrange
-    const name = 'testCollection';
-    
-    // Act
-    const metadata = new CollectionMetadata(name);
-    
-    // Assert
-    TestFramework.assertEquals(metadata.name, name, 'Should set name property');
-    TestFramework.assertEquals(metadata.fileId, null, 'Should default fileId to null');
+  suite.addTest('should require both name and fileId', function() {
+    // Arrange & Act & Assert - Test that name alone is not sufficient
+    TestFramework.assertThrows(() => {
+      new CollectionMetadata('testCollection'); // Missing fileId
+    }, InvalidArgumentError, 'Should throw error when fileId is missing');
   });
   
   suite.addTest('should throw error for invalid name type', function() {
@@ -127,7 +128,7 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should update lastModified timestamp', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     const originalLastUpdated = metadata.lastUpdated;
     
     // Wait a small amount to ensure timestamp difference
@@ -143,7 +144,7 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should increment document count', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     const originalCount = metadata.documentCount;
     
     // Act
@@ -156,7 +157,11 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should decrement document count', function() {
     // Arrange
-    const initialMetadata = { documentCount: 5 };
+    const initialMetadata = { 
+      name: 'testCollection',
+      fileId: 'testFileId',
+      documentCount: 5 
+    };
     const metadata = new CollectionMetadata(initialMetadata);
     const originalCount = metadata.documentCount;
     
@@ -170,7 +175,7 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should not allow decrementing below zero', function() {
     // Arrange
-    const metadata = new CollectionMetadata(); // documentCount starts at 0
+    const metadata = new CollectionMetadata('testCollection', 'testFileId'); // documentCount starts at 0
     
     // Act & Assert
     TestFramework.assertThrows(() => {
@@ -180,7 +185,7 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should set document count to specific value', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     const newCount = 42;
     
     // Act
@@ -193,7 +198,7 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should throw error for invalid document count in setDocumentCount', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     
     // Act & Assert
     TestFramework.assertThrows(() => {
@@ -207,7 +212,7 @@ function createCollectionMetadataUpdateTestSuite() {
   
   suite.addTest('should update lastModified when document count changes', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     const originalLastUpdated = metadata.lastUpdated;
     
     // Wait a small amount to ensure timestamp difference
@@ -379,7 +384,7 @@ function createCollectionMetadataSerialisationTestSuite() {
   
   suite.addTest('should return plain object from toObject method', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     
     // Act
     const metadataObject = metadata;
@@ -472,7 +477,7 @@ function createCollectionMetadataSerialisationTestSuite() {
   });
 
   // RED PHASE: Test 2.5 - Static Factory Methods
-  suite.addTest('should create instance from object using fromObject factory', function() {
+  suite.addTest('should create instance from object using constructor', function() {
     // Arrange
     const sourceObject = {
       name: 'testCollection',
@@ -490,7 +495,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     };
     
     // Act
-    const metadata = CollectionMetadata.fromObject(sourceObject);
+    const metadata = new CollectionMetadata(sourceObject);
     
     // Assert
     TestFramework.assertEquals(metadata.name, sourceObject.name, 'Should set name from object');
@@ -525,30 +530,60 @@ function createCollectionMetadataSerialisationTestSuite() {
     TestFramework.assertTrue(metadata.lastUpdated instanceof Date, 'Should set lastUpdated timestamp');
   });
   
-  suite.addTest('should throw error for invalid object in fromObject', function() {
-    // Arrange & Act & Assert
+  suite.addTest('should throw error for invalid object in constructor', function() {
+    // Arrange & Act & Assert - Test invalid metadata types that bypass the || {} fallback
     TestFramework.assertThrows(() => {
-      CollectionMetadata.fromObject(null);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for null object');
+      new CollectionMetadata('validName', 'validFileId', []);
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for array metadata');
     
     TestFramework.assertThrows(() => {
-      CollectionMetadata.fromObject('not-an-object');
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for non-object');
+      new CollectionMetadata('validName', 'validFileId', 'invalid-metadata');
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for string metadata');
   });
   
-  suite.addTest('should throw error for missing required fields in fromObject', function() {
-    // Arrange
-    const incompleteObject = {
-      created: new Date(),
-      lastUpdated: new Date(),
-      documentCount: 5
-      // Missing name and fileId
-    };
-    
-    // Act & Assert
+  suite.addTest('should throw error for invalid field values in constructor', function() {
+    // Arrange & Act & Assert - Test missing required fields
     TestFramework.assertThrows(() => {
-      CollectionMetadata.fromObject(incompleteObject);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for missing required fields');
+      new CollectionMetadata({
+        created: new Date(),
+        lastUpdated: new Date(),
+        documentCount: 5
+        // Missing name and fileId
+      });
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for missing name and fileId');
+    
+    TestFramework.assertThrows(() => {
+      new CollectionMetadata({
+        name: 'validName',
+        // Missing fileId
+        created: new Date()
+      });
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for missing fileId');
+    
+    TestFramework.assertThrows(() => {
+      new CollectionMetadata({
+        fileId: 'validFileId',
+        // Missing name
+        created: new Date()
+      });
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for missing name');
+    
+    // Test invalid field values
+    TestFramework.assertThrows(() => {
+      new CollectionMetadata({
+        name: 'validName',
+        fileId: 'validFileId',
+        created: 'invalid-date'
+      });
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for invalid created date');
+    
+    TestFramework.assertThrows(() => {
+      new CollectionMetadata({
+        name: 'validName', 
+        fileId: 'validFileId',
+        documentCount: 'invalid-count'
+      });
+    }, InvalidArgumentError, 'Should throw InvalidArgumentError for invalid document count');
   });
   
   return suite;
@@ -563,7 +598,7 @@ function createCollectionMetadataEdgeCasesTestSuite() {
   
   suite.addTest('should handle very large document counts', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     const largeCount = Number.MAX_SAFE_INTEGER;
     
     // Act
@@ -576,6 +611,8 @@ function createCollectionMetadataEdgeCasesTestSuite() {
   suite.addTest('should handle partial metadata objects', function() {
     // Arrange
     const partialMetadata = {
+      name: 'testCollection',
+      fileId: 'testFileId',
       documentCount: 3
       // Missing created and lastUpdated
     };
@@ -585,6 +622,8 @@ function createCollectionMetadataEdgeCasesTestSuite() {
     const metadataObject = metadata;
     
     // Assert
+    TestFramework.assertEquals(metadataObject.name, 'testCollection', 'Should preserve provided name');
+    TestFramework.assertEquals(metadataObject.fileId, 'testFileId', 'Should preserve provided fileId');
     TestFramework.assertEquals(metadataObject.documentCount, 3, 'Should preserve provided documentCount');
     TestFramework.assertTrue(metadataObject.created instanceof Date, 'Should generate missing created timestamp');
     TestFramework.assertTrue(metadataObject.lastUpdated instanceof Date, 'Should generate missing lastUpdated timestamp');
@@ -606,7 +645,7 @@ function createCollectionMetadataEdgeCasesTestSuite() {
   
   suite.addTest('should handle zero document count operations', function() {
     // Arrange
-    const metadata = new CollectionMetadata();
+    const metadata = new CollectionMetadata('testCollection', 'testFileId');
     
     // Act & Assert - should work fine
     metadata.setDocumentCount(0);

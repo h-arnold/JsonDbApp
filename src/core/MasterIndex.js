@@ -147,7 +147,7 @@ class MasterIndex {
     // Ensure we have a CollectionMetadata instance (revived or created)
     const collectionMetadata = rawData instanceof CollectionMetadata
       ? rawData
-      : CollectionMetadata.fromObject(rawData);
+      : new CollectionMetadata(rawData);
     
     // Synchronise lock status from current locks
     const currentLock = this._data.locks[name];
@@ -188,7 +188,7 @@ class MasterIndex {
       if (updates && typeof updates === 'object' && updates.name) {
         const newMetadata = updates instanceof CollectionMetadata
           ? updates
-          : CollectionMetadata.fromObject(updates);
+          : new CollectionMetadata(updates);
         this._data.collections[name] = newMetadata;
         this._data.lastUpdated = new Date();
         this._addToModificationHistory(name, 'FULL_METADATA_UPDATE', newMetadata);
@@ -196,7 +196,7 @@ class MasterIndex {
       }
 
       // Instantiate CollectionMetadata for incremental updates
-      const collectionMetadata = CollectionMetadata.fromObject(rawData);
+      const collectionMetadata = new CollectionMetadata(rawData);
       
       // Apply updates using CollectionMetadata methods where available
       Object.keys(updates).forEach(key => {
@@ -448,7 +448,7 @@ class MasterIndex {
       // Always use a CollectionMetadata instance
       const collectionMetadata = collectionData instanceof CollectionMetadata
         ? collectionData
-        : CollectionMetadata.fromObject(collectionData);
+        : new CollectionMetadata(collectionData);
 
       switch (strategy) {
         case 'LAST_WRITE_WINS':
@@ -549,7 +549,7 @@ class MasterIndex {
     if (this._data.collections[collectionName]) {
       const instance = this._data.collections[collectionName] instanceof CollectionMetadata
         ? this._data.collections[collectionName]
-        : CollectionMetadata.fromObject(this._data.collections[collectionName]);
+        : new CollectionMetadata(this._data.collections[collectionName]);
       instance.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
       this._data.collections[collectionName] = instance;
     }

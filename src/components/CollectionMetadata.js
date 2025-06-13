@@ -75,6 +75,15 @@ class CollectionMetadata {
     this.name = name;
     this.fileId = fileId;
 
+    // Validate that both name and fileId are provided - required for usable metadata
+    if (!this.name || typeof this.name !== 'string' || this.name.trim() === '') {
+      throw new InvalidArgumentError('name', this.name, 'Collection name is required and must be a non-empty string');
+    }
+    
+    if (!this.fileId || typeof this.fileId !== 'string' || this.fileId.trim() === '') {
+      throw new InvalidArgumentError('fileId', this.fileId, 'File ID is required and must be a non-empty string');
+    }
+
     const now = new Date();
     
     // Set created timestamp
