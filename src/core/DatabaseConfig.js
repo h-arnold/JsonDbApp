@@ -103,12 +103,12 @@ class DatabaseConfig {
   }
   
   /**
-   * Converts configuration to plain object
-   * 
-   * @returns {Object} Configuration as plain object
+   * toJSON hook for JSON.stringify
+   * @returns {Object} Plain object with configuration and __type tag
    */
-  toObject() {
+  toJSON() {
     return {
+      __type: this.constructor.name,
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
       lockTimeout: this.lockTimeout,
@@ -116,5 +116,26 @@ class DatabaseConfig {
       logLevel: this.logLevel,
       masterIndexKey: this.masterIndexKey
     };
+  }
+
+  /**
+   * Create DatabaseConfig instance from JSON object
+   * @param {Object} obj - JSON object produced by toJSON
+   * @returns {DatabaseConfig}
+   * @static
+   */
+  static fromJSON(obj) {
+    if (typeof obj !== 'object' || obj === null || obj.__type !== 'DatabaseConfig') {
+      throw new InvalidArgumentError('obj', obj, 'Invalid JSON for DatabaseConfig');
+    }
+    const config = {
+      rootFolderId: obj.rootFolderId,
+      autoCreateCollections: obj.autoCreateCollections,
+      lockTimeout: obj.lockTimeout,
+      cacheEnabled: obj.cacheEnabled,
+      logLevel: obj.logLevel,
+      masterIndexKey: obj.masterIndexKey
+    };
+    return new DatabaseConfig(config);
   }
 }

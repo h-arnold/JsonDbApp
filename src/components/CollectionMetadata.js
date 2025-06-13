@@ -258,38 +258,39 @@ class CollectionMetadata {
   }
 
   /**
-   * Return metadata as plain object
-   * @returns {Object} Plain object with metadata properties
+   * Alias for toJSON, to maintain existing toObject API
+   * @returns {Object}
    */
   toObject() {
+    return this.toJSON();
+  }
+
+  /**
+   * toJSON hook for JSON.stringify
+   * @returns {Object} Plain object with metadata properties and __type tag
+   */
+  toJSON() {
     const result = {
+      __type: this.constructor.name,
       created: new Date(this.created.getTime()),
       lastUpdated: new Date(this.lastUpdated.getTime()),
       documentCount: this.documentCount
     };
 
     // Include name and fileId if they exist
-    if (this.name !== null) {
-      result.name = this.name;
-    }
-    if (this.fileId !== null) {
-      result.fileId = this.fileId;
-    }
+    if (this.name !== null) result.name = this.name;
+    if (this.fileId !== null) result.fileId = this.fileId;
 
     // Include modification token
     result.modificationToken = this.modificationToken;
 
     // Include lock status with deep copy if it exists
-    if (this.lockStatus !== null) {
-      result.lockStatus = {
-        isLocked: this.lockStatus.isLocked,
-        lockedBy: this.lockStatus.lockedBy,
-        lockedAt: this.lockStatus.lockedAt, // Keep as timestamp number
-        lockTimeout: this.lockStatus.lockTimeout // Keep as timestamp number
-      };
-    } else {
-      result.lockStatus = null;
-    }
+    result.lockStatus = this.lockStatus !== null ? {
+      isLocked: this.lockStatus.isLocked,
+      lockedBy: this.lockStatus.lockedBy,
+      lockedAt: this.lockStatus.lockedAt,
+      lockTimeout: this.lockStatus.lockTimeout
+    } : null;
 
     return result;
   }
@@ -298,8 +299,8 @@ class CollectionMetadata {
    * Create independent clone of metadata
    * @returns {CollectionMetadata} New instance with same values
    */
-  clone() {
-    const cloneMetadata = {
+   clone() {
+     const cloneMetadata = {
       created: new Date(this.created.getTime()),
       lastUpdated: new Date(this.lastUpdated.getTime()),
       documentCount: this.documentCount,
@@ -312,8 +313,8 @@ class CollectionMetadata {
       } : null
     };
 
-    return new CollectionMetadata(this.name, this.fileId, cloneMetadata);
-  }
+     return new CollectionMetadata(this.name, this.fileId, cloneMetadata);
+   }
 
   /**
    * Create CollectionMetadata instance from plain object
@@ -322,37 +323,45 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} For invalid input object
    * @static
    */
-  static fromObject(obj) {
-    if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
-      throw new InvalidArgumentError('obj', obj, 'Must be an object');
-    }
+  static fromJSON(obj) {
+     if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
+       throw new InvalidArgumentError('obj', obj, 'Must be an object');
+     }
 
-    // Check for required fields
-    if (!obj.hasOwnProperty('name') || !obj.hasOwnProperty('fileId')) {
-      throw new InvalidArgumentError('obj', obj, 'Must have name and fileId properties');
-    }
+     // Check for required fields
+     if (!obj.hasOwnProperty('name') || !obj.hasOwnProperty('fileId')) {
+       throw new InvalidArgumentError('obj', obj, 'Must have name and fileId properties');
+     }
 
-    const name = obj.name;
-    const fileId = obj.fileId;
-    const metadata = {
-      created: obj.created,
-      lastUpdated: obj.lastUpdated,
-      documentCount: obj.documentCount,
-      modificationToken: obj.modificationToken,
-      lockStatus: obj.lockStatus
-    };
+     const name = obj.name;
+     const fileId = obj.fileId;
+     const metadata = {
+       created: obj.created,
+       lastUpdated: obj.lastUpdated,
+       documentCount: obj.documentCount,
+       modificationToken: obj.modificationToken,
+       lockStatus: obj.lockStatus
+     };
 
-    return new CollectionMetadata(name, fileId, metadata);
-  }
-
+     return new CollectionMetadata(name, fileId, metadata);
+   }
+  
   /**
-   * Create new CollectionMetadata instance with specified name and fileId
-   * @param {string} name - Collection name
-   * @param {string} fileId - Google Drive file ID
-   * @returns {CollectionMetadata} New CollectionMetadata instance
-   * @static
+   * Alias for backward compatibility: fromObject -> fromJSON
+   * @throws {InvalidArgumentError}
    */
-  static create(name, fileId) {
-    return new CollectionMetadata(name, fileId);
+  static fromObject(obj) {
+    return CollectionMetadata.fromJSON(obj);
   }
+
+   /**
+    * Create new CollectionMetadata instance with specified name and fileId
+    * @param {string} name - Collection name
+    * @param {string} fileId - Google Drive file ID
+    * @returns {CollectionMetadata} New CollectionMetadata instance
+    * @static
+    */
+   static create(name, fileId) {
+     return new CollectionMetadata(name, fileId);
+   }
 }

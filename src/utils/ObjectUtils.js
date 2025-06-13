@@ -112,8 +112,8 @@ class ObjectUtils {
    * @private
    */
   static _classRegistry = {
-    CollectionMetadata
-    // Add ther classes here as needed
+    CollectionMetadata,
+    DatabaseConfig
   };
 
   /**
