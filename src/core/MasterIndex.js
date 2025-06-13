@@ -144,21 +144,12 @@ class MasterIndex {
       const expiresAt = currentLock.lockTimeout || currentLock.expiresAt;
       
       if (now < expiresAt) {
-        // Lock is still active, update the collection metadata with current lock status
+        // Lock is still active, update metadata
         collectionMetadata.setLockStatus(currentLock);
       } else {
-        // Lock has expired, remove it and set collection to unlocked
+        // Lock expired, remove it
         this._removeLock(name);
-        collectionMetadata.setLockStatus({
-          isLocked: false,
-          lockedBy: null,
-          lockedAt: null,
-          lockTimeout: null
-        });
       }
-    } else {
-      // No active lock, ensure collection shows as unlocked
-      collectionMetadata.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
     }
     
     return collectionMetadata;
