@@ -25,27 +25,13 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
    */
   constructor(collection) {
-    // Validate collection reference
-    if (!collection) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection reference is required');
-    }
-    
-    if (typeof collection !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must be an object');
-    }
-    
-    // Validate collection has required properties and methods
-    if (!collection.hasOwnProperty('_documents') || typeof collection._documents !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _documents property');
-    }
-    
-    if (typeof collection._markDirty !== 'function') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _markDirty method');
-    }
-    
-    if (typeof collection._updateMetadata !== 'function') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _updateMetadata method');
-    }
+    // Validate collection reference using ValidationUtils
+    Validate.required(collection, 'collection');
+    Validate.object(collection, 'collection');
+    Validate.objectProperties(collection, ['_documents'], 'collection');
+    Validate.object(collection._documents, 'collection._documents');
+    Validate.func(collection._markDirty, 'collection._markDirty');
+    Validate.func(collection._updateMetadata, 'collection._updateMetadata');
     
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
@@ -72,9 +58,7 @@ class DocumentOperations {
       documentToInsert._id = this._generateDocumentId();
     } else {
       // Validate provided ID
-      if (typeof documentToInsert._id !== 'string' || documentToInsert._id.trim() === '') {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('_id', documentToInsert._id, 'Document ID must be a non-empty string');
-      }
+      Validate.nonEmptyString(documentToInsert._id, '_id');
       
       // Check for duplicate ID
       if (this._collection._documents[documentToInsert._id]) {
@@ -102,9 +86,7 @@ class DocumentOperations {
    */
   findDocumentById(id) {
     // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
+    Validate.nonEmptyString(id, 'id');
     
     const document = this._collection._documents[id];
     
@@ -144,15 +126,9 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    */
   updateDocument(id, updateData) {
-    // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
-    
-    // Validate update data
-    if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateData', updateData, 'Update data must be an object');
-    }
+    // Validate parameters
+    Validate.nonEmptyString(id, 'id');
+    Validate.object(updateData, 'updateData');
     
     // Check if document exists
     if (!this._collection._documents[id]) {
@@ -189,9 +165,7 @@ class DocumentOperations {
    */
   deleteDocument(id) {
     // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
+    Validate.nonEmptyString(id, 'id');
     
     // Check if document exists
     if (!this._collection._documents[id]) {
@@ -228,9 +202,7 @@ class DocumentOperations {
    */
   documentExists(id) {
     // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
+    Validate.nonEmptyString(id, 'id');
     
     return this._collection._documents.hasOwnProperty(id);
   }
@@ -343,16 +315,11 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When document is invalid
    */
   _validateDocument(doc) {
-    // Check if document is provided
-    if (!doc) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Document is required');
-    }
+    // Use ValidationUtils for standard validations
+    Validate.required(doc, 'doc');
+    Validate.object(doc, 'doc');
     
-    // Check if document is an object
-    if (typeof doc !== 'object' || Array.isArray(doc)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Document must be an object');
-    }
-    
+    // DocumentOperations-specific validations
     // Check for forbidden fields (reserved prefixes)
     for (const field in doc) {
       if (field.startsWith('__')) {
@@ -360,7 +327,7 @@ class DocumentOperations {
       }
     }
     
-    // Validate _id field if present
+    // Validate _id field if present (specific to document structure)
     if (doc._id !== undefined && (typeof doc._id !== 'string' || doc._id.trim() === '')) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', doc._id, 'Document _id must be a non-empty string if provided');
     }
@@ -380,14 +347,10 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operators are invalid
    */
   updateDocumentWithOperators(id, updateOps) {
-    // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
-    // Validate updateOps
-    if (!updateOps || typeof updateOps !== 'object' || Array.isArray(updateOps)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateOps', updateOps, 'Update operations must be an object');
-    }
+    // Validate parameters
+    Validate.nonEmptyString(id, 'id');
+    Validate.object(updateOps, 'updateOps');
+    
     // Check existence
     const existing = this._collection._documents[id];
     if (!existing) {
@@ -416,14 +379,10 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND} When no documents match
    */
   updateDocumentByQuery(query, updateOps) {
-    // Validate query
-    if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be an object');
-    }
-    // Validate updateOps
-    if (!updateOps || typeof updateOps !== 'object' || Array.isArray(updateOps)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateOps', updateOps, 'Update operations must be an object');
-    }
+    // Validate parameters
+    Validate.object(query, 'query');
+    Validate.object(updateOps, 'updateOps');
+    
     // Find matches
     const matches = this.findMultipleByQuery(query);
     if (matches.length === 0) {
@@ -442,14 +401,10 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    */
   replaceDocument(id, doc) {
-    // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
-    // Validate doc
-    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Replacement document must be an object');
-    }
+    // Validate parameters
+    Validate.nonEmptyString(id, 'id');
+    Validate.object(doc, 'doc');
+    
     // Check existence
     if (!this._collection._documents[id]) {
       return { acknowledged: true, modifiedCount: 0 };
@@ -474,14 +429,10 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    */
   replaceDocumentByQuery(query, doc) {
-    // Validate query
-    if (!query || typeof query !== 'object' || Array.isArray(query)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('query', query, 'Query must be an object');
-    }
-    // Validate doc
-    if (!doc || typeof doc !== 'object' || Array.isArray(doc)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Replacement document must be an object');
-    }
+    // Validate parameters
+    Validate.object(query, 'query');
+    Validate.object(doc, 'doc');
+    
     // Find matches
     const matches = this.findMultipleByQuery(query);
     if (matches.length === 0) {

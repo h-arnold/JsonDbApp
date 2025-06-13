@@ -4,7 +4,7 @@
  * Provides static methods for common validation patterns used throughout the codebase.
  * Throws standardised ErrorHandler.ErrorTypes.INVALID_ARGUMENT exceptions for consistency.
  */
-class ValidationUtils {
+class Validate {
   
   /**
    * Validate that a value is not null or undefined
@@ -12,7 +12,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is null or undefined
    */
-  static validateRequired(value, paramName) {
+  static required(value, paramName) {
     if (value === null || value === undefined) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'is required');
     }
@@ -25,7 +25,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not of expected type
    */
-  static validateType(value, expectedType, paramName) {
+  static type(value, expectedType, paramName) {
     const actualType = typeof value;
     if (actualType !== expectedType) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must be of type ${expectedType}, got ${actualType}`);
@@ -38,7 +38,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a non-empty string
    */
-  static validateNonEmptyString(value, paramName) {
+  static nonEmptyString(value, paramName) {
     if (!value || typeof value !== 'string' || value.trim() === '') {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a non-empty string');
     }
@@ -50,7 +50,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a string
    */
-  static validateString(value, paramName) {
+  static string(value, paramName) {
     if (typeof value !== 'string') {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a string');
     }
@@ -62,7 +62,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a valid object
    */
-  static validateObject(value, paramName) {
+  static object(value, paramName) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be an object');
     }
@@ -74,7 +74,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a boolean
    */
-  static validateBoolean(value, paramName) {
+  static boolean(value, paramName) {
     if (typeof value !== 'boolean') {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a boolean');
     }
@@ -86,7 +86,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not an array
    */
-  static validateArray(value, paramName) {
+  static array(value, paramName) {
     if (!Array.isArray(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be an array');
     }
@@ -98,8 +98,8 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a non-empty array
    */
-  static validateNonEmptyArray(value, paramName) {
-    this.validateArray(value, paramName);
+  static nonEmptyArray(value, paramName) {
+    this.array(value, paramName);
     if (value.length === 0) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a non-empty array');
     }
@@ -111,7 +111,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a number
    */
-  static validateNumber(value, paramName) {
+  static number(value, paramName) {
     if (typeof value !== 'number' || isNaN(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a number');
     }
@@ -123,8 +123,8 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not an integer
    */
-  static validateInteger(value, paramName) {
-    this.validateNumber(value, paramName);
+  static integer(value, paramName) {
+    this.number(value, paramName);
     if (!Number.isInteger(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be an integer');
     }
@@ -136,8 +136,8 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a positive number
    */
-  static validatePositiveNumber(value, paramName) {
-    this.validateNumber(value, paramName);
+  static positiveNumber(value, paramName) {
+    this.number(value, paramName);
     if (value <= 0) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a positive number');
     }
@@ -149,8 +149,8 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a non-negative number
    */
-  static validateNonNegativeNumber(value, paramName) {
-    this.validateNumber(value, paramName);
+  static nonNegativeNumber(value, paramName) {
+    this.number(value, paramName);
     if (value < 0) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a non-negative number');
     }
@@ -164,8 +164,8 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is out of range
    */
-  static validateRange(value, min, max, paramName) {
-    this.validateNumber(value, paramName);
+  static range(value, min, max, paramName) {
+    this.number(value, paramName);
     if (value < min || value > max) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must be between ${min} and ${max}`);
     }
@@ -177,7 +177,7 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a function
    */
-  static validateFunction(value, paramName) {
+  static func(value, paramName) {
     if (typeof value !== 'function') {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a function');
     }
@@ -190,8 +190,8 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not in allowed values
    */
-  static validateEnum(value, allowedValues, paramName) {
-    this.validateArray(allowedValues, 'allowedValues');
+  static enum(value, allowedValues, paramName) {
+    this.array(allowedValues, 'allowedValues');
     if (!allowedValues.includes(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must be one of: ${allowedValues.join(', ')}`);
     }
@@ -204,9 +204,9 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When object is missing required properties
    */
-  static validateObjectProperties(obj, requiredProps, paramName) {
-    this.validateObject(obj, paramName);
-    this.validateNonEmptyArray(requiredProps, 'requiredProps');
+  static objectProperties(obj, requiredProps, paramName) {
+    this.object(obj, paramName);
+    this.nonEmptyArray(requiredProps, 'requiredProps');
     
     for (const prop of requiredProps) {
       if (!obj.hasOwnProperty(prop)) {
@@ -223,8 +223,8 @@ class ValidationUtils {
    * @param {string} description - Description of the pattern for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When string doesn't match pattern
    */
-  static validatePattern(value, pattern, paramName, description = 'the required pattern') {
-    this.validateString(value, paramName);
+  static pattern(value, pattern, paramName, description = 'the required pattern') {
+    this.string(value, paramName);
     if (!(pattern instanceof RegExp)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('pattern', pattern, 'must be a RegExp');
     }
@@ -239,9 +239,9 @@ class ValidationUtils {
    * @param {Function} validationFn - Function that validates the value if not null/undefined
    * @param {string} paramName - Parameter name for error messages
    */
-  static validateOptional(value, validationFn, paramName) {
+  static optional(value, validationFn, paramName) {
     if (value !== null && value !== undefined) {
-      this.validateFunction(validationFn, 'validationFn');
+      this.func(validationFn, 'validationFn');
       validationFn(value, paramName);
     }
   }
@@ -252,10 +252,10 @@ class ValidationUtils {
    * @param {*} value - The value to validate
    * @param {string} paramName - Parameter name for error messages
    */
-  static validateAll(validators, value, paramName) {
-    this.validateNonEmptyArray(validators, 'validators');
+  static all(validators, value, paramName) {
+    this.nonEmptyArray(validators, 'validators');
     for (const validator of validators) {
-      this.validateFunction(validator, 'validator');
+      this.func(validator, 'validator');
       validator(value, paramName);
     }
   }
@@ -267,12 +267,12 @@ class ValidationUtils {
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When none of the validators pass
    */
-  static validateAny(validators, value, paramName) {
-    this.validateNonEmptyArray(validators, 'validators');
+  static any(validators, value, paramName) {
+    this.nonEmptyArray(validators, 'validators');
     
     const errors = [];
     for (const validator of validators) {
-      this.validateFunction(validator, 'validator');
+      this.func(validator, 'validator');
       try {
         validator(value, paramName);
         return; // Success - at least one validator passed
