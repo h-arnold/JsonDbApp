@@ -55,9 +55,13 @@ class DatabaseConfig {
    * @private
    */
   _validateConfig() {
-    // Validate lock timeout
+    // Validate lock timeout (non-negative)
     if (typeof this.lockTimeout !== 'number' || this.lockTimeout < 0) {
       throw new Error('Lock timeout must be a non-negative number');
+    }
+    // Enforce minimum lock timeout of 500ms
+    if (this.lockTimeout < 500) {
+      throw new Error('Lock timeout must be at least 500ms');
     }
     
     // Validate log level

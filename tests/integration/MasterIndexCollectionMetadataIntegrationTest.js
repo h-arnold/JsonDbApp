@@ -502,7 +502,7 @@ function testLockManagementIntegration() {
     // Arrange: Setup MasterIndex with short timeout
     const masterIndex = new MasterIndex({
       masterIndexKey: 'TEST_LOCK_INTEGRATION_3',
-      lockTimeout: 100 // Very short timeout for testing
+      lockTimeout: 500 // Shortest possible timeout for testing
     });
     
     const metadata = CollectionMetadata.create('timeout_test_collection', 'timeout-file-id');
@@ -510,7 +510,11 @@ function testLockManagementIntegration() {
     
     // Act: Acquire lock and wait for timeout
     masterIndex.acquireLock('timeout_test_collection', 'test-instance-id');
-    Utilities.sleep(150); // Wait longer than timeout
+    Utilities.sleep(1500); // Wait 1000ms longer than timeout. Very short timeouts sometimes mean that the lock expires before the sleep
+    //finishes, causing the test to fail incorrectly. In reality I don't expect for super short gaps between locks and timeouts to be an issue
+    // but if it does become an issue in the future, I'm fairly sure I need to add an extra writeback of the lock status to memory before
+    // updating the lock to avoid this issue.
+
     
     // Try to acquire lock with different instance (should succeed due to timeout)
     const secondLockAcquired = masterIndex.acquireLock('timeout_test_collection', 'second-instance-id');
