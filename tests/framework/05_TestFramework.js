@@ -282,7 +282,7 @@ class TestFramework {
       }
       
       // Test error handling
-      ErrorHandler.validateRequired('test', 'testParam');
+      ValidationUtils.validateRequired('test', 'testParam');
       const error = ErrorHandler.createError('DOCUMENT_NOT_FOUND', { id: 'test' });
       if (!error) {
         throw new Error('Error handling test failed');

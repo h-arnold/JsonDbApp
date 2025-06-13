@@ -267,9 +267,8 @@ class ErrorHandler {
    * @throws {Error} If value is null or undefined
    */
   static validateRequired(value, name) {
-    if (value === null || value === undefined) {
-      throw new Error(`Required parameter ${name} is null or undefined`);
-    }
+    // Delegate to ValidationUtils for standardised validation
+    ValidationUtils.validateRequired(value, name);
   }
   
   /**
