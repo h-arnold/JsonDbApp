@@ -50,6 +50,7 @@ class DocumentOperations {
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
     this._queryEngine = null; // Lazy-loaded QueryEngine instance
+    this._updateEngine = null; // Lazy-loaded UpdateEngine instance
   }
   
   /**
