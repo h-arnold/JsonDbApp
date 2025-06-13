@@ -182,7 +182,10 @@ class InvalidFileFormatError extends GASDBError {
  */
 class InvalidArgumentError extends GASDBError {
   constructor(argumentName, providedValue = null, reason = null) {
-    const message = `Invalid argument: ${argumentName}`;
+    let message = `Invalid argument: ${argumentName}`;
+    if (reason) {
+      message += ` - ${reason}`;
+    }
     super(message, 'INVALID_ARGUMENT', { argumentName, providedValue, reason });
   }
 }
