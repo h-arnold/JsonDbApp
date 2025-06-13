@@ -350,6 +350,15 @@ class DocumentOperations {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
     Validate.object(updateOps, 'updateOps');
+    // Validate operators before checking existence so invalid ops throw
+    if (!this._updateEngine) {
+      this._updateEngine = new UpdateEngine();
+    }
+    for (const operator in updateOps) {
+      if (!this._updateEngine._operatorHandlers[operator]) {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(updateOps, `Unsupported update operator: ${operator}`);
+      }
+    }
     
     // Check existence
     const existing = this._collection._documents[id];
@@ -357,9 +366,6 @@ class DocumentOperations {
       return { acknowledged: true, modifiedCount: 0 };
     }
     // Apply operators
-    if (!this._updateEngine) {
-      this._updateEngine = new UpdateEngine();
-    }
     const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
     // Persist
     this._collection._documents[id] = updatedDoc;
