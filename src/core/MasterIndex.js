@@ -662,9 +662,8 @@ class MasterIndex {
     const lock = this._acquireScriptLock(timeout);
     
     try {
-      // Reload data from ScriptProperties to get latest state
-      this._loadFromScriptProperties();
-      
+      // Skipping reload on each operation for in-memory performance
+      // this.loadFromScriptProperties(); //Keeping that here because I have a feeling that this may cause consistency issues if the data is changed by another instance
       // Execute the operation
       const result = operation();
       
