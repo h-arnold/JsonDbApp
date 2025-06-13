@@ -284,4 +284,25 @@ class Validate {
     // All validators failed
     throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `failed all validation conditions: ${errors.join('; ')}`);
   }
+
+  /**
+   * Validate that a value is a plain object (not Date, Array, or null)
+   * @param {*} value - The value to validate
+   * @param {string} paramName - Parameter name for error messages
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a plain object
+   */
+  static plainObject(value, paramName) {
+    if (value === null || typeof value !== 'object' || value instanceof Date || Array.isArray(value)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a plain object (not null, Date, or Array)');
+    }
+  }
+
+  /**
+   * Check if a value is a plain object (not Date, Array, or null)
+   * @param {*} value - The value to check
+   * @returns {boolean} True if value is a plain object
+   */
+  static isPlainObject(value) {
+    return value !== null && typeof value === 'object' && !(value instanceof Date) && !Array.isArray(value);
+  }
 }

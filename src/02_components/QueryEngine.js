@@ -107,18 +107,23 @@ class QueryEngine {
   _matchField(document, fieldPath, queryValue) {
     const documentValue = this._getFieldValue(document, fieldPath);
 
-    // Handle operator objects
-    try {
-      ValidationUtils.validateObject(queryValue, 'queryValue');
-      if (!(queryValue instanceof Date)) {
-        return this._matchOperators(documentValue, queryValue);
-      }
-    } catch (e) {
-      // Not a plain object, fall through to direct comparison
+    // Use helper to detect operator objects
+    if (this._isOperatorObject(queryValue)) {
+      return this._matchOperators(documentValue, queryValue);
     }
 
     // Direct value comparison (implicit $eq)
     return this._compareValues(documentValue, queryValue, '$eq');
+  }
+
+  /**
+   * Check if a value represents operator object (plain object, not Date or Array)
+   * @param {*} value - Value to check
+   * @returns {boolean} True if value is a plain operator object
+   * @private
+   */
+  _isOperatorObject(value) {
+    return Validate.isPlainObject(value);
   }
 
   /**
