@@ -338,14 +338,6 @@ class CollectionMetadata {
      return new CollectionMetadata(name, fileId, metadata);
    }
   
-  /**
-   * Alias for backward compatibility: fromObject -> fromJSON
-   * @throws {InvalidArgumentError}
-   */
-  static fromObject(obj) {
-    return CollectionMetadata.fromJSON(obj);
-  }
-
    /**
     * Create new CollectionMetadata instance with specified name and fileId
     * @param {string} name - Collection name
@@ -357,3 +349,5 @@ class CollectionMetadata {
      return new CollectionMetadata(name, fileId);
    }
 }
+
+

@@ -177,21 +177,24 @@ class MasterIndex {
     if (!name || typeof name !== 'string') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
-    
+
     return this._withScriptLock(() => {
       const rawData = this._data.collections[name];
       if (!rawData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
       }
-      
+
       // Full replace if a complete metadata object is provided
       if (updates && typeof updates === 'object' && updates.name) {
-        this._data.collections[name] = updates;
+        const newMetadata = updates instanceof CollectionMetadata
+          ? updates
+          : CollectionMetadata.fromObject(updates);
+        this._data.collections[name] = newMetadata;
         this._data.lastUpdated = new Date();
-        this._addToModificationHistory(name, 'FULL_METADATA_UPDATE', updates);
-        return updates;
+        this._addToModificationHistory(name, 'FULL_METADATA_UPDATE', newMetadata);
+        return newMetadata;
       }
-      
+
       // Instantiate CollectionMetadata for incremental updates
       const collectionMetadata = CollectionMetadata.fromObject(rawData);
       
@@ -431,24 +434,22 @@ class MasterIndex {
     if (!collectionName || typeof collectionName !== 'string') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
     }
-    
     if (!newData || typeof newData !== 'object') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('New data must be an object');
     }
-    
     strategy = strategy || 'LAST_WRITE_WINS';
-    
+
     return this._withScriptLock(() => {
       const collectionData = this._data.collections[collectionName];
       if (!collectionData) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
       }
-      
-      // Create CollectionMetadata instance from stored data
-      const collectionMetadata = collectionData;
-      
-      let resolvedData;
-      
+
+      // Always use a CollectionMetadata instance
+      const collectionMetadata = collectionData instanceof CollectionMetadata
+        ? collectionData
+        : CollectionMetadata.fromObject(collectionData);
+
       switch (strategy) {
         case 'LAST_WRITE_WINS':
           // Apply new data using CollectionMetadata methods where possible
@@ -463,49 +464,27 @@ class MasterIndex {
               case 'lockStatus':
                 collectionMetadata.setLockStatus(newData[key]);
                 break;
-              case 'lastModified':
-              case 'lastUpdated':
-                collectionMetadata.touch();
-                break;
               default:
-                // For other fields, we'll handle them in the final resolved data
                 break;
             }
           });
-          
-          // Generate new modification token and update timestamp
           collectionMetadata.setModificationToken(this.generateModificationToken());
           collectionMetadata.touch();
-          
-          // Create resolved data object
-          resolvedData = {
-            ...collectionMetadata,
-            ...newData, // Apply any remaining fields
-            modificationToken: collectionMetadata.modificationToken,
-            lastModified: collectionMetadata.lastUpdated
-          };
-          break;
-          
+
+          // Store the updated instance
+          this._data.collections[collectionName] = collectionMetadata;
+          this._data.lastUpdated = new Date();
+          this._addToModificationHistory(collectionName, 'CONFLICT_RESOLVED', {
+            strategy,
+            newData,
+            resolvedToken: collectionMetadata.getModificationToken()
+          });
+
+          return { success: true, data: collectionMetadata, strategy };
+
         default:
           throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(`Unknown conflict resolution strategy: ${strategy}`);
       }
-      
-      // Update the collection with resolved data
-      this._data.collections[collectionName] = resolvedData;
-      this._data.lastUpdated = new Date();
-      
-      // Track conflict resolution in history
-      this._addToModificationHistory(collectionName, 'CONFLICT_RESOLVED', {
-        strategy: strategy,
-        newData: newData,
-        resolvedToken: resolvedData.modificationToken
-      });
-      
-      return {
-        success: true,
-        data: resolvedData,
-        strategy: strategy
-      };
     });
   }
   
