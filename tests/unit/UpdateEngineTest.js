@@ -325,6 +325,274 @@ function createUpdateEngineTestSuite() {
     }, ErrorHandler.ErrorTypes.INVALID_QUERY, 'Should throw if update object contains no $ operators');
   });
 
+  // Field Removal Tests
+  suite.addTest('testUnsetSimpleField', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { name: 'Alice', age: 30, city: 'London' };
+    const update = { $unset: { age: '' } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals('Alice', result.name, 'Name field should remain unchanged');
+    TestFramework.assertEquals('London', result.city, 'City field should remain unchanged');
+    TestFramework.assertUndefined(result.age, 'Age field should be removed');
+    TestFramework.assertFalse(Object.prototype.hasOwnProperty.call(result, 'age'), 'Age property should not exist');
+    TestFramework.assertEquals(30, doc.age, 'Original document should be unmodified');
+  });
+
+  suite.addTest('testUnsetNestedField', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { 
+      user: { 
+        profile: { name: 'Bob', email: 'bob@example.com' },
+        settings: { theme: 'dark' }
+      },
+      status: 'active'
+    };
+    const update = { $unset: { 'user.profile.email': '' } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals('Bob', result.user.profile.name, 'Nested name should remain');
+    TestFramework.assertEquals('dark', result.user.settings.theme, 'Other nested objects should remain');
+    TestFramework.assertEquals('active', result.status, 'Top-level fields should remain');
+    TestFramework.assertUndefined(result.user.profile.email, 'Nested email field should be removed');
+    TestFramework.assertFalse(
+      Object.prototype.hasOwnProperty.call(result.user.profile, 'email'), 
+      'Email property should not exist in nested object'
+    );
+  });
+
+  suite.addTest('testUnsetNonExistentFieldNoError', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { a: 1, b: 2 };
+    const update = { $unset: { nonExistent: '', 'nested.field': '' } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals(1, result.a, 'Existing field a should remain');
+    TestFramework.assertEquals(2, result.b, 'Existing field b should remain');
+    TestFramework.assertUndefined(result.nonExistent, 'Non-existent field should remain undefined');
+    TestFramework.assertUndefined(result.nested, 'Non-existent nested path should remain undefined');
+    // Should not throw an error for attempting to unset non-existent fields
+  });
+
+  suite.addTest('testUnsetArrayElementByIndex', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { items: ['apple', 'banana', 'cherry'], count: 3 };
+    const update = { $unset: { 'items.1': '' } }; // Remove second element
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals('apple', result.items[0], 'First array element should remain');
+    TestFramework.assertUndefined(result.items[1], 'Second array element should be undefined');
+    TestFramework.assertEquals('cherry', result.items[2], 'Third array element should remain');
+    TestFramework.assertEquals(3, result.items.length, 'Array length should remain unchanged');
+    TestFramework.assertEquals(3, result.count, 'Other fields should remain unchanged');
+  });
+
+  suite.addTest('testUnsetDeepNestedPath', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { 
+      level1: { 
+        level2: { 
+          level3: { 
+            level4: { 
+              target: 'remove me', 
+              keep: 'preserve me' 
+            },
+            otherLevel4: 'should remain'
+          },
+          otherLevel3: 'should remain'
+        },
+        otherLevel2: 'should remain'
+      },
+      topLevel: 'should remain'
+    };
+    const update = { $unset: { 'level1.level2.level3.level4.target': '' } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals('preserve me', result.level1.level2.level3.level4.keep, 'Keep field should remain');
+    TestFramework.assertEquals('should remain', result.level1.level2.level3.otherLevel4, 'Other level4 should remain');
+    TestFramework.assertEquals('should remain', result.level1.level2.otherLevel3, 'Other level3 should remain');
+    TestFramework.assertEquals('should remain', result.level1.otherLevel2, 'Other level2 should remain');
+    TestFramework.assertEquals('should remain', result.topLevel, 'Top level field should remain');
+    TestFramework.assertUndefined(result.level1.level2.level3.level4.target, 'Deep nested target should be removed');
+    TestFramework.assertFalse(
+      Object.prototype.hasOwnProperty.call(result.level1.level2.level3.level4, 'target'),
+      'Target property should not exist in deep nested object'
+    );
+  });
+
+  suite.addTest('testDocumentStructureAfterUnset', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { 
+      a: 1, 
+      b: { x: 10, y: 20 }, 
+      c: [1, 2, 3], 
+      d: 'text' 
+    };
+    const update = { $unset: { 'b.x': '', 'c.1': '', d: '' } };
+    const result = engine.applyOperators(doc, update);
+    
+    // Verify overall document structure integrity
+    TestFramework.assertEquals(1, result.a, 'Top-level field a should remain');
+    TestFramework.assertTrue(typeof result.b === 'object' && result.b !== null, 'Object b should remain an object');
+    TestFramework.assertTrue(Array.isArray(result.c), 'Array c should remain an array');
+    TestFramework.assertUndefined(result.d, 'Field d should be removed');
+    
+    // Verify nested object structure
+    TestFramework.assertUndefined(result.b.x, 'Nested field b.x should be removed');
+    TestFramework.assertEquals(20, result.b.y, 'Nested field b.y should remain');
+    TestFramework.assertEquals(1, Object.keys(result.b).length, 'Object b should have only one property');
+    
+    // Verify array structure
+    TestFramework.assertEquals(1, result.c[0], 'Array element 0 should remain');
+    TestFramework.assertUndefined(result.c[1], 'Array element 1 should be undefined');
+    TestFramework.assertEquals(3, result.c[2], 'Array element 2 should remain');
+    TestFramework.assertEquals(3, result.c.length, 'Array length should be preserved');
+    
+    // Verify original document integrity
+    TestFramework.assertEquals(10, doc.b.x, 'Original document nested field should be unmodified');
+    TestFramework.assertEquals(2, doc.c[1], 'Original document array should be unmodified');
+    TestFramework.assertEquals('text', doc.d, 'Original document field should be unmodified');
+  });
+
+  // Array Update Tests
+  suite.addTest('testPushSingleValue', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { tags: ['javascript', 'mongodb'] };
+    const update = { $push: { tags: 'database' } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertArrayEquals(['javascript', 'mongodb', 'database'], result.tags, 'Should push single value to array');
+    TestFramework.assertArrayEquals(['javascript', 'mongodb'], doc.tags, 'Original document should remain unmodified');
+  });
+
+  suite.addTest('testPushMultipleValues', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { scores: [10, 20] };
+    const update = { $push: { scores: { $each: [30, 40, 50] } } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertArrayEquals([10, 20, 30, 40, 50], result.scores, 'Should push multiple values using $each');
+    TestFramework.assertArrayEquals([10, 20], doc.scores, 'Original document should remain unmodified');
+  });
+
+  suite.addTest('testPullByValueEquality', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { numbers: [1, 2, 3, 2, 4, 2] };
+    const update = { $pull: { numbers: 2 } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertArrayEquals([1, 3, 4], result.numbers, 'Should remove all instances of value 2');
+    TestFramework.assertArrayEquals([1, 2, 3, 2, 4, 2], doc.numbers, 'Original document should remain unmodified');
+  });
+
+  suite.addTest('testAddToSetUniqueOnly', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { categories: ['tech', 'news'] };
+    const update = { $addToSet: { categories: 'sports' } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertArrayEquals(['tech', 'news', 'sports'], result.categories, 'Should add unique value to set');
+    TestFramework.assertArrayEquals(['tech', 'news'], doc.categories, 'Original document should remain unmodified');
+  });
+
+  suite.addTest('testAddToSetMultipleUnique', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { tags: ['red', 'blue'] };
+    const update = { $addToSet: { tags: { $each: ['green', 'yellow', 'purple'] } } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertArrayEquals(['red', 'blue', 'green', 'yellow', 'purple'], result.tags, 'Should add multiple unique values using $each');
+    TestFramework.assertArrayEquals(['red', 'blue'], doc.tags, 'Original document should remain unmodified');
+  });
+
+  suite.addTest('testAddToSetDuplicatesIgnored', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { items: ['apple', 'banana', 'cherry'] };
+    const update1 = { $addToSet: { items: 'banana' } }; // Duplicate
+    const result1 = engine.applyOperators(doc, update1);
+    
+    TestFramework.assertArrayEquals(['apple', 'banana', 'cherry'], result1.items, 'Should ignore duplicate single value');
+    
+    const update2 = { $addToSet: { items: { $each: ['apple', 'date', 'banana', 'elderberry'] } } }; // Mix of duplicates and new
+    const result2 = engine.applyOperators(doc, update2);
+    
+    TestFramework.assertArrayEquals(['apple', 'banana', 'cherry', 'date', 'elderberry'], result2.items, 'Should ignore duplicates in $each array');
+  });
+
+  suite.addTest('testPushNestedArray', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { matrix: [[1, 2], [3, 4]] };
+    const update = { $push: { matrix: [5, 6] } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals(3, result.matrix.length, 'Should have 3 nested arrays');
+    TestFramework.assertArrayEquals([1, 2], result.matrix[0], 'First nested array should remain unchanged');
+    TestFramework.assertArrayEquals([3, 4], result.matrix[1], 'Second nested array should remain unchanged');
+    TestFramework.assertArrayEquals([5, 6], result.matrix[2], 'Should push nested array as single element');
+  });
+
+  suite.addTest('testPullNestedArray', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { 
+      coordinates: [
+        { x: 1, y: 2 }, 
+        { x: 3, y: 4 }, 
+        { x: 1, y: 2 }, 
+        { x: 5, y: 6 }
+      ] 
+    };
+    const update = { $pull: { coordinates: { x: 1, y: 2 } } };
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals(2, result.coordinates.length, 'Should remove matching nested objects');
+    TestFramework.assertEquals(3, result.coordinates[0].x, 'First remaining coordinate should be {x:3, y:4}');
+    TestFramework.assertEquals(4, result.coordinates[0].y, 'First remaining coordinate should be {x:3, y:4}');
+    TestFramework.assertEquals(5, result.coordinates[1].x, 'Second remaining coordinate should be {x:5, y:6}');
+    TestFramework.assertEquals(6, result.coordinates[1].y, 'Second remaining coordinate should be {x:5, y:6}');
+  });
+
+  suite.addTest('testArrayPositionSpecifier', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { items: ['first', 'second', 'third'] };
+    const update = { $set: { 'items.1': 'modified' } }; // Set specific array position
+    const result = engine.applyOperators(doc, update);
+    
+    TestFramework.assertEquals('first', result.items[0], 'First element should remain unchanged');
+    TestFramework.assertEquals('modified', result.items[1], 'Second element should be modified');
+    TestFramework.assertEquals('third', result.items[2], 'Third element should remain unchanged');
+    TestFramework.assertEquals(3, result.items.length, 'Array length should remain unchanged');
+  });
+
+  suite.addTest('testPushOnNonArrayThrows', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { field: 'not an array' };
+    const update = { $push: { field: 'value' } };
+    
+    TestFramework.assertThrows(function() {
+      engine.applyOperators(doc, update);
+    }, ErrorHandler.ErrorTypes.INVALID_QUERY, 'Should throw when trying to $push to non-array field');
+  });
+
+  suite.addTest('testPullOnNonArrayThrows', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { field: 42 };
+    const update = { $pull: { field: 42 } };
+    
+    TestFramework.assertThrows(function() {
+      engine.applyOperators(doc, update);
+    }, ErrorHandler.ErrorTypes.INVALID_QUERY, 'Should throw when trying to $pull from non-array field');
+  });
+
+  suite.addTest('testAddToSetOnNonArrayThrows', function() {
+    const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
+    const doc = { field: { key: 'value' } };
+    const update = { $addToSet: { field: 'new value' } };
+    
+    TestFramework.assertThrows(function() {
+      engine.applyOperators(doc, update);
+    }, ErrorHandler.ErrorTypes.INVALID_QUERY, 'Should throw when trying to $addToSet to non-array field');
+  });
+
   return suite;
 }
 
@@ -358,44 +626,15 @@ try {
  * Convenience function to run the UpdateEngine-related suite
  */
 function runUpdateEngineTests() {
-  const logger = GASDBLogger.createComponentLogger('UpdateEngine-TestRunner');
+  GASDBLogger.info('Running UpdateEngine Tests: Testing Update Operators');
+  
   const testFramework = new TestFramework();
-  try {
-    logger.info('Starting UpdateEngine test execution');
-
-    // The suite should have been registered when this file was loaded.
-    // Add a check for robustness.
-    if (!testFramework.hasTestSuite('UpdateEngine Tests')) {
-      logger.warn('UpdateEngineTestSuite not found during run. Attempting to register now.');
-      // Attempt to register it again, using the same logic as at file load.
-      try {
-        testFramework.registerTestSuite(createUpdateEngineTestSuite());
-      } catch (e) {
-        logger.warn('Direct re-registration via testFramework failed, trying global registerTestSuite function.', { error: e.message });
-        try {
-          registerTestSuite(createUpdateEngineTestSuite());
-        } catch (e2) {
-          logger.error('Failed to register UpdateEngineTestSuite even during run.', { error: e2.message });
-          // Depending on desired strictness, could throw an error here.
-          // For now, proceed, runAllTests might still pick up other suites or fail gracefully.
-        }
-      }
-    }
-    
-    // Execute all registered tests (as per original log and structure)
-    const results = runAllTests();
-    // Log detailed results
-    results.logComprehensiveResults();
-    logger.info('UpdateEngine test execution completed', {
-      totalTests: results.results.length,
-      passed: results.getPassed().length,
-      failed: results.getFailed().length,
-      passRate: results.getPassRate(),
-      executionTime: results.getTotalExecutionTime()
-    });
-    return results;
-  } catch (error) {
-    logger.error('Error occurred during UpdateEngine test execution', { error: error.message });
-    throw error;
-  }
+  testFramework.registerTestSuite(createUpdateEngineTestSuite());
+  const results = testFramework.runTestSuite('UpdateEngine Tests');
+  
+  // Log summary
+  GASDBLogger.info('UpdateEngine Test Results:');
+  GASDBLogger.info(results.getSummary());
+  
+  return results;
 }

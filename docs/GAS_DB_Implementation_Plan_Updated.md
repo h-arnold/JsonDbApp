@@ -58,14 +58,18 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
 ## Section 7: Update Engine and Document Modification
 
-### ✅ **PARTIALLY COMPLETE - UpdateEngine Finished, DocumentOperations & Collection API Pending**
+### ✅ **MOSTLY COMPLETE - UpdateEngine Core Complete, Array Enhancement Needed**
 
 **Implementation Summary:**
-- ✅ UpdateEngine class fully implemented with MongoDB-compatible operators
-- ✅ All 13 UpdateEngine test cases passing (100% pass rate)
+- ✅ UpdateEngine class fully implemented with core MongoDB-compatible operators
+- ✅ 39/46 UpdateEngine test cases passing (84.8% pass rate)
 - ✅ Clean architecture with centralised validation methods
 - ✅ Immutable operations preserving original documents
-- ✅ Full support for nested field paths and array operations
+- ✅ Full support for nested field paths and basic array operations
+- ❌ 7 test failures indicate missing UpdateEngine features:
+  - Missing `$each` modifier support for `$push` and `$addToSet`
+  - Missing array index field path support (`items.1`)
+  - Missing validation for array operations on non-array fields
 - ⏳ DocumentOperations enhancement pending
 - ⏳ Collection API enhancement pending
 
@@ -220,64 +224,73 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
 ### Test Cases
 
-1.  **UpdateEngine Tests** (13 cases) - **Implemented and passing** 
-    *(Initial core operator tests)*
-    - testUpdateEngineSetStringField
-    - testUpdateEngineSetCreatesDeepPath
-    - testUpdateEngineIncPositive
-    - testUpdateEngineIncNegative
-    - testUpdateEngineMulNumber
-    - testUpdateEngineMinNumeric
-    - testUpdateEngineMaxValue
-    - testUpdateEngineUnsetSimpleField
-    - testUpdateEngineUnsetNestedField
-    - testUpdateEnginePushArrayValue
-    - testUpdateEnginePullArrayValue
-    - testUpdateEngineAddToSetUnique
-    - testUpdateEngineInvalidOperatorThrows
+1.  **UpdateEngine Tests** (13 cases) - **✅ COMPLETE** 
+    *(13/13 passing - 100% pass rate)*
+    - ✅ testUpdateEngineSetStringField
+    - ✅ testUpdateEngineSetCreatesDeepPath
+    - ✅ testUpdateEngineIncPositive
+    - ✅ testUpdateEngineIncNegative
+    - ✅ testUpdateEngineMulNumber
+    - ✅ testUpdateEngineMinNumeric
+    - ✅ testUpdateEngineMaxValue
+    - ✅ testUpdateEngineUnsetSimpleField
+    - ✅ testUpdateEngineUnsetNestedField
+    - ✅ testUpdateEnginePushArrayValue
+    - ✅ testUpdateEnginePullArrayValue
+    - ✅ testUpdateEngineAddToSetUnique
+    - ✅ testUpdateEngineInvalidOperatorThrows
 
 2.  **Field Modification Tests** (16 cases) - **✅ COMPLETE**
-    *(16 passing)*
+    *(16/16 passing - 100% pass rate)*
     - ✅ testSetVariousDataTypes
-    - ✅ testSetOnNonExistentCreatesField (covered by `testSetOnNonExistentTopLevelField` and `testUpdateEngineSetCreatesDeepPath`)
-    - ✅ testIncOnNonNumericThrows *(validation for non-numeric current field values)*
-    - ✅ testMulOnNonNumericThrows *(validation for non-numeric current field values)*
-    - ✅ testMinOnNonComparableThrows *(validation for incompatible type comparisons)*
-    - ✅ testMaxOnNonComparableThrows *(validation for incompatible type comparisons)*
-    - ✅ testNestedFieldUpdateDeepPath (covered by `testUpdateEngineSetCreatesDeepPath`)
+    - ✅ testSetOnNonExistentTopLevelField
+    - ✅ testIncOnNonNumericThrows
+    - ✅ testMulOnNonNumericThrows
+    - ✅ testMinOnNonComparableThrows
+    - ✅ testMaxOnNonComparableThrows
     - ✅ testMultipleOperatorsInSingleUpdate
-    - ✅ testOrderOfOperatorApplication (implicitly covered)
-    - ✅ testImmutableOriginalDocument (covered by multiple tests, e.g. `testUpdateEngineSetStringField`)
-    - ✅ testFieldTypePreservation (covered by `testSetCanChangeFieldType` and `testNumericOperatorsPreserveNumericType`)
+    - ✅ testSetCanChangeFieldType
+    - ✅ testNumericOperatorsPreserveNumericType
     - ✅ testSetNullAndUndefinedBehaviour
-    - ✅ testIncExtremeValues *(boundary handling for mathematical overflow to Infinity)*
+    - ✅ testIncExtremeValues
     - ✅ testMinOnEqualValueNoChange
     - ✅ testMaxOnEqualValueNoChange
-    - ✅ testEmptyUpdateObjectThrows *(validation for empty update operations)*
+    - ✅ testEmptyUpdateObjectThrows
+    - ✅ testUpdateObjectWithNoDollarOperatorsThrows
+    - ✅ testNestedFieldUpdateDeepPath *(covered by testUpdateEngineSetCreatesDeepPath)*
 
-3.  **Field Removal Tests** (6 cases)
+3.  **Field Removal Tests** (6 cases) - **✅ COMPLETE**
+    *(6/6 passing - 100% pass rate)*
+    - ✅ testUnsetSimpleField
+    - ✅ testUnsetNestedField
+    - ✅ testUnsetNonExistentFieldNoError
+    - ✅ testUnsetArrayElementByIndex
+    - ✅ testUnsetDeepNestedPath
+    - ✅ testDocumentStructureAfterUnset
 
-    - testUnsetSimpleField
-    - testUnsetNestedField
-    - testUnsetNonExistentFieldNoError
-    - testUnsetArrayElementByIndex
-    - testUnsetDeepNestedPath
-    - testDocumentStructureAfterUnset
+5.  **Array Update Tests** (12 cases) - **✅ IMPLEMENTED - 5/12 PASSING**
+    *(84.8% overall pass rate - 39/46 tests passing)*
 
-5.  **Array Update Tests** (12 cases)
+    **✅ PASSING (5 cases):**
+    - ✅ testPushSingleValue
+    - ✅ testPullByValueEquality
+    - ✅ testAddToSetUniqueOnly
+    - ✅ testPushNestedArray
+    - ✅ testPullNestedArray
 
-    - testPushSingleValue
-    - testPushMultipleValues
-    - testPullByValueEquality
-    - testAddToSetUniqueOnly
-    - testAddToSetMultipleUnique
-    - testAddToSetDuplicatesIgnored
-    - testPushNestedArray
-    - testPullNestedArray
-    - testArrayPositionSpecifier
-    - testPushOnNonArrayThrows
-    - testPullOnNonArrayThrows
-    - testAddToSetOnNonArrayThrows
+    **❌ FAILING (7 cases) - UpdateEngine Gaps:**
+    - ❌ testPushMultipleValues *(Missing `$each` modifier support)*
+    - ❌ testAddToSetMultipleUnique *(Missing `$each` modifier support)*
+    - ❌ testAddToSetDuplicatesIgnored *(Missing `$each` modifier support)*
+    - ❌ testArrayPositionSpecifier *(Array index access via `$set` not implemented)*
+    - ❌ testPushOnNonArrayThrows *(Missing validation for non-array fields)*
+    - ❌ testPullOnNonArrayThrows *(Missing validation for non-array fields)*
+    - ❌ testAddToSetOnNonArrayThrows *(Missing validation for non-array fields)*
+
+    **UpdateEngine Implementation Gaps:**
+    - `$each` modifier for `$push` and `$addToSet` operations
+    - Array index field paths (`items.1`) for `$set` operations
+    - Validation to ensure array operations only work on array fields
 
 6.  **DocumentOperations Update Tests** (8 cases)
 
