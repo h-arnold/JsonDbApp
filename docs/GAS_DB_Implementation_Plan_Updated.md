@@ -62,7 +62,7 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
 **Implementation Summary:**
 - ✅ UpdateEngine class fully implemented with core MongoDB-compatible operators
-- ✅ 39/46 UpdateEngine test cases passing (84.8% pass rate)
+- ✅ 46/46 UpdateEngine test cases passing (100% pass rate)
 - ✅ Clean architecture with centralised validation methods
 - ✅ Immutable operations preserving original documents
 - ✅ Full support for nested field paths and basic array operations
@@ -268,29 +268,24 @@ Following the completion of Section 6, a refactoring pull request was merged, in
     - ✅ testUnsetDeepNestedPath
     - ✅ testDocumentStructureAfterUnset
 
-5.  **Array Update Tests** (12 cases) - **✅ IMPLEMENTED - 5/12 PASSING**
-    *(84.8% overall pass rate - 39/46 tests passing)*
+5.  **Array Update Tests** (12 cases) - **✅ COMPLETE (12/12 PASSING)**
+    *(100% pass rate - 46/46 UpdateEngine tests passing)*
 
-    **✅ PASSING (5 cases):**
+    **✅ PASSING (12 cases):**
     - ✅ testPushSingleValue
     - ✅ testPullByValueEquality
     - ✅ testAddToSetUniqueOnly
     - ✅ testPushNestedArray
     - ✅ testPullNestedArray
-
-    **❌ FAILING (7 cases) - UpdateEngine Gaps:**
-    - ❌ testPushMultipleValues *(Missing `$each` modifier support)*
-    - ❌ testAddToSetMultipleUnique *(Missing `$each` modifier support)*
-    - ❌ testAddToSetDuplicatesIgnored *(Missing `$each` modifier support)*
-    - ❌ testArrayPositionSpecifier *(Array index access via `$set` not implemented)*
-    - ❌ testPushOnNonArrayThrows *(Missing validation for non-array fields)*
-    - ❌ testPullOnNonArrayThrows *(Missing validation for non-array fields)*
-    - ❌ testAddToSetOnNonArrayThrows *(Missing validation for non-array fields)*
-
-    **UpdateEngine Implementation Gaps:**
-    - `$each` modifier for `$push` and `$addToSet` operations
-    - Array index field paths (`items.1`) for `$set` operations
-    - Validation to ensure array operations only work on array fields
+    - ✅ testPushMultipleValues
+    - ✅ testAddToSetMultipleUnique
+    - ✅ testAddToSetDuplicatesIgnored
+    - ✅ testArrayPositionSpecifier
+    - ✅ testPushOnNonArrayThrows
+    - ✅ testPullOnNonArrayThrows
+    - ✅ testAddToSetOnNonArrayThrows
+    
+    **UpdateEngine Implementation Gaps:** None
 
 6.  **DocumentOperations Update Tests** (8 cases)
 
@@ -343,6 +338,14 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 - Collection API provides full MongoDB-compatible update functionality
 - UpdateEngine integrates seamlessly with existing components
 
+
+## Extra Refactor: Create ValidationUtils Class
+
+### Objectives
+
+There are lots of validation methods in Update and Query engine that are similar and can be resued. THe current method of handling validation using various if statements isn't ideal and makes it difficult to read.
+
+We'll create a ValidationUtils class that will contain all shaerd validiation methods and only class specific validation methods will remain in their respective classes.
 
 
 ## Section 8: Cross-Instance Coordination

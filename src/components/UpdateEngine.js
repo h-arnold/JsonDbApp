@@ -36,7 +36,7 @@ class UpdateEngine {
     this._validateUpdateOperationsNotEmpty(updateOps);
     
     // Create a deep copy of the document to avoid modifying the original
-    let result = ObjectUtils.deepClone(document);
+    let clonedDoc = ObjectUtils.deepClone(document);
     
     // Apply each operator
     for (const operator in updateOps) {
@@ -45,10 +45,10 @@ class UpdateEngine {
       }
       
       this._logger.debug(`Applying operator ${operator}`, { fields: Object.keys(updateOps[operator] || {}) });
-      result = this._operatorHandlers[operator](result, updateOps[operator]);
+      clonedDoc = this._operatorHandlers[operator](clonedDoc, updateOps[operator]);
     }
     
-    return result;
+    return clonedDoc;
   }
 
   // Private operator handlers
@@ -69,10 +69,11 @@ class UpdateEngine {
   }
 
   /**
-   * Apply $inc operator - increments numeric values
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Increment operations
-   * @returns {Object} Modified document
+   * Increment numeric fields by specified amounts.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to increment values.
+   * @returns {Object} The updated document instance.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If any target field or increment value is non-numeric.
    */
   _applyInc(document, ops) {
     this._validateOperationsNotEmpty(ops, '$inc');
@@ -97,10 +98,11 @@ class UpdateEngine {
   }
 
   /**
-   * Apply $mul operator - multiplies numeric values
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Multiply operations
-   * @returns {Object} Modified document
+   * Multiply numeric fields by specified factors.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to multiplication factors.
+   * @returns {Object} The updated document instance.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If any target field or factor is non-numeric.
    */
   _applyMul(document, ops) {
     this._validateOperationsNotEmpty(ops, '$mul');
@@ -125,10 +127,12 @@ class UpdateEngine {
   }
 
   /**
-   * Apply $min operator - sets minimum value
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Minimum operations
-   * @returns {Object} Modified document
+   * Set fields to the minimum of current and provided values.
+   * Only updates when the new value is less than existing.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to minimum values.
+   * @returns {Object} The updated document instance.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If comparison between values is invalid.
    */
   _applyMin(document, ops) {
     this._validateOperationsNotEmpty(ops, '$min');
@@ -148,10 +152,12 @@ class UpdateEngine {
   }
 
   /**
-   * Apply $max operator - sets maximum value
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Maximum operations
-   * @returns {Object} Modified document
+   * Set fields to the maximum of current and provided values.
+   * Only updates when the new value is greater than existing.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to maximum values.
+   * @returns {Object} The updated document instance.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If comparison between values is invalid.
    */
   _applyMax(document, ops) {
     this._validateOperationsNotEmpty(ops, '$max');
@@ -171,10 +177,10 @@ class UpdateEngine {
   }
 
   /**
-   * Apply $unset operator - removes fields
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Unset operations
-   * @returns {Object} Modified document
+   * Remove specified fields or nested elements.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to unset flags.
+   * @returns {Object} The updated document instance with fields removed.
    */
   _applyUnset(document, ops) {
     this._validateOperationsNotEmpty(ops, '$unset');
@@ -186,70 +192,121 @@ class UpdateEngine {
   }
 
   /**
-   * Apply $push operator - adds elements to arrays
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Push operations
-   * @returns {Object} Modified document
+   * Applies MongoDB-like `$push` operations to the specified fields in a document.
+   *
+   * This method updates the given `document` by pushing values onto arrays at the specified field paths,
+   * according to the operations described in the `ops` object. Supports both direct value pushes and
+   * the `$each` modifier for pushing multiple values at once.
+   *
+   * @param {Object} document - The target document to update.
+   * @param {Object} ops - An object mapping field paths to values or modifiers to push.
+   *   Each value can be a direct value to push, or an object with a `$each` array.
+   * @returns {Object} The updated document after applying the push operations.
+   * @throws {Error} If the operations object is empty, or if any target field is not an array when required.
+   *
+   * @example
+   * // Push a single value
+   * _applyPush(doc, { tags: 'newTag' });
+   *
+   * @example
+   * // Push multiple values using $each
+   * _applyPush(doc, { tags: { $each: ['tag1', 'tag2'] } });
    */
   _applyPush(document, ops) {
     this._validateOperationsNotEmpty(ops, '$push');
-    
     for (const fieldPath in ops) {
-      const currentValue = this._getFieldValue(document, fieldPath);
-      const valueToAdd = ops[fieldPath];
-      
-      if (!Array.isArray(currentValue)) {
-        // Create array if field doesn't exist or isn't an array
-        this._setFieldValue(document, fieldPath, [valueToAdd]);
+      const current = this._getFieldValue(document, fieldPath);
+      const valueOrModifier = ops[fieldPath];
+
+      // Handle {$each: [...] } modifier to push multiple items
+      if (valueOrModifier && typeof valueOrModifier === 'object' && '$each' in valueOrModifier) {
+        const eachValues = valueOrModifier.$each;
+        this._validateArrayValue(eachValues, fieldPath, '$push');
+        if (current === undefined) {
+          // No array exists: initialise with all provided values
+          this._setFieldValue(document, fieldPath, [...eachValues]);
+        } else {
+          // Must be an array to append
+          this._validateArrayValue(current, fieldPath, '$push');
+          // Append each element in sequence
+          eachValues.forEach(v => current.push(v));
+        }
       } else {
-        currentValue.push(valueToAdd);
+        // Single‐value push
+        if (current === undefined) {
+          // Initialise array with single element
+          this._setFieldValue(document, fieldPath, [valueOrModifier]);
+        } else {
+          // Must be an array to append
+          this._validateArrayValue(current, fieldPath, '$push');
+          current.push(valueOrModifier);
+        }
       }
     }
     return document;
   }
 
   /**
-   * Apply $pull operator - removes elements from arrays
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - Pull operations
-   * @returns {Object} Modified document
+   * Remove matching elements from arrays.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to values to remove.
+   * @returns {Object} The updated document instance without matching elements.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If target field is not an array.
    */
   _applyPull(document, ops) {
     this._validateOperationsNotEmpty(ops, '$pull');
     
     for (const fieldPath in ops) {
-      const currentValue = this._getFieldValue(document, fieldPath);
-      const valueToRemove = ops[fieldPath];
-      
-      if (Array.isArray(currentValue)) {
-        const filteredArray = currentValue.filter(item => !this._valuesEqual(item, valueToRemove));
-        this._setFieldValue(document, fieldPath, filteredArray);
-      }
+      const current = this._getFieldValue(document, fieldPath);
+      if (current === undefined) continue;
+      this._validateArrayValue(current, fieldPath, '$pull');
+      const toRemove = ops[fieldPath];
+      const filtered = current.filter(item => !this._valuesEqual(item, toRemove));
+      this._setFieldValue(document, fieldPath, filtered);
     }
     return document;
   }
 
   /**
-   * Apply $addToSet operator - adds unique elements to arrays
-   * @param {Object} document - Document to modify
-   * @param {Object} ops - AddToSet operations
-   * @returns {Object} Modified document
+   * Add unique elements to arrays, supporting $each modifier.
+   * @param {Object} document - The document being modified.
+   * @param {Object} ops - An object mapping field paths to single values or $each modifiers.
+   * @returns {Object} The updated document instance with values added when unique.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If target field or modifier values are not arrays.
    */
   _applyAddToSet(document, ops) {
     this._validateOperationsNotEmpty(ops, '$addToSet');
     
     for (const fieldPath in ops) {
-      const currentValue = this._getFieldValue(document, fieldPath);
-      const valueToAdd = ops[fieldPath];
-      
-      if (!Array.isArray(currentValue)) {
-        // Create array if field doesn't exist or isn't an array
-        this._setFieldValue(document, fieldPath, [valueToAdd]);
+     let current = this._getFieldValue(document, fieldPath);
+     const valueOrModifier = ops[fieldPath];
+
+     // Helper: push only if not already present
+     const addOne = val => {
+       if (!current.some(item => this._valuesEqual(item, val))) {
+         current.push(val);
+       }
+     };
+
+     // Support {$each: [...] } for multiple unique additions
+     if (valueOrModifier && typeof valueOrModifier === 'object' && '$each' in valueOrModifier) {
+       const eachValues = valueOrModifier.$each;
+        this._validateArrayValue(eachValues, fieldPath, '$addToSet');
+        if (current === undefined) {
+          // Initialise new array from provided values
+          this._setFieldValue(document, fieldPath, [...eachValues]);
+        } else {
+          this._validateArrayValue(current, fieldPath, '$addToSet');
+          // Add each unique element
+          eachValues.forEach(addOne);
+        }
       } else {
-        // Only add if value doesn't already exist
-        const exists = currentValue.some(item => this._valuesEqual(item, valueToAdd));
-        if (!exists) {
-          currentValue.push(valueToAdd);
+        // Single‐value add
+        if (current === undefined) {
+          this._setFieldValue(document, fieldPath, [valueOrModifier]);
+        } else {
+          this._validateArrayValue(current, fieldPath, '$addToSet');
+          addOne(valueOrModifier);
         }
       }
     }
@@ -285,47 +342,77 @@ class UpdateEngine {
   _setFieldValue(document, fieldPath, value) {
     const parts = fieldPath.split('.');
     let current = document;
-    
-    // Navigate to the parent of the target field, creating objects as needed
+
+    // Traverse to parent container, creating objects/arrays as required
     for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      if (!current[part] || typeof current[part] !== 'object' || Array.isArray(current[part])) {
-        current[part] = {};
+      const key = parts[i];
+
+      if (Array.isArray(current)) {
+        const arrayIndex = Number(key);
+        if (!Number.isNaN(arrayIndex)) {
+          // Numeric key: treat as array index, auto-initialise if missing
+          if (current[arrayIndex] === undefined) current[arrayIndex] = {};
+          current = current[arrayIndex];
+        } else {
+          // Non-numeric on array: fallback to object-style property
+          current[key] = current[key] || {};
+          current = current[key];
+        }
+      } else {
+        // Preserve existing arrays; only create if missing or primitive
+        if (current[key] === undefined || typeof current[key] !== 'object') {
+          current[key] = {};
+        }
+        current = current[key];
       }
-      current = current[part];
     }
-    
-    // Set the final field
-    current[parts[parts.length - 1]] = value;
+
+    // Final assignment: detect numeric tail for arrays
+    const last = parts[parts.length - 1];
+    if (Array.isArray(current) && /^\d+$/.test(last)) {
+      current[Number(last)] = value;
+    } else {
+      current[last] = value;
+    }
   }
 
   /**
-   * Remove field using dot notation path
-   * @param {Object} document - Document to modify
-   * @param {string} fieldPath - Dot notation field path
+   * Delete a field or array element at a given dot-notation path.
+   * @param {Object} document - The document to update.
+   * @param {string} fieldPath - Dot-notation path of the field or element to remove.
    */
   _unsetFieldValue(document, fieldPath) {
     const parts = fieldPath.split('.');
     let current = document;
-    
-    // Navigate to the parent of the target field
+
+    // Traverse to parent of target
     for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      if (!current[part] || typeof current[part] !== 'object') {
-        return; // Path doesn't exist, nothing to unset
+      const key = parts[i];
+      if (Array.isArray(current)) {
+        const arrayIndex = Number(key);
+        if (Number.isNaN(arrayIndex) || current[arrayIndex] === undefined) return;  // nothing to unset
+        current = current[arrayIndex];
+      } else {
+        if (!current[key] || typeof current[key] !== 'object') return;
+        current = current[key];
       }
-      current = current[part];
     }
-    
-    // Remove the final field
-    delete current[parts[parts.length - 1]];
+
+    const last = parts[parts.length - 1];
+    if (Array.isArray(current) && /^\d+$/.test(last)) {
+      // Deleting an array index leaves undefined but preserves length
+      delete current[Number(last)];
+    } else {
+      // Delete object property entirely
+      delete current[last];
+    }
   }
 
   /**
-   * Check if two values are equal (for array operations)
-   * @param {*} a - First value
-   * @param {*} b - Second value
-   * @returns {boolean} True if values are equal
+   * Deep compare two values (primitives, arrays, or objects) for equality.
+   * @param {*} a - First value for comparison.
+   * @param {*} b - Second value for comparison.
+   * @returns {boolean} True if values are deeply equal, false otherwise.
    */
   _valuesEqual(a, b) {
     if (a === b) return true;

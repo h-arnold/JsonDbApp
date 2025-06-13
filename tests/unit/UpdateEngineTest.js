@@ -603,7 +603,7 @@ const updateEngineTestFileLogger = GASDBLogger.createComponentLogger('UpdateEngi
 try {
   // This is the primary point of creation and registration for the suite.
   // createUpdateEngineTestSuite is called once here when the file loads.
-  testFramework.registerTestSuite(createUpdateEngineTestSuite());
+  new TestFramework().registerTestSuite(createUpdateEngineTestSuite());
 } catch (e) {
   // Fallback for environments where 'testFramework' global might not be initialized,
   // or if the above fails for another reason.
