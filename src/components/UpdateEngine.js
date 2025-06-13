@@ -33,6 +33,7 @@ class UpdateEngine {
    */
   applyOperators(document, updateOps) {
     this._validateApplyOperatorsInputs(document, updateOps);
+    this._validateUpdateOperationsNotEmpty(updateOps);
     
     // Create a deep copy of the document to avoid modifying the original
     let result = ObjectUtils.deepClone(document);
@@ -77,12 +78,20 @@ class UpdateEngine {
     this._validateOperationsNotEmpty(ops, '$inc');
     
     for (const fieldPath in ops) {
-      const currentValue = this._getFieldValue(document, fieldPath) || 0;
+      const currentValue = this._getFieldValue(document, fieldPath);
       const incrementValue = ops[fieldPath];
       
       this._validateNumericValue(incrementValue, fieldPath, '$inc');
       
-      this._setFieldValue(document, fieldPath, currentValue + incrementValue);
+      // If field exists, validate it's numeric
+      if (currentValue !== undefined) {
+        this._validateCurrentFieldNumeric(currentValue, fieldPath, '$inc');
+      }
+      
+      const baseValue = currentValue || 0;
+      const newValue = baseValue + incrementValue;
+      
+      this._setFieldValue(document, fieldPath, newValue);
     }
     return document;
   }
@@ -97,12 +106,20 @@ class UpdateEngine {
     this._validateOperationsNotEmpty(ops, '$mul');
     
     for (const fieldPath in ops) {
-      const currentValue = this._getFieldValue(document, fieldPath) || 0;
+      const currentValue = this._getFieldValue(document, fieldPath);
       const multiplyValue = ops[fieldPath];
       
       this._validateNumericValue(multiplyValue, fieldPath, '$mul');
       
-      this._setFieldValue(document, fieldPath, currentValue * multiplyValue);
+      // If field exists, validate it's numeric
+      if (currentValue !== undefined) {
+        this._validateCurrentFieldNumeric(currentValue, fieldPath, '$mul');
+      }
+      
+      const baseValue = currentValue || 0;
+      const newValue = baseValue * multiplyValue;
+      
+      this._setFieldValue(document, fieldPath, newValue);
     }
     return document;
   }
@@ -122,6 +139,9 @@ class UpdateEngine {
       
       if (currentValue === undefined || minValue < currentValue) {
         this._setFieldValue(document, fieldPath, minValue);
+      } else if (currentValue !== undefined) {
+        // Validate that comparison is valid between current and new value
+        this._validateComparableValues(currentValue, minValue, fieldPath, '$min');
       }
     }
     return document;
@@ -142,6 +162,9 @@ class UpdateEngine {
       
       if (currentValue === undefined || maxValue > currentValue) {
         this._setFieldValue(document, fieldPath, maxValue);
+      } else if (currentValue !== undefined) {
+        // Validate that comparison is valid between current and new value
+        this._validateComparableValues(currentValue, maxValue, fieldPath, '$max');
       }
     }
     return document;
@@ -370,6 +393,54 @@ class UpdateEngine {
   _validateOperationsNotEmpty(ops, operatorName) {
     if (!ops || typeof ops !== 'object' || Object.keys(ops).length === 0) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY('operations', ops, `${operatorName} operator requires at least one field operation`);
+    }
+  }
+
+  /**
+   * Validate that the update operations object contains at least one operator
+   * @param {Object} updateOps - Update operations object to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operations object is empty
+   */
+  _validateUpdateOperationsNotEmpty(updateOps) {
+    const operators = Object.keys(updateOps);
+    if (operators.length === 0) {
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY('updateOps', updateOps, 'Update operations must contain at least one operator');
+    }
+  }
+
+  /**
+   * Validate that a current field value is numeric for arithmetic operations
+   * @param {*} value - Current field value to validate
+   * @param {string} fieldPath - Field path for error reporting
+   * @param {string} operation - Operation name for error reporting
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When current field value is not numeric
+   */
+  _validateCurrentFieldNumeric(value, fieldPath, operation) {
+    if (typeof value !== 'number') {
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, value, `${operation} operation requires current field value to be numeric`);
+    }
+  }
+
+  /**
+   * Validate that two values can be compared (same type or both numeric)
+   * @param {*} currentValue - Current field value
+   * @param {*} newValue - New value to compare
+   * @param {string} fieldPath - Field path for error reporting
+   * @param {string} operation - Operation name for error reporting
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When values cannot be compared
+   */
+  _validateComparableValues(currentValue, newValue, fieldPath, operation) {
+    const currentType = typeof currentValue;
+    const newType = typeof newValue;
+    
+    // Both must be the same type for safe comparison
+    if (currentType !== newType) {
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, { currentValue, newValue }, `${operation} operation requires comparable values of the same type`);
+    }
+    
+    // Objects and arrays cannot be compared with < or >
+    if (currentType === 'object') {
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, currentValue, `${operation} operation cannot compare objects or arrays`);
     }
   }
 }
