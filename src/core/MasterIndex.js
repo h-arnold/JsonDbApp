@@ -42,53 +42,66 @@ class MasterIndex {
   }
   
   /**
-   * Add a collection to the master index
+   * @private
+   * Internal logic for adding a single collection without repeated ScriptLock overhead
    * @param {string} name - Collection name
-   * @param {Object|CollectionMetadata} metadata - Collection metadata or CollectionMetadata instance
+   * @param {Object|CollectionMetadata} metadata - Collection metadata or instance
+   * @returns {Object} Serialized collection metadata
+   * @throws {InvalidArgumentError} If name is invalid
+   */
+  _addCollectionInternal(name, metadata) {
+    if (!name || typeof name !== 'string') {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('Collection name must be a non-empty string');
+    }
+    let collectionMetadata;
+    if (metadata instanceof CollectionMetadata) {
+      collectionMetadata = metadata;
+      if (collectionMetadata.name !== name) {
+        collectionMetadata = new CollectionMetadata(name, collectionMetadata.fileId, metadata);
+      }
+    } else {
+      const created = metadata.created instanceof Date ? metadata.created : new Date(metadata.created || Date.now());
+      const lastUpdated = metadata.lastModified instanceof Date ? metadata.lastModified : new Date(metadata.lastModified || Date.now());
+      collectionMetadata = new CollectionMetadata(name, metadata.fileId || null, {
+        created: created,
+        lastUpdated: lastUpdated,
+        documentCount: metadata.documentCount || 0,
+        modificationToken: metadata.modificationToken || this.generateModificationToken(),
+        lockStatus: null
+      });
+    }
+    this._data.collections[name] = collectionMetadata;
+    this._data.lastUpdated = new Date();
+    this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata);
+    return collectionMetadata;
+  }
+  
+  /**
+   * Add a collection to the master index with locking
+   * @param {string} name - Collection name
+   * @param {Object|CollectionMetadata} metadata - Collection metadata or instance
+   * @returns {Object} Serialized collection metadata
    */
   addCollection(name, metadata) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
+    return this._withScriptLock(() => this._addCollectionInternal(name, metadata));
+  }
+  
+  /**
+   * Bulk add multiple collections under a single lock
+   * @param {Object<string, Object|CollectionMetadata>} collectionsMap - Map of name to metadata
+   * @returns {Object[]} Array of serialized metadata objects
+   * @throws {InvalidArgumentError} When collectionsMap is invalid
+   */
+  addCollections(collectionsMap) {
+    if (!collectionsMap || typeof collectionsMap !== 'object') {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collectionsMap must be a non-empty object');
     }
-    
     return this._withScriptLock(() => {
-      let collectionMetadata;
-      
-      // Handle both CollectionMetadata instances and plain objects
-      if (metadata instanceof CollectionMetadata) {
-        // If it's already a CollectionMetadata instance, use it directly
-        collectionMetadata = metadata;
-        // Ensure name and fileId match if provided
-        if (collectionMetadata.name !== name) {
-          collectionMetadata = new CollectionMetadata(name, collectionMetadata.fileId, metadata.toObject());
-        }
-      } else {
-        // Create CollectionMetadata from plain object
-        // Ensure dates are Date objects, not strings
-        const created = metadata.created ? 
-          (metadata.created instanceof Date ? metadata.created : new Date(metadata.created)) : 
-          new Date();
-        const lastUpdated = metadata.lastModified ? 
-          (metadata.lastModified instanceof Date ? metadata.lastModified : new Date(metadata.lastModified)) : 
-          new Date();
-          
-        collectionMetadata = new CollectionMetadata(name, metadata.fileId || null, {
-          created: created,
-          lastUpdated: lastUpdated,
-          documentCount: metadata.documentCount || 0,
-          modificationToken: metadata.modificationToken || this.generateModificationToken(),
-          lockStatus: null
-        });
-      }
-      
-      // Store the CollectionMetadata instance directly for JSON reviver support
-      this._data.collections[name] = collectionMetadata;
-      this._data.lastUpdated = new Date();
-      
-      // Track modification history
-      this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata.toObject());
-      
-      return collectionMetadata.toObject();
+      const results = [];
+      Object.entries(collectionsMap).forEach(([name, meta]) => {
+        results.push(this._addCollectionInternal(name, meta));
+      });
+      return results;
     });
   }
   
@@ -466,7 +479,7 @@ class MasterIndex {
           
           // Create resolved data object
           resolvedData = {
-            ...collectionMetadata.toObject(),
+            ...collectionMetadata,
             ...newData, // Apply any remaining fields
             modificationToken: collectionMetadata.modificationToken,
             lastModified: collectionMetadata.lastUpdated

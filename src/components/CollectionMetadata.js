@@ -258,14 +258,6 @@ class CollectionMetadata {
   }
 
   /**
-   * Alias for toJSON, to maintain existing toObject API
-   * @returns {Object}
-   */
-  toObject() {
-    return this.toJSON();
-  }
-
-  /**
    * toJSON hook for JSON.stringify
    * @returns {Object} Plain object with metadata properties and __type tag
    */

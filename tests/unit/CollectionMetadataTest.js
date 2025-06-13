@@ -28,7 +28,7 @@ function createCollectionMetadataConstructorTestSuite() {
   suite.addTest('should create metadata with default values when no input provided', function() {
     // Arrange & Act
     const metadata = new CollectionMetadata();
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertTrue(metadataObject.hasOwnProperty('created'), 'Should have created timestamp');
@@ -49,7 +49,7 @@ function createCollectionMetadataConstructorTestSuite() {
     
     // Act
     const metadata = new CollectionMetadata(initialMetadata);
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertEquals(metadataObject.created.getTime(), initialMetadata.created.getTime(), 'Should preserve created timestamp');
@@ -70,7 +70,7 @@ function createCollectionMetadataConstructorTestSuite() {
     
     // Act
     const metadata = new CollectionMetadata(name, fileId, initialMetadata);
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertEquals(metadata.name, name, 'Should set name property');
@@ -128,14 +128,14 @@ function createCollectionMetadataUpdateTestSuite() {
   suite.addTest('should update lastModified timestamp', function() {
     // Arrange
     const metadata = new CollectionMetadata();
-    const originalLastUpdated = metadata.toObject().lastUpdated;
+    const originalLastUpdated = metadata.lastUpdated;
     
     // Wait a small amount to ensure timestamp difference
     Utilities.sleep(1);
     
     // Act
     metadata.updateLastModified();
-    const updatedMetadata = metadata.toObject();
+    const updatedMetadata = metadata;
     
     // Assert
     TestFramework.assertTrue(updatedMetadata.lastUpdated > originalLastUpdated, 'LastUpdated should be more recent');
@@ -144,11 +144,11 @@ function createCollectionMetadataUpdateTestSuite() {
   suite.addTest('should increment document count', function() {
     // Arrange
     const metadata = new CollectionMetadata();
-    const originalCount = metadata.toObject().documentCount;
+    const originalCount = metadata.documentCount;
     
     // Act
     metadata.incrementDocumentCount();
-    const updatedCount = metadata.toObject().documentCount;
+    const updatedCount = metadata.documentCount;
     
     // Assert
     TestFramework.assertEquals(updatedCount, originalCount + 1, 'Document count should be incremented by 1');
@@ -158,11 +158,11 @@ function createCollectionMetadataUpdateTestSuite() {
     // Arrange
     const initialMetadata = { documentCount: 5 };
     const metadata = new CollectionMetadata(initialMetadata);
-    const originalCount = metadata.toObject().documentCount;
+    const originalCount = metadata.documentCount;
     
     // Act
     metadata.decrementDocumentCount();
-    const updatedCount = metadata.toObject().documentCount;
+    const updatedCount = metadata.documentCount;
     
     // Assert
     TestFramework.assertEquals(updatedCount, originalCount - 1, 'Document count should be decremented by 1');
@@ -185,7 +185,7 @@ function createCollectionMetadataUpdateTestSuite() {
     
     // Act
     metadata.setDocumentCount(newCount);
-    const updatedCount = metadata.toObject().documentCount;
+    const updatedCount = metadata.documentCount;
     
     // Assert
     TestFramework.assertEquals(updatedCount, newCount, 'Document count should be set to specified value');
@@ -208,14 +208,14 @@ function createCollectionMetadataUpdateTestSuite() {
   suite.addTest('should update lastModified when document count changes', function() {
     // Arrange
     const metadata = new CollectionMetadata();
-    const originalLastUpdated = metadata.toObject().lastUpdated;
+    const originalLastUpdated = metadata.lastUpdated;
     
     // Wait a small amount to ensure timestamp difference
     Utilities.sleep(1);
     
     // Act
     metadata.setDocumentCount(5);
-    const updatedMetadata = metadata.toObject();
+    const updatedMetadata = metadata;
     
     // Assert
     TestFramework.assertTrue(updatedMetadata.lastUpdated > originalLastUpdated, 'LastUpdated should be more recent after document count change');
@@ -242,7 +242,7 @@ function createCollectionMetadataUpdateTestSuite() {
     
     // Act
     metadata.setModificationToken(token);
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertEquals(metadataObject.modificationToken, token, 'toObject should include modificationToken');
@@ -314,7 +314,7 @@ function createCollectionMetadataUpdateTestSuite() {
     
     // Act
     metadata.setLockStatus(lockStatus);
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertEquals(metadataObject.lockStatus.isLocked, false, 'toObject should include lockStatus.isLocked');
@@ -382,7 +382,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     const metadata = new CollectionMetadata();
     
     // Act
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertTrue(typeof metadataObject === 'object', 'Should return an object');
@@ -409,7 +409,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     metadata.setLockStatus(lockStatus);
     
     // Act
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertEquals(metadataObject.name, name, 'toObject should include name');
@@ -468,7 +468,7 @@ function createCollectionMetadataSerialisationTestSuite() {
     original.updateLastModified();
     
     // Assert
-    TestFramework.assertNotEquals(cloned.toObject().lastUpdated.getTime(), original.toObject().lastUpdated.getTime(), 'Clone timestamps should be independent');
+    TestFramework.assertNotEquals(cloned.lastUpdated.getTime(), original.lastUpdated.getTime(), 'Clone timestamps should be independent');
   });
 
   // RED PHASE: Test 2.5 - Static Factory Methods
@@ -495,9 +495,9 @@ function createCollectionMetadataSerialisationTestSuite() {
     // Assert
     TestFramework.assertEquals(metadata.name, sourceObject.name, 'Should set name from object');
     TestFramework.assertEquals(metadata.fileId, sourceObject.fileId, 'Should set fileId from object');
-    TestFramework.assertEquals(metadata.toObject().created.getTime(), sourceObject.created.getTime(), 'Should set created from object');
-    TestFramework.assertEquals(metadata.toObject().lastUpdated.getTime(), sourceObject.lastUpdated.getTime(), 'Should set lastUpdated from object');
-    TestFramework.assertEquals(metadata.toObject().documentCount, sourceObject.documentCount, 'Should set documentCount from object');
+    TestFramework.assertEquals(metadata.created.getTime(), sourceObject.created.getTime(), 'Should set created from object');
+    TestFramework.assertEquals(metadata.lastUpdated.getTime(), sourceObject.lastUpdated.getTime(), 'Should set lastUpdated from object');
+    TestFramework.assertEquals(metadata.documentCount, sourceObject.documentCount, 'Should set documentCount from object');
     TestFramework.assertEquals(metadata.getModificationToken(), sourceObject.modificationToken, 'Should set modificationToken from object');
     
     const lockStatus = metadata.getLockStatus();
@@ -518,11 +518,11 @@ function createCollectionMetadataSerialisationTestSuite() {
     // Assert
     TestFramework.assertEquals(metadata.name, name, 'Should set name using create factory');
     TestFramework.assertEquals(metadata.fileId, fileId, 'Should set fileId using create factory');
-    TestFramework.assertEquals(metadata.toObject().documentCount, 0, 'Should initialise documentCount to 0');
+    TestFramework.assertEquals(metadata.documentCount, 0, 'Should initialise documentCount to 0');
     TestFramework.assertEquals(metadata.getModificationToken(), null, 'Should initialise modificationToken to null');
     TestFramework.assertEquals(metadata.getLockStatus(), null, 'Should initialise lockStatus to null');
-    TestFramework.assertTrue(metadata.toObject().created instanceof Date, 'Should set created timestamp');
-    TestFramework.assertTrue(metadata.toObject().lastUpdated instanceof Date, 'Should set lastUpdated timestamp');
+    TestFramework.assertTrue(metadata.created instanceof Date, 'Should set created timestamp');
+    TestFramework.assertTrue(metadata.lastUpdated instanceof Date, 'Should set lastUpdated timestamp');
   });
   
   suite.addTest('should throw error for invalid object in fromObject', function() {
@@ -570,7 +570,7 @@ function createCollectionMetadataEdgeCasesTestSuite() {
     metadata.setDocumentCount(largeCount);
     
     // Assert
-    TestFramework.assertEquals(metadata.toObject().documentCount, largeCount, 'Should handle large document counts');
+    TestFramework.assertEquals(metadata.documentCount, largeCount, 'Should handle large document counts');
   });
   
   suite.addTest('should handle partial metadata objects', function() {
@@ -582,7 +582,7 @@ function createCollectionMetadataEdgeCasesTestSuite() {
     
     // Act
     const metadata = new CollectionMetadata(partialMetadata);
-    const metadataObject = metadata.toObject();
+    const metadataObject = metadata;
     
     // Assert
     TestFramework.assertEquals(metadataObject.documentCount, 3, 'Should preserve provided documentCount');
@@ -610,7 +610,7 @@ function createCollectionMetadataEdgeCasesTestSuite() {
     
     // Act & Assert - should work fine
     metadata.setDocumentCount(0);
-    TestFramework.assertEquals(metadata.toObject().documentCount, 0, 'Should handle zero document count');
+    TestFramework.assertEquals(metadata.documentCount, 0, 'Should handle zero document count');
     
     // Should not allow decrementing from zero
     TestFramework.assertThrows(() => {

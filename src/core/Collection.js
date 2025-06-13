@@ -447,7 +447,7 @@ class Collection {
    */
   getMetadata() {
     this._ensureLoaded();
-    return this._collectionMetadata.toObject();
+    return this._collectionMetadata;
   }
 
   /**
