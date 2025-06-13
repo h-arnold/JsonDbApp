@@ -112,7 +112,7 @@ class MasterIndex {
   getCollections() {
     const collections = {};
     Object.keys(this._data.collections).forEach(name => {
-      collections[name] = CollectionMetadata.fromObject(this._data.collections[name]);
+      collections[name] = this._data.collections[name];
     });
     return collections;
   }
@@ -132,7 +132,7 @@ class MasterIndex {
       return null;
     }
     
-    const collectionMetadata = CollectionMetadata.fromObject(collectionData);
+    const collectionMetadata = collectionData;
     
     // Synchronise lock status from current locks
     const currentLock = this._data.locks[name];
@@ -192,7 +192,7 @@ class MasterIndex {
       }
       
       // Incremental updates using CollectionMetadata
-      const collectionMetadata = CollectionMetadata.fromObject(collectionData);
+      const collectionMetadata = collectionData;
       
       // Apply updates using CollectionMetadata methods where available
       Object.keys(updates).forEach(key => {
@@ -307,9 +307,9 @@ class MasterIndex {
       
       // Also store in collection if it exists, using CollectionMetadata
       if (this._data.collections[collectionName]) {
-        const collectionMetadata = CollectionMetadata.fromObject(this._data.collections[collectionName]);
+        const collectionMetadata = this._data.collections[collectionName];
         collectionMetadata.setLockStatus(lockInfo);
-        this._data.collections[collectionName] = collectionMetadata.toObject();
+        this._data.collections[collectionName] = collectionMetadata;
       }
       
       this._data.lastUpdated = new Date();
@@ -445,7 +445,7 @@ class MasterIndex {
       }
       
       // Create CollectionMetadata instance from stored data
-      const collectionMetadata = CollectionMetadata.fromObject(collectionData);
+      const collectionMetadata = collectionData;
       
       let resolvedData;
       
@@ -568,14 +568,14 @@ class MasterIndex {
     delete this._data.locks[collectionName];
     
     if (this._data.collections[collectionName]) {
-      const collectionMetadata = CollectionMetadata.fromObject(this._data.collections[collectionName]);
+      const collectionMetadata = this._data.collections[collectionName];
       collectionMetadata.setLockStatus({
         isLocked: false,
         lockedBy: null,
         lockedAt: null,
         lockTimeout: null
       });
-      this._data.collections[collectionName] = collectionMetadata.toObject();
+      this._data.collections[collectionName] = collectionMetadata;
     }
   }
   

@@ -111,10 +111,12 @@ class ObjectUtils {
    * Registry of classes for JSON reviving
    * @private
    */
-  static _classRegistry = {
-    CollectionMetadata,
-    DatabaseConfig
-  };
+  static get _classRegistry() {
+    return {
+      CollectionMetadata,
+      DatabaseConfig
+    };
+  }
 
   /**
    * JSON reviver function to restore class instances and Dates

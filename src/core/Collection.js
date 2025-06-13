@@ -119,7 +119,7 @@ class Collection {
       
       this._logger.debug('Collection data loaded successfully', { 
         documentCount: Object.keys(this._documents).length,
-        metadata: this._collectionMetadata.toObject()
+        metadata: this._collectionMetadata.toJSON()
       });
       
     } catch (error) {
@@ -147,7 +147,7 @@ class Collection {
       
       const data = {
         documents: this._documents,
-        metadata: this._collectionMetadata.toObject()
+        metadata: this._collectionMetadata.toJSON()
       };
       
       this._fileService.writeFile(this._driveFileId, data);
@@ -194,7 +194,7 @@ class Collection {
       // Push full metadata object for atomic replace
       this._database._masterIndex.updateCollectionMetadata(
         this._name,
-        this._collectionMetadata.toObject()
+        this._collectionMetadata.toJSON()
       );
     }
   }
