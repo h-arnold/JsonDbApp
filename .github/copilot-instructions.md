@@ -52,7 +52,7 @@ tests/framework/: AssertionUtilities.js, TestFramework.js, TestResult.js, TestRu
  */
 methodName(param) {
   if (!param) {
-    throw new InvalidArgumentError('param is required');
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('param', param, 'param is required');
   }
   
   const result = this._performOperation(param);
@@ -71,7 +71,7 @@ methodName(param) {
 ## Implementation Requirements
 
 **Every class**: Constructor validates inputs, JSDoc on all methods, follows naming conventions and error handling patterns  
-**Every test**: Descriptive function names, Arrange-Act-Assert pattern, independent execution, mock dependencies  
+**Every test**: Descriptive function names, Arrange-Act-Assert pattern, independent execution, create folder for each class, create a file for each test suite and an orchestrator file for all of the tests.
 **Serialisation**: All serialisation/deserialisation is handled by `ObjectUtils.serialise()` and `ObjectUtils.deserialise()`. Any class requiring safe serialisation must implement `toJSON()` and a corresponding static `fromJSON()` and register in `ObjectUtils._classRegistry`.
 
 Follow TDD process as outlined in Core Principles.
