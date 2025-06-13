@@ -280,23 +280,7 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 - Collection API provides full MongoDB-compatible update functionality
 - UpdateEngine integrates seamlessly with existing components
 
-### TDD Implementation Ticklist for Section 7
 
-- [ ] Create `tests/unit/UpdateEngineTest.js` and write a failing test for the `$set` operator
-- [ ] Implement `$set` logic in `src/components/UpdateEngine.js` and verify the test turns green
-- [ ] Write a failing test for nested `$set` path support, then add nested-path handling
-- [ ] Add failing tests for `$inc` and `$mul`, implement both operators and confirm green
-- [ ] Add failing tests for `$min` and `$max`, implement both operators and confirm green
-- [ ] Write failing test for `$unset` operator, implement removal logic and verify
-- [ ] Write failing tests for array operators (`$push`, `$pull`, `$addToSet`), implement them and confirm pass
-- [ ] Refactor `UpdateEngine` internal helpers (`_accessPath`, `_validateOperator`) for clarity and ensure all tests remain green
-- [ ] Write failing tests in `tests/unit/DocumentOperationsTest.js` for `updateDocumentWithOperators`, then implement in `src/components/DocumentOperations.js`
-- [ ] Write failing tests for `updateDocumentByQuery`, implement method and confirm green
-- [ ] Inject `UpdateEngine` into `DocumentOperations` constructor, update DI setup and ensure tests pass
-- [ ] Write failing tests in `tests/unit/CollectionTest.js` for `updateOne`, implement API in `src/core/Collection.js` and pass tests
-- [ ] Write failing tests for `updateMany` and `replaceOne`, implement methods and verify green
-- [ ] Add tests to verify `MasterIndex.markCollectionUpdated` and `GASDBLogger` are called during updates, implement logging/metadata update and confirm
-- [ ] Run the full test suite, refactor any code for readability or duplication, and ensure 100% pass before proceeding
 
 ## Section 8: Cross-Instance Coordination
 
