@@ -3,7 +3,7 @@
  * 
  * Provides utilities for deep cloning objects while preserving Date instances
  * and other complex objects. Used throughout the codebase to avoid JSON 
- * serialization/deserialization that converts Dates to strings.
+ * serialisation/deserialisation that converts Dates to strings.
  */
 
 /**
@@ -108,37 +108,57 @@ class ObjectUtils {
   }
 
   /**
-   * Serialise an object to JSON string with proper Date handling
-   * @param {*} obj - Object to serialise
-   * @returns {string} JSON string with Dates converted to ISO strings
+   * Registry of classes for JSON reviving
+   * @private
    */
-  static serialise(obj) {
-    return JSON.stringify(obj, (key, value) => {
-      if (value instanceof Date) {
-        return value.toISOString();
+  static _classRegistry = {
+    CollectionMetadata
+    // Add ther classes here as needed
+  };
+
+  /**
+   * JSON reviver function to restore class instances and Dates
+   * @param {string} key - Property key
+   * @param {*} value - Parsed value
+   * @returns {*} Revived value or original
+   * @private
+   */
+  static _reviver(key, value) {
+    if (value && typeof value === 'object') {
+      // Class instances
+      const type = value.__type;
+      if (typeof type === 'string' && ObjectUtils._classRegistry[type]) {
+        return ObjectUtils._classRegistry[type].fromJSON(value);
       }
-      return value;
-    });
+    }
+    // Fallback: convert ISO date strings
+    return ObjectUtils.convertDateStringsToObjects(value);
   }
 
   /**
-   * Deserialise JSON string to object with Date restoration
+   * Serialise an object to JSON string using toJSON hooks
+   * @param {*} obj - Object to serialise
+   * @param {number|string} [space] - Indentation for pretty-print
+   * @returns {string} JSON string
+   */
+  static serialise(obj, space) {
+    return JSON.stringify(obj, null, space);
+  }
+
+  /**
+   * Deserialise JSON string to object with class revival and Date restoration
    * @param {string} jsonString - JSON string to deserialise
-   * @returns {*} Object with ISO date strings converted back to Date objects
+   * @returns {*} Revived object
    * @throws {InvalidArgumentError} When jsonString is invalid JSON
    */
   static deserialise(jsonString) {
     if (typeof jsonString !== 'string') {
-      throw new InvalidArgumentError('jsonString must be a string');
+      throw new InvalidArgumentError('jsonString', jsonString, 'Must be a string');
     }
-    
-    let parsed;
     try {
-      parsed = JSON.parse(jsonString);
+      return JSON.parse(jsonString, ObjectUtils._reviver);
     } catch (error) {
-      throw new InvalidArgumentError('jsonString must be valid JSON', jsonString, error.message);
+      throw new InvalidArgumentError('jsonString', jsonString, 'Invalid JSON: ' + error.message);
     }
-    
-    return ObjectUtils.convertDateStringsToObjects(parsed);
   }
 }
