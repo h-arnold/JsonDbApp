@@ -566,6 +566,52 @@ function createObjectUtilsTestSuite() {
     }, InvalidArgumentError, 'Should throw InvalidArgumentError for undefined input');
   });
   
+  // Add tests for class revival functionality
+  suite.addTest('testObjectUtilsDeserialiseClassInstances', function() {
+    // Prepare a DatabaseConfig instance and serialise
+    const originalConfig = new DatabaseConfig({
+      rootFolderId: 'root123',
+      autoCreateCollections: false,
+      lockTimeout: 10000,
+      cacheEnabled: false,
+      logLevel: 'DEBUG',
+      masterIndexKey: 'TEST_KEY'
+    });
+    const serialisedConfig = ObjectUtils.serialise(originalConfig);
+    const deserialisedConfig = ObjectUtils.deserialise(serialisedConfig);
+
+    TestFramework.assertTrue(deserialisedConfig instanceof DatabaseConfig, 'Should revive DatabaseConfig instance');
+    TestFramework.assertEquals(originalConfig.rootFolderId, deserialisedConfig.rootFolderId, 'rootFolderId should match');
+    TestFramework.assertEquals(originalConfig.autoCreateCollections, deserialisedConfig.autoCreateCollections, 'autoCreateCollections should match');
+    TestFramework.assertEquals(originalConfig.lockTimeout, deserialisedConfig.lockTimeout, 'lockTimeout should match');
+    TestFramework.assertEquals(originalConfig.cacheEnabled, deserialisedConfig.cacheEnabled, 'cacheEnabled should match');
+    TestFramework.assertEquals(originalConfig.logLevel, deserialisedConfig.logLevel, 'logLevel should match');
+    TestFramework.assertEquals(originalConfig.masterIndexKey, deserialisedConfig.masterIndexKey, 'masterIndexKey should match');
+
+    // Prepare a CollectionMetadata instance and serialise
+    const originalMeta = new CollectionMetadata(
+      'testCollection',
+      'file123',
+      {
+        created: new Date('2023-01-01T00:00:00.000Z'),
+        lastUpdated: new Date('2023-06-15T10:30:00.000Z'),
+        documentCount: 5,
+        modificationToken: 'token123',
+        lockStatus: null
+      }
+    );
+    const serialisedMeta = ObjectUtils.serialise(originalMeta);
+    const deserialisedMeta = ObjectUtils.deserialise(serialisedMeta);
+
+    TestFramework.assertTrue(deserialisedMeta instanceof CollectionMetadata, 'Should revive CollectionMetadata instance');
+    TestFramework.assertEquals(originalMeta.name, deserialisedMeta.name, 'Collection name should match');
+    TestFramework.assertEquals(originalMeta.fileId, deserialisedMeta.fileId, 'fileId should match');
+    TestFramework.assertEquals(originalMeta.documentCount, deserialisedMeta.documentCount, 'documentCount should match');
+    TestFramework.assertEquals(originalMeta.modificationToken, deserialisedMeta.modificationToken, 'modificationToken should match');
+    TestFramework.assertTrue(deserialisedMeta.created instanceof Date, 'created should be Date');
+    TestFramework.assertTrue(deserialisedMeta.lastUpdated instanceof Date, 'lastUpdated should be Date');
+  });
+  
   suite.addTest('testObjectUtilsRoundTripSerialisation', function() {
     // Test complete serialise → deserialise cycles
     const originalData = {
