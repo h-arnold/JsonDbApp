@@ -341,7 +341,7 @@ class Database {
    * @throws {Error} When index file cannot be loaded or is corrupted
    */
   loadIndex() {
-    // Auto-initialize database if not already initialized
+    // Auto-initialise database if not already initialised
     if (!this.indexFileId) {
       try {
         this.initialise();

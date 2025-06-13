@@ -19,7 +19,7 @@ class MasterIndex {
       version: config.version || 1
     };
     
-    this._logger = GASDBLogger.createComponentLogger('MasterIndex'); // Initialize logger
+    this._logger = GASDBLogger.createComponentLogger('MasterIndex'); // Initialise logger
 
     this._data = {
       version: this._config.version,

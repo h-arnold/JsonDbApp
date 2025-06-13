@@ -102,7 +102,7 @@ class Collection {
         throw new OperationError('Invalid file structure', 'Collection file must contain a JSON object');
       }
       
-      // Initialize documents and metadata with defaults
+      // Initialise documents and metadata with defaults
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
       
