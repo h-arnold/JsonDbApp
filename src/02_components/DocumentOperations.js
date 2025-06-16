@@ -214,6 +214,16 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findByQuery(query) {
+    // Validate query argument
+    Validate.required(query, 'query');
+    Validate.object(query, 'query');
+    // Validate unsupported operators at top level
+    const supportedOps = new QueryEngine()._config.supportedOperators;
+    Object.keys(query).forEach(key => {
+      if (key.startsWith('$') && !supportedOps.includes(key)) {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, `Unsupported operator: ${key}`);
+      }
+    });
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -221,7 +231,12 @@ class DocumentOperations {
     if (!this._queryEngine) {
       this._queryEngine = new QueryEngine();
     }
-    
+    try {
+      // Validate operators and propagate errors from QueryEngine
+      this._queryEngine.executeQuery([], query);
+    } catch (e) {
+      throw e;
+    }
     // Let QueryEngine handle all validation and execution
     const results = this._queryEngine.executeQuery(documents, query);
     
@@ -240,6 +255,9 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findMultipleByQuery(query) {
+    // Validate query argument
+    Validate.required(query, 'query');
+    Validate.object(query, 'query');
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -266,6 +284,9 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   countByQuery(query) {
+    // Validate query argument
+    Validate.required(query, 'query');
+    Validate.object(query, 'query');
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     

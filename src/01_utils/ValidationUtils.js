@@ -286,23 +286,23 @@ class Validate {
   }
 
   /**
-   * Validate that a value is a plain object (not Date, Array, or null)
+   * Validate that a value is a plain object (not array, not null, not date)
    * @param {*} value - The value to validate
    * @param {string} paramName - Parameter name for error messages
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a plain object
    */
-  static plainObject(value, paramName) {
-    if (value === null || typeof value !== 'object' || value instanceof Date || Array.isArray(value)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a plain object (not null, Date, or Array)');
+  static validateObject(value, paramName) {
+    if (!value || typeof value !== 'object' || Array.isArray(value) || value instanceof Date) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a plain object');
     }
   }
 
   /**
-   * Check if a value is a plain object (not Date, Array, or null)
+   * Check if a value is a plain object (not array, not date)
    * @param {*} value - The value to check
    * @returns {boolean} True if value is a plain object
    */
   static isPlainObject(value) {
-    return value !== null && typeof value === 'object' && !(value instanceof Date) && !Array.isArray(value);
+    return value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
   }
 }

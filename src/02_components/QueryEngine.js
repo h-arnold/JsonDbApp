@@ -379,7 +379,7 @@ class QueryEngine {
    */
   _findOperators(obj, operators = []) {
     try {
-      ValidationUtils.validateObject(obj, 'queryObject');
+      Validate.validateObject(obj, 'queryObject');
       if (!(obj instanceof Date)) {
         Object.keys(obj).forEach(key => {
           if (key.startsWith('$')) {
@@ -418,7 +418,7 @@ class QueryEngine {
     }
 
     try {
-      ValidationUtils.validateObject(obj, 'queryObject');
+      Validate.validateObject(obj, 'queryObject');
       if (!(obj instanceof Date)) {
         Object.keys(obj).forEach(key => {
           if (key === '$and' || key === '$or') {
