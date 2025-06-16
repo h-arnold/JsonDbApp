@@ -22,11 +22,8 @@ class DocumentOperations {
   /**
    * Creates a new DocumentOperations instance
    * @param {Object} collection - Collection reference for document storage
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
    */
   constructor(collection) {
-    this._validateCollection(collection);
-    
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
     this._queryEngine = null; // Lazy-loaded QueryEngine instance
@@ -429,23 +426,6 @@ class DocumentOperations {
     // Apply replacements
     matches.forEach(d => this.replaceDocument(d._id, doc));
     return matches.length;
-  }
-
-  /**
-   * Validate collection reference for constructor
-   * @private
-   * @param {Object} collection - Collection to validate
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
-   */
-  _validateCollection(collection) {
-    Validate.objectStructure(collection, {
-      requiredProperties: ['_documents', '_markDirty', '_updateMetadata'],
-      propertyTypes: {
-        '_documents': 'object',
-        '_markDirty': 'function',
-        '_updateMetadata': 'function'
-      }
-    }, 'collection');
   }
 
   /**
