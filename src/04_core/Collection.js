@@ -36,27 +36,13 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid parameters
    */
   constructor(name, driveFileId, database, fileService) {
-    // Validate parameters
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      throw new InvalidArgumentError('name', name, 'Collection name must be a non-empty string');
-    }
-    
-    if (!driveFileId || typeof driveFileId !== 'string' || driveFileId.trim() === '') {
-      throw new InvalidArgumentError('driveFileId', driveFileId, 'Drive file ID must be a non-empty string');
-    }
-    
-    if (!database || typeof database !== 'object') {
-      throw new InvalidArgumentError('database', database, 'Database reference is required');
-    }
-    
-    if (!fileService || typeof fileService !== 'object') {
-      throw new InvalidArgumentError('fileService', fileService, 'FileService reference is required');
-    }
-    
-    // Validate fileService has required methods
-    if (typeof fileService.readFile !== 'function' || typeof fileService.writeFile !== 'function') {
-      throw new InvalidArgumentError('fileService', fileService, 'FileService must have readFile and writeFile methods');
-    }
+    // Use Validate for parameter validation
+    Validate.nonEmptyString(name, 'name');
+    Validate.nonEmptyString(driveFileId, 'driveFileId');
+    Validate.object(database, 'database');
+    Validate.object(fileService, 'fileService');
+    Validate.func(fileService.readFile, 'fileService.readFile');
+    Validate.func(fileService.writeFile, 'fileService.writeFile');
     
     this._name = name;
     this._driveFileId = driveFileId;
@@ -207,18 +193,14 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid filter structure
    */
   _validateFilter(filter, operation) {
-    if (!filter || typeof filter !== 'object' || Array.isArray(filter)) {
-      throw new InvalidArgumentError('filter', filter, 'Filter must be an object');
-    }
+    // Use Validate for filter validation
+    Validate.object(filter, 'filter');
     
     const filterKeys = Object.keys(filter);
     
     // Validate _id filter value if present
     if (filterKeys.includes('_id')) {
-      const idValue = filter._id;
-      if (!idValue || typeof idValue !== 'string' || idValue.trim() === '') {
-        throw new InvalidArgumentError('filter._id', idValue, 'ID filter value must be a non-empty string');
-      }
+      Validate.nonEmptyString(filter._id, 'filter._id');
     }
   }
 
@@ -304,10 +286,8 @@ class Collection {
     this._ensureLoaded();
     this._validateFilter(filter, 'updateOne');
     
-    // Validate update parameter
-    if (!update || typeof update !== 'object' || Array.isArray(update)) {
-      throw new InvalidArgumentError('update', update, 'Update must be an object');
-    }
+    // Use Validate for update validation
+    Validate.object(update, 'update');
     
     // Check for update operators (not supported in current version)
     const updateKeys = Object.keys(update);
