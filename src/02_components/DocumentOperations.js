@@ -120,7 +120,7 @@ class DocumentOperations {
     Validate.object(updateData, 'updateData');
     
     // Check if document exists
-    if (!this._collection._documents[id]) {
+    if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
     }
     
@@ -157,7 +157,7 @@ class DocumentOperations {
     Validate.nonEmptyString(id, 'id');
     
     // Check if document exists
-    if (!this._collection._documents[id]) {
+    if (!this.documentExists(id)) {
       return { acknowledged: true, deletedCount: 0 };
     }
     
@@ -195,7 +195,7 @@ class DocumentOperations {
     
     return this._collection._documents.hasOwnProperty(id);
   }
-  
+
   /**
    * Find first document matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
@@ -341,10 +341,12 @@ class DocumentOperations {
     this._validateUpdateOperators(updateOps);
     
     // Check existence
-    const existing = this._collection._documents[id];
-    if (!existing) {
+    if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
     }
+    
+    // Get existing document for the update engine
+    const existing = this._collection._documents[id];
     // Apply operators
     const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
     // Persist
@@ -392,7 +394,7 @@ class DocumentOperations {
     Validate.object(doc, 'doc');
     
     // Check existence
-    if (!this._collection._documents[id]) {
+    if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
     }
     // Prepare replacement
