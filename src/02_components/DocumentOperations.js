@@ -25,13 +25,7 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
    */
   constructor(collection) {
-    // Validate collection reference using ValidationUtils
-    Validate.required(collection, 'collection');
-    Validate.object(collection, 'collection');
-    Validate.objectProperties(collection, ['_documents'], 'collection');
-    Validate.object(collection._documents, 'collection._documents');
-    Validate.func(collection._markDirty, 'collection._markDirty');
-    Validate.func(collection._updateMetadata, 'collection._updateMetadata');
+    this._validateCollection(collection);
     
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
@@ -57,13 +51,8 @@ class DocumentOperations {
     if (!documentToInsert._id) {
       documentToInsert._id = this._generateDocumentId();
     } else {
-      // Validate provided ID
-      Validate.nonEmptyString(documentToInsert._id, '_id');
-      
-      // Check for duplicate ID
-      if (this._collection._documents[documentToInsert._id]) {
-        throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR('document', documentToInsert._id, 'Document with this ID already exists');
-      }
+      this._validateDocumentId(documentToInsert._id);
+      this._checkDuplicateId(documentToInsert._id);
     }
     
     // Insert document
@@ -214,16 +203,8 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findByQuery(query) {
-    // Validate query argument
-    Validate.required(query, 'query');
-    Validate.object(query, 'query');
-    // Validate unsupported operators at top level
-    const supportedOps = new QueryEngine()._config.supportedOperators;
-    Object.keys(query).forEach(key => {
-      if (key.startsWith('$') && !supportedOps.includes(key)) {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(query, `Unsupported operator: ${key}`);
-      }
-    });
+    this._validateQuery(query);
+    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -231,12 +212,7 @@ class DocumentOperations {
     if (!this._queryEngine) {
       this._queryEngine = new QueryEngine();
     }
-    try {
-      // Validate operators and propagate errors from QueryEngine
-      this._queryEngine.executeQuery([], query);
-    } catch (e) {
-      throw e;
-    }
+    
     // Let QueryEngine handle all validation and execution
     const results = this._queryEngine.executeQuery(documents, query);
     
@@ -255,9 +231,8 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findMultipleByQuery(query) {
-    // Validate query argument
-    Validate.required(query, 'query');
-    Validate.object(query, 'query');
+    this._validateQuery(query);
+    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -284,9 +259,8 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   countByQuery(query) {
-    // Validate query argument
-    Validate.required(query, 'query');
-    Validate.object(query, 'query');
+    this._validateQuery(query);
+    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -341,17 +315,8 @@ class DocumentOperations {
     Validate.object(doc, 'doc');
     
     // DocumentOperations-specific validations
-    // Check for forbidden fields (reserved prefixes)
-    for (const field in doc) {
-      if (field.startsWith('__')) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
-      }
-    }
-    
-    // Validate _id field if present (specific to document structure)
-    if (doc._id !== undefined && (typeof doc._id !== 'string' || doc._id.trim() === '')) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', doc._id, 'Document _id must be a non-empty string if provided');
-    }
+    this._validateDocumentFields(doc);
+    this._validateDocumentIdInDocument(doc._id, doc);
     
     // Additional validation could be added here for:
     // - Maximum document size
@@ -371,15 +336,9 @@ class DocumentOperations {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
     Validate.object(updateOps, 'updateOps');
+    
     // Validate operators before checking existence so invalid ops throw
-    if (!this._updateEngine) {
-      this._updateEngine = new UpdateEngine();
-    }
-    for (const operator in updateOps) {
-      if (!this._updateEngine._operatorHandlers[operator]) {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(updateOps, `Unsupported update operator: ${operator}`);
-      }
-    }
+    this._validateUpdateOperators(updateOps);
     
     // Check existence
     const existing = this._collection._documents[id];
@@ -468,5 +427,100 @@ class DocumentOperations {
     // Apply replacements
     matches.forEach(d => this.replaceDocument(d._id, doc));
     return matches.length;
+  }
+
+  /**
+   * Validate collection reference for constructor
+   * @private
+   * @param {Object} collection - Collection to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
+   */
+  _validateCollection(collection) {
+    Validate.objectStructure(collection, {
+      requiredProperties: ['_documents', '_markDirty', '_updateMetadata'],
+      propertyTypes: {
+        '_documents': 'object',
+        '_markDirty': 'function',
+        '_updateMetadata': 'function'
+      }
+    }, 'collection');
+  }
+
+  /**
+   * Validate document ID
+   * @private
+   * @param {string} id - Document ID to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
+   */
+  _validateDocumentId(id) {
+    Validate.nonEmptyString(id, '_id');
+  }
+
+  /**
+   * Validate document ID in document context
+   * @private
+   * @param {string|undefined} id - Document ID to validate
+   * @param {Object} doc - Document context for error reporting
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
+   */
+  _validateDocumentIdInDocument(id, doc) {
+    if (id !== undefined && (typeof id !== 'string' || id.trim() === '')) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', id, 'Document _id must be a non-empty string if provided');
+    }
+  }
+
+  /**
+   * Validate document field names
+   * @private
+   * @param {Object} doc - Document to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When field names are invalid
+   */
+  _validateDocumentFields(doc) {
+    for (const field in doc) {
+      if (field.startsWith('__')) {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
+      }
+    }
+  }
+
+  /**
+   * Check for duplicate document ID
+   * @private
+   * @param {string} id - Document ID to check
+   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When ID already exists
+   */
+  _checkDuplicateId(id) {
+    if (this._collection._documents[id]) {
+      throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR('document', id, 'Document with this ID already exists');
+    }
+  }
+
+  /**
+   * Validate query object for query operations
+   * @private
+   * @param {Object} query - Query to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
+   */
+  _validateQuery(query) {
+    Validate.required(query, 'query');
+    Validate.object(query, 'query');
+  }
+
+  /**
+   * Validate update operators
+   * @private
+   * @param {Object} updateOps - Update operators to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When operators are invalid
+   */
+  _validateUpdateOperators(updateOps) {
+    if (!this._updateEngine) {
+      this._updateEngine = new UpdateEngine();
+    }
+    
+    for (const operator in updateOps) {
+      if (!this._updateEngine._operatorHandlers[operator]) {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(updateOps, `Unsupported update operator: ${operator}`);
+      }
+    }
   }
 }
