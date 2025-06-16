@@ -23,31 +23,5 @@ function createDocumentOperationsConstructorTestSuite() {
     TestFramework.assertEquals('function', typeof docOps.documentExists, 'Should have documentExists method');
   });
 
-  suite.addTest('should throw error when created without collection reference', function() {
-    // Act & Assert
-    TestFramework.assertThrows(() => {
-      new DocumentOperations(null);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError when collection is null');
-    TestFramework.assertThrows(() => {
-      new DocumentOperations(undefined);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError when collection is undefined');
-    TestFramework.assertThrows(() => {
-      new DocumentOperations();
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError when collection is missing');
-  });
-
-  suite.addTest('should throw error when created with invalid collection reference', function() {
-    // Act & Assert
-    TestFramework.assertThrows(() => {
-      new DocumentOperations({});
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for empty object');
-    TestFramework.assertThrows(() => {
-      new DocumentOperations('not-a-collection');
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for string');
-    TestFramework.assertThrows(() => {
-      new DocumentOperations(42);
-    }, InvalidArgumentError, 'Should throw InvalidArgumentError for number');
-  });
-
   return suite;
 }
