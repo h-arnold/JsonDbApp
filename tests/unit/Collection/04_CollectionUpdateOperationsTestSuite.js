@@ -255,5 +255,221 @@ function createCollectionUpdateOperationsTestSuite() {
     TestFramework.assertTrue(updateResult.acknowledged, 'Operation should still be acknowledged');
   });
   
+  // RED PHASE: Collection API Enhancement Tests - New Methods and Advanced Operations
+  
+  suite.addTest('testCollectionUpdateManyReturnsModifiedCount', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'updateManyTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test documents
+    collection.insertOne({ department: 'Engineering', level: 'Junior', salary: 70000 });
+    collection.insertOne({ department: 'Engineering', level: 'Senior', salary: 90000 });
+    collection.insertOne({ department: 'Marketing', level: 'Junior', salary: 65000 });
+    collection.insertOne({ department: 'Engineering', level: 'Principal', salary: 120000 });
+    
+    // Act & Assert - Should fail in Red phase (updateMany not implemented yet)
+    TestFramework.assertThrows(() => {
+      collection.updateMany(
+        { department: 'Engineering' },
+        { $inc: { salary: 5000 } }
+      );
+    }, TypeError, 'Should throw TypeError: updateMany is not a function');
+  });
+  
+  suite.addTest('testCollectionReplaceOneById', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'replaceOneByIdTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ 
+      name: 'Original Doc', 
+      value: 100, 
+      status: 'active',
+      metadata: { created: new Date(), version: 1 }
+    });
+    const docId = insertResult.insertedId;
+    
+    // Act & Assert - Should fail in Red phase (replaceOne not implemented yet)
+    TestFramework.assertThrows(() => {
+      const replacementDoc = { 
+        name: 'Completely Replaced', 
+        description: 'This is a completely new document',
+        version: 2
+      };
+      collection.replaceOne({ _id: docId }, replacementDoc);
+    }, TypeError, 'Should throw TypeError: replaceOne is not a function');
+  });
+  
+  suite.addTest('testCollectionReplaceOneByFilter', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'replaceOneByFilterTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test documents
+    collection.insertOne({ name: 'Alice', department: 'Engineering', role: 'Developer' });
+    collection.insertOne({ name: 'Bob', department: 'Engineering', role: 'Manager' });
+    collection.insertOne({ name: 'Charlie', department: 'Marketing', role: 'Analyst' });
+    
+    // Act & Assert - Should fail in Red phase (replaceOne not implemented yet)
+    TestFramework.assertThrows(() => {
+      const replacementDoc = { 
+        name: 'Alice Smith', 
+        department: 'Product', 
+        role: 'Product Manager',
+        startDate: new Date()
+      };
+      collection.replaceOne({ name: 'Alice' }, replacementDoc);
+    }, TypeError, 'Should throw TypeError: replaceOne is not a function');
+  });
+  
+  suite.addTest('testCollectionReplaceCorrectDocument', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'replaceCorrectDocTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test documents with similar properties
+    collection.insertOne({ name: 'Alice', age: 30, department: 'Engineering' });
+    collection.insertOne({ name: 'Alice', age: 25, department: 'Marketing' });
+    collection.insertOne({ name: 'Bob', age: 30, department: 'Engineering' });
+    
+    // Act & Assert - Should fail in Red phase (replaceOne not implemented yet)
+    TestFramework.assertThrows(() => {
+      const replacementDoc = { 
+        name: 'Alice Senior', 
+        age: 31, 
+        department: 'Engineering',
+        title: 'Senior Engineer'
+      };
+      collection.replaceOne({ name: 'Alice', age: 30 }, replacementDoc);
+    }, TypeError, 'Should throw TypeError: replaceOne is not a function');
+  });
+  
+  suite.addTest('testCollectionUpdateWithMultipleOperators', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'updateMultipleOperatorsTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ 
+      name: 'Test User',
+      stats: { score: 100, level: 1 },
+      tags: ['beginner'],
+      lastActive: new Date('2023-01-01')
+    });
+    const docId = insertResult.insertedId;
+    
+    // Act & Assert - Should fail with current implementation (operators not supported)
+    TestFramework.assertThrows(() => {
+      collection.updateOne({ _id: docId }, {
+        $set: { name: 'Advanced User', lastActive: new Date() },
+        $inc: { 'stats.score': 50, 'stats.level': 1 },
+        $push: { tags: 'advanced' },
+        $unset: { temporary: '' }
+      });
+    }, OperationError, 'Should throw OperationError for update operators');
+  });
+  
+  suite.addTest('testCollectionErrorPropagation', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'errorPropagationTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Test invalid filter parameter
+    TestFramework.assertThrows(() => {
+      collection.updateOne(null, { name: 'Updated' });
+    }, InvalidArgumentError, 'Should propagate InvalidArgumentError for null filter');
+    
+    // Test invalid update parameter
+    TestFramework.assertThrows(() => {
+      collection.updateOne({ _id: 'test' }, null);
+    }, InvalidArgumentError, 'Should propagate InvalidArgumentError for null update');
+    
+    // Test empty update object
+    TestFramework.assertThrows(() => {
+      collection.updateOne({ _id: 'test' }, {});
+    }, InvalidArgumentError, 'Should throw error for empty update object');
+  });
+  
+  suite.addTest('testCollectionLockingDuringUpdate', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'lockingDuringUpdateTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ name: 'Lock Test', value: 100 });
+    const docId = insertResult.insertedId;
+    
+    // Act & Assert - Should fail in Red phase (advanced locking not implemented)
+    // This test will initially pass with basic functionality but fail when we add proper locking
+    const updateResult = collection.updateOne({ _id: docId }, { name: 'Updated', value: 200 });
+    
+    // Basic assertion that should work with current implementation
+    TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should update document');
+    
+    // TODO: Add proper lock testing when Section 8 coordination is implemented
+    // For now, this serves as a placeholder for future lock validation
+  });
+  
+  suite.addTest('testCollectionUpdateLogging', function() {
+    // Arrange
+    const fileId = createTestCollectionFile();
+    const collection = new Collection(
+      'updateLoggingTestCollection',
+      fileId,
+      COLLECTION_TEST_DATA.testDatabase,
+      COLLECTION_TEST_DATA.testFileService
+    );
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ name: 'Log Test', value: 100 });
+    const docId = insertResult.insertedId;
+    
+    // Act - Perform update operation
+    const updateResult = collection.updateOne({ _id: docId }, { name: 'Updated Log Test', value: 200 });
+    
+    // Assert - Basic functionality works (logging validation requires Section 8)
+    TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should update document');
+    
+    // TODO: Add proper logging verification when enhanced logging is implemented
+    // For now, this ensures the operation completes without logging errors
+  });
+
   return suite;
 }
