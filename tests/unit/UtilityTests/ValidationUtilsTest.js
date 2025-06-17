@@ -420,6 +420,72 @@ function createValidationUtilsTestSuite() {
     }
   });
 
+  // ============= PLAIN OBJECT VALIDATION TESTS =============
+  
+  suite.addTest('testValidationUtilsValidatePlainObject', function() {
+    // Valid plain objects
+    Validate.validateObject({}, 'param');
+    Validate.validateObject({key: 'value'}, 'param');
+    
+    // Invalid plain objects
+    TestFramework.assertThrows(() => {
+      Validate.validateObject([], 'param');
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw for array');
+    
+    TestFramework.assertThrows(() => {
+      Validate.validateObject(new Date(), 'param');
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw for Date');
+    
+    TestFramework.assertThrows(() => {
+      Validate.validateObject(null, 'param');
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw for null');
+  });
+  
+  suite.addTest('testValidationUtilsIsPlainObject', function() {
+    TestFramework.assertTrue(Validate.isPlainObject({}), '{} is plain object');
+    TestFramework.assertTrue(Validate.isPlainObject({a: 1}), '{a:1} is plain object');
+    TestFramework.assertFalse(Validate.isPlainObject([]), '[] is not plain object');
+    TestFramework.assertFalse(Validate.isPlainObject(new Date()), 'Date is not plain object');
+    TestFramework.assertFalse(Validate.isPlainObject(null), 'null is not plain object');
+    TestFramework.assertFalse(Validate.isPlainObject(123), 'number is not plain object');
+  });
+  
+  // ============= UPDATE OBJECT VALIDATION TESTS =============
+  
+  suite.addTest('testValidationUtilsValidateUpdateObject', function() {
+    // Valid default cases
+    Validate.validateUpdateObject({field: 1}, 'param');
+    Validate.validateUpdateObject({$set: {field: 1}}, 'param');
+    
+    // Empty update object
+    TestFramework.assertThrows(() => {
+      Validate.validateUpdateObject({}, 'param');
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw for empty update object');
+    
+    // Forbidden operators
+    TestFramework.assertThrows(() => {
+      Validate.validateUpdateObject({$set: {field: 1}}, 'param', {forbidOperators: true});
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw when operators are forbidden');
+    
+    // Required operators
+    TestFramework.assertThrows(() => {
+      Validate.validateUpdateObject({field: 1}, 'param', {requireOperators: true});
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw when operators are required');
+    
+    // Mixed operators and fields (default allowMixed = false)
+    TestFramework.assertThrows(() => {
+      Validate.validateUpdateObject({$set: {field: 1}, field: 2}, 'param');
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw for mixed operators and fields');
+    
+    // allowMixed true should pass
+    Validate.validateUpdateObject({$set: {field: 1}, field: 2}, 'param', {allowMixed: true});
+    
+    // Invalid type
+    TestFramework.assertThrows(() => {
+      Validate.validateUpdateObject(null, 'param');
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw for non-object update');
+  });
+
   return suite;
 }
 
@@ -452,11 +518,4 @@ function runValidationUtilsTests() {
     GASDBLogger.error('Failed to execute ValidationUtils tests', { error: error.message, stack: error.stack });
     throw error;
   }
-}
-
-/**
- * Test suite registration
- */
-if (typeof module !== 'undefined' && module.exports) {
-  module.exports = createValidationUtilsTestSuite;
 }
