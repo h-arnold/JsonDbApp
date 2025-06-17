@@ -31,7 +31,7 @@ function createErrorHandlerTestSuite() {
   suite.addTest('testErrorValidation', function() {
     // Test validation functions
     TestFramework.assertThrows(
-      () => ValidationUtils.validateRequired(null, 'testParam'),
+      () => ErrorHandler.validateRequired(null, 'testParam'),
       Error,
       'Should throw for null value'
     );

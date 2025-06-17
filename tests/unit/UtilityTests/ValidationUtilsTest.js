@@ -352,7 +352,7 @@ function createValidationUtilsTestSuite() {
     Validate.optional(null, () => { throw new Error('Should not run'); }, 'param');
     Validate.optional(undefined, () => { throw new Error('Should not run'); }, 'param');
     
-    // Should  non-null/undefined values
+    // Should validate non-null/undefined values
     Validate.optional('test', (value, name) => {
       Validate.nonEmptyString(value, name);
     }, 'param');
