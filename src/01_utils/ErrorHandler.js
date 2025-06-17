@@ -268,7 +268,7 @@ class ErrorHandler {
    */
   static validateRequired(value, name) {
     // Delegate to ValidationUtils for standardised validation
-    ValidationUtils.validateRequired(value, name);
+    Validate.required(value, name);
   }
   
   /**
