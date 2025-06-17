@@ -19,50 +19,28 @@ This document explains the role, API surface and usage patterns for the Collecti
       - [deleteOne(filter: Object): Object](#deleteonefilter-object-object)
       - [countDocuments(filter?: Object): number](#countdocumentsfilter-object-number)
       - [getName(): string](#getname-string)
-      - [getMetadata(): Object](#getmetadataobject)
-      - [isDirty(): boolean](#isdirtyboolean)
-      - [save(): void](#savevoid)
+      - [getMetadata(): Object](#getmetadata-object)
+      - [isDirty(): boolean](#isdirty-boolean)
+      - [save(): void](#save-void)
     - [Lazy Loading](#lazy-loading)
   - [CollectionMetadata](#collectionmetadata)
     - [Purpose](#purpose-1)
     - [Constructor](#constructor-1)
     - [Public Methods](#public-methods-1)
-      - [updateLastModified(): void](#updatelastmodified-void)
-      - [incrementDocumentCount(): void](#incrementdocumentcount-void)
-      - [decrementDocumentCount(): void](#decrementdocumentcount-void)
-      - [setDocumentCount(count: number): void](#setdocumentcountcount-number-void)
-      - [toObject(): Object](#toobject-object)
-      - [clone(): CollectionMetadata](#clone-collectionmetadata)
-  - [DocumentOperations](#documentoperations)
-    - [Purpose](#purpose-2)
-    - [Constructor](#constructor-2)
-    - [Public Methods](#public-methods-2)
-      - [insertDocument(doc: Object): Object](#insertdocumentdoc-object-object)
-      - [findDocumentById(id: string): Object|null](#finddocumentbyidid-string-objectnull)
-      - [findAllDocuments(): Array](#findalldocuments-array)
-      - [updateDocument(id: string, updateData: Object): Object](#updatedocumentid-string-updatedata-object-object)
-      - [deleteDocument(id: string): Object](#deletedocumentid-string-object)
-      - [countDocuments(): number](#countdocuments-number)
-      - [documentExists(id: string): boolean](#documentexistsid-string-boolean)
-    - [Document Validation](#document-validation)
-    - [ID Generation](#id-generation)
-  - [Usage Patterns](#usage-patterns)
-    - [Basic CRUD Operations](#basic-crud-operations)
-    - [Metadata Tracking](#metadata-tracking)
-    - [Error Handling](#error-handling)
-    - [Manual Persistence](#manual-persistence)
-  - [Integration with Other Components](#integration-with-other-components)
-    - [FileService Integration](#fileservice-integration)
-    - [Database Integration](#database-integration)
-    - [Error Handling Integration](#error-handling-integration)
-  - [Performance Considerations](#performance-considerations)
-    - [Lazy Loading](#lazy-loading-1)
-    - [Dirty Tracking](#dirty-tracking)
-    - [Memory Management](#memory-management)
-    - [Caching Strategy](#caching-strategy)
-  - [Future Enhancements](#future-enhancements)
-    - [Section 6: Query Engine](#section-6-query-engine)
-    - [Section 7: Update Engine](#section-7-update-engine)
+      - [`updateLastModified(): void`](#updatelastmodified-void)
+      - [`touch(): void`](#touch-void)
+      - [`incrementDocumentCount(): void`](#incrementdocumentcount-void)
+      - [`decrementDocumentCount(): void`](#decrementdocumentcount-void)
+      - [`setDocumentCount(count: number): void`](#setdocumentcountcount-number-void)
+      - [`getModificationToken(): string | null`](#getmodificationtoken-string--null)
+      - [`setModificationToken(token: string | null): void`](#setmodificationtokentoken-string--null-void)
+      - [`getLockStatus(): Object | null`](#getlockstatus-object--null)
+      - [`setLockStatus(lockStatus: Object | null): void`](#setlockstatuslockstatus-object--null-void)
+      - [`toJSON(): Object`](#tojson-object)
+      - [`clone(): CollectionMetadata`](#clone-collectionmetadata)
+    - [Static Methods](#static-methods)
+      - [`static fromJSON(obj: Object): CollectionMetadata`](#static-fromjsonobj-object-collectionmetadata)
+      - [`static create(name: string, fileId: string): CollectionMetadata`](#static-createname-string-fileid-string-collectionmetadata)
 
 
 ---
@@ -509,38 +487,68 @@ const docs = collection.find({}); // Already loaded, no Drive access
 
 ### Purpose
 
-CollectionMetadata manages collection metadata as plain objects with methods for timestamp tracking and document count management.
+`CollectionMetadata` manages essential information about a collection. This includes its identity (name and file ID), timestamps for creation and updates, the number of documents it contains, a token for managing concurrent modifications, and its current lock status. It ensures that metadata is always in a valid state and provides methods for its manipulation and serialisation.
 
 ### Constructor
 
-```js
-new CollectionMetadata(initialMetadata?: Object)
+```javascript
+new CollectionMetadata(name: string, fileId: string, initialMetadata?: Object)
+```
+or (legacy support)
+```javascript
+new CollectionMetadata(initialMetadata: Object)
 ```
 
-- **initialMetadata** (optional): Initial metadata object
-  - `created`: Creation timestamp (Date)
-  - `lastUpdated`: Last update timestamp (Date)
-  - `documentCount`: Document count (integer ≥ 0)
+- **name** (string): The name of the collection. This is a required field.
+- **fileId** (string): The Google Drive file ID where the collection data is stored. This is a required field.
+- **initialMetadata** (optional Object): An object containing initial values for metadata properties.
+  - `created`: Creation timestamp (Date). Defaults to the current time.
+  - `lastUpdated`: Last update timestamp (Date). Defaults to the current time.
+  - `documentCount`: Document count (integer ≥ 0). Defaults to 0.
+  - `modificationToken`: A string token for optimistic locking, or `null`. Defaults to `null`.
+  - `lockStatus`: An object detailing the lock state, or `null`. Defaults to `null`.
+    - `isLocked`: (boolean) Whether the collection is locked.
+    - `lockedBy`: (string|null) Identifier of the process/user holding the lock.
+    - `lockedAt`: (number|null) Timestamp (epoch milliseconds) when the lock was acquired.
+    - `lockTimeout`: (number|null) Duration in milliseconds for which the lock is valid.
 
-**Throws**: `InvalidArgumentError` for invalid metadata
+**Throws**: `InvalidArgumentError` for invalid or missing `name`, `fileId`, or other metadata values.
 
 **Example:**
 
 ```javascript
-// Create with defaults
-const metadata1 = new CollectionMetadata();
+// Create with name, fileId, and defaults for other properties
+const metadata1 = new CollectionMetadata('users', 'fileId123');
+console.log('Collection Name:', metadata1.name); // 'users'
+console.log('File ID:', metadata1.fileId); // 'fileId123'
 console.log('Default count:', metadata1.documentCount); // 0
 
-// Create with initial values
-const metadata2 = new CollectionMetadata({
+// Create with name, fileId, and specific initial values
+const metadata2 = new CollectionMetadata('products', 'fileId456', {
   created: new Date('2023-01-01'),
   lastUpdated: new Date('2023-06-15'),
-  documentCount: 42
+  documentCount: 42,
+  modificationToken: 'initialToken123',
+  lockStatus: { isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null }
 });
+console.log('Product count:', metadata2.documentCount); // 42
+console.log('Modification Token:', metadata2.getModificationToken()); // 'initialToken123'
 
 // Invalid values throw errors
 try {
-  new CollectionMetadata({ documentCount: -1 });
+  new CollectionMetadata('', 'fileId789'); // Empty name
+} catch (error) {
+  console.error('Invalid name:', error.message);
+}
+
+try {
+  new CollectionMetadata('orders', null); // Missing fileId
+} catch (error) {
+  console.error('Invalid fileId:', error.message);
+}
+
+try {
+  new CollectionMetadata('inventory', 'fileIdABC', { documentCount: -1 });
 } catch (error) {
   console.error('Invalid count:', error.message);
 }
@@ -548,12 +556,12 @@ try {
 
 ### Public Methods
 
-#### updateLastModified(): void
+#### `updateLastModified(): void`
 
-Update the lastUpdated timestamp to current time.
+Updates the `lastUpdated` timestamp to the current time.
 
 ```javascript
-const metadata = new CollectionMetadata();
+const metadata = new CollectionMetadata('logs', 'logFileId');
 const oldTime = metadata.lastUpdated;
 
 // Wait a moment...
@@ -563,49 +571,60 @@ setTimeout(() => {
 }, 10);
 ```
 
-#### incrementDocumentCount(): void
+#### `touch(): void`
 
-Increment document count by 1 and update lastModified.
+Alias for `updateLastModified()`. Updates the `lastUpdated` timestamp to the current time. This is typically used to signify that the collection metadata has been accessed or "touched" without necessarily changing other data like document count.
 
 ```javascript
-const metadata = new CollectionMetadata();
+const metadata = new CollectionMetadata('cache', 'cacheFileId');
+const oldTime = metadata.lastUpdated;
+metadata.touch();
+console.log('Touched, lastUpdated changed:', metadata.lastUpdated > oldTime); // true (assuming a slight delay)
+```
+
+#### `incrementDocumentCount(): void`
+
+Increments the `documentCount` by 1 and updates the `lastUpdated` timestamp.
+
+```javascript
+const metadata = new CollectionMetadata('tasks', 'tasksFileId');
 console.log('Initial count:', metadata.documentCount); // 0
 
 metadata.incrementDocumentCount();
 console.log('After increment:', metadata.documentCount); // 1
 ```
 
-#### decrementDocumentCount(): void
+#### `decrementDocumentCount(): void`
 
-Decrement document count by 1 and update lastModified.
+Decrements the `documentCount` by 1 and updates the `lastUpdated` timestamp.
 
-- **Throws**: `InvalidArgumentError` if count would go below zero
+- **Throws**: `InvalidArgumentError` if `documentCount` would go below zero.
 
 ```javascript
-const metadata = new CollectionMetadata({ documentCount: 5 });
+const metadata = new CollectionMetadata('items', 'itemsFileId', { documentCount: 5 });
 
 metadata.decrementDocumentCount();
 console.log('After decrement:', metadata.documentCount); // 4
 
 // Cannot go below zero
 try {
-  const empty = new CollectionMetadata({ documentCount: 0 });
-  empty.decrementDocumentCount(); // Throws error
+  const emptyMetadata = new CollectionMetadata('empty', 'emptyFileId', { documentCount: 0 });
+  emptyMetadata.decrementDocumentCount(); // Throws error
 } catch (error) {
   console.error('Cannot decrement:', error.message);
 }
 ```
 
-#### setDocumentCount(count: number): void
+#### `setDocumentCount(count: number): void`
 
-Set document count to specific value and update lastModified.
+Sets the `documentCount` to a specific value and updates the `lastUpdated` timestamp.
 
-- **Parameters**
-  - `count`: New document count (integer ≥ 0)
-- **Throws**: `InvalidArgumentError` for invalid values
+- **Parameters**:
+  - `count`: The new document count (must be an integer ≥ 0).
+- **Throws**: `InvalidArgumentError` for invalid `count` values (e.g., negative, not an integer).
 
 ```javascript
-const metadata = new CollectionMetadata();
+const metadata = new CollectionMetadata('notes', 'notesFileId');
 
 metadata.setDocumentCount(100);
 console.log('Set count:', metadata.documentCount); // 100
@@ -614,453 +633,180 @@ console.log('Set count:', metadata.documentCount); // 100
 try {
   metadata.setDocumentCount(-5); // Throws error
 } catch (error) {
-  console.error('Invalid count:', error.message);
+  console.error('Invalid count for setDocumentCount:', error.message);
 }
 ```
 
-#### toObject(): Object
+#### `getModificationToken(): string | null`
 
-Return metadata as plain object with Date copies.
-
-- **Returns**: `{created: Date, lastUpdated: Date, documentCount: number}`
+Returns the current `modificationToken`. This token can be used for optimistic concurrency control.
 
 ```javascript
-const metadata = new CollectionMetadata({ documentCount: 10 });
-const obj = metadata.toObject();
-
-console.log('Plain object:', obj);
-// { created: Date, lastUpdated: Date, documentCount: 10 }
-
-// Dates are independent copies
-obj.created.setFullYear(2000);
-console.log('Original unchanged:', metadata.created.getFullYear() !== 2000);
+const metadata = new CollectionMetadata('configs', 'configsFileId', { modificationToken: 'v1' });
+console.log(metadata.getModificationToken()); // 'v1'
 ```
 
-#### clone(): CollectionMetadata
+#### `setModificationToken(token: string | null): void`
 
-Create independent clone of metadata.
+Sets the `modificationToken`.
+
+- **Parameters**:
+  - `token`: The new modification token (string or `null`). Must be a non-empty string if not `null`.
+- **Throws**: `InvalidArgumentError` for invalid token values.
 
 ```javascript
-const original = new CollectionMetadata({ documentCount: 5 });
+const metadata = new CollectionMetadata('settings', 'settingsFileId');
+metadata.setModificationToken('v2-alpha');
+console.log(metadata.getModificationToken()); // 'v2-alpha'
+
+metadata.setModificationToken(null);
+console.log(metadata.getModificationToken()); // null
+
+try {
+  metadata.setModificationToken(''); // Empty string
+} catch (error) {
+  console.error('Invalid token:', error.message);
+}
+```
+
+#### `getLockStatus(): Object | null`
+
+Returns the current `lockStatus` object or `null` if no lock information is set.
+The `lockStatus` object has the shape: `{ isLocked: boolean, lockedBy: string|null, lockedAt: number|null, lockTimeout: number|null }`.
+
+```javascript
+const lockInfo = { isLocked: true, lockedBy: 'process-1', lockedAt: Date.now(), lockTimeout: 30000 };
+const metadata = new CollectionMetadata('jobs', 'jobsFileId', { lockStatus: lockInfo });
+console.log(metadata.getLockStatus()); // { isLocked: true, ... }
+```
+
+#### `setLockStatus(lockStatus: Object | null): void`
+
+Sets the `lockStatus`.
+
+- **Parameters**:
+  - `lockStatus`: The new lock status object or `null`. If an object, it must conform to the required structure and types.
+- **Throws**: `InvalidArgumentError` for invalid `lockStatus` object structure or values.
+
+```javascript
+const metadata = new CollectionMetadata('queue', 'queueFileId');
+const newLock = { isLocked: true, lockedBy: 'worker-bee', lockedAt: Date.now(), lockTimeout: 60000 };
+metadata.setLockStatus(newLock);
+console.log(metadata.getLockStatus()); // { isLocked: true, lockedBy: 'worker-bee', ... }
+
+metadata.setLockStatus(null);
+console.log(metadata.getLockStatus()); // null
+
+try {
+  metadata.setLockStatus({ isLocked: 'yes' }); // Invalid type for isLocked
+} catch (error) {
+  console.error('Invalid lock status:', error.message);
+}
+```
+
+#### `toJSON(): Object`
+
+Returns the metadata as a plain JavaScript object, suitable for `JSON.stringify()`. This method includes a `__type` property for potential deserialisation and ensures all date properties are new `Date` instances.
+
+- **Returns**: A plain object with all metadata properties:
+  `{ __type: 'CollectionMetadata', name: string, fileId: string, created: Date, lastUpdated: Date, documentCount: number, modificationToken: string|null, lockStatus: Object|null }`
+
+```javascript
+const metadata = new CollectionMetadata('dataEntries', 'dataFileId1', {
+  documentCount: 10,
+  modificationToken: 'token-xyz'
+});
+const obj = metadata.toJSON();
+
+console.log('Plain object:', obj);
+/*
+{
+  __type: 'CollectionMetadata',
+  name: 'dataEntries',
+  fileId: 'dataFileId1',
+  created: Date, // (a new Date instance)
+  lastUpdated: Date, // (a new Date instance)
+  documentCount: 10,
+  modificationToken: 'token-xyz',
+  lockStatus: null
+}
+*/
+
+// Dates are independent copies
+const originalCreationYear = metadata.created.getFullYear();
+obj.created.setFullYear(2000);
+console.log('Original created year unchanged:', metadata.created.getFullYear() === originalCreationYear); // true
+```
+
+#### `clone(): CollectionMetadata`
+
+Creates and returns a new `CollectionMetadata` instance that is an independent, deep copy of the original.
+
+```javascript
+const original = new CollectionMetadata('source', 'sourceFile', { documentCount: 5 });
 const copy = original.clone();
 
 copy.incrementDocumentCount();
 console.log('Original unchanged:', original.documentCount); // 5
 console.log('Copy changed:', copy.documentCount); // 6
+
+// Ensure deep copy of nested objects like lockStatus if present
+const lock = { isLocked: true, lockedBy: 'test', lockedAt: Date.now(), lockTimeout: 1000 };
+const originalWithLock = new CollectionMetadata('lockedColl', 'lockFile', { lockStatus: lock });
+const copyWithLock = originalWithLock.clone();
+copyWithLock.getLockStatus().isLocked = false;
+
+console.log('Original lock status unchanged:', originalWithLock.getLockStatus().isLocked); // true
+console.log('Copy lock status changed:', copyWithLock.getLockStatus().isLocked); // false
+```
+
+### Static Methods
+
+#### `static fromJSON(obj: Object): CollectionMetadata`
+
+Creates a `CollectionMetadata` instance from a plain JavaScript object (typically one produced by `toJSON()`).
+
+- **Parameters**:
+  - `obj`: A plain object containing metadata properties.
+- **Returns**: A new `CollectionMetadata` instance.
+- **Throws**: `InvalidArgumentError` if the input object is invalid or missing required properties.
+
+```javascript
+const plainObject = {
+  name: 'deserialisedCollection',
+  fileId: 'deserialisedFileId',
+  created: new Date('2022-01-01T10:00:00Z').toISOString(), // Dates can be ISO strings or Date objects
+  lastUpdated: new Date('2022-01-02T11:00:00Z'),
+  documentCount: 15,
+  modificationToken: 'tokenFromObject',
+  lockStatus: null
+};
+
+// Note: For fromJSON to correctly parse date strings, they should be in a format
+// that the Date constructor can parse, or be actual Date objects.
+// The constructor of CollectionMetadata handles new Date(value) for date fields.
+
+const metadataInstance = CollectionMetadata.fromJSON(plainObject);
+console.log('Instance name:', metadataInstance.name); // 'deserialisedCollection'
+console.log('Instance document count:', metadataInstance.documentCount); // 15
+console.log('Instance modification token:', metadataInstance.getModificationToken()); // 'tokenFromObject'
+```
+
+#### `static create(name: string, fileId: string): CollectionMetadata`
+
+A static factory method to create a new `CollectionMetadata` instance with the specified `name` and `fileId`, and default values for other properties.
+
+- **Parameters**:
+  - `name`: The collection name.
+  - `fileId`: The Google Drive file ID.
+- **Returns**: A new `CollectionMetadata` instance.
+- **Throws**: `InvalidArgumentError` if `name` or `fileId` are invalid.
+
+```javascript
+const newMetadata = CollectionMetadata.create('newCollection', 'newFileIdXYZ');
+console.log('Created name:', newMetadata.name); // 'newCollection'
+console.log('Created fileId:', newMetadata.fileId); // 'newFileIdXYZ'
+console.log('Created doc count:', newMetadata.documentCount); // 0
 ```
 
 ---
-
-## DocumentOperations
-
-### Purpose
-
-DocumentOperations handles low-level document CRUD operations on collections stored as plain objects. It provides ID-based document manipulation with validation and error handling.
-
-### Constructor
-
-```js
-new DocumentOperations(collection)
-```
-
-- **collection**: Collection reference for document storage
-  - Must have `_documents` property (object)
-  - Must have `_markDirty()` method
-  - Must have `_updateMetadata()` method
-
-**Throws**: `InvalidArgumentError` for invalid collection
-
-**Example:**
-
-```javascript
-// Usually created by Collection class internally
-const docOps = new DocumentOperations(collectionInstance);
-```
-
-### Public Methods
-
-#### insertDocument(doc: Object): Object
-
-Insert a document with automatic or provided ID.
-
-- **Parameters**
-  - `doc`: Document object to insert
-- **Returns**
-  - Inserted document with `_id`
-- **Throws**
-  - `InvalidArgumentError` for invalid documents
-  - `ConflictError` for duplicate IDs
-
-**Example:**
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-// Insert with auto-generated ID
-const doc1 = docOps.insertDocument({
-  name: 'Alice',
-  email: 'alice@example.com'
-});
-console.log('Generated ID:', doc1._id);
-
-// Insert with specific ID
-const doc2 = docOps.insertDocument({
-  _id: 'custom123',
-  name: 'Bob'
-});
-console.log('Custom ID:', doc2._id); // 'custom123'
-```
-
-#### findDocumentById(id: string): Object|null
-
-Find document by ID.
-
-- **Parameters**
-  - `id`: Document ID to find (non-empty string)
-- **Returns**
-  - Document copy or `null` if not found
-- **Throws**
-  - `InvalidArgumentError` for invalid ID
-
-**Example:**
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-const found = docOps.findDocumentById('custom123');
-if (found) {
-  console.log('Found document:', found.name);
-  // Modifying returned object doesn't affect original
-  found.name = 'Modified';
-} else {
-  console.log('Document not found');
-}
-```
-
-#### findAllDocuments(): Array
-
-Find all documents in collection.
-
-- **Returns**
-  - Array of document copies
-
-**Example:**
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-const allDocs = docOps.findAllDocuments();
-console.log('Total documents:', allDocs.length);
-
-allDocs.forEach(doc => {
-  console.log('ID:', doc._id, 'Name:', doc.name);
-});
-```
-
-#### updateDocument(id: string, updateData: Object): Object
-
-Update document by ID using document replacement.
-
-- **Parameters**
-  - `id`: Document ID to update (non-empty string)
-  - `updateData`: Data to merge with existing document
-- **Returns**
-  - `{acknowledged: boolean, modifiedCount: number}`
-- **Throws**
-  - `InvalidArgumentError` for invalid parameters
-
-**Example:**
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-// Update existing document
-const result = docOps.updateDocument('custom123', {
-  name: 'Robert',
-  age: 30,
-  lastModified: new Date()
-});
-console.log('Modified:', result.modifiedCount); // 1
-
-// Non-existent document
-const noMatch = docOps.updateDocument('missing', { name: 'Ghost' });
-console.log('No match:', noMatch.modifiedCount); // 0
-```
-
-#### deleteDocument(id: string): Object
-
-Delete document by ID.
-
-- **Parameters**
-  - `id`: Document ID to delete (non-empty string)
-- **Returns**
-  - `{acknowledged: boolean, deletedCount: number}`
-- **Throws**
-  - `InvalidArgumentError` for invalid ID
-
-**Example:**
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-const result = docOps.deleteDocument('custom123');
-console.log('Deleted:', result.deletedCount); // 1
-
-// Document no longer exists
-const gone = docOps.findDocumentById('custom123');
-console.log('Document gone:', gone); // null
-```
-
-#### countDocuments(): number
-
-Count total documents in collection.
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-const count = docOps.countDocuments();
-console.log('Document count:', count);
-```
-
-#### documentExists(id: string): boolean
-
-Check if document exists by ID.
-
-- **Parameters**
-  - `id`: Document ID to check (non-empty string)
-- **Returns**
-  - `true` if document exists, `false` otherwise
-- **Throws**
-  - `InvalidArgumentError` for invalid ID
-
-**Example:**
-
-```javascript
-const docOps = new DocumentOperations(collection);
-
-const exists = docOps.documentExists('custom123');
-if (exists) {
-  console.log('Document exists');
-} else {
-  console.log('Document not found');
-}
-```
-
-### Document Validation
-
-DocumentOperations validates documents before insertion/updates:
-
-```javascript
-// Valid documents
-const valid1 = { name: 'Alice', age: 30 };
-const valid2 = { _id: 'custom', data: { nested: true } };
-
-// Invalid documents (throw InvalidArgumentError)
-const invalid1 = null; // Must be object
-const invalid2 = []; // Must be object, not array
-const invalid3 = { __reserved: 'value' }; // Field names cannot start with __
-const invalid4 = { _id: '' }; // ID must be non-empty string if provided
-```
-
-### ID Generation
-
-When no `_id` is provided, DocumentOperations generates unique UUIDs:
-
-```javascript
-const doc1 = docOps.insertDocument({ name: 'Test1' });
-const doc2 = docOps.insertDocument({ name: 'Test2' });
-
-console.log('Unique IDs:', doc1._id !== doc2._id); // true
-console.log('UUID format:', /^[0-9a-f-]{36}$/.test(doc1._id)); // true
-```
-
----
-
-## Usage Patterns
-
-### Basic CRUD Operations
-
-```javascript
-// Get collection from database
-const users = database.collection('users');
-
-// Create
-const newUser = users.insertOne({
-  name: 'Alice',
-  email: 'alice@example.com',
-  createdAt: new Date()
-});
-
-// Read
-const user = users.findOne({ _id: newUser.insertedId });
-const allUsers = users.find({});
-
-// Update (document replacement in Section 5)
-users.updateOne(
-  { _id: newUser.insertedId },
-  { ...user, name: 'Alice Smith', updatedAt: new Date() }
-);
-
-// Delete
-users.deleteOne({ _id: newUser.insertedId });
-
-// Count
-const totalUsers = users.countDocuments({});
-```
-
-### Metadata Tracking
-
-```javascript
-const users = database.collection('users');
-
-// Check collection state
-const metadata = users.getMetadata();
-console.log('Collection created:', metadata.created);
-console.log('Last updated:', metadata.lastUpdated);
-console.log('Document count:', metadata.documentCount);
-
-// Monitor changes
-console.log('Has unsaved changes:', users.isDirty());
-```
-
-### Error Handling
-
-```javascript
-const users = database.collection('users');
-
-try {
-  // Attempt unsupported query
-  users.find({ name: 'Alice' });
-} catch (error) {
-  if (error instanceof OperationError) {
-    console.log('Query not supported:', error.message);
-    // Fallback to supported operations
-    const allUsers = users.find({});
-    const alice = allUsers.find(user => user.name === 'Alice');
-  }
-}
-
-try {
-  // Attempt duplicate ID insertion
-  users.insertOne({ _id: 'duplicate', name: 'User1' });
-  users.insertOne({ _id: 'duplicate', name: 'User2' });
-} catch (error) {
-  if (error instanceof ConflictError) {
-    console.log('ID already exists:', error.message);
-  }
-}
-```
-
-### Manual Persistence
-
-```javascript
-const users = database.collection('users');
-
-// Make multiple changes
-users.insertOne({ name: 'User1' });
-users.insertOne({ name: 'User2' });
-users.insertOne({ name: 'User3' });
-
-// Check dirty state
-console.log('Has changes:', users.isDirty()); // true
-
-// Force save (usually automatic)
-users.save();
-console.log('Changes saved:', !users.isDirty()); // true
-```
-
----
-
-## Integration with Other Components
-
-### FileService Integration
-
-Collection relies on FileService for Drive persistence:
-
-```javascript
-// Collection uses FileService internally
-const data = fileService.readFile(driveFileId); // Returns parsed object with Dates
-fileService.writeFile(driveFileId, collectionData); // Accepts object, handles JSON
-```
-
-**Note**: JSON serialisation and Date conversion are handled automatically by the underlying FileOperations layer, not by Collection or FileService directly.
-
-### Database Integration
-
-Database manages collection instances:
-
-```javascript
-// Database creates and caches collections
-const users = database.collection('users'); // Creates Collection instance
-const sameUsers = database.collection('users'); // Returns cached instance
-```
-
-### Error Handling Integration
-
-All classes use standardised GAS-DB error types:
-
-```javascript
-// Common error types across components
-InvalidArgumentError // Parameter validation
-ConflictError        // Duplicate IDs
-OperationError       // Unsupported operations
-FileIOError         // Drive access failures
-```
-
----
-
-## Performance Considerations
-
-### Lazy Loading
-
-- Collections load from Drive only when first accessed
-- Subsequent operations use in-memory data
-- Reduces unnecessary Drive API calls
-
-### Dirty Tracking
-
-- Changes are tracked with `_dirty` flag
-- Only dirty collections are saved to Drive
-- Prevents unnecessary write operations
-
-### Memory Management
-
-- Document operations return copies to prevent external modification
-- Original documents remain protected in collection state
-- Metadata objects are cloned when returned
-
-### Caching Strategy
-
-- Collections cache loaded data until manually saved
-- FileService provides additional caching layer
-- Reduces Drive API usage and improves performance
-
----
-
-## Future Enhancements
-
-### Section 6: Query Engine
-
-Advanced query capabilities will be added:
-
-```javascript
-// Future query support
-users.find({ age: { $gte: 18 } });
-users.find({ name: /^A/ });
-users.find({ 'address.city': 'London' });
-```
-
-### Section 7: Update Engine
-
-Update operators will be supported:
-
-```javascript
-// Future update operators
-users.updateOne({ _id: 'user123' }, {
-  $set: { age: 31 },
-  $inc: { loginCount: 1 },
-  $push: { tags: 'active' }
-});
-```
-
-These enhancements will maintain backward compatibility with current Section 5 implementations.
