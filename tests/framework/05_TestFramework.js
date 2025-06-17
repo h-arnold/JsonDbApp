@@ -14,9 +14,20 @@
 class TestFramework {
   constructor() {
     this.testSuites = new Map();
-    this.results = new TestResults();
+    this.results = null; // Defer initialization until first use
     this.resourceFiles = new Set(); // Track files created during testing
     this.environmentValidated = false;
+  }
+  
+  /**
+   * Get or create the results object
+   * @private
+   */
+  _getResults() {
+    if (!this.results) {
+      this.results = new TestResults();
+    }
+    return this.results;
   }
   
   // ============= STATIC ASSERTION UTILITIES =============
@@ -271,7 +282,7 @@ class TestFramework {
       }
       
       // Test error handling
-      ErrorHandler.validateRequired('test', 'testParam');
+      Validate.required('test', 'testParam');
       const error = ErrorHandler.createError('DOCUMENT_NOT_FOUND', { id: 'test' });
       if (!error) {
         throw new Error('Error handling test failed');

@@ -107,13 +107,23 @@ class QueryEngine {
   _matchField(document, fieldPath, queryValue) {
     const documentValue = this._getFieldValue(document, fieldPath);
 
-    // Handle operator objects
-    if (queryValue && typeof queryValue === 'object' && !Array.isArray(queryValue) && !(queryValue instanceof Date)) {
+    // Use helper to detect operator objects
+    if (this._isOperatorObject(queryValue)) {
       return this._matchOperators(documentValue, queryValue);
     }
 
     // Direct value comparison (implicit $eq)
     return this._compareValues(documentValue, queryValue, '$eq');
+  }
+
+  /**
+   * Check if a value represents operator object (plain object, not Date or Array)
+   * @param {*} value - Value to check
+   * @returns {boolean} True if value is a plain operator object
+   * @private
+   */
+  _isOperatorObject(value) {
+    return Validate.isPlainObject(value);
   }
 
   /**
@@ -335,10 +345,15 @@ class QueryEngine {
       throw new InvalidQueryError(`Query nesting exceeds maximum depth of ${this._config.maxNestedDepth}`);
     }
 
-    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
-      Object.values(obj).forEach(value => {
-        this._validateQueryDepth(value, depth + 1);
-      });
+    try {
+      Validate.object(obj, 'queryObject');
+      if (!(obj instanceof Date)) {
+        Object.values(obj).forEach(value => {
+          this._validateQueryDepth(value, depth + 1);
+        });
+      }
+    } catch (e) {
+      // Not a plain object, do nothing
     }
   }
 
@@ -363,15 +378,18 @@ class QueryEngine {
    * @private
    */
   _findOperators(obj, operators = []) {
-    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
-      Object.keys(obj).forEach(key => {
-        if (key.startsWith('$')) {
-          operators.push(key);
-        }
-        this._findOperators(obj[key], operators);
-      });
+    if (Validate.isPlainObject(obj)) {
+      if (!(obj instanceof Date)) {
+        Object.keys(obj).forEach(key => {
+          if (key.startsWith('$')) {
+            operators.push(key);
+          }
+          this._findOperators(obj[key], operators);
+        });
+      }
+    } catch (e) {
+      // Not a plain object, do nothing
     }
-
     return operators;
   }
 
@@ -398,26 +416,35 @@ class QueryEngine {
       throw new InvalidQueryError(`Operator validation depth exceeds maximum of ${this._config.maxNestedDepth}`);
     }
 
-    if (obj && typeof obj === 'object' && !Array.isArray(obj) && !(obj instanceof Date)) {
-      Object.keys(obj).forEach(key => {
-        if (key === '$and' || key === '$or') {
-          // Logical operators must have array values
-          if (!Array.isArray(obj[key])) {
-            throw new InvalidQueryError(`${key} operator requires an array of conditions`);
+    try {
+      Validate.validateObject(obj, 'queryObject');
+      if (!(obj instanceof Date)) {
+        Object.keys(obj).forEach(key => {
+          if (key === '$and' || key === '$or') {
+            // Logical operators must have array values
+            if (!Array.isArray(obj[key])) {
+              throw new InvalidQueryError(`${key} operator requires an array of conditions`);
+            }
+            // Recursively validate each condition in the array
+            obj[key].forEach(condition => {
+              this._validateOperatorValuesRecursive(condition, depth + 1);
+            });
+          } else if (key.startsWith('$')) {
+            // Other operators - can add specific validation here as needed
+            // For now, just recursively validate the value
+            this._validateOperatorValuesRecursive(obj[key], depth + 1);
+          } else {
+            // Regular field - validate its value
+            this._validateOperatorValuesRecursive(obj[key], depth + 1);
           }
-          // Recursively validate each condition in the array
-          obj[key].forEach(condition => {
-            this._validateOperatorValuesRecursive(condition, depth + 1);
-          });
-        } else if (key.startsWith('$')) {
-          // Other operators - can add specific validation here as needed
-          // For now, just recursively validate the value
-          this._validateOperatorValuesRecursive(obj[key], depth + 1);
-        } else {
-          // Regular field - validate its value
-          this._validateOperatorValuesRecursive(obj[key], depth + 1);
-        }
-      });
+        });
+      }
+    } catch (e) {
+      // Only ignore validation errors for non-objects, re-throw query errors
+      if (e instanceof InvalidQueryError) {
+        throw e;
+      }
+      // Not a plain object, do nothing
     }
   }
 

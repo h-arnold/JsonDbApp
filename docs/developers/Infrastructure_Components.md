@@ -446,8 +446,8 @@ All infrastructure components are designed to work together seamlessly:
 class Database {
   constructor(config) {
     // Validate configuration
-    ErrorHandler.validateRequired(config, 'config');
-    ErrorHandler.validateType(config.rootFolderId, 'string', 'rootFolderId');
+    ValidationUtils.validateRequired(config, 'config');
+    ValidationUtils.validateType(config.rootFolderId, 'string', 'rootFolderId');
     
     // Set up logging
     this.logger = GASDBLogger.createComponentLogger('Database');
@@ -487,8 +487,8 @@ class Database {
 class Collection {
   findOne(query) {
     try {
-      ErrorHandler.validateRequired(query, 'query');
-      ErrorHandler.validateType(query, 'object', 'query');
+      ValidationUtils.validateRequired(query, 'query');
+      ValidationUtils.validateType(query, 'object', 'query');
       
       const result = this._performFind(query);
       

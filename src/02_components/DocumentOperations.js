@@ -22,34 +22,12 @@ class DocumentOperations {
   /**
    * Creates a new DocumentOperations instance
    * @param {Object} collection - Collection reference for document storage
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection is invalid
    */
   constructor(collection) {
-    // Validate collection reference
-    if (!collection) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection reference is required');
-    }
-    
-    if (typeof collection !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must be an object');
-    }
-    
-    // Validate collection has required properties and methods
-    if (!collection.hasOwnProperty('_documents') || typeof collection._documents !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _documents property');
-    }
-    
-    if (typeof collection._markDirty !== 'function') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _markDirty method');
-    }
-    
-    if (typeof collection._updateMetadata !== 'function') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collection', collection, 'Collection must have _updateMetadata method');
-    }
-    
     this._collection = collection;
     this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
     this._queryEngine = null; // Lazy-loaded QueryEngine instance
+    this._updateEngine = null; // Lazy-loaded UpdateEngine instance
   }
   
   /**
@@ -70,15 +48,8 @@ class DocumentOperations {
     if (!documentToInsert._id) {
       documentToInsert._id = this._generateDocumentId();
     } else {
-      // Validate provided ID
-      if (typeof documentToInsert._id !== 'string' || documentToInsert._id.trim() === '') {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('_id', documentToInsert._id, 'Document ID must be a non-empty string');
-      }
-      
-      // Check for duplicate ID
-      if (this._collection._documents[documentToInsert._id]) {
-        throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR('document', documentToInsert._id, 'Document with this ID already exists');
-      }
+      this._validateDocumentId(documentToInsert._id);
+      this._checkDuplicateId(documentToInsert._id);
     }
     
     // Insert document
@@ -101,9 +72,7 @@ class DocumentOperations {
    */
   findDocumentById(id) {
     // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
+    Validate.nonEmptyString(id, 'id');
     
     const document = this._collection._documents[id];
     
@@ -143,18 +112,12 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    */
   updateDocument(id, updateData) {
-    // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
-    
-    // Validate update data
-    if (!updateData || typeof updateData !== 'object' || Array.isArray(updateData)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateData', updateData, 'Update data must be an object');
-    }
+    // Validate parameters
+    Validate.nonEmptyString(id, 'id');
+    Validate.object(updateData, 'updateData');
     
     // Check if document exists
-    if (!this._collection._documents[id]) {
+    if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
     }
     
@@ -188,12 +151,10 @@ class DocumentOperations {
    */
   deleteDocument(id) {
     // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
+    Validate.nonEmptyString(id, 'id');
     
     // Check if document exists
-    if (!this._collection._documents[id]) {
+    if (!this.documentExists(id)) {
       return { acknowledged: true, deletedCount: 0 };
     }
     
@@ -227,13 +188,11 @@ class DocumentOperations {
    */
   documentExists(id) {
     // Validate ID
-    if (!id || typeof id !== 'string' || id.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('id', id, 'Document ID must be a non-empty string');
-    }
+    Validate.nonEmptyString(id, 'id');
     
     return this._collection._documents.hasOwnProperty(id);
   }
-  
+
   /**
    * Find first document matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
@@ -241,6 +200,8 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findByQuery(query) {
+    this._validateQuery(query);
+    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -267,6 +228,8 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findMultipleByQuery(query) {
+    this._validateQuery(query);
+    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -293,6 +256,8 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   countByQuery(query) {
+    this._validateQuery(query);
+    
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
     
@@ -342,31 +307,202 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When document is invalid
    */
   _validateDocument(doc) {
-    // Check if document is provided
-    if (!doc) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Document is required');
-    }
+    // Use ValidationUtils for standard validations
+    Validate.required(doc, 'doc');
+    Validate.object(doc, 'doc');
     
-    // Check if document is an object
-    if (typeof doc !== 'object' || Array.isArray(doc)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Document must be an object');
-    }
-    
-    // Check for forbidden fields (reserved prefixes)
-    for (const field in doc) {
-      if (field.startsWith('__')) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
-      }
-    }
-    
-    // Validate _id field if present
-    if (doc._id !== undefined && (typeof doc._id !== 'string' || doc._id.trim() === '')) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', doc._id, 'Document _id must be a non-empty string if provided');
-    }
+    // DocumentOperations-specific validations
+    this._validateDocumentFields(doc);
+    this._validateDocumentIdInDocument(doc._id, doc);
     
     // Additional validation could be added here for:
     // - Maximum document size
     // - Field name restrictions
     // - Data type constraints
+  }
+  
+  /**
+   * Apply update operators to a document by ID
+   * @param {string} id - Document identifier
+   * @param {Object} updateOps - MongoDB-style update operators
+   * @returns {Object} Update result { acknowledged: boolean, modifiedCount: number }
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operators are invalid
+   */
+  updateDocumentWithOperators(id, updateOps) {
+    // Validate parameters
+    Validate.nonEmptyString(id, 'id');
+    Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
+    
+    // Validate operators before checking existence so invalid ops throw
+    this._validateUpdateOperators(updateOps);
+    
+    // Check existence
+    if (!this.documentExists(id)) {
+      return { acknowledged: true, modifiedCount: 0 };
+    }
+    
+    // Get existing document for the update engine
+    const existing = this._collection._documents[id];
+    // Apply operators
+    const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
+    // Persist
+    this._collection._documents[id] = updatedDoc;
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    this._logger.debug('Document updated with operators', { documentId: id, operators: updateOps });
+    return { acknowledged: true, modifiedCount: 1 };
+  }
+
+  /**
+   * Update documents matching a query using operators
+   * @param {Object} query - Filter criteria
+   * @param {Object} updateOps - MongoDB-style update operators
+   * @returns {number} Number of documents updated
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operators are invalid
+   * @throws {ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND} When no documents match
+   */
+  updateDocumentByQuery(query, updateOps) {
+    // Validate parameters
+    Validate.object(query, 'query');
+    Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
+    
+    // Find matches
+    const matches = this.findMultipleByQuery(query);
+    if (matches.length === 0) {
+      throw new ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND(query, this._collection.name);
+    }
+    // Apply updates
+    matches.forEach(doc => this.updateDocumentWithOperators(doc._id, updateOps));
+    return matches.length;
+  }
+
+  /**
+   * Replace a single document by ID
+   * @param {string} id - Document identifier
+   * @param {Object} doc - Replacement document
+   * @returns {Object} Replace result { acknowledged: boolean, modifiedCount: number }
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   */
+  replaceDocument(id, doc) {
+    // Validate parameters
+    Validate.nonEmptyString(id, 'id');
+    Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
+    
+    // Check existence
+    if (!this.documentExists(id)) {
+      return { acknowledged: true, modifiedCount: 0 };
+    }
+    // Prepare replacement
+    const newDoc = ObjectUtils.deepClone(doc);
+    newDoc._id = id;
+    this._validateDocument(newDoc);
+    // Persist
+    this._collection._documents[id] = newDoc;
+    this._collection._updateMetadata();
+    this._collection._markDirty();
+    this._logger.debug('Document replaced by ID', { documentId: id });
+    return { acknowledged: true, modifiedCount: 1 };
+  }
+
+  /**
+   * Replace documents matching a query
+   * @param {Object} query - Filter criteria
+   * @param {Object} doc - Replacement document
+   * @returns {number} Number of documents replaced
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
+   */
+  replaceDocumentByQuery(query, doc) {
+    // Validate parameters
+    Validate.object(query, 'query');
+    Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
+    
+    // Find matches
+    const matches = this.findMultipleByQuery(query);
+    if (matches.length === 0) {
+      return 0;
+    }
+    // Apply replacements
+    matches.forEach(d => this.replaceDocument(d._id, doc));
+    return matches.length;
+  }
+
+  /**
+   * Validate document ID
+   * @private
+   * @param {string} id - Document ID to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
+   */
+  _validateDocumentId(id) {
+    Validate.nonEmptyString(id, '_id');
+  }
+
+  /**
+   * Validate document ID in document context
+   * @private
+   * @param {string|undefined} id - Document ID to validate
+   * @param {Object} doc - Document context for error reporting
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When ID is invalid
+   */
+  _validateDocumentIdInDocument(id, doc) {
+    if (id !== undefined && (typeof id !== 'string' || id.trim() === '')) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', id, 'Document _id must be a non-empty string if provided');
+    }
+  }
+
+  /**
+   * Validate document field names
+   * @private
+   * @param {Object} doc - Document to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When field names are invalid
+   */
+  _validateDocumentFields(doc) {
+    for (const field in doc) {
+      if (field.startsWith('__')) {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
+      }
+    }
+  }
+
+  /**
+   * Check for duplicate document ID
+   * @private
+   * @param {string} id - Document ID to check
+   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When ID already exists
+   */
+  _checkDuplicateId(id) {
+    if (this._collection._documents[id]) {
+      throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR('document', id, 'Document with this ID already exists');
+    }
+  }
+
+  /**
+   * Validate query object for query operations
+   * @private
+   * @param {Object} query - Query to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When query is invalid
+   */
+  _validateQuery(query) {
+    Validate.required(query, 'query');
+    Validate.object(query, 'query');
+  }
+
+  /**
+   * Validate update operators
+   * @private
+   * @param {Object} updateOps - Update operators to validate
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When operators are invalid
+   */
+  _validateUpdateOperators(updateOps) {
+    if (!this._updateEngine) {
+      this._updateEngine = new UpdateEngine();
+    }
+    
+    for (const operator in updateOps) {
+      if (!this._updateEngine._operatorHandlers[operator]) {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(updateOps, `Unsupported update operator: ${operator}`);
+      }
+    }
   }
 }

@@ -182,7 +182,10 @@ class InvalidFileFormatError extends GASDBError {
  */
 class InvalidArgumentError extends GASDBError {
   constructor(argumentName, providedValue = null, reason = null) {
-    const message = `Invalid argument: ${argumentName}`;
+    let message = `Invalid argument: ${argumentName}`;
+    if (reason) {
+      message += ` - ${reason}`;
+    }
     super(message, 'INVALID_ARGUMENT', { argumentName, providedValue, reason });
   }
 }
@@ -264,9 +267,8 @@ class ErrorHandler {
    * @throws {Error} If value is null or undefined
    */
   static validateRequired(value, name) {
-    if (value === null || value === undefined) {
-      throw new Error(`Required parameter ${name} is null or undefined`);
-    }
+    // Delegate to ValidationUtils for standardised validation
+    Validate.required(value, name);
   }
   
   /**
