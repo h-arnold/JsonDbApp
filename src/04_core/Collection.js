@@ -295,15 +295,12 @@ class Collection {
       this._validateFilter(filter, 'updateOne');
     }
     
+    // Validate update object structure - forbid mixing operators and document fields
+    Validate.validateUpdateObject(update, 'update');
+    
     // Determine if this is an update operation or document replacement
     const updateKeys = Object.keys(update);
     const hasOperators = updateKeys.some(key => key.startsWith('$'));
-    const hasNonOperators = updateKeys.some(key => !key.startsWith('$'));
-    
-    // Validate that we don't mix operators and non-operators
-    if (hasOperators && hasNonOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('update', update, 'Cannot mix update operators with document fields');
-    }
     
     const filterKeys = Object.keys(filter);
     
@@ -406,18 +403,12 @@ class Collection {
     // Use Validate for update validation - disallow empty objects
     Validate.object(update, 'update', false);
     
-    // Validate that update contains only operators
+    // Validate update object structure - require operators only
+    Validate.validateUpdateObject(update, 'update', { requireOperators: true });
+    
+    // Determine operator presence
     const updateKeys = Object.keys(update);
     const hasOperators = updateKeys.some(key => key.startsWith('$'));
-    const hasNonOperators = updateKeys.some(key => !key.startsWith('$'));
-    
-    if (!hasOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('update', update, 'updateMany requires update operators (e.g. {$set: {field: value}})');
-    }
-    
-    if (hasNonOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('update', update, 'Cannot mix update operators with document fields');
-    }
     
     // Find all matching documents first
     const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
@@ -464,12 +455,7 @@ class Collection {
     Validate.object(doc, 'doc', false);
     
     // Validate that replacement document contains no operators
-    const docKeys = Object.keys(doc);
-    for (const key of docKeys) {
-      if (key.startsWith('$')) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Replacement document cannot contain update operators');
-      }
-    }
+    Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
     
     // Determine if this is a filter or ID
     const isIdFilter = typeof filterOrId === 'string';

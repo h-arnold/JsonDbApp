@@ -310,4 +310,43 @@ class Validate {
   static isPlainObject(value) {
     return value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
   }
+
+  /**
+   * Validate update object structure for MongoDB-style operations
+   * @param {Object} update - Update object to validate
+   * @param {string} paramName - Parameter name for error messages
+   * @param {Object} options - Validation options
+   * @param {boolean} options.allowMixed - Whether to allow mixing operators and fields (default: false)
+   * @param {boolean} options.requireOperators - Whether operators are required (default: false)
+   * @param {boolean} options.forbidOperators - Whether operators are forbidden (default: false)
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When update structure is invalid
+   */
+  static validateUpdateObject(update, paramName, options = {}) {
+    this.object(update, paramName, false); // Don't allow empty objects
+    
+    const {
+      allowMixed = false,
+      requireOperators = false,
+      forbidOperators = false
+    } = options;
+    
+    const updateKeys = Object.keys(update);
+    const hasOperators = updateKeys.some(key => key.startsWith('$'));
+    const hasNonOperators = updateKeys.some(key => !key.startsWith('$'));
+    
+    // Check for forbidden operators
+    if (forbidOperators && hasOperators) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, update, 'cannot contain update operators');
+    }
+    
+    // Check for required operators
+    if (requireOperators && !hasOperators) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, update, 'requires update operators (e.g. {$set: {field: value}})');
+    }
+    
+    // Check for mixed operators and fields
+    if (!allowMixed && hasOperators && hasNonOperators) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, update, 'cannot mix update operators with document fields');
+    }
+  }
 }
