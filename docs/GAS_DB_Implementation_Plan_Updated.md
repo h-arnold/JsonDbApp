@@ -103,352 +103,338 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 - Consistency improvements: standardised British English (`initialise`), refined error handling, added minimum lock timeout.
 - Breaking changes: deprecated `toObject()` aliases removed; `CollectionMetadata` constructor signatures updated.
 
-## Section 7: Update Engine and Document Modification
+## Section 7: Update Engine and Document Modification (Summary)
 
-### ✅ **MOSTLY COMPLETE - UpdateEngine & DocumentOperations Complete, Minor Query Issues**
-
-**Implementation Summary:**
-- ✅ UpdateEngine class fully implemented with core MongoDB-compatible operators
-- ✅ 46/46 UpdateEngine test cases passing (100% pass rate)
-- ✅ DocumentOperations enhancement complete with all 4 new methods implemented
-- ✅ 32/32 DocumentOperations tests passing (100% pass rate)
-- ✅ All QueryEngine integration tests passing (100% pass rate)
-- ⏳ Collection API enhancement pending
-
-### Achievements
-
-**Core Update Operators Implemented:**
-- ✅ **`$set`** - Sets field values with deep path creation (`a.b.c` notation)
-- ✅ **`$inc`** - Increments numeric values (positive and negative)
-- ✅ **`$mul`** - Multiplies numeric values
-- ✅ **`$min`** - Sets minimum values (only if new value is smaller)
-- ✅ **`$max`** - Sets maximum values (only if new value is larger)
-- ✅ **`$unset`** - Removes fields (simple and nested paths)
-- ✅ **`$push`** - Adds elements to arrays
-- ✅ **`$pull`** - Removes matching elements from arrays
-- ✅ **`$addToSet`** - Adds unique elements to arrays (no duplicates)
-
-**Architecture Features:**
-- ✅ **Immutable Operations** - Original documents remain unmodified
-- ✅ **Deep Path Support** - Automatic nested object creation
-- ✅ **Centralised Validation** - Clean, reusable validation methods
-- ✅ **Robust Error Handling** - Consistent error patterns and messages
-- ✅ **Performance Optimised** - Efficient field access and modification
-
-### Implementation Steps Completed
-
-1. **✅ Update Engine Implementation**
-   - UpdateEngine class with document modification logic
-   - Field access and modification utilities (`_getFieldValue`, `_setFieldValue`)
-   - Nested object field updates with automatic path creation
-   - Comprehensive validation and sanitisation
-
-2. **✅ Field Modification Operators**
-   - `$set` operator with deep path creation
-   - `$inc` operator with numeric validation
-   - `$mul` operator with numeric validation  
-   - `$min` operator with comparison logic
-   - `$max` operator with comparison logic
-   - Full nested field update support
-
-3. **✅ Field Removal Operators**
-   - `$unset` operator for field removal
-   - Nested field removal support (`_unsetFieldValue`)
-   - Document structure integrity maintained
-
-4. **✅ Array Update Operators**
-   - `$push` operator for array element addition
-   - `$pull` operator for array element removal (with deep equality)
-   - `$addToSet` operator for unique element addition
-   - Array creation when field doesn't exist
-
-5. **✅ Validation Architecture**
-   - `_validateApplyOperatorsInputs()` for main method validation
-   - `_validateNumericValue()` for arithmetic operations
-   - `_validateOperationsNotEmpty()` for operation object validation
-   - Consistent error handling with descriptive messages
-
-3. **✅ Field Removal Operators**
-   - ✅ `$unset` operator for field removal
-   - ✅ Nested field removal support (`_unsetFieldValue`)
-   - ✅ Document structure integrity maintained
-
-4. **✅ Array Update Operators**
-   - ✅ `$push` operator for array element addition
-   - ✅ `$pull` operator for array element removal (with deep equality)
-   - ✅ `$addToSet` operator for unique element addition
-   - ✅ Array creation when field doesn't exist
-
-5. **✅ Validation Architecture**
-   - ✅ `_validateApplyOperatorsInputs()` for main method validation
-   - ✅ `_validateNumericValue()` for arithmetic operations
-   - ✅ `_validateOperationsNotEmpty()` for operation object validation
-   - ✅ Consistent error handling with descriptive messages
-
-6. **✅ DocumentOperations Enhancement** *(Add advanced update capabilities - RED & GREEN phase complete)*
-   - ✅ All tests created and implemented for `updateDocumentByQuery(query, updateOperations)`, `updateDocumentWithOperators(id, updateOperations)`, `replaceDocument(id, doc)`, `replaceDocumentByQuery(query, doc)`
-   - ✅ All DocumentOperations Query Enhancement and integration tests now pass (100% pass rate)
-   - ✅ UpdateEngine fully integrated for all complex update operations
-
-7. **✅ Collection API Enhancement** *(Complete MongoDB-style updates - COMPLETE)*
-   - ✅ RED phase test cases created for all Collection API Update Tests  
-   - ✅ GREEN phase implementation complete
-   - ✅ Enhanced `updateOne(idOrFilter, update)` to support update operators
-   - ✅ Added `updateMany(filter, update)` for multiple document updates
-   - ✅ Added `replaceOne(idOrFilter, doc)` for document replacement
-   - ✅ Support both document replacement and operator-based updates
-   - ✅ `deleteOne()` and `countDocuments()` methods implemented
-   - ✅ All legacy and new tests updated for new behaviour
-   - ✅ **All tests now pass (100% pass rate)**
-
-### Integration and API Enhancements
-
-- Dependency Injection:
-  - `DocumentOperations` constructor accepts `UpdateEngine` and `FileService`.
-  - `Collection` constructor injects `DocumentOperations`, `MasterIndex` and `FileOperations`.
-
-- Update Flow:
-  1. **Retrieve**: `Collection.updateOne()` normalises `filterOrId` and delegates to `DocumentOperations`.
-  2. **Fetch Document**: `DocumentOperations.loadDocumentById(id)` loads the current document.
-  3. **Apply Operators**: Document passed to `UpdateEngine.applyOperators(document, updateOps)`.
-  4. **Persist Changes**: Modified document serialized via `ObjectUtils.serialise()` and saved through `FileService.saveDocument(collectionName, updatedDocument)`.
-  5. **MasterIndex Update**: On successful save, `MasterIndex.markCollectionUpdated(collectionName)`.
-  6. **Logging**: `GASDBLogger.info()` records the update event with details.
-
-- API Method Signatures:
-  - In `src/components/DocumentOperations.js`:
-
-    ```js
-    /**
-     * Apply update operators to a document by ID
-     * @param {string} id - Document identifier
-     * @param {Object} updateOps - MongoDB-style update operators
-     * @throws {InvalidQueryError} If operators are invalid
-     */
-    updateDocumentWithOperators(id, updateOps)
-
-    /**
-     * Update documents matching a query using operators
-     * @param {Object} query - Filter criteria
-     * @param {Object} updateOps - MongoDB-style update operators
-     * @returns {number} Number of documents updated
-     */
-    updateDocumentByQuery(query, updateOps)
-    ```
-
-  - In `src/core/Collection.js`:
-
-    ```js
-    /**
-     * Update a single document by ID or filter
-     * @param {string|Object} filterOrId - Document ID or filter criteria
-     * @param {Object} update - Operators or replacement document
-     */
-    updateOne(filterOrId, update)
-
-    /**
-     * Update multiple documents matching a filter
-     * @param {Object} filter - Filter criteria
-     * @param {Object} update - MongoDB-style update operators
-     * @returns {number} Number of documents updated
-     */
-    updateMany(filter, update)
-
-    /**
-     * Replace a single document by ID or filter
-     * @param {string|Object} filterOrId - Document ID or filter criteria
-     * @param {Object} doc - Replacement document
-     */
-    replaceOne(filterOrId, doc)
-    ```
-
-- Error Handling:
-  - Invalid or malformed update operators throw `InvalidQueryError` (`INVALID_QUERY`).
-  - Save conflicts or lock acquisition failures throw `LockTimeoutError` (`LOCK_TIMEOUT`).
-
-### Test Cases
-
-1.  **UpdateEngine Tests** (13 cases) - **✅ COMPLETE** 
-    *(13/13 passing - 100% pass rate)*
-    - ✅ testUpdateEngineSetStringField
-    - ✅ testUpdateEngineSetCreatesDeepPath
-    - ✅ testUpdateEngineIncPositive
-    - ✅ testUpdateEngineIncNegative
-    - ✅ testUpdateEngineMulNumber
-    - ✅ testUpdateEngineMinNumeric
-    - ✅ testUpdateEngineMaxValue
-    - ✅ testUpdateEngineUnsetSimpleField
-    - ✅ testUpdateEngineUnsetNestedField
-    - ✅ testUpdateEnginePushArrayValue
-    - ✅ testUpdateEnginePullArrayValue
-    - ✅ testUpdateEngineAddToSetUnique
-    - ✅ testUpdateEngineInvalidOperatorThrows
-
-2.  **Field Modification Tests** (16 cases) - **✅ COMPLETE**
-    *(16/16 passing - 100% pass rate)*
-    - ✅ testSetVariousDataTypes
-    - ✅ testSetOnNonExistentTopLevelField
-    - ✅ testIncOnNonNumericThrows
-    - ✅ testMulOnNonNumericThrows
-    - ✅ testMinOnNonComparableThrows
-    - ✅ testMaxOnNonComparableThrows
-    - ✅ testMultipleOperatorsInSingleUpdate
-    - ✅ testSetCanChangeFieldType
-    - ✅ testNumericOperatorsPreserveNumericType
-    - ✅ testSetNullAndUndefinedBehaviour
-    - ✅ testIncExtremeValues
-    - ✅ testMinOnEqualValueNoChange
-    - ✅ testMaxOnEqualValueNoChange
-    - ✅ testEmptyUpdateObjectThrows
-    - ✅ testUpdateObjectWithNoDollarOperatorsThrows
-    - ✅ testNestedFieldUpdateDeepPath *(covered by testUpdateEngineSetCreatesDeepPath)*
-
-3.  **Field Removal Tests** (6 cases) - **✅ COMPLETE**
-    *(6/6 passing - 100% pass rate)*
-    - ✅ testUnsetSimpleField
-    - ✅ testUnsetNestedField
-    - ✅ testUnsetNonExistentFieldNoError
-    - ✅ testUnsetArrayElementByIndex
-    - ✅ testUnsetDeepNestedPath
-    - ✅ testDocumentStructureAfterUnset
-
-5.  **Array Update Tests** (12 cases) - **✅ COMPLETE (12/12 PASSING)**
-    *(100% pass rate - 46/46 UpdateEngine tests passing)*
-
-    **✅ PASSING (12 cases):**
-    - ✅ testPushSingleValue
-    - ✅ testPullByValueEquality
-    - ✅ testAddToSetUniqueOnly
-    - ✅ testPushNestedArray
-    - ✅ testPullNestedArray
-    - ✅ testPushMultipleValues
-    - ✅ testAddToSetMultipleUnique
-    - ✅ testAddToSetDuplicatesIgnored
-    - ✅ testArrayPositionSpecifier
-    - ✅ testPushOnNonArrayThrows
-    - ✅ testPullOnNonArrayThrows
-    - ✅ testAddToSetOnNonArrayThrows
-    
-    **UpdateEngine Implementation Gaps:** None
-
-6.  **DocumentOperations Update Tests** (11 cases) - **✅ COMPLETE** 
-    *(11/11 passing - 100% pass rate - GREEN phase successful)*
-
-    **✅ PASSING (11 cases - all functionality implemented):**
-    - ✅ testUpdateExistingDocumentById (existing functionality)
-    - ✅ testReturnErrorResultWhenUpdatingNonExistentDocument (existing functionality) 
-    - ✅ testThrowErrorWhenUpdatingWithInvalidParameters (existing functionality)
-    - ✅ testUpdateDocumentWithOperatorsById (`updateDocumentWithOperators` ✅ implemented)
-    - ✅ testUpdateDocumentByQuerySingleMatch (`updateDocumentByQuery` ✅ implemented)
-    - ✅ testUpdateDocumentByQueryMultipleMatches (`updateDocumentByQuery` ✅ implemented)
-    - ✅ testUpdateDocumentByQueryNoMatchesThrows (`updateDocumentByQuery` ✅ implemented)
-    - ✅ testReplaceDocumentById (`replaceDocument` ✅ implemented)
-    - ✅ testReplaceDocumentByQuery (`replaceDocumentByQuery` ✅ implemented)
-    - ✅ testDocumentOperationsIntegrationWithUpdateEngine (`updateDocumentWithOperators` ✅ implemented)
-    - ✅ testUpdateDocumentInvalidOperators (`updateDocumentWithOperators` ✅ implemented)
-
-    **✅ GREEN Phase Complete:** All 4 missing methods successfully implemented in DocumentOperations class
-
-7. **Collection API Update Tests** (12 cases) - **✅ ALL TESTS PASSING & IMPLEMENTED**
-
-    **🟢 ALL TESTS PASSING:**
-    - ✅ testCollectionUpdateOneById (existing - passing)
-    - ✅ testCollectionUpdateOneByFilter (existing - passing)
-    - ✅ testCollectionUpdateManyReturnsModifiedCount (implemented & passing)
-    - ✅ testCollectionReplaceOneById (implemented & passing)
-    - ✅ testCollectionReplaceOneByFilter (implemented & passing)
-    - ✅ testCollectionUpdateReturnsModifiedCount (covered by existing tests)
-    - ✅ testCollectionReplaceCorrectDocument (implemented & passing)
-    - ✅ testCollectionUpdateWithNoMatches (existing as testCollectionUpdateOneNoMatch)
-    - ✅ testCollectionUpdateWithMultipleOperators (CORRECT - passing: tests existing OperationError behaviour)
-    - ✅ testCollectionErrorPropagation (implemented & passing)
-    - ✅ testCollectionLockingDuringUpdate (implemented & passing)
-    - ✅ testCollectionUpdateLogging (implemented & passing)
-
-    **STATUS:**
-    - All RED phase tests converted to GREEN: all methods implemented, all tests pass
-    - Full MongoDB-style update/replace API achieved
-    - No outstanding TypeError or negative test failures
-
-    **Summary:**
-    - 🟢 All Collection API update methods implemented and tested
-    - 🟢 100% pass rate for Collection API update tests
-    - 🟢 No further action required for this section
-
-### File Updates Required
-
-**New Files:**
-
-- `src/components/UpdateEngine.js`
-- `tests/unit/UpdateEngineTest.js`
-
-**Enhanced Files:**
-
-- `src/components/DocumentOperations.js` - Add advanced update methods
-- `src/core/Collection.js` - Enhance update API methods
-- `tests/unit/DocumentOperationsTest.js` - Add update operation tests
-- `tests/unit/CollectionTest.js` - Add advanced update tests
-
-### Completion Criteria
-
-- All test cases pass
-- Update engine can modify documents using MongoDB-style operators
-- Field modification works with various data types and nested structures
-- Field removal maintains document integrity
-- Array operations work correctly with various data scenarios
-- DocumentOperations supports all advanced update methods
-- Collection API provides full MongoDB-compatible update functionality
-- UpdateEngine integrates seamlessly with existing components
-
+- All MongoDB-style update operators are fully implemented:
+  - Field modifications: $set, $inc, $mul, $min, $max
+  - Field removal: $unset
+  - Array operations: $push, $pull, $addToSet
+- DocumentOperations now provides advanced update methods:
+  - updateDocumentWithOperators(id, updateOps)
+  - updateDocumentByQuery(query, updateOps)
+  - replaceDocument(id, doc) and replaceDocumentByQuery(query, doc)
+- The Collection API supports:
+  - updateOne(idOrFilter, update)
+  - updateMany(filter, update)
+  - replaceOne(idOrFilter, doc)
+  - deleteOne(filter) and countDocuments(filter)
+- Update flow:
+  1. Retrieve the document via filter or ID.
+  2. Apply update operators via UpdateEngine.
+  3. Persist changes using FileService.
+  4. Update the master index with MasterIndex.
+  5. Log the update with GASDBLogger.
+- All Section 7 tests pass, confirming a fully operational MongoDB-compatible update system.
 
 ## Section 8: Cross-Instance Coordination
 
 ### Objectives
 
-- Implement cross-instance coordination
-- Test concurrent operations
-- Ensure data consistency
+- Implement cross-instance coordination using MasterIndex virtual locking
+- Test concurrent operations across multiple script instances
+- Ensure data consistency and conflict resolution
+- Integrate Collection operations with MasterIndex coordination
+
+### Requirements Analysis
+
+Based on the PRD and existing codebase, Section 8 focuses on:
+
+1. **Virtual Locking Protocol**: ScriptProperties-based locking via MasterIndex to prevent concurrent modifications
+2. **Conflict Detection**: Modification tokens to identify when data has been changed by another instance
+3. **Atomic Operations**: Collection operations must be wrapped in lock acquisition/release cycles
+4. **Retry Mechanisms**: Handle lock timeouts and conflicts gracefully
+5. **Data Consistency**: Ensure Collection metadata stays synchronised with MasterIndex
 
 ### Implementation Steps
 
-1. **Coordination Implementation**
-   - Integrate MasterIndex with Collection operations
-   - Implement lock acquisition before modifications
-   - Implement conflict detection during saves
+#### 1. Collection Coordination Integration
 
-2. **Concurrent Operation Handling**
-   - Implement retry mechanism
-   - Handle lock timeouts
-   - Resolve conflicts
+**Current State**: Collection class performs operations without MasterIndex coordination
+**Required Changes**:
+- Integrate Collection._saveData() with MasterIndex lock acquisition
+- Add modification token validation before saves
+- Implement conflict detection and retry logic
+- Update Collection operations to use virtual locking protocol
 
-3. **Data Consistency**
-   - Ensure atomic operations
-   - Maintain collection metadata
-   - Synchronize master index
+**Key Components**:
+- Collection._acquireOperationLock(operationId)
+- Collection._releaseOperationLock(operationId)
+- Collection._detectConflict(expectedToken)
+- Collection._resolveConflict(strategy)
+- Collection._saveDataWithCoordination()
+
+#### 2. Modification Protocol Implementation
+
+**Lock Acquisition Pattern**:
+```javascript
+const operationId = IdGenerator.generateId();
+if (!this._database._masterIndex.acquireLock(this._name, operationId)) {
+  throw new LockTimeoutError('Collection', this._name);
+}
+try {
+  // Perform operations
+  this._validateModificationToken();
+  // Apply changes
+  this._updateMetadata();
+  this._markDirty();
+  this._saveData();
+  this._updateMasterIndexMetadata();
+} finally {
+  this._database._masterIndex.releaseLock(this._name, operationId);
+}
+```
+
+**Conflict Detection Pattern**:
+```javascript
+const currentToken = this._collectionMetadata.getModificationToken();
+const hasConflict = this._database._masterIndex.hasConflict(this._name, currentToken);
+if (hasConflict) {
+  this._resolveConflict('RELOAD_AND_RETRY');
+}
+```
+
+#### 3. Enhanced Error Handling
+
+**New Error Types**:
+- LockAcquisitionFailureError: When virtual lock cannot be acquired
+- ModificationConflictError: When modification token conflicts detected
+- ConcurrentAccessError: When multiple operations conflict
+- CoordinationTimeoutError: When coordination operations timeout
+
+#### 4. Retry and Recovery Mechanisms
+
+**Retry Logic**:
+- Lock acquisition: Exponential backoff with configurable max attempts
+- Conflict resolution: Automatic reload and retry for read operations
+- Timeout handling: Graceful degradation with user feedback
+
+**Recovery Scenarios**:
+- Expired locks: Automatic cleanup and retry
+- Stale data: Reload from Drive and retry operation
+- Partial failures: Rollback mechanisms where possible
 
 ### Test Cases
 
-1. **Coordination Tests**
-   - Test lock acquisition during operations
-   - Test lock release after operations
-   - Test modification token updates
+#### Test Suite 1: Virtual Locking Integration (15 tests)
 
-2. **Concurrent Operation Tests**
-   - Test simultaneous read operations
-   - Test simultaneous write operations
-   - Test read-during-write operations
+**1.1 Lock Acquisition Tests (5 tests)**
+- testCollectionAcquiresLockBeforeModification()
+- testCollectionHandlesLockAcquisitionFailure()
+- testCollectionReleasesLockAfterOperation()
+- testCollectionReleasesLockOnError()
+- testCollectionHandlesLockTimeout()
 
-3. **Data Consistency Tests**
-   - Test operation atomicity
-   - Test metadata consistency
-   - Test recovery from failures
+**1.2 Lock Coordination Tests (5 tests)**
+- testMultipleCollectionInstancesLockCoordination()
+- testLockExpirationAndCleanup()
+- testLockOperationIdValidation()
+- testLockStatusReflectedInMetadata()
+- testLockPersistenceAcrossInstances()
+
+**1.3 Lock Recovery Tests (5 tests)**
+- testExpiredLockAutomaticCleanup()
+- testLockRecoveryAfterScriptFailure()
+- testConcurrentLockCleanupOperations()
+- testLockValidationDuringOperations()
+- testLockConsistencyAfterErrors()
+
+#### Test Suite 2: Modification Token Management (12 tests)
+
+**2.1 Token Generation and Validation (4 tests)**
+- testModificationTokenGeneratedOnCollectionCreate()
+- testModificationTokenUpdatedOnDataChange()
+- testModificationTokenValidationBeforeSave()
+- testModificationTokenFormatValidation()
+
+**2.2 Conflict Detection (4 tests)**
+- testConflictDetectionWithStaleToken()
+- testConflictDetectionWithValidToken()
+- testConflictDetectionAcrossInstances()
+- testConflictDetectionWithExpiredToken()
+
+**2.3 Token Persistence (4 tests)**
+- testTokenPersistenceInMasterIndex()
+- testTokenPersistenceInCollectionMetadata()
+- testTokenSynchronisationBetweenSources()
+- testTokenConsistencyAfterReload()
+
+#### Test Suite 3: Concurrent Operation Handling (18 tests)
+
+**3.1 Read Operation Concurrency (6 tests)**
+- testConcurrentReadOperationsAllowed()
+- testReadDuringWriteOperation()
+- testReadOperationWithoutLocking()
+- testConcurrentFindOperations()
+- testConcurrentCountOperations()
+- testConcurrentMetadataAccess()
+
+**3.2 Write Operation Coordination (6 tests)**
+- testConcurrentWriteOperationsPrevented()
+- testWriteOperationBlocksOtherWrites()
+- testInsertOperationRequiresLock()
+- testUpdateOperationRequiresLock()
+- testDeleteOperationRequiresLock()
+- testReplaceOperationRequiresLock()
+
+**3.3 Mixed Operation Scenarios (6 tests)**
+- testReadDuringWriteOperationBlocking()
+- testWriteAfterReadOperationCompletion()
+- testConcurrentInsertOperationsHandling()
+- testConcurrentUpdateSameDocument()
+- testConcurrentDeleteSameDocument()
+- testMixedOperationSequencing()
+
+#### Test Suite 4: Data Consistency and Atomicity (15 tests)
+
+**4.1 Atomic Operation Tests (5 tests)**
+- testInsertOperationAtomicity()
+- testUpdateOperationAtomicity()
+- testDeleteOperationAtomicity()
+- testBatchOperationAtomicity()
+- testOperationRollbackOnFailure()
+
+**4.2 Metadata Consistency (5 tests)**
+- testCollectionMetadataConsistency()
+- testMasterIndexMetadataSynchronisation()
+- testDocumentCountConsistency()
+- testTimestampConsistency()
+- testLockStatusConsistency()
+
+**4.3 Cross-Instance Consistency (5 tests)**
+- testConsistencyBetweenCollectionInstances()
+- testConsistencyAfterInstanceRestart()
+- testConsistencyWithConcurrentModifications()
+- testConsistencyAfterConflictResolution()
+- testConsistencyWithPartialFailures()
+
+#### Test Suite 5: Conflict Resolution (12 tests)
+
+**5.1 Conflict Detection Scenarios (4 tests)**
+- testConflictDetectionOnSave()
+- testConflictDetectionOnMetadataUpdate()
+- testConflictDetectionWithConcurrentWrites()
+- testConflictDetectionWithExpiredData()
+
+**5.2 Conflict Resolution Strategies (4 tests)**
+- testLastWriteWinsResolution()
+- testReloadAndRetryResolution()
+- testManualConflictResolution()
+- testConflictResolutionWithUserChoice()
+
+**5.3 Recovery After Conflicts (4 tests)**
+- testDataIntegrityAfterConflictResolution()
+- testMetadataConsistencyAfterResolution()
+- testOperationRetryAfterResolution()
+- testConflictHistoryTracking()
+
+#### Test Suite 6: Error Handling and Recovery (15 tests)
+
+**6.1 Lock-Related Errors (5 tests)**
+- testLockTimeoutErrorHandling()
+- testLockAcquisitionFailureHandling()
+- testLockReleaseFailureHandling()
+- testExpiredLockErrorHandling()
+- testInvalidOperationIdErrorHandling()
+
+**6.2 Coordination Errors (5 tests)**
+- testMasterIndexUnavailableError()
+- testScriptPropertiesTimeoutError()
+- testCoordinationProtocolError()
+- testConflictResolutionError()
+- testModificationTokenValidationError()
+
+**6.3 Recovery Mechanisms (5 tests)**
+- testAutomaticRetryMechanism()
+- testGracefulDegradationHandling()
+- testErrorRecoveryAfterTimeout()
+- testDataReloadOnConflict()
+- testOperationRollbackCapabilities()
+
+#### Test Suite 7: Performance and Scalability (9 tests)
+
+**7.1 Lock Performance (3 tests)**
+- testLockAcquisitionPerformance()
+- testLockContentionHandling()
+- testLockOperationThroughput()
+
+**7.2 Coordination Overhead (3 tests)**
+- testCoordinationOverheadMeasurement()
+- testMasterIndexOperationPerformance()
+- testScriptPropertiesAccessOptimisation()
+
+**7.3 Scalability Limits (3 tests)**
+- testConcurrentInstancesLimit()
+- testLockTimeoutScaling()
+- testCoordinationPerformanceWithLoad()
+
+### Implementation Requirements
+
+#### Collection Class Enhancements
+
+**New Methods**:
+- _acquireOperationLock(operationId): boolean
+- _releaseOperationLock(operationId): boolean
+- _validateModificationToken(): boolean
+- _detectConflict(): boolean
+- _resolveConflict(strategy): void
+- _saveDataWithCoordination(): void
+- _reloadFromDrive(): void
+- _updateMasterIndexMetadata(): void
+
+**Modified Methods**:
+- insertOne(): Add lock coordination
+- find/findOne(): Consider read locks if needed
+- updateOne/updateMany(): Add lock coordination
+- deleteOne(): Add lock coordination
+- replaceOne(): Add lock coordination
+- save(): Use coordinated save method
+- _saveData(): Add conflict detection
+
+#### Configuration Options
+
+**Database Configuration**:
+- coordinationEnabled: boolean (default: true)
+- lockTimeoutMs: number (default: 30000)
+- retryAttempts: number (default: 3)
+- retryDelayMs: number (default: 1000)
+- conflictResolutionStrategy: string (default: 'LAST_WRITE_WINS')
+
+#### Error Classes
+
+**New Error Types**:
+- LockAcquisitionFailureError
+- ModificationConflictError  
+- ConcurrentAccessError
+- CoordinationTimeoutError
+- ConflictResolutionError
 
 ### Completion Criteria
 
-- All test cases pass
-- Cross-instance coordination prevents data corruption
-- Concurrent operations are handled safely
-- Data consistency is maintained across instances
+**Functional Requirements**:
+- ✅ All 96 test cases pass (15+12+18+15+12+15+9)
+- ✅ Virtual locking prevents data corruption
+- ✅ Modification tokens detect conflicts correctly
+- ✅ Atomic operations maintain data integrity
+- ✅ Conflict resolution works reliably
+- ✅ Error handling provides graceful degradation
+
+**Performance Requirements**:
+- Lock acquisition time < 500ms under normal conditions
+- Coordination overhead < 10% for single-instance operations
+- System handles up to 5 concurrent instances reliably
+- Lock timeout cleanup occurs within 1 second of expiration
+
+**Integration Requirements**:
+- Full compatibility with existing Collection API
+- Seamless integration with MasterIndex
+- Backwards compatibility with non-coordinated mode
+- Comprehensive error reporting and logging
+
+**Documentation Requirements**:
+- Updated Collection developer documentation
+- Cross-instance coordination guide
+- Troubleshooting guide for coordination issues
+- Performance tuning recommendations
 
 ## Section 9: Integration and System Testing
 
