@@ -523,6 +523,100 @@ class Collection {
   }
 
   /**
+   * Delete a single document by filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries, _id queries, and empty filter)
+   * @returns {Object} {deletedCount: number, acknowledged: boolean}
+   * @throws {InvalidArgumentError} For invalid filters
+   */
+  deleteOne(filter = {}) {
+    this._ensureLoaded();
+    this._validateFilter(filter, 'deleteOne');
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Empty filter {} - delete first document found
+    if (filterKeys.length === 0) {
+      const allDocs = this._documentOperations.findAllDocuments();
+      if (allDocs.length === 0) {
+        return {
+          deletedCount: 0,
+          acknowledged: true
+        };
+      }
+      
+      const result = this._documentOperations.deleteDocument(allDocs[0]._id);
+      
+      if (result.deletedCount > 0) {
+        this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+        this._markDirty();
+      }
+      
+      return {
+        deletedCount: result.deletedCount,
+        acknowledged: true
+      };
+    }
+    
+    // ID filter {_id: "id"} - use direct lookup for performance
+    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+      const result = this._documentOperations.deleteDocument(filter._id);
+      
+      if (result.deletedCount > 0) {
+        this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+        this._markDirty();
+      }
+      
+      return {
+        deletedCount: result.deletedCount,
+        acknowledged: true
+      };
+    }
+    
+    // Field-based or complex queries - use QueryEngine
+    const matchingDoc = this._documentOperations.findByQuery(filter);
+    
+    if (!matchingDoc) {
+      return {
+        deletedCount: 0,
+        acknowledged: true
+      };
+    }
+    
+    const result = this._documentOperations.deleteDocument(matchingDoc._id);
+    
+    if (result.deletedCount > 0) {
+      this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+      this._markDirty();
+    }
+    
+    return {
+      deletedCount: result.deletedCount,
+      acknowledged: true
+    };
+  }
+
+  /**
+   * Count documents matching filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries and empty filter)
+   * @returns {number} Count of matching documents
+   * @throws {InvalidArgumentError} For invalid filters
+   */
+  countDocuments(filter = {}) {
+    this._ensureLoaded();
+    this._validateFilter(filter, 'countDocuments');
+    
+    const filterKeys = Object.keys(filter);
+    
+    // Empty filter {} - count all documents
+    if (filterKeys.length === 0) {
+      return this._documentOperations.countDocuments();
+    }
+    
+    // Field-based or complex queries - use QueryEngine
+    return this._documentOperations.countByQuery(filter);
+  }
+
+  /**
    * Get collection name
    * @returns {string} Collection name
    */

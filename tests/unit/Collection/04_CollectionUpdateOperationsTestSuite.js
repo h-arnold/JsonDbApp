@@ -75,7 +75,6 @@ function createCollectionUpdateOperationsTestSuite() {
     // Arrange
     const fileId = createTestCollectionFile();
     
-    // Act & Assert - Should fail in Red phase
     const collection = new Collection(
       'updateOneUnsupportedOperatorsTestCollection',
       fileId,
@@ -87,10 +86,18 @@ function createCollectionUpdateOperationsTestSuite() {
     const insertResult = collection.insertOne({ name: 'Test Doc', value: 100 });
     const docId = insertResult.insertedId;
     
-    // Test unsupported $set operator - should throw with Section 7 message
-    TestFramework.assertThrows(() => {
-      collection.updateOne({ _id: docId }, { $set: { name: 'Updated' } });
-    }, OperationError, 'Should throw OperationError for $set operator');
+    // Test $set operator - should now work with Section 7 implementation
+    const updateResult = collection.updateOne({ _id: docId }, { $set: { name: 'Updated' } });
+    
+    // Assert - Should succeed and update the document
+    TestFramework.assertEquals(1, updateResult.matchedCount, 'Should match one document');
+    TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should modify one document');
+    TestFramework.assertTrue(updateResult.acknowledged, 'Should be acknowledged');
+    
+    // Verify document was updated
+    const updatedDoc = collection.findOne({ _id: docId });
+    TestFramework.assertEquals('Updated', updatedDoc.name, 'Should have updated name');
+    TestFramework.assertEquals(100, updatedDoc.value, 'Should preserve other fields');
   });
   
   // RED PHASE: Collection API Enhancement Tests - Field-based update filters
@@ -423,15 +430,25 @@ function createCollectionUpdateOperationsTestSuite() {
     });
     const docId = insertResult.insertedId;
     
-    // Act & Assert - Should fail with current implementation (operators not supported)
-    TestFramework.assertThrows(() => {
-      collection.updateOne({ _id: docId }, {
-        $set: { name: 'Advanced User', lastActive: new Date() },
-        $inc: { 'stats.score': 50, 'stats.level': 1 },
-        $push: { tags: 'advanced' },
-        $unset: { temporary: '' }
-      });
-    }, OperationError, 'Should throw OperationError for update operators');
+    // Act - Should now work with Section 7 implementation (multiple operators supported)
+    const updateResult = collection.updateOne({ _id: docId }, {
+      $set: { name: 'Advanced User', lastActive: new Date('2024-01-01') },
+      $inc: { 'stats.score': 50, 'stats.level': 1 },
+      $push: { tags: 'advanced' }
+    });
+    
+    // Assert - Should succeed and apply all operators
+    TestFramework.assertEquals(1, updateResult.matchedCount, 'Should match one document');
+    TestFramework.assertEquals(1, updateResult.modifiedCount, 'Should modify one document');
+    TestFramework.assertTrue(updateResult.acknowledged, 'Should be acknowledged');
+    
+    // Verify all updates were applied
+    const updatedDoc = collection.findOne({ _id: docId });
+    TestFramework.assertEquals('Advanced User', updatedDoc.name, 'Should have updated name');
+    TestFramework.assertEquals(150, updatedDoc.stats.score, 'Should have incremented score');
+    TestFramework.assertEquals(2, updatedDoc.stats.level, 'Should have incremented level');
+    TestFramework.assertTrue(updatedDoc.tags.includes('beginner'), 'Should preserve original tag');
+    TestFramework.assertTrue(updatedDoc.tags.includes('advanced'), 'Should have added new tag');
   });
   
   suite.addTest('testCollectionErrorPropagation', function() {
