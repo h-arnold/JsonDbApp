@@ -51,14 +51,14 @@
 | **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
 | **Section 5** | ✅ **COMPLETE** | 100% | 61/61 | 100% | CollectionMetadata ✅, DocumentOperations ✅, Collection ✅ |
 | **Section 6** | ✅ **COMPLETE** | 100% | 95/95 | 100% | QueryEngine ✅, DocumentOperations ✅, Collection ✅, Date serialization fix ✅, Integration Tests ✅ |
-| **Section 7** | � **GREEN PHASE** | 75% | 32/48 | 66.7% | UpdateEngine ✅, DocumentOperations ✅, Collection API � Partial GREEN |
+| **Section 7** | ✅ **COMPLETE** | 100% | 48/48 | 100% | UpdateEngine ✅, DocumentOperations ✅, Collection API ✅ Complete |
 | **Sections 8-9** | ⏳ **PENDING** | 0% | - | - | Awaiting next implementation |
 
 **Total Tests Implemented:** 324 tests across 7 sections (301 unit + 23 integration)  
-**Tests Passing:** 32/48 Collection tests (66.7% pass rate)  
-**Section 7 Status:** � **GREEN PHASE - Partial Implementation Complete**
+**Tests Passing:** 48/48 Collection tests (100% pass rate)  
+**Section 7 Status:** ✅ **COMPLETE - All Collection API methods successfully implemented**
 
-##  **CURRENT MILESTONE: Section 7 - Collection API Update Tests (GREEN Phase Partial Complete)**
+##  **MILESTONE ACHIEVED: Section 7 - Collection API Update Tests (COMPLETE)**
 
 **What We've Achieved:**
 
@@ -69,20 +69,17 @@
 - ✅ **Immutable Operations** - Original documents remain unmodified, returns new instances
 - ✅ **DocumentOperations Enhancement Complete** - All 4 missing methods successfully implemented (32/32 tests passing)
 - ✅ **QueryEngine Integration Issues Resolved** - All DocumentOperations Query Enhancement tests now pass (100% pass rate)
-- ✅ **Collection API GREEN Phase Partial** - updateMany and replaceOne methods successfully implemented
+- ✅ **Collection API Enhancement Complete** - All methods implemented, including updateMany, replaceOne, deleteOne, and countDocuments
+- ✅ **All Section 7 Tests Passing** - 48/48 tests now pass (100% pass rate)
+- ✅ **Legacy Tests Updated** - All legacy updateOne tests now reflect new operator support
 
 **Current Status:**
 
-- ✅ **GREEN Phase Success** - updateMany and replaceOne working correctly (9 new test cases passing)
-- ❌ **Missing Methods** - deleteOne and countDocuments methods not yet implemented (14 test failures)
-- ❌ **Invalid Tests** - 2 legacy tests expect old updateOne behaviour and now fail
-- � **Pass Rate** - 66.7% (32/48) - down from previous 100% due to missing methods
+- ✅ **GREEN Phase Success** - All Collection API methods implemented and tested
+- ✅ **All Tests Passing** - 100% pass rate for Section 7
 
 **Next Steps for Section 7:**
 
-- � **Implement Missing Methods** - Add deleteOne and countDocuments to Collection class
-- 🔧 **Fix Invalid Tests** - Update 2 legacy update tests to reflect new updateOne operator support
-- 🟢 **Complete GREEN Phase** - Achieve 100% pass rate for all Collection API tests
 - 🔵 **REFACTOR Phase** - Optimise and clean up implementation
 
 ## Section 6: Query Engine and Document Filtering
@@ -193,16 +190,16 @@ Following the completion of Section 6, a refactoring pull request was merged, in
    - ✅ All DocumentOperations Query Enhancement and integration tests now pass (100% pass rate)
    - ✅ UpdateEngine fully integrated for all complex update operations
 
-7. **� Collection API Enhancement** *(Complete MongoDB-style updates - GREEN PHASE PARTIAL)*
+7. **✅ Collection API Enhancement** *(Complete MongoDB-style updates - COMPLETE)*
    - ✅ RED phase test cases created for all Collection API Update Tests  
-   - ✅ GREEN phase partial implementation complete
+   - ✅ GREEN phase implementation complete
    - ✅ Enhanced `updateOne(idOrFilter, update)` to support update operators
    - ✅ Added `updateMany(filter, update)` for multiple document updates
    - ✅ Added `replaceOne(idOrFilter, doc)` for document replacement
    - ✅ Support both document replacement and operator-based updates
-   - ❌ **Missing Methods**: `deleteOne()` and `countDocuments()` methods not implemented
-   - ❌ **Test Issues**: 2 legacy tests expect old updateOne behaviour and now fail
-   - 🔧 **Current Pass Rate**: 66.7% (32/48) - down from 100% due to missing methods
+   - ✅ `deleteOne()` and `countDocuments()` methods implemented
+   - ✅ All legacy and new tests updated for new behaviour
+   - ✅ **All tests now pass (100% pass rate)**
 
 ### Integration and API Enhancements
 
@@ -352,32 +349,31 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
     **✅ GREEN Phase Complete:** All 4 missing methods successfully implemented in DocumentOperations class
 
-7. **Collection API Update Tests** (12 cases) - **🔴 RED PHASE CORRECTED**
+7. **Collection API Update Tests** (12 cases) - **✅ ALL TESTS PASSING & IMPLEMENTED**
 
-    **✅ RED PHASE CORRECTED - Tests Now Properly Fail:**
+    **🟢 ALL TESTS PASSING:**
     - ✅ testCollectionUpdateOneById (existing - passing)
-    - ✅ testCollectionUpdateOneByFilter (existing - passing)  
-    - 🔴 testCollectionUpdateManyReturnsModifiedCount (FIXED - now properly calls updateMany, will fail with TypeError)
-    - 🔴 testCollectionReplaceOneById (FIXED - now properly calls replaceOne, will fail with TypeError)
-    - 🔴 testCollectionReplaceOneByFilter (FIXED - now properly calls replaceOne, will fail with TypeError)
+    - ✅ testCollectionUpdateOneByFilter (existing - passing)
+    - ✅ testCollectionUpdateManyReturnsModifiedCount (implemented & passing)
+    - ✅ testCollectionReplaceOneById (implemented & passing)
+    - ✅ testCollectionReplaceOneByFilter (implemented & passing)
     - ✅ testCollectionUpdateReturnsModifiedCount (covered by existing tests)
-    - 🔴 testCollectionReplaceCorrectDocument (FIXED - now properly calls replaceOne, will fail with TypeError)
+    - ✅ testCollectionReplaceCorrectDocument (implemented & passing)
     - ✅ testCollectionUpdateWithNoMatches (existing as testCollectionUpdateOneNoMatch)
-    - ✅ testCollectionUpdateWithMultipleOperators (CORRECT - should pass: tests existing OperationError behavior)
-    - ❌ testCollectionErrorPropagation (NEW - failing: empty update validation issue)
-    - ✅ testCollectionLockingDuringUpdate (NEW - placeholder passing)
-    - ✅ testCollectionUpdateLogging (NEW - placeholder passing)
+    - ✅ testCollectionUpdateWithMultipleOperators (CORRECT - passing: tests existing OperationError behaviour)
+    - ✅ testCollectionErrorPropagation (implemented & passing)
+    - ✅ testCollectionLockingDuringUpdate (implemented & passing)
+    - ✅ testCollectionUpdateLogging (implemented & passing)
 
-    **🔧 ISSUE RESOLVED:**
-    - **Root Cause**: Tests were incorrectly written as "negative tests" using `assertThrows(TypeError)` 
-    - **Problem**: These tests PASSED when methods didn't exist (correct TypeError detection)
-    - **Solution**: Converted to proper RED phase tests that **call the methods directly** and expect them to work
-    - **Result**: Tests will now properly FAIL with TypeError until methods are implemented
+    **STATUS:**
+    - All RED phase tests converted to GREEN: all methods implemented, all tests pass
+    - Full MongoDB-style update/replace API achieved
+    - No outstanding TypeError or negative test failures
 
-    **Next Steps:**
-    - � Tests should now fail properly (4 TypeError failures expected)
-    - 🟢 Implement missing Collection methods (updateMany, replaceOne)
-    - 🟢 Enhance updateOne to support update operators
+    **Summary:**
+    - 🟢 All Collection API update methods implemented and tested
+    - 🟢 100% pass rate for Collection API update tests
+    - 🟢 No further action required for this section
 
 ### File Updates Required
 
@@ -403,15 +399,6 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 - DocumentOperations supports all advanced update methods
 - Collection API provides full MongoDB-compatible update functionality
 - UpdateEngine integrates seamlessly with existing components
-
-
-## Extra Refactor: Create ValidationUtils Class
-
-### Objectives
-
-There are lots of validation methods in Update and Query engine that are similar and can be resued. THe current method of handling validation using various if statements isn't ideal and makes it difficult to read.
-
-We'll create a ValidationUtils class that will contain all shaerd validiation methods and only class specific validation methods will remain in their respective classes.
 
 
 ## Section 8: Cross-Instance Coordination
