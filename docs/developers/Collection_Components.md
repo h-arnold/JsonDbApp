@@ -14,12 +14,14 @@ This document explains the role, API surface and usage patterns for the Collecti
       - [findOne(filter?: Object): Object|null](#findonefilter-object-objectnull)
       - [find(filter?: Object): Array](#findfilter-object-array)
       - [updateOne(filter: Object, update: Object): Object](#updateonefilter-object-update-object-object)
+      - [updateMany(filter: Object, update: Object): Object](#updatemanyfilter-object-update-object-object)
+      - [replaceOne(filter: Object, replacement: Object): Object](#replaceonefilter-object-replacement-object-object)
       - [deleteOne(filter: Object): Object](#deleteonefilter-object-object)
       - [countDocuments(filter?: Object): number](#countdocumentsfilter-object-number)
       - [getName(): string](#getname-string)
-      - [getMetadata(): Object](#getmetadata-object)
-      - [isDirty(): boolean](#isdirty-boolean)
-      - [save(): void](#save-void)
+      - [getMetadata(): Object](#getmetadataobject)
+      - [isDirty(): boolean](#isdirtyboolean)
+      - [save(): void](#savevoid)
     - [Lazy Loading](#lazy-loading)
   - [CollectionMetadata](#collectionmetadata)
     - [Purpose](#purpose-1)
@@ -75,15 +77,17 @@ The Collection Components form the core of GAS-DB's document storage system:
 
 ### Architecture
 
-```
-Collection (High-level MongoDB API)
-├── CollectionMetadata (Metadata management)
-└── DocumentOperations (Document CRUD operations)
+```mermaid
+graph TD
+    Collection[Collection (High-level MongoDB API)] --> CollectionMetadata[CollectionMetadata (Metadata management)]
+    Collection --> DocumentOperations[DocumentOperations (Document CRUD operations)]
+    DocumentOperations --> QueryEngine[QueryEngine (Query processing)]
+    DocumentOperations --> UpdateEngine[UpdateEngine (Update operation processing)]
 ```
 
 ### Current Limitations (Section 5)
 
-These components currently have limited query support:
+This section describes the capabilities as of Section 5. The `Collection` class has since been enhanced. Refer to the method descriptions below for current capabilities.
 
 - **findOne()**: Only supports `{}` (empty) and `{_id: "id"}` filters
 - **find()**: Only supports `{}` (empty) filters
@@ -102,6 +106,7 @@ Advanced query capabilities will be added in Section 6 (Query Engine) and Sectio
 Collection provides the primary interface for document operations, mimicking MongoDB's collection API whilst managing persistence to Google Drive.
 
 Key responsibilities:
+
 - MongoDB-compatible CRUD operations
 - Lazy loading from Google Drive
 - Dirty tracking and persistence
@@ -179,7 +184,7 @@ try {
 Find a single document matching the filter.
 
 - **Parameters**
-  - `filter`: Query filter (Section 5: `{}` or `{_id: "id"}` only)
+  - `filter`: Query filter (supports field-based queries, `{_id: "id"}` and empty `{}` filters)
 - **Returns**
   - Document object or `null` if not found
 - **Throws**
@@ -201,9 +206,15 @@ if (userDoc) {
   console.log('User not found');
 }
 
+// Find by field
+const aliceDoc = collection.findOne({ name: 'Alice' });
+if (aliceDoc) {
+  console.log('Found Alice by name:', aliceDoc.email);
+}
+
 // Unsupported filter (throws error)
 try {
-  collection.findOne({ name: 'Alice' }); // Not supported in Section 5
+  collection.findOne({ age: { $gt: 25 } }); // Complex operators may not be supported depending on QueryEngine
 } catch (error) {
   console.error('Unsupported:', error.message);
 }
@@ -214,7 +225,7 @@ try {
 Find multiple documents matching the filter.
 
 - **Parameters**
-  - `filter`: Query filter (Section 5: `{}` only)
+  - `filter`: Query filter (supports field-based queries and empty `{}` filter)
 - **Returns**
   - Array of document objects
 - **Throws**
@@ -232,6 +243,10 @@ allDocs.forEach(doc => {
   console.log('Document ID:', doc._id);
 });
 
+// Find by field
+const usersOver25 = collection.find({ age: { $gt: 25 } }); // Example, assuming QueryEngine supports $gt
+console.log('Users over 25:', usersOver25.length);
+
 // Empty collection returns empty array
 const emptyResults = emptyCollection.find({});
 console.log('Empty results:', emptyResults); // []
@@ -242,8 +257,8 @@ console.log('Empty results:', emptyResults); // []
 Update a single document matching the filter.
 
 - **Parameters**
-  - `filter`: Query filter (Section 5: `{_id: "id"}` only)
-  - `update`: Document replacement (no operators in Section 5)
+  - `filter`: Query filter (supports field-based queries and `{_id: "id"}` filters)
+  - `update`: Document replacement or update operators (e.g. `{$set: {field: value}}`)
 - **Returns**
   - `{matchedCount: number, modifiedCount: number, acknowledged: boolean}`
 - **Throws**
@@ -257,7 +272,7 @@ Update a single document matching the filter.
 const updateResult = collection.updateOne(
   { _id: 'user123' },
   {
-    _id: 'user123', // ID preserved automatically
+    // _id: 'user123', // ID is preserved automatically if not specified in replacement
     name: 'Robert',
     email: 'robert@example.com',
     age: 31,
@@ -265,7 +280,15 @@ const updateResult = collection.updateOne(
   }
 );
 
-console.log('Modified count:', updateResult.modifiedCount); // 1
+console.log('Modified count (replacement):', updateResult.modifiedCount); // 1
+
+// Update by field using $set operator
+const setResult = collection.updateOne(
+  { email: 'robert@example.com' },
+  { $set: { age: 32 } }
+);
+console.log('Modified count ($set):', setResult.modifiedCount); // 1
+
 
 // Non-existent document
 const noMatch = collection.updateOne(
@@ -278,10 +301,72 @@ console.log('No match:', noMatch.modifiedCount); // 0
 try {
   collection.updateOne(
     { _id: 'user123' },
-    { $set: { age: 32 } } // Not supported in Section 5
+    { $inc: { age: 1 } } // Assuming $inc is supported by UpdateEngine
   );
 } catch (error) {
-  console.error('Unsupported operator:', error.message);
+  console.error('Unsupported operator or error during update:', error.message);
+}
+```
+
+#### updateMany(filter: Object, update: Object): Object
+
+Update multiple documents matching a filter.
+
+- **Parameters**
+  - `filter`: Query filter criteria (supports field-based queries and empty `{}` filter)
+  - `update`: Update operators (e.g. `{$set: {field: value}}`)
+- **Returns**
+  - `{matchedCount: number, modifiedCount: number, acknowledged: boolean}`
+- **Throws**
+  - `InvalidArgumentError` for invalid parameters
+  - `OperationError` if update operators are invalid or an error occurs
+
+**Example:**
+```javascript
+// Add a 'status' field to all documents
+const updateManyResult = collection.updateMany(
+  {}, // Empty filter matches all documents
+  { $set: { status: 'active' } }
+);
+console.log('Matched:', updateManyResult.matchedCount, 'Modified:', updateManyResult.modifiedCount);
+
+// Update status for users older than 30
+const updateAdultsResult = collection.updateMany(
+  { age: { $gt: 30 } }, // Assuming QueryEngine supports $gt
+  { $set: { status: 'senior' } }
+);
+console.log('Adults updated:', updateAdultsResult.modifiedCount);
+```
+
+#### replaceOne(filter: Object, replacement: Object): Object
+
+Replace a single document matching the filter.
+
+- **Parameters**
+  - `filter`: Query filter (supports field-based queries and `{_id: "id"}` filters)
+  - `replacement`: The new document. Cannot contain update operators. `_id` if present must match original or be omitted.
+- **Returns**
+  - `{matchedCount: number, modifiedCount: number, acknowledged: boolean}`
+- **Throws**
+  - `InvalidArgumentError` for invalid parameters or if replacement contains update operators.
+
+**Example:**
+```javascript
+// Replace document by ID
+const replaceResult = collection.replaceOne(
+  { _id: 'user123' },
+  { name: 'Bobby Tables', email: 'bobby@example.com', age: 25 } // _id will be preserved
+);
+console.log('Replaced count:', replaceResult.modifiedCount); // 1
+
+// Attempt to replace with update operators (will throw error)
+try {
+  collection.replaceOne(
+    { _id: 'user123' },
+    { $set: { name: 'Not Allowed' } }
+  );
+} catch (error) {
+  console.error('Error:', error.message); // Should indicate $set is not allowed
 }
 ```
 
@@ -290,9 +375,11 @@ try {
 Delete a single document matching the filter.
 
 - **Parameters**
-  - `filter`: Query filter (Section 5: `{_id: "id"}` only)
+  - `filter`: Query filter (supports field-based queries and `{_id: "id"}` filters)
 - **Returns**
-  - `{deletedCount: number, acknowledged: boolean}`
+
+  `{deletedCount: number, acknowledged: boolean}`
+
 - **Throws**
   - `InvalidArgumentError` for invalid filter structure
   - `OperationError` for unsupported filters
@@ -302,7 +389,12 @@ Delete a single document matching the filter.
 ```javascript
 // Delete by ID
 const deleteResult = collection.deleteOne({ _id: 'user123' });
-console.log('Deleted count:', deleteResult.deletedCount); // 1
+console.log('Deleted count by ID:', deleteResult.deletedCount); // 1
+
+// Delete by field
+const deleteByEmailResult = collection.deleteOne({ email: 'alice@example.com' });
+console.log('Deleted count by email:', deleteByEmailResult.deletedCount); // 1
+
 
 // Non-existent document
 const noDelete = collection.deleteOne({ _id: 'nonexistent' });
@@ -318,9 +410,11 @@ console.log('Document gone:', gone); // null
 Count documents matching the filter.
 
 - **Parameters**
-  - `filter`: Query filter (Section 5: `{}` only)
+  - `filter`: Query filter (supports field-based queries and empty `{}` filter)
 - **Returns**
-  - Number of matching documents
+
+  Number of matching documents
+
 - **Throws**
   - `InvalidArgumentError` for invalid filter structure
   - `OperationError` for unsupported filters
@@ -331,6 +425,10 @@ Count documents matching the filter.
 // Count all documents
 const totalCount = collection.countDocuments({});
 console.log('Total documents:', totalCount);
+
+// Count documents matching a filter
+const countOver30 = collection.countDocuments({ age: { $gt: 30 } }); // Assuming QueryEngine supports $gt
+console.log('Documents with age > 30:', countOver30);
 
 // Empty collection
 const emptyCount = emptyCollection.countDocuments();

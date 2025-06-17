@@ -106,12 +106,16 @@ Each class in the system has a clearly defined responsibility:
 | - _documents: Object                     |
 | - _collectionMetadata: CollectionMetadata| ← DIP: Composition instead of inheritance
 | - _documentOperations: DocumentOperations| ← DIP: Composition instead of inheritance
+| - _queryEngine: QueryEngine              | ← DIP: Composition for query processing
+| - _updateEngine: UpdateEngine            | ← DIP: Composition for update processing
 +------------------------------------------+
 | + constructor(name, driveFileId, database, fileService) | ← DIP: Dependencies injected
 | + insertOne(doc: Object): Object         | ← SRP: MongoDB-compatible API
 | + findOne(filter: Object): Object|null   | ← ISP: Focused methods
 | + find(filter: Object): Array<Object>    |
-| + updateOne(filter: Object, update: Object): Object |
+| + updateOne(filterOrId: Object|String, update: Object): Object |
+| + updateMany(filter: Object, update: Object): Object |
+| + replaceOne(filterOrId: Object|String, doc: Object): Object |
 | + deleteOne(filter: Object): Object      |
 | + countDocuments(filter: Object): Number |
 | + getName(): String                      |
@@ -124,6 +128,8 @@ Each class in the system has a clearly defined responsibility:
 | - _markDirty(): void                     |
 | - _updateMetadata(changes: Object): void |
 | - _validateFilter(filter: Object, operation: String): void |
+| - _updateOneWithOperators(filter: Object, update: Object): Object |
+| - _updateOneWithReplacement(filter: Object, update: Object): Object |
 +------------------------------------------+
 ```
 
