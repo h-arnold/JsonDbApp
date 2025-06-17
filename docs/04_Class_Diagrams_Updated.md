@@ -141,6 +141,8 @@ Each class in the system has a clearly defined responsibility:
 +------------------------------------------+
 | - _collection: Collection                | ← DIP: Depends on Collection interface 
 | - _logger: GASDBLogger                   |
+| - _queryEngine: QueryEngine              |
+| - _updateEngine: UpdateEngine            |
 +------------------------------------------+
 | + constructor(collection: Collection)    | ← DIP: Dependency injected
 | + insertDocument(doc: Object): Object    | ← SRP: Document manipulation only
@@ -150,29 +152,53 @@ Each class in the system has a clearly defined responsibility:
 | + deleteDocument(id: String): Object     |
 | + countDocuments(): Number               |
 | + documentExists(id: String): Boolean    |
+| + findByQuery(query: Object): Object|null|
+| + findMultipleByQuery(query: Object): Array<Object>|
+| + countByQuery(query: Object): Number    |
+| + updateDocumentWithOperators(id: String, updateOps: Object): Object |
+| + updateDocumentByQuery(query: Object, updateOps: Object): Number |
+| + replaceDocument(id: String, doc: Object): Object |
+| + replaceDocumentByQuery(query: Object, doc: Object): Number |
 | - _generateDocumentId(): String          | ← DRY: Reusable ID generation
 | - _validateDocument(doc: Object): void   | ← DRY: Centralized validation
+| - _validateDocumentId(id: String): void  |
+| - _validateDocumentIdInDocument(id: String, doc: Object): void |
+| - _validateDocumentFields(doc: Object): void |
+| - _checkDuplicateId(id: String): void    |
+| - _validateQuery(query: Object): void    |
+| - _validateUpdateOperators(updateOps: Object): void |
 +------------------------------------------+
 ```
 
 ### CollectionMetadata Class Diagram (Updated)
 
 ```text
-+------------------------------------------+
-|          CollectionMetadata              |
-+------------------------------------------+
-| + created: Date                          |
-| + lastUpdated: Date                      |
-| + documentCount: Number                  |
-+------------------------------------------+
-| + constructor(initialMetadata?: Object)  |
-| + updateLastModified(): void             |
-| + incrementDocumentCount(): void         |
-| + decrementDocumentCount(): void         |
-| + setDocumentCount(count: Number): void  |
-| + toObject(): Object                     |
-| + clone(): CollectionMetadata            |
-+------------------------------------------+
++----------------------------------------------------+
+|                 CollectionMetadata                 |
++----------------------------------------------------+
+| + name: String                                     |
+| + fileId: String                                   |
+| + created: Date                                    |
+| + lastUpdated: Date                                |
+| + documentCount: Number                            |
+| + modificationToken: String | null                 |
+| + lockStatus: Object | null                        |
++----------------------------------------------------+
+| + constructor(name: String, fileId: String, initialMetadata?: Object) |
+| + updateLastModified(): void                       |
+| + touch(): void                                    |
+| + incrementDocumentCount(): void                   |
+| + decrementDocumentCount(): void                   |
+| + setDocumentCount(count: Number): void            |
+| + getModificationToken(): String | null            |
+| + setModificationToken(token: String | null): void |
+| + getLockStatus(): Object | null                   |
+| + setLockStatus(lockStatus: Object | null): void   |
+| + toJSON(): Object                                 |
+| + clone(): CollectionMetadata                      |
+| + static fromJSON(obj: Object): CollectionMetadata |
+| + static create(name: String, fileId: String): CollectionMetadata |
++----------------------------------------------------+
 ```
 
 ### FileService Class Diagram (Updated)
