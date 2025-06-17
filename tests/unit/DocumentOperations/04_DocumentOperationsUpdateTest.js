@@ -176,13 +176,22 @@ function createDocumentOperationsUpdateTestSuite() {
     TestFramework.assertEquals(docOps.findDocumentById(doc._id).nested.count, 5, 'Nested field should update');
   });
 
-  suite.addTest('should throw error for invalid update operators', function() {
+  suite.addTest('should throw error for unsupported update operators', function() {
     // Arrange
     const docOps = new DocumentOperations(DOCUMENT_OPERATIONS_TEST_DATA.testCollection);
     // Act & Assert
     TestFramework.assertThrows(() => {
-      docOps.updateDocumentWithOperators('any-id', { invalidOp: {} });
+      docOps.updateDocumentWithOperators('any-id', { '$invalidOp': {} });
     }, InvalidQueryError, 'Should throw for unsupported operator');
+  });
+
+  suite.addTest('should throw error when no operators provided to updateDocumentWithOperators', function() {
+    // Arrange
+    const docOps = new DocumentOperations(DOCUMENT_OPERATIONS_TEST_DATA.testCollection);
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      docOps.updateDocumentWithOperators('any-id', { invalidField: 'value' });
+    }, InvalidArgumentError, 'Should throw when no operators provided');
   });
 
   return suite;

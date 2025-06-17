@@ -332,7 +332,7 @@ class DocumentOperations {
   updateDocumentWithOperators(id, updateOps) {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
-    Validate.object(updateOps, 'updateOps');
+    Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
     
     // Validate operators before checking existence so invalid ops throw
     this._validateUpdateOperators(updateOps);
@@ -366,7 +366,7 @@ class DocumentOperations {
   updateDocumentByQuery(query, updateOps) {
     // Validate parameters
     Validate.object(query, 'query');
-    Validate.object(updateOps, 'updateOps');
+    Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
     
     // Find matches
     const matches = this.findMultipleByQuery(query);
@@ -388,7 +388,7 @@ class DocumentOperations {
   replaceDocument(id, doc) {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
-    Validate.object(doc, 'doc');
+    Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
     
     // Check existence
     if (!this.documentExists(id)) {
@@ -416,7 +416,7 @@ class DocumentOperations {
   replaceDocumentByQuery(query, doc) {
     // Validate parameters
     Validate.object(query, 'query');
-    Validate.object(doc, 'doc');
+    Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
     
     // Find matches
     const matches = this.findMultipleByQuery(query);
