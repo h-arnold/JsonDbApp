@@ -18,6 +18,8 @@ Make sure you've enabled the DriveAPI in your Google Cloud project. This is cruc
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex
 - [**DatabaseConfig**](./DatabaseConfig.md) - Database configuration management with validation and defaults
 - [**MasterIndex**](./MasterIndex.md) - Cross-instance coordination system using ScriptProperties for virtual locking and conflict detection
+- [**QueryEngine**](./QueryEngine.md) - Engine for parsing and executing MongoDB-style queries
+- [**UpdateEngine**](./UpdateEngine.md) - Engine for applying MongoDB-style update operators to documents
 - [**test-runner.sh Documentation**](./test-runner.sh.md) - Automated testing script for streamlined development workflow
 - [**clasp-watch.sh Documentation**](./clasp-watch.sh.md) - Continuous deployment script for automatic file watching and pushing to Google Apps Script
 
@@ -29,5 +31,7 @@ Make sure you've enabled the DriveAPI in your Google Cloud project. This is cruc
 - **Database**: Main entry point for database operations, collection management, and index file coordination
 - **DatabaseConfig**: Configuration validation, defaults, and management for database instances
 - **MasterIndex**: Understand cross-instance coordination, virtual locking, and conflict resolution
+- **QueryEngine**: Learn how to use the query engine for document retrieval
+- **UpdateEngine**: Understand how to apply update operators to documents
 - **test-runner.sh**: Streamline development with automated testing and deployment
 - **clasp-watch.sh**: Manage continuous deployment with automatic file watching and clasp authentication

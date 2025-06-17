@@ -96,18 +96,17 @@ Each class in the system has a clearly defined responsibility:
 +------------------------------------------+
 |               Collection                 |
 +------------------------------------------+
-| - _name: String                          | ← SRP: Collection API interface
+| - _name: String                          |
 | - _driveFileId: String                   |
-| - _database: Database                    | ← DIP: Depends on Database interface
-| - _fileService: FileService              | ← DIP: Depends on FileService interface
+| - _database: Database                    |
+| - _fileService: FileService              |
 | - _logger: GASDBLogger                   |
 | - _loaded: Boolean                       |
 | - _dirty: Boolean                        |
 | - _documents: Object                     |
-| - _collectionMetadata: CollectionMetadata| ← DIP: Composition instead of inheritance
-| - _documentOperations: DocumentOperations| ← DIP: Composition instead of inheritance
-| - _queryEngine: QueryEngine              | ← DIP: Composition for query processing
-| - _updateEngine: UpdateEngine            | ← DIP: Composition for update processing
+| - _collectionMetadata: CollectionMetadata|  // Instantiated in _loadData()
+| - _documentOperations: DocumentOperations|  // Instantiated in _loadData()
+|                                          |  // QueryEngine & UpdateEngine are used by DocumentOperations
 +------------------------------------------+
 | + constructor(name, driveFileId, database, fileService) | ← DIP: Dependencies injected
 | + insertOne(doc: Object): Object         | ← SRP: MongoDB-compatible API

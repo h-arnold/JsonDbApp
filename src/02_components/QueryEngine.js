@@ -387,8 +387,6 @@ class QueryEngine {
           this._findOperators(obj[key], operators);
         });
       }
-    } catch (e) {
-      // Not a plain object, do nothing
     }
     return operators;
   }
