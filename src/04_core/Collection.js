@@ -286,8 +286,8 @@ class Collection {
     this._ensureLoaded();
     this._validateFilter(filter, 'updateOne');
     
-    // Use Validate for update validation
-    Validate.object(update, 'update');
+    // Use Validate for update validation - disallow empty objects
+    Validate.object(update, 'update', false);
     
     // Check for update operators (not supported in current version)
     const updateKeys = Object.keys(update);

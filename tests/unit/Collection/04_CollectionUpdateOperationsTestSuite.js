@@ -273,13 +273,16 @@ function createCollectionUpdateOperationsTestSuite() {
     collection.insertOne({ department: 'Marketing', level: 'Junior', salary: 65000 });
     collection.insertOne({ department: 'Engineering', level: 'Principal', salary: 120000 });
     
-    // Act & Assert - Should fail in Red phase (updateMany not implemented yet)
-    TestFramework.assertThrows(() => {
-      collection.updateMany(
-        { department: 'Engineering' },
-        { $inc: { salary: 5000 } }
-      );
-    }, TypeError, 'Should throw TypeError: updateMany is not a function');
+    // Act - RED PHASE: This should fail because updateMany doesn't exist yet
+    const updateResult = collection.updateMany(
+      { department: 'Engineering' },
+      { $inc: { salary: 5000 } }
+    );
+    
+    // Assert - When implemented, should update multiple documents
+    TestFramework.assertEquals(3, updateResult.matchedCount, 'Should match 3 Engineering documents');
+    TestFramework.assertEquals(3, updateResult.modifiedCount, 'Should modify 3 Engineering documents');
+    TestFramework.assertTrue(updateResult.acknowledged, 'Operation should be acknowledged');
   });
   
   suite.addTest('testCollectionReplaceOneById', function() {
@@ -301,15 +304,27 @@ function createCollectionUpdateOperationsTestSuite() {
     });
     const docId = insertResult.insertedId;
     
-    // Act & Assert - Should fail in Red phase (replaceOne not implemented yet)
-    TestFramework.assertThrows(() => {
-      const replacementDoc = { 
-        name: 'Completely Replaced', 
-        description: 'This is a completely new document',
-        version: 2
-      };
-      collection.replaceOne({ _id: docId }, replacementDoc);
-    }, TypeError, 'Should throw TypeError: replaceOne is not a function');
+    // Act - RED PHASE: This should fail because replaceOne doesn't exist yet
+    const replacementDoc = { 
+      name: 'Completely Replaced', 
+      description: 'This is a completely new document',
+      version: 2
+    };
+    const replaceResult = collection.replaceOne({ _id: docId }, replacementDoc);
+    
+    // Assert - When implemented, should completely replace the document
+    TestFramework.assertEquals(1, replaceResult.matchedCount, 'Should match 1 document');
+    TestFramework.assertEquals(1, replaceResult.modifiedCount, 'Should replace 1 document');
+    TestFramework.assertTrue(replaceResult.acknowledged, 'Operation should be acknowledged');
+    
+    // Verify document was completely replaced (old fields gone, new fields present)
+    const replacedDoc = collection.findOne({ _id: docId });
+    TestFramework.assertEquals('Completely Replaced', replacedDoc.name, 'Should have new name');
+    TestFramework.assertEquals('This is a completely new document', replacedDoc.description, 'Should have new description');
+    TestFramework.assertEquals(2, replacedDoc.version, 'Should have new version');
+    TestFramework.assertUndefined(replacedDoc.value, 'Should not have old value field');
+    TestFramework.assertUndefined(replacedDoc.status, 'Should not have old status field');
+    TestFramework.assertUndefined(replacedDoc.metadata, 'Should not have old metadata field');
   });
   
   suite.addTest('testCollectionReplaceOneByFilter', function() {
@@ -327,16 +342,26 @@ function createCollectionUpdateOperationsTestSuite() {
     collection.insertOne({ name: 'Bob', department: 'Engineering', role: 'Manager' });
     collection.insertOne({ name: 'Charlie', department: 'Marketing', role: 'Analyst' });
     
-    // Act & Assert - Should fail in Red phase (replaceOne not implemented yet)
-    TestFramework.assertThrows(() => {
-      const replacementDoc = { 
-        name: 'Alice Smith', 
-        department: 'Product', 
-        role: 'Product Manager',
-        startDate: new Date()
-      };
-      collection.replaceOne({ name: 'Alice' }, replacementDoc);
-    }, TypeError, 'Should throw TypeError: replaceOne is not a function');
+    // Act - RED PHASE: This should fail because replaceOne doesn't exist yet
+    const replacementDoc = { 
+      name: 'Alice Smith', 
+      department: 'Product', 
+      role: 'Product Manager',
+      startDate: new Date()
+    };
+    const replaceResult = collection.replaceOne({ name: 'Alice' }, replacementDoc);
+    
+    // Assert - When implemented, should replace first matching document
+    TestFramework.assertEquals(1, replaceResult.matchedCount, 'Should match 1 document');
+    TestFramework.assertEquals(1, replaceResult.modifiedCount, 'Should replace 1 document');
+    TestFramework.assertTrue(replaceResult.acknowledged, 'Operation should be acknowledged');
+    
+    // Verify correct document was replaced
+    const replacedDoc = collection.findOne({ name: 'Alice Smith' });
+    TestFramework.assertNotNull(replacedDoc, 'Should find replaced document');
+    TestFramework.assertEquals('Product', replacedDoc.department, 'Should have new department');
+    TestFramework.assertEquals('Product Manager', replacedDoc.role, 'Should have new role');
+    TestFramework.assertNotNull(replacedDoc.startDate, 'Should have new startDate field');
   });
   
   suite.addTest('testCollectionReplaceCorrectDocument', function() {
@@ -354,16 +379,29 @@ function createCollectionUpdateOperationsTestSuite() {
     collection.insertOne({ name: 'Alice', age: 25, department: 'Marketing' });
     collection.insertOne({ name: 'Bob', age: 30, department: 'Engineering' });
     
-    // Act & Assert - Should fail in Red phase (replaceOne not implemented yet)
-    TestFramework.assertThrows(() => {
-      const replacementDoc = { 
-        name: 'Alice Senior', 
-        age: 31, 
-        department: 'Engineering',
-        title: 'Senior Engineer'
-      };
-      collection.replaceOne({ name: 'Alice', age: 30 }, replacementDoc);
-    }, TypeError, 'Should throw TypeError: replaceOne is not a function');
+    // Act - RED PHASE: This should fail because replaceOne doesn't exist yet
+    const replacementDoc = { 
+      name: 'Alice Senior', 
+      age: 31, 
+      department: 'Engineering',
+      title: 'Senior Engineer'
+    };
+    const replaceResult = collection.replaceOne({ name: 'Alice', age: 30 }, replacementDoc);
+    
+    // Assert - When implemented, should replace only the specific matching document
+    TestFramework.assertEquals(1, replaceResult.matchedCount, 'Should match 1 specific document');
+    TestFramework.assertEquals(1, replaceResult.modifiedCount, 'Should replace 1 document');
+    
+    // Verify correct document was replaced and others remain unchanged
+    const replacedDoc = collection.findOne({ name: 'Alice Senior' });
+    TestFramework.assertNotNull(replacedDoc, 'Should find replaced document');
+    TestFramework.assertEquals(31, replacedDoc.age, 'Should have new age');
+    TestFramework.assertEquals('Senior Engineer', replacedDoc.title, 'Should have new title');
+    
+    // Verify other Alice document is unchanged
+    const otherAlice = collection.findOne({ name: 'Alice', age: 25 });
+    TestFramework.assertNotNull(otherAlice, 'Other Alice document should remain');
+    TestFramework.assertEquals('Marketing', otherAlice.department, 'Other Alice should be unchanged');
   });
   
   suite.addTest('testCollectionUpdateWithMultipleOperators', function() {

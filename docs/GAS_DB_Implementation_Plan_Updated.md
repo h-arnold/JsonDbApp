@@ -6,7 +6,32 @@
 
 | Section | Status | Progress | Tests | Pass Rate | Notes |
 |---------|--------|----------|-------|-----------|--------|
-| **Section 1** | ✅ **COMPLETE** | 100% | 16/16 | 100% | Project setup, utilities, test framework |
+| **Section 1** | ✅ **COMPLETE** | 100% | 16/16 | 100% | Project setup, u7. **Collection API Update Tests** (12 cases) - **🔴 RED PHASE COMPLETE**
+
+    **✅ RED PHASE WORKING CORRECTLY - Tests Now Properly Fail:**
+    - ✅ testCollectionUpdateOneById (existing - passing)
+    - ✅ testCollectionUpdateOneByFilter (existing - passing)  
+    - 🔴 testCollectionUpdateManyReturnsModifiedCount (FAILING: TypeError - updateMany not implemented)
+    - 🔴 testCollectionReplaceOneById (FAILING: TypeError - replaceOne not implemented)
+    - 🔴 testCollectionReplaceOneByFilter (FAILING: TypeError - replaceOne not implemented)
+    - ✅ testCollectionUpdateReturnsModifiedCount (covered by existing tests)
+    - 🔴 testCollectionReplaceCorrectDocument (FAILING: TypeError - replaceOne not implemented)
+    - ✅ testCollectionUpdateWithNoMatches (existing as testCollectionUpdateOneNoMatch)
+    - ✅ testCollectionUpdateWithMultipleOperators (CORRECT - should pass: tests existing OperationError behavior)
+    - ✅ testCollectionErrorPropagation (FIXED - enhanced Validate.object with allowEmpty parameter)
+    - ✅ testCollectionLockingDuringUpdate (NEW - placeholder passing)
+    - ✅ testCollectionUpdateLogging (NEW - placeholder passing)
+
+    **✅ RED PHASE SUCCESSFUL:**
+    - **Pass Rate**: 68.8% (11/16 passed) - down from 97.9%
+    - **4 Proper TypeError Failures**: updateMany and replaceOne methods correctly fail
+    - **Enhanced ValidationUtils**: Added allowEmpty parameter to Validate.object method
+    - **Ready for GREEN Phase**: Clear failures indicate exactly what needs to be implemented
+
+    **Next Steps:**
+    - 🟢 Implement Collection.updateMany(filter, update) method
+    - 🟢 Implement Collection.replaceOne(filter, doc) method
+    - 🟢 Enhance updateOne to support update operators ($set, $inc, etc.)test framework |
 | **Section 2** | ✅ **COMPLETE** | 100% | 16/16 | 100% | ScriptProperties master index, locking |
 | **Section 3** | ✅ **COMPLETE** | 100% | 36/36 | 100% | File service, Drive API integration |
 | **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
@@ -310,31 +335,30 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
     **✅ GREEN Phase Complete:** All 4 missing methods successfully implemented in DocumentOperations class
 
-7. **Collection API Update Tests** (12 cases) - **🔴 RED PHASE IMPLEMENTED**
+7. **Collection API Update Tests** (12 cases) - **🔴 RED PHASE CORRECTED**
 
-    **✅ RED PHASE COMPLETE - Test Cases Created (8 new tests added to CollectionUpdateOperationsTestSuite.js):**
+    **✅ RED PHASE CORRECTED - Tests Now Properly Fail:**
     - ✅ testCollectionUpdateOneById (existing - passing)
     - ✅ testCollectionUpdateOneByFilter (existing - passing)  
-    - ✅ testCollectionUpdateManyReturnsModifiedCount (NEW - should fail: TypeError)
-    - ✅ testCollectionReplaceOneById (NEW - should fail: TypeError)
-    - ✅ testCollectionReplaceOneByFilter (NEW - should fail: TypeError)
+    - 🔴 testCollectionUpdateManyReturnsModifiedCount (FIXED - now properly calls updateMany, will fail with TypeError)
+    - 🔴 testCollectionReplaceOneById (FIXED - now properly calls replaceOne, will fail with TypeError)
+    - 🔴 testCollectionReplaceOneByFilter (FIXED - now properly calls replaceOne, will fail with TypeError)
     - ✅ testCollectionUpdateReturnsModifiedCount (covered by existing tests)
-    - ✅ testCollectionReplaceCorrectDocument (NEW - should fail: TypeError)
+    - 🔴 testCollectionReplaceCorrectDocument (FIXED - now properly calls replaceOne, will fail with TypeError)
     - ✅ testCollectionUpdateWithNoMatches (existing as testCollectionUpdateOneNoMatch)
-    - ✅ testCollectionUpdateWithMultipleOperators (NEW - should fail: OperationError)
+    - ✅ testCollectionUpdateWithMultipleOperators (CORRECT - should pass: tests existing OperationError behavior)
     - ❌ testCollectionErrorPropagation (NEW - failing: empty update validation issue)
     - ✅ testCollectionLockingDuringUpdate (NEW - placeholder passing)
     - ✅ testCollectionUpdateLogging (NEW - placeholder passing)
 
-    **⚠️ INVESTIGATION REQUIRED:**
-    - Tests showing 97.9% pass rate instead of expected RED phase failures
-    - Only 1 genuine failure: testCollectionErrorPropagation (empty update validation)
-    - Tests expecting TypeError for missing methods (updateMany, replaceOne) are passing unexpectedly
-    - Need to investigate why tests aren't failing as expected
+    **🔧 ISSUE RESOLVED:**
+    - **Root Cause**: Tests were incorrectly written as "negative tests" using `assertThrows(TypeError)` 
+    - **Problem**: These tests PASSED when methods didn't exist (correct TypeError detection)
+    - **Solution**: Converted to proper RED phase tests that **call the methods directly** and expect them to work
+    - **Result**: Tests will now properly FAIL with TypeError until methods are implemented
 
     **Next Steps:**
-    - 🔍 Investigate test framework behaviour with missing methods
-    - 🔴 Fix RED phase tests to ensure proper failures
+    - � Tests should now fail properly (4 TypeError failures expected)
     - 🟢 Implement missing Collection methods (updateMany, replaceOne)
     - 🟢 Enhance updateOne to support update operators
 

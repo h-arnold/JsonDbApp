@@ -60,11 +60,16 @@ class Validate {
    * Validate that a value is an object (not array or null)
    * @param {*} value - The value to validate
    * @param {string} paramName - Parameter name for error messages
+   * @param {boolean} allowEmpty - Whether to allow empty objects (default: true)
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When value is not a valid object
    */
-  static object(value, paramName) {
+  static object(value, paramName, allowEmpty = true) {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be an object');
+    }
+    
+    if (!allowEmpty && Object.keys(value).length === 0) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must not be an empty object');
     }
   }
 
