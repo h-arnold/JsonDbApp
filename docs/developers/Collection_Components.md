@@ -41,7 +41,25 @@ This document explains the role, API surface and usage patterns for the Collecti
     - [Static Methods](#static-methods)
       - [`static fromJSON(obj: Object): CollectionMetadata`](#static-fromjsonobj-object-collectionmetadata)
       - [`static create(name: string, fileId: string): CollectionMetadata`](#static-createname-string-fileid-string-collectionmetadata)
-
+  - [DocumentOperations](#documentoperations)
+    - [Purpose](#purpose-2)
+    - [Constructor](#constructor-2)
+    - [Public Methods](#public-methods-2)
+      - [insertDocument(doc: Object): Object](#insertdocumentdoc-object-object)
+      - [findDocumentById(id: string): Object|null](#finddocumentbyidid-string-objectnull)
+      - [findAllDocuments(): Array\<Object\>](#findalldocuments-arrayobject)
+      - [updateDocument(id: string, updateData: Object): Object](#updatedocumentid-string-updatedata-object-object)
+      - [deleteDocument(id: string): Object](#deletedocumentid-string-object)
+      - [countDocuments(): number](#countdocuments-number)
+      - [documentExists(id: string): boolean](#documentexistsid-string-boolean)
+      - [findByQuery(query: Object): Object|null](#findbyqueryquery-object-objectnull)
+      - [findMultipleByQuery(query: Object): Array\<Object\>](#findmultiplebyqueryquery-object-arrayobject)
+      - [countByQuery(query: Object): number](#countbyqueryquery-object-number)
+      - [updateDocumentWithOperators(id: string, updateOps: Object): Object](#updatedocumentwithoperatorsid-string-updateops-object-object)
+      - [updateDocumentByQuery(query: Object, updateOps: Object): number](#updatedocumentbyqueryquery-object-updateops-object-number)
+      - [replaceDocument(id: string, doc: Object): Object](#replacedocumentid-string-doc-object-object)
+      - [replaceDocumentByQuery(query: Object, doc: Object): number](#replacedocumentbyqueryquery-object-doc-object-number)
+    - [Private Methods](#private-methods)
 
 ---
 
@@ -808,5 +826,339 @@ console.log('Created name:', newMetadata.name); // 'newCollection'
 console.log('Created fileId:', newMetadata.fileId); // 'newFileIdXYZ'
 console.log('Created doc count:', newMetadata.documentCount); // 0
 ```
+
+---
+
+## DocumentOperations
+
+### Purpose
+
+`DocumentOperations` is a low-level component responsible for the direct manipulation of documents within a collection's in-memory representation. It provides the core Create, Read, Update, and Delete (CRUD) functionalities that are utilised by the higher-level `Collection` class. `DocumentOperations` itself does not interact with the file system or manage metadata; its focus is solely on operating on the JavaScript objects that represent documents.
+
+It works in conjunction with:
+
+- **Collection**: The `Collection` class instantiates and uses `DocumentOperations` to perform actions on its `_documents` object.
+- **QueryEngine**: For `findByQuery`, `findMultipleByQuery`, and `countByQuery` methods, `DocumentOperations` delegates the filtering logic to the `QueryEngine`.
+- **UpdateEngine**: For `updateDocumentWithOperators` and `updateDocumentByQuery` methods, `DocumentOperations` uses the `UpdateEngine` to apply complex update operations.
+
+### Constructor
+
+```javascript
+new DocumentOperations(collection)
+```
+
+- **collection**: A reference to the `Collection` instance. This provides `DocumentOperations` access to the actual documents array (`collection._documents`) and methods to update metadata (`collection._updateMetadata()`) and mark the collection as dirty (`collection._markDirty()`).
+
+**Throws**: `InvalidArgumentError` if the `collection` parameter is not a valid `Collection` instance (though this is typically ensured by the `Collection` class itself).
+
+**Example:**
+
+```javascript
+// Typically created by the Collection class, not directly
+// Assuming 'this' is an instance of the Collection class
+this._documentOperations = new DocumentOperations(this);
+```
+
+### Public Methods
+
+#### insertDocument(doc: Object): Object
+
+Inserts a single document into the collection's internal `_documents` object. If the document does not have an `_id` field, one is generated.
+
+- **Parameters**
+  - `doc`: The document object to insert.
+- **Returns**
+  - The inserted document, including its `_id`.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the document is invalid (e.g., `null`, not an object, or contains invalid field names).
+  - `ErrorHandler.ErrorTypes.CONFLICT_ERROR`: If a document with the same `_id` already exists.
+
+**Example:**
+
+```javascript
+// Assuming docOps is an instance of DocumentOperations
+const newDoc = docOps.insertDocument({ name: 'Alice', age: 30 });
+console.log('Inserted document ID:', newDoc._id);
+
+try {
+  docOps.insertDocument({ _id: newDoc._id, name: 'Bob' });
+} catch (e) {
+  console.error(e.message); // Conflict error
+}
+```
+
+#### findDocumentById(id: string): Object|null
+
+Retrieves a document by its `_id`.
+
+- **Parameters**
+  - `id`: The `_id` of the document to find.
+- **Returns**
+  - The found document object, or `null` if no document with that `_id` exists.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the `id` is invalid (e.g., not a string or empty).
+
+**Example:**
+
+```javascript
+const user = docOps.findDocumentById('some-unique-id');
+if (user) {
+  console.log('Found user:', user.name);
+} else {
+  console.log('User not found.');
+}
+```
+
+#### findAllDocuments(): Array&lt;Object&gt;
+
+Retrieves all documents currently held in the collection's `_documents` object.
+
+- **Returns**
+  - An array of all document objects. Returns an empty array if the collection is empty.
+
+**Example:**
+
+```javascript
+const allUsers = docOps.findAllDocuments();
+console.log(`There are ${allUsers.length} users.`);
+```
+
+#### updateDocument(id: string, updateData: Object): Object
+
+Replaces the entire document identified by `id` with `updateData`. This is a full replacement, not a partial update. The `_id` in `updateData` must match the `id` parameter if provided, or `updateData` should not contain an `_id` (in which case the original `_id` is preserved).
+
+- **Parameters**
+  - `id`: The `_id` of the document to update.
+  - `updateData`: The new document data.
+- **Returns**
+  - An object `{ acknowledged: boolean, modifiedCount: number }`. `modifiedCount` is 1 if the document was found and updated, 0 otherwise.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If `id` or `updateData` is invalid, or if `updateData._id` is present and does not match `id`.
+  - `ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND`: If no document with the given `id` exists. (Note: current implementation returns `modifiedCount: 0` instead of throwing)
+
+**Example:**
+
+```javascript
+const result = docOps.updateDocument('some-unique-id', { name: 'Alice Smith', age: 31 });
+if (result.modifiedCount > 0) {
+  console.log('Document updated.');
+} else {
+  console.log('Document not found or not modified.');
+}
+```
+
+#### deleteDocument(id: string): Object
+
+Deletes a document by its `_id`.
+
+- **Parameters**
+  - `id`: The `_id` of the document to delete.
+- **Returns**
+  - An object `{ acknowledged: boolean, deletedCount: number }`. `deletedCount` is 1 if the document was found and deleted, 0 otherwise.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the `id` is invalid.
+
+**Example:**
+
+```javascript
+const result = docOps.deleteDocument('some-unique-id');
+if (result.deletedCount > 0) {
+  console.log('Document deleted.');
+} else {
+  console.log('Document not found.');
+}
+```
+
+#### countDocuments(): number
+
+Counts the total number of documents in the collection.
+
+- **Returns**
+  - The total number of documents.
+
+**Example:**
+
+```javascript
+const count = docOps.countDocuments();
+console.log(`Total documents: ${count}`);
+```
+
+#### documentExists(id: string): boolean
+
+Checks if a document with the given `_id` exists.
+
+- **Parameters**
+  - `id`: The `_id` to check.
+- **Returns**
+  - `true` if a document with the `_id` exists, `false` otherwise.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the `id` is invalid.
+
+**Example:**
+
+```javascript
+if (docOps.documentExists('some-unique-id')) {
+  console.log('Document exists.');
+}
+```
+
+#### findByQuery(query: Object): Object|null
+
+Finds the first document that matches the given query. Delegates to `QueryEngine`.
+
+- **Parameters**
+  - `query`: A MongoDB-compatible query object.
+- **Returns**
+  - The first matching document, or `null` if no documents match.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the query is invalid.
+  - `ErrorHandler.ErrorTypes.INVALID_QUERY`: If the query contains invalid operators (as determined by `QueryEngine`).
+
+**Example:**
+
+```javascript
+const user = docOps.findByQuery({ age: { $gt: 30 } });
+if (user) {
+  console.log('Found user older than 30:', user.name);
+}
+```
+
+#### findMultipleByQuery(query: Object): Array&lt;Object&gt;
+
+Finds all documents that match the given query. Delegates to `QueryEngine`.
+
+- **Parameters**
+  - `query`: A MongoDB-compatible query object.
+- **Returns**
+  - An array of matching documents. Returns an empty array if no documents match.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the query is invalid.
+  - `ErrorHandler.ErrorTypes.INVALID_QUERY`: If the query contains invalid operators.
+
+**Example:**
+
+```javascript
+const admins = docOps.findMultipleByQuery({ role: 'admin' });
+admins.forEach(admin => console.log(admin.name));
+```
+
+#### countByQuery(query: Object): number
+
+Counts documents that match the given query. Delegates to `QueryEngine`.
+
+- **Parameters**
+  - `query`: A MongoDB-compatible query object.
+- **Returns**
+  - The number of matching documents.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If the query is invalid.
+  - `ErrorHandler.ErrorTypes.INVALID_QUERY`: If the query contains invalid operators.
+
+**Example:**
+
+```javascript
+const activeUserCount = docOps.countByQuery({ status: 'active' });
+console.log(`Number of active users: ${activeUserCount}`);
+```
+
+#### updateDocumentWithOperators(id: string, updateOps: Object): Object
+
+Updates a single document identified by `id` using MongoDB-style update operators (e.g., `$set`, `$inc`). Delegates to `UpdateEngine`.
+
+- **Parameters**
+  - `id`: The `_id` of the document to update.
+  - `updateOps`: An object containing update operator instructions.
+- **Returns**
+  - An object `{ acknowledged: boolean, modifiedCount: number }`.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If `id` or `updateOps` are invalid.
+  - `ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND`: If no document with the given `id` exists.
+  - `ErrorHandler.ErrorTypes.INVALID_QUERY`: If `updateOps` are invalid (as determined by `UpdateEngine`).
+
+**Example:**
+
+```javascript
+const result = docOps.updateDocumentWithOperators('some-unique-id', { $set: { status: 'inactive' }, $inc: { loginAttempts: 1 } });
+if (result.modifiedCount > 0) {
+  console.log('Document updated with operators.');
+}
+```
+
+#### updateDocumentByQuery(query: Object, updateOps: Object): number
+
+Updates all documents matching the `query` using MongoDB-style update operators. Delegates to `QueryEngine` for finding documents and `UpdateEngine` for applying updates.
+
+- **Parameters**
+  - `query`: The filter criteria to select documents for update.
+  - `updateOps`: The update operator instructions.
+- **Returns**
+  - The number of documents modified.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If `query` or `updateOps` are invalid.
+  - `ErrorHandler.ErrorTypes.INVALID_QUERY`: If `updateOps` are invalid.
+  (Note: `DOCUMENT_NOT_FOUND` is listed in JSDoc but typically results in 0 modified documents rather than an error for "update many" type operations).
+
+**Example:**
+
+```javascript
+const updatedCount = docOps.updateDocumentByQuery({ department: 'Sales' }, { $set: { onQuota: true } });
+console.log(`${updatedCount} sales documents updated.`);
+```
+
+#### replaceDocument(id: string, doc: Object): Object
+
+Replaces a single document identified by `id` with the new `doc`. The `_id` in `doc` must match `id` or be omitted.
+
+- **Parameters**
+  - `id`: The `_id` of the document to replace.
+  - `doc`: The replacement document.
+- **Returns**
+  - An object `{ acknowledged: boolean, modifiedCount: number }`.
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If `id` or `doc` is invalid, or if `doc._id` is present and mismatches `id`.
+  - `ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND`: If no document with the given `id` exists.
+
+**Example:**
+
+```javascript
+const result = docOps.replaceDocument('some-unique-id', { name: 'New Name', value: 'New Value' });
+if (result.modifiedCount > 0) {
+  console.log('Document replaced.');
+}
+```
+
+#### replaceDocumentByQuery(query: Object, doc: Object): number
+
+Replaces the first document matching the `query` with the new `doc`. Note: MongoDB's `replaceOne` is more aligned with `replaceDocument`. This method's name might be slightly misleading if it replaces multiple, but the current implementation seems to target one. If it's intended to replace multiple, the return type and logic would differ. Assuming it replaces one based on typical `replace` semantics.
+
+- **Parameters**
+  - `query`: The filter criteria to select the document for replacement.
+  - `doc`: The replacement document.
+- **Returns**
+  - The number of documents replaced (0 or 1).
+- **Throws**
+  - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If `query` or `doc` is invalid.
+
+**Example:**
+
+```javascript
+const replacedCount = docOps.replaceDocumentByQuery({ status: 'pending' }, { status: 'approved', approvedBy: 'admin' });
+console.log(`${replacedCount} document(s) replaced.`);
+```
+
+### Private Methods
+
+`DocumentOperations` also includes several private helper methods for validation and ID generation:
+
+- `_generateDocumentId()`: Generates a unique ID for new documents.
+- `_validateDocument(doc)`: Validates the overall document structure and content.
+- `_validateDocumentId(id)`: Validates a standalone document ID.
+- `_validateDocumentIdInDocument(id, doc)`: Validates an `_id` field within a document.
+- `_validateDocumentFields(doc)`: Validates field names within a document.
+- `_checkDuplicateId(id)`: Ensures an `_id` is not already in use before insertion.
+- `_validateQuery(query)`: Basic validation for query objects.
+- `_validateUpdateOperators(updateOps)`: Basic validation for update operator objects.
+
+These private methods ensure data integrity and consistent error handling within the component.
 
 ---
