@@ -37,14 +37,14 @@
 | **Section 4** | ✅ **COMPLETE** | 100% | 18/18 | 100% | Database/Collection (refactored) |
 | **Section 5** | ✅ **COMPLETE** | 100% | 61/61 | 100% | CollectionMetadata ✅, DocumentOperations ✅, Collection ✅ |
 | **Section 6** | ✅ **COMPLETE** | 100% | 95/95 | 100% | QueryEngine ✅, DocumentOperations ✅, Collection ✅, Date serialization fix ✅, Integration Tests ✅ |
-| **Section 7** | 🔴 **RED PHASE** | 90% | 44/44 | 100% | UpdateEngine ✅, DocumentOperations ✅, Collection API 🔴 RED Phase |
+| **Section 7** | � **GREEN PHASE** | 75% | 32/48 | 66.7% | UpdateEngine ✅, DocumentOperations ✅, Collection API � Partial GREEN |
 | **Sections 8-9** | ⏳ **PENDING** | 0% | - | - | Awaiting next implementation |
 
 **Total Tests Implemented:** 324 tests across 7 sections (301 unit + 23 integration)  
-**Tests Passing:** 324/324 (100% - all tests passing)  
-**Section 7 Status:** 🔴 **RED PHASE - Collection API Update Tests Created (Investigation Required)**
+**Tests Passing:** 32/48 Collection tests (66.7% pass rate)  
+**Section 7 Status:** � **GREEN PHASE - Partial Implementation Complete**
 
-##  **CURRENT MILESTONE: Section 7 - Collection API Update Tests (RED Phase Complete with Issues)**
+##  **CURRENT MILESTONE: Section 7 - Collection API Update Tests (GREEN Phase Partial Complete)**
 
 **What We've Achieved:**
 
@@ -55,20 +55,20 @@
 - ✅ **Immutable Operations** - Original documents remain unmodified, returns new instances
 - ✅ **DocumentOperations Enhancement Complete** - All 4 missing methods successfully implemented (32/32 tests passing)
 - ✅ **QueryEngine Integration Issues Resolved** - All DocumentOperations Query Enhancement tests now pass (100% pass rate)
-- 🔴 **Collection API RED Phase** - 8 new test cases created for updateMany, replaceOne, and advanced functionality
+- ✅ **Collection API GREEN Phase Partial** - updateMany and replaceOne methods successfully implemented
 
-**Current Investigation:**
+**Current Status:**
 
-- ⚠️ **Unexpected Test Results** - RED phase tests showing 97.9% pass rate instead of expected failures
-- ❌ **Test Framework Issue** - Tests expecting TypeError for missing methods are passing unexpectedly  
-- 🔍 **Investigation Required** - Need to determine why Collection tests aren't failing as designed
-- 📝 **Only 1 Genuine Failure** - testCollectionErrorPropagation (empty update validation issue)
+- ✅ **GREEN Phase Success** - updateMany and replaceOne working correctly (9 new test cases passing)
+- ❌ **Missing Methods** - deleteOne and countDocuments methods not yet implemented (14 test failures)
+- ❌ **Invalid Tests** - 2 legacy tests expect old updateOne behaviour and now fail
+- � **Pass Rate** - 66.7% (32/48) - down from previous 100% due to missing methods
 
 **Next Steps for Section 7:**
 
-- 🔴 **RED Phase Investigation** - Determine why Collection API tests aren't failing as expected
-- 🔧 **Fix Test Framework Issues** - Ensure proper RED phase behaviour for missing methods
-- 🟢 **GREEN Phase Implementation** - Add missing Collection methods once RED phase is confirmed
+- � **Implement Missing Methods** - Add deleteOne and countDocuments to Collection class
+- 🔧 **Fix Invalid Tests** - Update 2 legacy update tests to reflect new updateOne operator support
+- 🟢 **Complete GREEN Phase** - Achieve 100% pass rate for all Collection API tests
 - 🔵 **REFACTOR Phase** - Optimise and clean up implementation
 
 ## Section 6: Query Engine and Document Filtering
@@ -179,13 +179,16 @@ Following the completion of Section 6, a refactoring pull request was merged, in
    - ✅ All DocumentOperations Query Enhancement and integration tests now pass (100% pass rate)
    - ✅ UpdateEngine fully integrated for all complex update operations
 
-7. **🔴 Collection API Enhancement** *(Complete MongoDB-style updates - RED PHASE)*
-   - ✅ RED phase test cases created for all 12 Collection API Update Tests
-   - ⚠️ **Investigation Required**: Tests showing 97.9% pass rate (expected RED phase failures)
-   - ⏳ Enhance `updateOne(idOrFilter, update)` to support update operators
-   - ⏳ Add `updateMany(filter, update)` for multiple document updates
-   - ⏳ Add `replaceOne(idOrFilter, doc)` for document replacement
-   - ⏳ Support both document replacement and operator-based updates
+7. **� Collection API Enhancement** *(Complete MongoDB-style updates - GREEN PHASE PARTIAL)*
+   - ✅ RED phase test cases created for all Collection API Update Tests  
+   - ✅ GREEN phase partial implementation complete
+   - ✅ Enhanced `updateOne(idOrFilter, update)` to support update operators
+   - ✅ Added `updateMany(filter, update)` for multiple document updates
+   - ✅ Added `replaceOne(idOrFilter, doc)` for document replacement
+   - ✅ Support both document replacement and operator-based updates
+   - ❌ **Missing Methods**: `deleteOne()` and `countDocuments()` methods not implemented
+   - ❌ **Test Issues**: 2 legacy tests expect old updateOne behaviour and now fail
+   - 🔧 **Current Pass Rate**: 66.7% (32/48) - down from 100% due to missing methods
 
 ### Integration and API Enhancements
 

@@ -276,32 +276,214 @@ class Collection {
 
   /**
    * Update a single document by filter (MongoDB-compatible with QueryEngine support)
-   * @param {Object} filter - Query filter (supports field-based queries and _id queries)
-   * @param {Object} update - Document replacement (no operators in current version)
+   * @param {string|Object} filterOrId - Document ID or filter criteria
+   * @param {Object} update - Update operators (e.g. {$set: {field: value}}) or document replacement
    * @returns {Object} {matchedCount: number, modifiedCount: number, acknowledged: boolean}
    * @throws {InvalidArgumentError} For invalid parameters
-   * @throws {OperationError} For unsupported update operators
    */
-  updateOne(filter, update) {
+  updateOne(filterOrId, update) {
     this._ensureLoaded();
-    this._validateFilter(filter, 'updateOne');
     
     // Use Validate for update validation - disallow empty objects
     Validate.object(update, 'update', false);
     
-    // Check for update operators (not supported in current version)
+    // Determine if this is a filter or ID
+    const isIdFilter = typeof filterOrId === 'string';
+    const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
+    
+    if (!isIdFilter) {
+      this._validateFilter(filter, 'updateOne');
+    }
+    
+    // Determine if this is an update operation or document replacement
     const updateKeys = Object.keys(update);
-    for (const key of updateKeys) {
-      if (key.startsWith('$')) {
-        throw new OperationError('Update operators not yet implemented - requires Section 7 Update Engine');
-      }
+    const hasOperators = updateKeys.some(key => key.startsWith('$'));
+    const hasNonOperators = updateKeys.some(key => !key.startsWith('$'));
+    
+    // Validate that we don't mix operators and non-operators
+    if (hasOperators && hasNonOperators) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('update', update, 'Cannot mix update operators with document fields');
     }
     
     const filterKeys = Object.keys(filter);
     
-    // ID filter {_id: "id"} - use direct update for performance
+    if (hasOperators) {
+      // Handle update operators through UpdateEngine
+      if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+        // ID-based update with operators
+        const result = this._documentOperations.updateDocumentWithOperators(filter._id, update);
+        
+        if (result.modifiedCount > 0) {
+          this._updateMetadata();
+          this._markDirty();
+        }
+        
+        return {
+          matchedCount: result.modifiedCount > 0 ? 1 : 0,
+          modifiedCount: result.modifiedCount,
+          acknowledged: true
+        };
+      } else {
+        // Field-based filter update with operators
+        const matchingDoc = this._documentOperations.findByQuery(filter);
+        
+        if (!matchingDoc) {
+          return {
+            matchedCount: 0,
+            modifiedCount: 0,
+            acknowledged: true
+          };
+        }
+        
+        const result = this._documentOperations.updateDocumentWithOperators(matchingDoc._id, update);
+        
+        if (result.modifiedCount > 0) {
+          this._updateMetadata();
+          this._markDirty();
+        }
+        
+        return {
+          matchedCount: 1,
+          modifiedCount: result.modifiedCount,
+          acknowledged: true
+        };
+      }
+    } else {
+      // Handle document replacement (original behaviour)
+      if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+        // ID-based document replacement
+        const result = this._documentOperations.updateDocument(filter._id, update);
+        
+        if (result.modifiedCount > 0) {
+          this._updateMetadata();
+          this._markDirty();
+        }
+        
+        return {
+          matchedCount: result.modifiedCount > 0 ? 1 : 0,
+          modifiedCount: result.modifiedCount,
+          acknowledged: true
+        };
+      } else {
+        // Field-based filter document replacement
+        const matchingDoc = this._documentOperations.findByQuery(filter);
+        
+        if (!matchingDoc) {
+          return {
+            matchedCount: 0,
+            modifiedCount: 0,
+            acknowledged: true
+          };
+        }
+        
+        const result = this._documentOperations.updateDocument(matchingDoc._id, update);
+        
+        if (result.modifiedCount > 0) {
+          this._updateMetadata();
+          this._markDirty();
+        }
+        
+        return {
+          matchedCount: 1,
+          modifiedCount: result.modifiedCount,
+          acknowledged: true
+        };
+      }
+    }
+  }
+
+  /**
+   * Update multiple documents matching a filter (MongoDB-compatible)
+   * @param {Object} filter - Query filter criteria
+   * @param {Object} update - Update operators (e.g. {$set: {field: value}})
+   * @returns {Object} {matchedCount: number, modifiedCount: number, acknowledged: boolean}
+   * @throws {InvalidArgumentError} For invalid parameters
+   */
+  updateMany(filter, update) {
+    this._ensureLoaded();
+    this._validateFilter(filter, 'updateMany');
+    
+    // Use Validate for update validation - disallow empty objects
+    Validate.object(update, 'update', false);
+    
+    // Validate that update contains only operators
+    const updateKeys = Object.keys(update);
+    const hasOperators = updateKeys.some(key => key.startsWith('$'));
+    const hasNonOperators = updateKeys.some(key => !key.startsWith('$'));
+    
+    if (!hasOperators) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('update', update, 'updateMany requires update operators (e.g. {$set: {field: value}})');
+    }
+    
+    if (hasNonOperators) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('update', update, 'Cannot mix update operators with document fields');
+    }
+    
+    // Find all matching documents first
+    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
+    const matchedCount = matchingDocs.length;
+    
+    if (matchedCount === 0) {
+      return {
+        matchedCount: 0,
+        modifiedCount: 0,
+        acknowledged: true
+      };
+    }
+    
+    // Apply updates to all matching documents
+    let modifiedCount = 0;
+    for (const doc of matchingDocs) {
+      const result = this._documentOperations.updateDocumentWithOperators(doc._id, update);
+      modifiedCount += result.modifiedCount;
+    }
+    
+    if (modifiedCount > 0) {
+      this._updateMetadata();
+      this._markDirty();
+    }
+    
+    return {
+      matchedCount: matchedCount,
+      modifiedCount: modifiedCount,
+      acknowledged: true
+    };
+  }
+
+  /**
+   * Replace a single document by filter or ID (MongoDB-compatible)
+   * @param {string|Object} filterOrId - Document ID or filter criteria
+   * @param {Object} doc - Replacement document (cannot contain update operators)
+   * @returns {Object} {matchedCount: number, modifiedCount: number, acknowledged: boolean}
+   * @throws {InvalidArgumentError} For invalid parameters
+   */
+  replaceOne(filterOrId, doc) {
+    this._ensureLoaded();
+    
+    // Use Validate for doc validation - disallow empty objects
+    Validate.object(doc, 'doc', false);
+    
+    // Validate that replacement document contains no operators
+    const docKeys = Object.keys(doc);
+    for (const key of docKeys) {
+      if (key.startsWith('$')) {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, 'Replacement document cannot contain update operators');
+      }
+    }
+    
+    // Determine if this is a filter or ID
+    const isIdFilter = typeof filterOrId === 'string';
+    const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
+    
+    if (!isIdFilter) {
+      this._validateFilter(filter, 'replaceOne');
+    }
+    
+    const filterKeys = Object.keys(filter);
+    
     if (filterKeys.length === 1 && filterKeys[0] === '_id') {
-      const result = this._documentOperations.updateDocument(filter._id, update);
+      // ID-based replacement
+      const result = this._documentOperations.replaceDocument(filter._id, doc);
       
       if (result.modifiedCount > 0) {
         this._updateMetadata();
@@ -313,104 +495,31 @@ class Collection {
         modifiedCount: result.modifiedCount,
         acknowledged: true
       };
-    }
-    
-    // Field-based or complex queries - find first matching document then update
-    const matchingDoc = this._documentOperations.findByQuery(filter);
-    
-    if (!matchingDoc) {
-      return {
-        matchedCount: 0,
-        modifiedCount: 0,
-        acknowledged: true
-      };
-    }
-    
-    // Update the found document by ID
-    const result = this._documentOperations.updateDocument(matchingDoc._id, update);
-    
-    if (result.modifiedCount > 0) {
-      this._updateMetadata();
-      this._markDirty();
-    }
-    
-    return {
-      matchedCount: 1,
-      modifiedCount: result.modifiedCount,
-      acknowledged: true
-    };
-  }
-
-  /**
-   * Delete a single document by filter (MongoDB-compatible with QueryEngine support)
-   * @param {Object} filter - Query filter (supports field-based queries and _id queries)
-   * @returns {Object} {deletedCount: number, acknowledged: boolean}
-   * @throws {InvalidArgumentError} For invalid filters
-   */
-  deleteOne(filter) {
-    this._ensureLoaded();
-    this._validateFilter(filter, 'deleteOne');
-    
-    const filterKeys = Object.keys(filter);
-    
-    // ID filter {_id: "id"} - use direct delete for performance
-    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
-      const result = this._documentOperations.deleteDocument(filter._id);
+    } else {
+      // Field-based filter replacement
+      const matchingDoc = this._documentOperations.findByQuery(filter);
       
-      if (result.deletedCount > 0) {
-        this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+      if (!matchingDoc) {
+        return {
+          matchedCount: 0,
+          modifiedCount: 0,
+          acknowledged: true
+        };
+      }
+      
+      const result = this._documentOperations.replaceDocument(matchingDoc._id, doc);
+      
+      if (result.modifiedCount > 0) {
+        this._updateMetadata();
         this._markDirty();
       }
       
       return {
-        deletedCount: result.deletedCount,
+        matchedCount: 1,
+        modifiedCount: result.modifiedCount,
         acknowledged: true
       };
     }
-    
-    // Field-based or complex queries - find first matching document then delete
-    const matchingDoc = this._documentOperations.findByQuery(filter);
-    
-    if (!matchingDoc) {
-      return {
-        deletedCount: 0,
-        acknowledged: true
-      };
-    }
-    
-    // Delete the found document by ID
-    const result = this._documentOperations.deleteDocument(matchingDoc._id);
-    
-    if (result.deletedCount > 0) {
-      this._updateMetadata({ documentCount: Object.keys(this._documents).length });
-      this._markDirty();
-    }
-    
-    return {
-      deletedCount: result.deletedCount,
-      acknowledged: true
-    };
-  }
-
-  /**
-   * Count documents by filter (MongoDB-compatible with QueryEngine support)
-   * @param {Object} filter - Query filter (supports field-based queries and empty filter)
-   * @returns {number} Document count
-   * @throws {InvalidArgumentError} For invalid filters
-   */
-  countDocuments(filter = {}) {
-    this._ensureLoaded();
-    this._validateFilter(filter, 'countDocuments');
-    
-    const filterKeys = Object.keys(filter);
-    
-    // Empty filter {} - count all documents
-    if (filterKeys.length === 0) {
-      return this._documentOperations.countDocuments();
-    }
-    
-    // Field-based or complex queries - use QueryEngine
-    return this._documentOperations.countByQuery(filter);
   }
 
   /**
