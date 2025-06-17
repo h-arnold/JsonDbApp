@@ -378,8 +378,7 @@ class QueryEngine {
    * @private
    */
   _findOperators(obj, operators = []) {
-    try {
-      Validate.validateObject(obj, 'queryObject');
+    if (Validate.isPlainObject(obj)) {
       if (!(obj instanceof Date)) {
         Object.keys(obj).forEach(key => {
           if (key.startsWith('$')) {
