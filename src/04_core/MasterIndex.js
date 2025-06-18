@@ -455,5 +455,3 @@ class MasterIndex {
     }
   }
  }
-
- module.exports = MasterIndex;
