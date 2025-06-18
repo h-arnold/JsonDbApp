@@ -122,5 +122,28 @@ function createMasterIndexLockServiceIntegrationTestSuite() {
     }, Error, 'LockService integration should not exist yet (TDD red phase)');
   });
 
+  suite.addTest('should coordinate CollectionMetadata with locking mechanism', function() {
+    // Arrange
+    const masterIndex = new MasterIndex();
+    const collectionName = 'metadataLockingTest';
+    const operationId = 'metadata-locking-operation';
+    const metadata = new CollectionMetadata(collectionName, 'locking-file-id', {
+      documentCount: 3,
+      modificationToken: 'locking-token-123'
+    });
+    
+    // Act
+    const lockAcquired = masterIndex.acquireLock(collectionName, operationId);
+    masterIndex.addCollection(collectionName, metadata);
+    const retrievedCollection = masterIndex.getCollection(collectionName);
+    
+    // Assert - RED PHASE: This will fail until CollectionMetadata supports lock status integration
+    TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
+    TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'Should return CollectionMetadata instance');
+    TestFramework.assertNotNull(retrievedCollection.lockStatus, 'CollectionMetadata should contain lock status');
+    TestFramework.assertTrue(retrievedCollection.lockStatus.isLocked, 'CollectionMetadata should reflect locked state');
+    TestFramework.assertEquals(retrievedCollection.lockStatus.lockedBy, operationId, 'CollectionMetadata should track operation ID');
+  });
+
   return suite;
 }

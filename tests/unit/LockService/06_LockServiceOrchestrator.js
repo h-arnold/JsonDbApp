@@ -107,6 +107,7 @@ function createAllLockServiceTestSuites() {
   // Create all test suites in order
   suites.push(createLockServiceConstructorTestSuite());
   suites.push(createLockServiceOperationTestSuite());
+  suites.push(createLockServiceCollectionOperationTestSuite());
   suites.push(createMasterIndexLockServiceIntegrationTestSuite());
   suites.push(createBackwardsCompatibilityTestSuite());
   suites.push(createRealEnvironmentIntegrationTestSuite());
@@ -155,7 +156,8 @@ function runAllLockServiceTests() {
     // Run tests in specific order for TDD red phase
     const testOrder = [
       'LockService Constructor Tests',
-      'LockService Operation Tests', 
+      'LockService Operation Tests',
+      'LockService Collection Operations',
       'MasterIndex LockService Integration',
       'Backwards Compatibility Tests',
       'LockService Real Environment Integration Tests'
