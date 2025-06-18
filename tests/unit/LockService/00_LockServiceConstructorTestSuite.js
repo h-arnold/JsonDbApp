@@ -11,21 +11,20 @@ function createLockServiceConstructorTestSuite() {
   const suite = new TestSuite('LockService Constructor Tests');
 
   suite.addTest('testLockServiceConstructorWithDefaultConfig', function() {
-    // Arrange
-    // Act - This should fail initially as LockService doesn't exist yet
-    TestFramework.assertThrows(() => {
-      const lockService = new LockService();
-    }, ReferenceError, 'LockService class should not exist yet (TDD red phase)');
+    // Arrange & Act
+    const lockService = new LockService();
+    // Assert - default timeout should be applied
+    TestFramework.assertTrue(lockService instanceof LockService, 'Expected instance of LockService');
+    TestFramework.assertEquals(5000, lockService._lockTimeout, 'Default lockTimeout should be 5000ms');
   });
 
   suite.addTest('testLockServiceConstructorWithInvalidConfig', function() {
     // Arrange
     const invalidConfig = null;
-    
-    // Act & Assert - This should fail initially as LockService doesn't exist yet
+    // Act & Assert - should throw INVALID_ARGUMENT for null config
     TestFramework.assertThrows(() => {
-      const lockService = new LockService(invalidConfig);
-    }, ReferenceError, 'LockService class should not exist yet (TDD red phase)');
+      new LockService(invalidConfig);
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Constructor should throw INVALID_ARGUMENT for null config');
   });
 
   return suite;
