@@ -115,22 +115,12 @@ function createBackwardsCompatibilityTestSuite() {
 
   suite.addTest('testMasterIndexConfigurationCompatible', function() {
     // Arrange
-    const customConfig = {
-      lockTimeout: 10000,
-      version: 2
-    };
-    
-    // Act
-    const masterIndex = new MasterIndex(customConfig);
-    
-    // Assert - Test that LockService dependency injection doesn't exist yet (TDD red phase)
-    // This should fail because we expect to be able to inject a LockService in the future
-    TestFramework.assertThrows(() => {
-      const mockLockService = { acquireScriptLock: function() {}, releaseScriptLock: function() {} };
-      const masterIndexWithLockService = new MasterIndex(customConfig, mockLockService);
-      // If this doesn't throw, it means LockService injection is already implemented
-      TestFramework.assertNotNull(masterIndexWithLockService._lockService, 'LockService should be injectable');
-    }, Error, 'LockService dependency injection should not exist yet (TDD red phase)');
+    const customConfig = { lockTimeout: 10000, version: 2 };
+    // Act: inject a mock LockService
+    const mockLockService = { acquireScriptLock: () => {}, releaseScriptLock: () => {} };
+    const masterIndexWithLockService = new MasterIndex(customConfig, mockLockService);
+    // Assert: LockService is injectable and assigned correctly
+    TestFramework.assertEquals(mockLockService, masterIndexWithLockService._lockService, 'LockService should be injectable');
   });
 
   return suite;

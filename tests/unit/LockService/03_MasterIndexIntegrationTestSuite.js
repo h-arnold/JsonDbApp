@@ -11,38 +11,37 @@ function createMasterIndexLockServiceIntegrationTestSuite() {
   const suite = new TestSuite('MasterIndex LockService Integration');
 
   suite.addTest('testMasterIndexConstructorWithDefaultLockService', function() {
-    // Arrange & Act - This should pass as MasterIndex exists, but we're testing new functionality
+    // Arrange & Act
     const masterIndex = new MasterIndex();
-    
-    // Assert - This should fail initially as LockService integration doesn't exist yet
-    TestFramework.assertThrows(() => {
-      const lockService = masterIndex._lockService;
-      TestFramework.assertNotNull(lockService, 'MasterIndex should have default LockService');
-    }, Error, 'LockService integration should not exist yet (TDD red phase)');
+    // Assert default LockService is injected
+    TestFramework.assertDefined(masterIndex._lockService, 'MasterIndex should have a LockService instance');
+    TestFramework.assertTrue(masterIndex._lockService instanceof LockService, 'Default _lockService should be LockService');
   });
 
   suite.addTest('testMasterIndexConstructorWithInjectedLockService', function() {
     // Arrange
-    // Act & Assert - This should fail initially as LockService doesn't exist yet
-    TestFramework.assertThrows(() => {
-      const mockLockService = new LockService();
-      const masterIndex = new MasterIndex({}, mockLockService);
-    }, ReferenceError, 'LockService class should not exist yet (TDD red phase)');
+    const mockLockService = new LockService();
+    // Act
+    const masterIndex = new MasterIndex({}, mockLockService);
+    // Assert injected LockService is used
+    TestFramework.assertEquals(mockLockService, masterIndex._lockService, 'Injected LockService should be assigned');
   });
 
   suite.addTest('testMasterIndexUsesInjectedLockService', function() {
-    // Arrange
-    // Act & Assert - This should fail initially as LockService integration doesn't exist yet
-    TestFramework.assertThrows(() => {
-      const mockLockService = {
-        acquireScriptLock: function() { return {}; },
-        releaseScriptLock: function() {}
-      };
-      const masterIndex = new MasterIndex({}, mockLockService);
-      
-      // Try to access a collection to trigger lock usage
-      masterIndex.getCollection('test');
-    }, Error, 'LockService integration should not exist yet (TDD red phase)');
+    // Arrange flags for script lock calls
+    let acquireCalled = false;
+    let releaseCalled = false;
+    const mockLock = { releaseLock: () => { releaseCalled = true; } };
+    const mockLockService = {
+      acquireScriptLock: function(timeout) { acquireCalled = true; return mockLock; },
+      releaseScriptLock: function(lock) { releaseCalled = true; }
+    };
+    const masterIndex = new MasterIndex({}, mockLockService);
+    // Act: perform an operation that uses script lock
+    masterIndex.addCollection('test', { fileId: 'id', documentCount: 0, modificationToken: 'tok' });
+    // Assert: LockService methods were called
+    TestFramework.assertTrue(acquireCalled, 'acquireScriptLock should be called');
+    TestFramework.assertTrue(releaseCalled, 'releaseScriptLock should be called');
   });
 
   suite.addTest('testMasterIndexLockServiceMethodCalls', function() {

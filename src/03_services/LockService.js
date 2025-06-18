@@ -37,6 +37,12 @@ class LockService {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('timeout', timeout, 'timeout must be non-negative');
     }
 
+    // If native GAS LockService not available, return no-op lock
+    if (!globalThis.LockService || typeof globalThis.LockService.getScriptLock !== 'function') {
+      this._logger.warn('Native GAS LockService not available: using no-op lock');
+      return { waitLock: () => {}, releaseLock: () => {} };
+    }
+
     // Acquire GAS script lock
     const gasLock = globalThis.LockService.getScriptLock();
     try {

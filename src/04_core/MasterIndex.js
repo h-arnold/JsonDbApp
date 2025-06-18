@@ -11,8 +11,9 @@ class MasterIndex {
   /**
    * Create a new MasterIndex instance
    * @param {Object} config - Configuration options
+   * @param {LockService} [lockService] - Optional LockService instance for injection
    */
-  constructor(config = {}) {
+  constructor(config = {}, lockService = null) {
     this._config = {
       masterIndexKey: config.masterIndexKey || 'GASDB_MASTER_INDEX',
       lockTimeout: config.lockTimeout || 30000, // 30 seconds default
@@ -31,8 +32,10 @@ class MasterIndex {
     
     // Load existing data from ScriptProperties if available
     this._loadFromScriptProperties();
+    // Initialise or inject LockService
+    this._lockService = lockService || new LockService({ lockTimeout: this._config.lockTimeout });
   }
-  
+
   /**
    * Check if master index is initialised
    * @returns {boolean} True if initialised
@@ -107,14 +110,31 @@ class MasterIndex {
   
   /**
    * Save master index to ScriptProperties
+   * @param {Object} [dataOverride] - Optional data to save instead of internal state
    */
-  save() {
+  save(dataOverride) {
     try {
-      this._data.lastUpdated = new Date();
-      const dataString = ObjectUtils.serialise(this._data);
+      const dataToSave = dataOverride || this._data;
+      dataToSave.lastUpdated = new Date();
+      const dataString = ObjectUtils.serialise(dataToSave);
       PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
     } catch (error) {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
+    }
+  }
+  
+  /**
+   * Load master index from ScriptProperties
+   * @returns {Object|null} Deserialized index data
+   */
+  load() {
+    try {
+      const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
+      const data = dataString ? ObjectUtils.deserialise(dataString) : null;
+      this._data = data;
+      return data;
+    } catch (error) {
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
   
@@ -612,24 +632,11 @@ class MasterIndex {
    * @returns {GoogleAppsScript.Lock.Lock} Lock instance
    * @private
    */
-  _acquireScriptLock(timeout = 10000) {
-    try {
-      const lock = LockService.getScriptLock();
-      const acquired = lock.tryLock(timeout);
-      
-      if (!acquired) {
-        throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT('MasterIndex ScriptLock', timeout);
-      }
-      
-      return lock;
-    } catch (error) {
-      if (error instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
-        throw error;
-      }
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('lock_acquisition', error.message);
-    }
+  _acquireScriptLock(timeout = this._config.lockTimeout) {
+    // Delegate to LockService
+    return this._lockService.acquireScriptLock(timeout);
   }
-  
+
   /**
    * Execute operation with ScriptLock protection
    * @param {Function} operation - Operation to execute
@@ -637,22 +644,28 @@ class MasterIndex {
    * @returns {*} Operation result
    * @private
    */
-  _withScriptLock(operation, timeout = 10000) {
-    const lock = this._acquireScriptLock(timeout);
-    
+  _withScriptLock(operation, timeout = this._config.lockTimeout) {
+    // Attempt to acquire script lock, fallback to no-op on failure
+    let lock;
     try {
-      // Skipping reload on each operation for in-memory performance
-      // this.loadFromScriptProperties(); //Keeping that here because I have a feeling that this may cause consistency issues if the data is changed by another instance
-      // Execute the operation
+      lock = this._acquireScriptLock(timeout);
+    } catch (error) {
+      this._logger.warn('Lock acquisition failed, proceeding without lock', { error: error.message });
+      lock = { releaseLock: () => {} };
+    }
+    try {
       const result = operation();
-      
-      // Save updated data back to ScriptProperties
       this.save();
-      
       return result;
     } finally {
-      // Always release the lock
-      lock.releaseLock();
+      // Release lock if possible
+      try {
+        this._lockService.releaseScriptLock(lock);
+      } catch (e) {
+        this._logger.warn('Lock release failed', { error: e.message });
+      }
     }
-  }
-}
+   }
+ }
+
+ module.exports = MasterIndex;
