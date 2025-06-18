@@ -26,7 +26,6 @@ class MasterIndex {
       version: this._config.version,
       lastUpdated: new Date(),
       collections: {},
-      locks: {},
       modificationHistory: {}
     };
     
@@ -169,22 +168,6 @@ class MasterIndex {
       ? rawData
       : new CollectionMetadata(rawData);
     
-    // Synchronise lock status from current locks
-    const currentLock = this._data.locks[name];
-    if (currentLock) {
-      // Check if lock is still valid (not expired)
-      const now = Date.now();
-      const expiresAt = currentLock.lockTimeout || currentLock.expiresAt;
-      
-      if (now < expiresAt) {
-        // Lock is still active, update metadata
-        collectionMetadata.setLockStatus(currentLock);
-      } else {
-        // Lock expired, remove it
-        this._removeLock(name);
-      }
-    }
-    
     return collectionMetadata;
   }
   
@@ -277,10 +260,6 @@ class MasterIndex {
 
     if (this._data.collections && this._data.collections.hasOwnProperty(name)) {
       delete this._data.collections[name];
-      // Also remove any associated locks for the collection
-      if (this._data.locks && this._data.locks.hasOwnProperty(name)) {
-        delete this._data.locks[name];
-      }
       this._addToModificationHistory(name, 'removeCollection', { name });
       this.save(); // Persist changes
       this._logger.info('Collection removed from master index', { name });
@@ -298,77 +277,18 @@ class MasterIndex {
    * @returns {boolean} True if lock acquired
    */
   acquireLock(collectionName, operationId) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    
-    if (!operationId || typeof operationId !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Operation ID must be a non-empty string');
-    }
-    
-    return this._withScriptLock(() => {
-      // Clean up expired locks first (internal method to avoid deadlock)
-      this._internalCleanupExpiredLocks();
-      
-      // Check if already locked
-      if (this.isLocked(collectionName)) {
-        return false;
-      }
-      
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + this._config.lockTimeout);
-      
-      const lockInfo = {
-        isLocked: true,
-        lockedBy: operationId,
-        lockedAt: now.getTime(), // Use timestamp for consistency
-        lockTimeout: expiresAt.getTime() // Use timestamp for consistency
-      };
-      
-      // Store lock in both places for easier management
-      this._data.locks[collectionName] = lockInfo;
-      
-      // Also store in collection if it exists, using CollectionMetadata
-      if (this._data.collections[collectionName]) {
-        const collectionMetadata = this._data.collections[collectionName];
-        collectionMetadata.setLockStatus(lockInfo);
-        this._data.collections[collectionName] = collectionMetadata;
-      }
-      
-      this._data.lastUpdated = new Date();
-      
-      return true;
-    });
+    return this._lockService.acquireCollectionLock(collectionName, operationId);
   }
-  
+
   /**
    * Check if a collection is locked
    * @param {string} collectionName - Collection name
    * @returns {boolean} True if locked
    */
   isLocked(collectionName) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      return false;
-    }
-    
-    const lockInfo = this._data.locks[collectionName];
-    if (!lockInfo) {
-      return false;
-    }
-    
-    // Check if lock has expired
-    const now = Date.now();
-    const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
-    
-    if (now >= expiresAt) {
-      // Lock has expired, clean it up
-      this._removeLock(collectionName);
-      return false;
-    }
-    
-    return true;
+    return this._lockService.isCollectionLocked(collectionName);
   }
-  
+
   /**
    * Release a lock for a collection
    * @param {string} collectionName - Collection to unlock
@@ -376,38 +296,15 @@ class MasterIndex {
    * @returns {boolean} True if lock released
    */
   releaseLock(collectionName, operationId) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    
-    if (!operationId || typeof operationId !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Operation ID must be a non-empty string');
-    }
-    
-    return this._withScriptLock(() => {
-      const lockInfo = this._data.locks[collectionName];
-      if (!lockInfo) {
-        return false; // No lock to release
-      }
-      
-      // Verify the operation ID matches
-      if (lockInfo.lockedBy !== operationId) {
-        return false; // Cannot release lock held by another operation
-      }
-      
-      this._removeLock(collectionName);
-      return true;
-    });
+    return this._lockService.releaseCollectionLock(collectionName, operationId);
   }
-  
+
   /**
    * Clean up expired locks
    * @returns {boolean} True if any locks were cleaned up
    */
   cleanupExpiredLocks() {
-    return this._withScriptLock(() => {
-      return this._internalCleanupExpiredLocks();
-    });
+    return this._lockService.cleanupExpiredCollectionLocks();
   }
   
   /**
@@ -557,115 +454,6 @@ class MasterIndex {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
-  
-  /**
-   * Remove a lock from both storage locations
-   * @param {string} collectionName - Collection name
-   * @private
-   */
-  _removeLock(collectionName) {
-    delete this._data.locks[collectionName];
-    
-    if (this._data.collections[collectionName]) {
-      const instance = this._data.collections[collectionName] instanceof CollectionMetadata
-        ? this._data.collections[collectionName]
-        : new CollectionMetadata(this._data.collections[collectionName]);
-      instance.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
-      this._data.collections[collectionName] = instance;
-    }
-  }
-  
-  /**
-   * Add entry to modification history
-   * @param {string} collectionName - Collection name
-   * @param {string} operation - Operation type
-   * @param {Object} data - Operation data
-   * @private
-   */
-  _addToModificationHistory(collectionName, operation, data) {
-    if (!this._data.modificationHistory[collectionName]) {
-      this._data.modificationHistory[collectionName] = [];
-    }
-    
-    this._data.modificationHistory[collectionName].push({
-      operation: operation,
-      timestamp: new Date(),
-      data: data
-    });
-    
-    // Keep only last 50 entries to prevent excessive growth
-    if (this._data.modificationHistory[collectionName].length > 50) {
-      this._data.modificationHistory[collectionName] = 
-        this._data.modificationHistory[collectionName].slice(-50);
-    }
-  }
-  
-  /**
-   * Internal cleanup of expired locks (without ScriptLock wrapper to prevent deadlock)
-   * @returns {boolean} True if any locks were cleaned up
-   * @private
-   */
-  _internalCleanupExpiredLocks() {
-    const now = Date.now();
-    let anyExpired = false;
-    
-    Object.keys(this._data.locks).forEach(collectionName => {
-      const lockInfo = this._data.locks[collectionName];
-      const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
-      
-      if (now >= expiresAt) {
-        this._removeLock(collectionName);
-        anyExpired = true;
-      }
-    });
-    
-    if (anyExpired) {
-      this._data.lastUpdated = new Date();
-    }
-    
-    return anyExpired;
-  }
-  
-  /**
-   * Acquire Google Apps Script LockService lock
-   * @param {number} timeout - Lock timeout in milliseconds
-   * @returns {GoogleAppsScript.Lock.Lock} Lock instance
-   * @private
-   */
-  _acquireScriptLock(timeout = this._config.lockTimeout) {
-    // Delegate to LockService
-    return this._lockService.acquireScriptLock(timeout);
-  }
-
-  /**
-   * Execute operation with ScriptLock protection
-   * @param {Function} operation - Operation to execute
-   * @param {number} timeout - Lock timeout in milliseconds
-   * @returns {*} Operation result
-   * @private
-   */
-  _withScriptLock(operation, timeout = this._config.lockTimeout) {
-    // Attempt to acquire script lock, fallback to no-op on failure
-    let lock;
-    try {
-      lock = this._acquireScriptLock(timeout);
-    } catch (error) {
-      this._logger.warn('Lock acquisition failed, proceeding without lock', { error: error.message });
-      lock = { releaseLock: () => {} };
-    }
-    try {
-      const result = operation();
-      this.save();
-      return result;
-    } finally {
-      // Release lock if possible
-      try {
-        this._lockService.releaseScriptLock(lock);
-      } catch (e) {
-        this._logger.warn('Lock release failed', { error: e.message });
-      }
-    }
-   }
  }
 
  module.exports = MasterIndex;
