@@ -470,4 +470,41 @@ class MasterIndex {
       this._lockService.releaseScriptLock(lock);
     }
   }
+
+  /**
+   * Add entry to modification history for debugging and auditing
+   * @param {string} collectionName - Collection name
+   * @param {string} operation - Operation type (e.g., 'ADD_COLLECTION', 'UPDATE_METADATA')
+   * @param {Object} data - Operation data/payload
+   * @private
+   */
+  _addToModificationHistory(collectionName, operation, data) {
+    if (!collectionName || typeof collectionName !== 'string') {
+      return; // Silent fail for invalid collection names to avoid breaking existing operations
+    }
+    
+    // Ensure modificationHistory structure exists
+    if (!this._data.modificationHistory) {
+      this._data.modificationHistory = {};
+    }
+    
+    if (!this._data.modificationHistory[collectionName]) {
+      this._data.modificationHistory[collectionName] = [];
+    }
+    
+    // Add new history entry
+    const entry = {
+      operation: operation || 'UNKNOWN',
+      timestamp: new Date().toISOString(),
+      data: data || null
+    };
+    
+    this._data.modificationHistory[collectionName].push(entry);
+    
+    // Optional: Limit history size to prevent unbounded growth
+    const maxHistoryEntries = 100; // Keep last 100 operations
+    if (this._data.modificationHistory[collectionName].length > maxHistoryEntries) {
+      this._data.modificationHistory[collectionName] = this._data.modificationHistory[collectionName].slice(-maxHistoryEntries);
+    }
+  }
 }
