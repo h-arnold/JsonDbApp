@@ -454,4 +454,20 @@ class MasterIndex {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
- }
+
+  /**
+   * Execute operation with ScriptLock protection
+   * @param {Function} operation - Operation to execute
+   * @param {number} timeout - Lock timeout in milliseconds
+   * @returns {*} Operation result
+   * @private
+   */
+  _withScriptLock(operation, timeout = this._config.lockTimeout) {
+    const lock = this._lockService.acquireScriptLock(timeout);
+    try {
+      return operation();
+    } finally {
+      this._lockService.releaseScriptLock(lock);
+    }
+  }
+}
