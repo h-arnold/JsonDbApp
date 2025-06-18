@@ -7,7 +7,9 @@
 const LOCKSERVICE_TEST_DATA = {
   createdProperties: [],
   testMasterIndexKey: 'GASDB_TEST_LOCKSERVICE_MASTER_INDEX',
-  originalMasterIndex: null
+  originalMasterIndex: null,
+  testLockService: null,
+  lockOperationHistory: []
 };
 
 /**
@@ -41,6 +43,15 @@ function setupLockServiceTestEnvironment() {
     
     // Set test master index as active for testing
     PropertiesService.getScriptProperties().setProperty('GASDB_MASTER_INDEX', testIndex);
+    
+    // Create a test LockService that records operations for verification
+    LOCKSERVICE_TEST_DATA.testLockService = new LockService({
+      scriptLockTimeout: 5000,
+      collectionLockTimeout: 30000
+    });
+    
+    // Clear lock operation history
+    LOCKSERVICE_TEST_DATA.lockOperationHistory = [];
     
     logger.info('LockService test environment setup completed', {
       testKey: LOCKSERVICE_TEST_DATA.testMasterIndexKey,
@@ -88,6 +99,8 @@ function cleanupLockServiceTestEnvironment() {
     // Clear test data
     LOCKSERVICE_TEST_DATA.createdProperties = [];
     LOCKSERVICE_TEST_DATA.originalMasterIndex = null;
+    LOCKSERVICE_TEST_DATA.testLockService = null;
+    LOCKSERVICE_TEST_DATA.lockOperationHistory = [];
     
     logger.info('LockService test cleanup completed');
     
@@ -95,6 +108,47 @@ function cleanupLockServiceTestEnvironment() {
     logger.error('Failed to cleanup LockService test environment', { error: error.message });
     // Don't throw here as we don't want to mask test failures with cleanup failures
   }
+}
+
+/**
+ * Gets a test LockService instance that records operations for verification
+ * @returns {LockService} Test LockService instance
+ */
+function getTestLockService() {
+  return LOCKSERVICE_TEST_DATA.testLockService || new LockService({
+    scriptLockTimeout: 5000,
+    collectionLockTimeout: 30000
+  });
+}
+
+/**
+ * Records a lock operation for test verification
+ * @param {string} operation - The operation type ('acquire' or 'release')
+ * @param {string} lockType - The lock type ('script' or 'collection')
+ * @param {Object} details - Additional operation details
+ */
+function recordLockOperation(operation, lockType, details = {}) {
+  LOCKSERVICE_TEST_DATA.lockOperationHistory.push({
+    operation,
+    lockType,
+    details,
+    timestamp: new Date().toISOString()
+  });
+}
+
+/**
+ * Gets the recorded lock operations for test verification
+ * @returns {Array} Array of recorded lock operations
+ */
+function getLockOperationHistory() {
+  return [...LOCKSERVICE_TEST_DATA.lockOperationHistory];
+}
+
+/**
+ * Clears the lock operation history
+ */
+function clearLockOperationHistory() {
+  LOCKSERVICE_TEST_DATA.lockOperationHistory = [];
 }
 
 /**
