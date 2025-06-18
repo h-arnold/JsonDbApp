@@ -109,6 +109,7 @@ function createAllLockServiceTestSuites() {
   suites.push(createLockServiceOperationTestSuite());
   suites.push(createMasterIndexLockServiceIntegrationTestSuite());
   suites.push(createBackwardsCompatibilityTestSuite());
+  suites.push(createRealEnvironmentIntegrationTestSuite());
   
   return suites;
 }
@@ -156,7 +157,8 @@ function runAllLockServiceTests() {
       'LockService Constructor Tests',
       'LockService Operation Tests', 
       'MasterIndex LockService Integration',
-      'Backwards Compatibility Tests'
+      'Backwards Compatibility Tests',
+      'LockService Real Environment Integration Tests'
     ];
     
     let allResults = new TestResults();
