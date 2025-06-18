@@ -107,7 +107,7 @@ function createAllLockServiceTestSuites() {
   // Create all test suites in order
   suites.push(createLockServiceConstructorTestSuite());
   suites.push(createLockServiceOperationTestSuite());
-  suites.push(createMasterIndexIntegrationTestSuite());
+  suites.push(createMasterIndexLockServiceIntegrationTestSuite());
   suites.push(createBackwardsCompatibilityTestSuite());
   
   return suites;
@@ -155,7 +155,7 @@ function runAllLockServiceTests() {
     const testOrder = [
       'LockService Constructor Tests',
       'LockService Operation Tests', 
-      'MasterIndex Integration',
+      'MasterIndex LockService Integration',
       'Backwards Compatibility Tests'
     ];
     
