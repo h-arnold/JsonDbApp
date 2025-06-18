@@ -155,7 +155,7 @@ function runAllLockServiceTests() {
     const testOrder = [
       'LockService Constructor Tests',
       'LockService Operation Tests', 
-      'MasterIndex Integration Tests',
+      'MasterIndex Integration',
       'Backwards Compatibility Tests'
     ];
     

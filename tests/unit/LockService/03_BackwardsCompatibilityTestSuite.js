@@ -18,11 +18,11 @@ function createBackwardsCompatibilityTestSuite() {
     TestFramework.assertTrue(typeof masterIndex.addCollection === 'function', 'addCollection method should exist');
     TestFramework.assertTrue(typeof masterIndex.removeCollection === 'function', 'removeCollection method should exist');
     TestFramework.assertTrue(typeof masterIndex.getCollection === 'function', 'getCollection method should exist');
-    TestFramework.assertTrue(typeof masterIndex.listCollections === 'function', 'listCollections method should exist');
-    TestFramework.assertTrue(typeof masterIndex.hasCollection === 'function', 'hasCollection method should exist');
+    TestFramework.assertTrue(typeof masterIndex.getCollections === 'function', 'getCollections method should exist');
     TestFramework.assertTrue(typeof masterIndex.updateCollectionMetadata === 'function', 'updateCollectionMetadata method should exist');
-    TestFramework.assertTrue(typeof masterIndex.serialise === 'function', 'serialise method should exist');
-    TestFramework.assertTrue(typeof masterIndex.toJSON === 'function', 'toJSON method should exist');
+    TestFramework.assertTrue(typeof masterIndex.acquireLock === 'function', 'acquireLock method should exist');
+    TestFramework.assertTrue(typeof masterIndex.releaseLock === 'function', 'releaseLock method should exist');
+    TestFramework.assertTrue(typeof masterIndex.isLocked === 'function', 'isLocked method should exist');
     
     // Verify constructor signature hasn't changed (should accept config only by default)
     const masterIndex2 = new MasterIndex({});
@@ -36,20 +36,19 @@ function createBackwardsCompatibilityTestSuite() {
     
     try {
       // Act - Test basic collection operations work identically
-      masterIndex.addCollection('test-collection', 'test-file-id');
+      masterIndex.addCollection('test-collection', '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
       
       // Assert - Verify behaviour is preserved
-      TestFramework.assertTrue(masterIndex.hasCollection('test-collection'), 'Collection should be added successfully');
-      
-      const collections = masterIndex.listCollections();
-      TestFramework.assertTrue(collections.includes('test-collection'), 'Collection should appear in list');
+      const collections = masterIndex.getCollections();
+      TestFramework.assertTrue(Object.keys(collections).includes('test-collection'), 'Collection should be added successfully');
       
       const collectionData = masterIndex.getCollection('test-collection');
-      TestFramework.assertEquals('test-file-id', collectionData.fileId, 'Collection data should be preserved');
+      TestFramework.assertEquals('1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms', collectionData.fileId, 'Collection data should be preserved');
       
       // Test removal
       masterIndex.removeCollection('test-collection');
-      TestFramework.assertFalse(masterIndex.hasCollection('test-collection'), 'Collection should be removed');
+      const collectionsAfterRemoval = masterIndex.getCollections();
+      TestFramework.assertFalse(Object.keys(collectionsAfterRemoval).includes('test-collection'), 'Collection should be removed');
       
     } finally {
       cleanupLockServiceTestEnvironment();
@@ -69,16 +68,17 @@ function createBackwardsCompatibilityTestSuite() {
       // Act & Assert - Test core functionality that existing tests rely on
       
       // Test 1: Basic collection addition and retrieval
-      masterIndex.addCollection('existing-test-1', 'file-1');
-      TestFramework.assertTrue(masterIndex.hasCollection('existing-test-1'), 'Existing test pattern should work');
+      masterIndex.addCollection('existing-test-1', '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
+      const collections = masterIndex.getCollections();
+      TestFramework.assertTrue(Object.keys(collections).includes('existing-test-1'), 'Existing test pattern should work');
       
       // Test 2: Duplicate collection handling
       TestFramework.assertThrows(() => {
-        masterIndex.addCollection('existing-test-1', 'file-2');
+        masterIndex.addCollection('existing-test-1', '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
       }, ErrorHandler.ErrorTypes.DUPLICATE_KEY, 'Duplicate key handling should work as before');
       
       // Test 3: Collection metadata operations
-      const metadata = { name: 'existing-test-1', fileId: 'file-1', version: 1 };
+      const metadata = { name: 'existing-test-1', fileId: '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms', version: 1 };
       masterIndex.updateCollectionMetadata('existing-test-1', metadata);
       const retrieved = masterIndex.getCollection('existing-test-1');
       TestFramework.assertEquals(1, retrieved.version, 'Metadata updates should work as before');
@@ -103,14 +103,14 @@ function createBackwardsCompatibilityTestSuite() {
     // Act
     const masterIndex = new MasterIndex(customConfig);
     
-    // Assert - Verify existing config options still work
-    // Note: This test should pass even before LockService implementation
-    // as it tests existing functionality
-    TestFramework.assertNotNull(masterIndex, 'MasterIndex should accept custom config');
-    
-    // The specific config validation will be implementation-dependent
-    // but the constructor should not fail with valid config objects
-    TestFramework.assertTrue(true, 'Custom configuration should be accepted without errors');
+    // Assert - Test that LockService dependency injection doesn't exist yet (TDD red phase)
+    // This should fail because we expect to be able to inject a LockService in the future
+    TestFramework.assertThrows(() => {
+      const mockLockService = { acquireScriptLock: function() {}, releaseScriptLock: function() {} };
+      const masterIndexWithLockService = new MasterIndex(customConfig, mockLockService);
+      // If this doesn't throw, it means LockService injection is already implemented
+      TestFramework.assertNotNull(masterIndexWithLockService._lockService, 'LockService should be injectable');
+    }, Error, 'LockService dependency injection should not exist yet (TDD red phase)');
   });
 
   return suite;

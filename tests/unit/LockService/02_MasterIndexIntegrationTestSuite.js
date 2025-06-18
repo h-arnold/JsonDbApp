@@ -8,7 +8,7 @@
  * @returns {TestSuite} The integration test suite
  */
 function createMasterIndexIntegrationTestSuite() {
-  const suite = new TestSuite('MasterIndex Integration Tests');
+  const suite = new TestSuite('MasterIndex Integration');
 
   suite.addTest('testMasterIndexConstructorWithDefaultLockService', function() {
     // Arrange & Act - This should pass as MasterIndex exists, but we're testing new functionality
@@ -64,7 +64,7 @@ function createMasterIndexIntegrationTestSuite() {
       const masterIndex = new MasterIndex({}, mockLockService);
       
       // Try to perform operation that should use locks
-      masterIndex.addCollection('test', 'test-file-id');
+      masterIndex.addCollection('test', '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
     }, Error, 'LockService integration should not exist yet (TDD red phase)');
   });
 
@@ -81,7 +81,7 @@ function createMasterIndexIntegrationTestSuite() {
       const masterIndex = new MasterIndex({}, mockLockService);
       
       // Try operation that should trigger timeout
-      masterIndex.addCollection('test', 'test-file-id');
+      masterIndex.addCollection('test', '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
     }, Error, 'LockService integration should not exist yet (TDD red phase)');
   });
 
@@ -101,7 +101,7 @@ function createMasterIndexIntegrationTestSuite() {
       const masterIndex = new MasterIndex({}, mockLockService);
       
       // Perform operation and verify lock is released
-      masterIndex.addCollection('test', 'test-file-id');
+      masterIndex.addCollection('test', '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms');
       TestFramework.assertTrue(lockReleased, 'Lock should have been released');
     }, Error, 'LockService integration should not exist yet (TDD red phase)');
   });
