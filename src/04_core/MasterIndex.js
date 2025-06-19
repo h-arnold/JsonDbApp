@@ -11,7 +11,7 @@ class MasterIndex {
   /**
    * Create a new MasterIndex instance
    * @param {Object} config - Configuration options
-   * @param {LockService} [lockService] - Optional LockService instance for injection
+   * @param {DbLockService} [lockService] - Optional DbLockService instance for injection
    */
   constructor(config = {}, lockService = null) {
     this._config = {
@@ -31,8 +31,8 @@ class MasterIndex {
     
     // Load existing data from ScriptProperties if available
     this._loadFromScriptProperties();
-    // Initialise or inject LockService
-    this._lockService = lockService || new LockService({ lockTimeout: this._config.lockTimeout });
+    // Initialise or inject DbLockService
+    this._lockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
   }
 
   /**

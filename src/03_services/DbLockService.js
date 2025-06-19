@@ -1,9 +1,9 @@
 /**
- * LockService - Provides script and collection level locking
+ * DbLockService - Provides script and collection level locking
  */
 class DbLockService {
   /**
-   * Constructor for LockService
+   * Constructor for DbLockService
    * @param {Object} [config={}] - Configuration object
    * @param {number} [config.lockTimeout=5000] - Default lock timeout for collection locks (ms)
    */

@@ -14,7 +14,7 @@ function createLockServiceOperationTestSuite() {
     // Arrange: mock global GAS LockService
     const mockLock = { waitLock: function(timeout) {}, releaseLock: function() {} };
     globalThis.LockService = { getScriptLock: () => mockLock };
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Act
     const lock = lockService.acquireScriptLock(5000);
     // Assert
@@ -25,7 +25,7 @@ function createLockServiceOperationTestSuite() {
     // Arrange: mock lock that throws on wait
     const mockLock = { waitLock: function(timeout) { throw new Error('timeout'); }, releaseLock: function() {} };
     globalThis.LockService = { getScriptLock: () => mockLock };
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Act & Assert
     TestFramework.assertThrows(() => {
       lockService.acquireScriptLock(100);
@@ -34,7 +34,7 @@ function createLockServiceOperationTestSuite() {
 
   suite.addTest('testAcquireScriptLockInvalidTimeout', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService(); // Adjusted for invalid timeout test
     // Act & Assert: negative timeout
     TestFramework.assertThrows(() => {
       lockService.acquireScriptLock(-1);
@@ -44,7 +44,7 @@ function createLockServiceOperationTestSuite() {
   suite.addTest('testReleaseScriptLockSuccess', function() {
     // Arrange
     const mockLock = { releaseLock: function() { this.released = true; } };
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Act
     lockService.releaseScriptLock(mockLock);
     // Assert
@@ -53,7 +53,7 @@ function createLockServiceOperationTestSuite() {
 
   suite.addTest('testReleaseScriptLockInvalidInstance', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Act & Assert
     TestFramework.assertThrows(() => {
       lockService.releaseScriptLock('not-a-lock');
@@ -62,7 +62,7 @@ function createLockServiceOperationTestSuite() {
 
   suite.addTest('testReleaseScriptLockNullInstance', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Act & Assert
     TestFramework.assertThrows(() => {
       lockService.releaseScriptLock(null);

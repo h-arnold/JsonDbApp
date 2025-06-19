@@ -13,7 +13,7 @@ function createLockServiceCollectionOperationTestSuite() {
 
   suite.addTest('should acquire lock for collection successfully', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     const collectionName = 'lockTestCollection';
     const operationId = 'test-operation-123';
     
@@ -27,7 +27,7 @@ function createLockServiceCollectionOperationTestSuite() {
   
   suite.addTest('should prevent multiple locks on same collection', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     const collectionName = 'conflictTestCollection';
     
     // Act
@@ -41,7 +41,7 @@ function createLockServiceCollectionOperationTestSuite() {
   
   suite.addTest('should release lock correctly', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     const collectionName = 'releaseTestCollection';
     const operationId = 'test-operation-456';
     
@@ -56,7 +56,7 @@ function createLockServiceCollectionOperationTestSuite() {
   
   suite.addTest('should handle lock timeout correctly', function() {
     // Arrange
-    const lockService = new LockService({ lockTimeout: 100 }); // 100ms timeout for testing
+    const lockService = new DbLockService({ lockTimeout: 100 }); // 100ms timeout for testing
     const collectionName = 'timeoutTestCollection';
     
     // Act
@@ -78,14 +78,14 @@ function createLockServiceCollectionOperationTestSuite() {
   
   suite.addTest('should persist locks to ScriptProperties', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     const collectionName = 'persistLockTest';
     
     // Act
     lockService.acquireCollectionLock(collectionName, 'persist-operation');
     
     // Create new instance to test persistence
-    const newLockService = new LockService();
+    const newLockService = new DbLockService();
     
     // Assert
     TestFramework.assertTrue(newLockService.isCollectionLocked(collectionName), 'Lock should be persisted');
