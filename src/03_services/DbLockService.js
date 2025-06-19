@@ -1,7 +1,7 @@
 /**
  * LockService - Provides script and collection level locking
  */
-class LockService {
+class DbLockService {
   /**
    * Constructor for LockService
    * @param {Object} [config={}] - Configuration object
@@ -21,7 +21,7 @@ class LockService {
     }
 
     // Logger instance
-    this._logger = GASDBLogger.createComponentLogger('LockService');
+    this._logger = GASDBLogger.createComponentLogger('DbLockService');
   }
 
   /**
@@ -216,4 +216,4 @@ class LockService {
 }
 
 // Expose class
-this.LockService = LockService;
+this.DbLockService = DbLockService;
