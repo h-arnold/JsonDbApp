@@ -52,9 +52,7 @@ class MasterIndex {
    * @throws {InvalidArgumentError} If name is invalid
    */
   _addCollectionInternal(name, metadata) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(name, 'name');
     let collectionMetadata;
     if (metadata instanceof CollectionMetadata) {
       collectionMetadata = metadata;
@@ -95,9 +93,7 @@ class MasterIndex {
    * @throws {InvalidArgumentError} When collectionsMap is invalid
    */
   addCollections(collectionsMap) {
-    if (!collectionsMap || typeof collectionsMap !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collectionsMap must be a non-empty object');
-    }
+    Validate.object(collectionsMap, 'collectionsMap', false);
     return this._withScriptLock(() => {
       const results = [];
       Object.entries(collectionsMap).forEach(([name, meta]) => {
@@ -155,9 +151,7 @@ class MasterIndex {
    * @returns {CollectionMetadata|null} Collection metadata instance or null if not found
    */
   getCollection(name) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(name, 'name');
     
     const rawData = this._data.collections[name];
     if (!rawData) {
@@ -177,9 +171,8 @@ class MasterIndex {
    * @param {Object} updates - Metadata updates
    */
   updateCollectionMetadata(name, updates) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(name, 'name');
+    Validate.object(updates, 'updates', false);
 
     return this._withScriptLock(() => {
       const rawData = this._data.collections[name];
@@ -251,6 +244,10 @@ class MasterIndex {
    * @returns {boolean} True if collection was found and removed, false otherwise
    */
   removeCollection(name) {
+    if (!Validate.isPlainObject(this._data.collections) || !Validate.isPlainObject(this._data)) {
+      this._logger.warn('Internal state corrupted', { name });
+      return false;
+    }
     if (!name || typeof name !== 'string' || name.trim() === '') {
       this._logger.warn('Invalid collection name for removal', { name });
       return false;
@@ -324,13 +321,8 @@ class MasterIndex {
    * @returns {boolean} True if there's a conflict
    */
   hasConflict(collectionName, expectedToken) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    
-    if (!expectedToken || typeof expectedToken !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Expected token must be a non-empty string');
-    }
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    Validate.nonEmptyString(expectedToken, 'expectedToken');
     
     const collection = this._data.collections[collectionName];
     if (!collection) {
@@ -348,12 +340,8 @@ class MasterIndex {
    * @returns {Object} Resolution result
    */
   resolveConflict(collectionName, newData, strategy) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    if (!newData || typeof newData !== 'object') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('New data must be an object');
-    }
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    Validate.object(newData, 'newData', false);
     strategy = strategy || 'LAST_WRITE_WINS';
 
     return this._withScriptLock(() => {
@@ -411,9 +399,7 @@ class MasterIndex {
    * @returns {Array} Modification history
    */
   getModificationHistory(collectionName) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(collectionName, 'collectionName');
     
     return this._data.modificationHistory[collectionName] || [];
   }
@@ -479,6 +465,9 @@ class MasterIndex {
    * @private
    */
   _addToModificationHistory(collectionName, operation, data) {
+    if (!Validate.isPlainObject(this._data.modificationHistory)) {
+      this._data.modificationHistory = {};
+    }
     if (!collectionName || typeof collectionName !== 'string') {
       return; // Silent fail for invalid collection names to avoid breaking existing operations
     }
