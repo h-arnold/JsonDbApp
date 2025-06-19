@@ -9,7 +9,7 @@
  * @returns {TestSuite} The real environment integration test suite
  */
 function createRealEnvironmentIntegrationTestSuite() {
-  const suite = new TestSuite('LockService Real Environment Integration Tests');
+  const suite = new TestSuite('DbLockService Real Environment Integration Tests');
 
   // Test environment setup for real GAS integration
   suite.setBeforeAll(function() {
@@ -22,7 +22,7 @@ function createRealEnvironmentIntegrationTestSuite() {
 
   suite.addTest('testLockServiceWithRealGASLockService', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Act
     const lock = lockService.acquireScriptLock(5000);
     // Assert
@@ -40,8 +40,8 @@ function createRealEnvironmentIntegrationTestSuite() {
 
   suite.addTest('testLockServiceConcurrentOperations', function() {
     // Arrange
-    const lockService1 = new LockService();
-    const lockService2 = new LockService();
+    const lockService1 = new DbLockService();
+    const lockService2 = new DbLockService();
     // Act: first service acquires lock
     const lock1 = lockService1.acquireScriptLock(1000);
     TestFramework.assertDefined(lock1, 'First lock should be acquired');
@@ -60,7 +60,7 @@ function createRealEnvironmentIntegrationTestSuite() {
 
   suite.addTest('testMasterIndexWithRealLockService', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     const config = { masterIndexKey: LOCKSERVICE_TEST_DATA.testMasterIndexKey };
     const masterIndex = new MasterIndex(config, lockService);
     // Act: save and load data
@@ -74,7 +74,7 @@ function createRealEnvironmentIntegrationTestSuite() {
 
   suite.addTest('testLockServiceErrorHandlingWithRealEnvironment', function() {
     // Arrange
-    const lockService = new LockService();
+    const lockService = new DbLockService();
     // Acquire a lock first
     const firstLock = lockService.acquireScriptLock(5000);
     TestFramework.assertDefined(firstLock, 'First lock should be acquired');
