@@ -7,8 +7,10 @@
  * Creates test suite for LockService lock operations
  * @returns {TestSuite} The lock operation test suite
  */
-function createLockServiceOperationTestSuite() {
+function createDbLockServiceOperationTestSuite() {
   const suite = new TestSuite('LockService Operation Tests');
+  // Update suite name for DbLockService
+  suite.name = 'DbLockService Operation Tests';
 
   suite.addTest('testAcquireScriptLockSuccess', function() {
     // Arrange: mock global GAS LockService

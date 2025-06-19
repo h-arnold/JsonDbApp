@@ -1,10 +1,10 @@
 /**
- * LockService Test Orchestrator
+ * DbLockService Test Orchestrator
  * Coordinates all LockService-related tests with proper setup and teardown
  */
 
 // Global test data storage for LockService tests
-const LOCKSERVICE_TEST_DATA = {
+const DBLOCKSERVICE_TEST_DATA = {
   createdProperties: [],
   testMasterIndexKey: 'GASDB_TEST_LOCKSERVICE_MASTER_INDEX',
   originalMasterIndex: null,
@@ -23,7 +23,7 @@ function setupLockServiceTestEnvironment() {
     // Store original master index if it exists
     const originalIndex = PropertiesService.getScriptProperties().getProperty('GASDB_MASTER_INDEX');
     if (originalIndex) {
-      LOCKSERVICE_TEST_DATA.originalMasterIndex = originalIndex;
+      DBLOCKSERVICE_TEST_DATA.originalMasterIndex = originalIndex;
       logger.info('Stored original master index for restoration');
     }
     
@@ -36,26 +36,26 @@ function setupLockServiceTestEnvironment() {
     });
     
     PropertiesService.getScriptProperties().setProperty(
-      LOCKSERVICE_TEST_DATA.testMasterIndexKey, 
+      DBLOCKSERVICE_TEST_DATA.testMasterIndexKey, 
       testIndex
     );
-    LOCKSERVICE_TEST_DATA.createdProperties.push(LOCKSERVICE_TEST_DATA.testMasterIndexKey);
+    DBLOCKSERVICE_TEST_DATA.createdProperties.push(DBLOCKSERVICE_TEST_DATA.testMasterIndexKey);
     
     // Set test master index as active for testing
     PropertiesService.getScriptProperties().setProperty('GASDB_MASTER_INDEX', testIndex);
     
     // Create a test LockService that records operations for verification
-    LOCKSERVICE_TEST_DATA.testLockService = new LockService({
+    DBLOCKSERVICE_TEST_DATA.testLockService = new DbLockService({
       scriptLockTimeout: 5000,
       collectionLockTimeout: 30000
     });
     
     // Clear lock operation history
-    LOCKSERVICE_TEST_DATA.lockOperationHistory = [];
+    DBLOCKSERVICE_TEST_DATA.lockOperationHistory = [];
     
     logger.info('LockService test environment setup completed', {
-      testKey: LOCKSERVICE_TEST_DATA.testMasterIndexKey,
-      hasOriginal: !!LOCKSERVICE_TEST_DATA.originalMasterIndex
+      testKey: DBLOCKSERVICE_TEST_DATA.testMasterIndexKey,
+      hasOriginal: !!DBLOCKSERVICE_TEST_DATA.originalMasterIndex
     });
     
   } catch (error) {
@@ -73,7 +73,7 @@ function cleanupLockServiceTestEnvironment() {
   
   try {
     // Clean up created properties
-    LOCKSERVICE_TEST_DATA.createdProperties.forEach(key => {
+    DBLOCKSERVICE_TEST_DATA.createdProperties.forEach(key => {
       try {
         PropertiesService.getScriptProperties().deleteProperty(key);
         logger.debug('Deleted test property', { key });
@@ -83,8 +83,8 @@ function cleanupLockServiceTestEnvironment() {
     });
     
     // Restore original master index if it existed
-    if (LOCKSERVICE_TEST_DATA.originalMasterIndex) {
-      PropertiesService.getScriptProperties().setProperty('GASDB_MASTER_INDEX', LOCKSERVICE_TEST_DATA.originalMasterIndex);
+    if (DBLOCKSERVICE_TEST_DATA.originalMasterIndex) {
+      PropertiesService.getScriptProperties().setProperty('GASDB_MASTER_INDEX', DBLOCKSERVICE_TEST_DATA.originalMasterIndex);
       logger.info('Restored original master index');
     } else {
       // Remove test master index if no original existed
@@ -97,10 +97,10 @@ function cleanupLockServiceTestEnvironment() {
     }
     
     // Clear test data
-    LOCKSERVICE_TEST_DATA.createdProperties = [];
-    LOCKSERVICE_TEST_DATA.originalMasterIndex = null;
-    LOCKSERVICE_TEST_DATA.testLockService = null;
-    LOCKSERVICE_TEST_DATA.lockOperationHistory = [];
+    DBLOCKSERVICE_TEST_DATA.createdProperties = [];
+    DBLOCKSERVICE_TEST_DATA.originalMasterIndex = null;
+    DBLOCKSERVICE_TEST_DATA.testLockService = null;
+    DBLOCKSERVICE_TEST_DATA.lockOperationHistory = [];
     
     logger.info('LockService test cleanup completed');
     
@@ -114,8 +114,8 @@ function cleanupLockServiceTestEnvironment() {
  * Gets a test LockService instance that records operations for verification
  * @returns {LockService} Test LockService instance
  */
-function getTestLockService() {
-  return LOCKSERVICE_TEST_DATA.testLockService || new LockService({
+function getTestDbLockService() {
+  return DBLOCKSERVICE_TEST_DATA.testLockService || new DbLockService({
     scriptLockTimeout: 5000,
     collectionLockTimeout: 30000
   });
@@ -128,7 +128,7 @@ function getTestLockService() {
  * @param {Object} details - Additional operation details
  */
 function recordLockOperation(operation, lockType, details = {}) {
-  LOCKSERVICE_TEST_DATA.lockOperationHistory.push({
+  DBLOCKSERVICE_TEST_DATA.lockOperationHistory.push({
     operation,
     lockType,
     details,
@@ -141,27 +141,27 @@ function recordLockOperation(operation, lockType, details = {}) {
  * @returns {Array} Array of recorded lock operations
  */
 function getLockOperationHistory() {
-  return [...LOCKSERVICE_TEST_DATA.lockOperationHistory];
+  return [...DBLOCKSERVICE_TEST_DATA.lockOperationHistory];
 }
 
 /**
  * Clears the lock operation history
  */
 function clearLockOperationHistory() {
-  LOCKSERVICE_TEST_DATA.lockOperationHistory = [];
+  DBLOCKSERVICE_TEST_DATA.lockOperationHistory = [];
 }
 
 /**
- * Creates and registers all LockService test suites
- * @returns {Array<TestSuite>} Array of all LockService test suites
+ * Creates and registers all DbLockService test suites
+ * @returns {Array<TestSuite>} Array of all DbLockService test suites
  */
-function createAllLockServiceTestSuites() {
+function createAllDbLockServiceTestSuites() {
   const suites = [];
   
   // Create all test suites in order
-  suites.push(createLockServiceConstructorTestSuite());
-  suites.push(createLockServiceOperationTestSuite());
-  suites.push(createLockServiceCollectionOperationTestSuite());
+  suites.push(createDbLockServiceConstructorTestSuite());
+  suites.push(createDbLockServiceOperationTestSuite());
+  suites.push(createDbLockServiceCollectionOperationTestSuite());
   suites.push(createMasterIndexLockServiceIntegrationTestSuite());
   suites.push(createBackwardsCompatibilityTestSuite());
   suites.push(createRealEnvironmentIntegrationTestSuite());
@@ -172,11 +172,11 @@ function createAllLockServiceTestSuites() {
 /**
  * Registers all LockService test suites with the global test framework
  */
-function registerAllLockServiceTestSuites() {
+function registerAllDbLockServiceTestSuites() {
   const logger = GASDBLogger.createComponentLogger('LockService-Registration');
   
   try {
-    const suites = createAllLockServiceTestSuites();
+    const suites = createAllDbLockServiceTestSuites();
     
     suites.forEach(suite => {
       registerTestSuite(suite);
@@ -195,7 +195,7 @@ function registerAllLockServiceTestSuites() {
  * Runs all LockService tests with proper environment management
  * @returns {TestResults} Results of all LockService tests
  */
-function runAllLockServiceTests() {
+function runAllDbLockServiceTests() {
   const logger = GASDBLogger.createComponentLogger('LockService-TestRunner');
   const startTime = new Date();
   
@@ -205,17 +205,17 @@ function runAllLockServiceTests() {
     // Setup test environment
     setupLockServiceTestEnvironment();
     
-    // Register all test suites
-    registerAllLockServiceTestSuites();
+    // Register all DbLockService test suites
+    registerAllDbLockServiceTestSuites();
     
     // Run tests in specific order for TDD red phase
     const testOrder = [
-      'LockService Constructor Tests',
-      'LockService Operation Tests',
-      'LockService Collection Operations',
-      'MasterIndex LockService Integration',
+      'DbLockService Constructor Tests',
+      'DbLockService Operation Tests',
+      'DbLockService Collection Operations',
+      'MasterIndex DbLockService Integration',
       'Backwards Compatibility Tests',
-      'LockService Real Environment Integration Tests'
+      'DbLockService Real Environment Integration Tests'
     ];
     
     let allResults = new TestResults();
@@ -289,7 +289,7 @@ function runLockServiceTestSuite(suiteName) {
     setupLockServiceTestEnvironment();
     
     // Register the specific suite if not already registered
-    const allSuites = createAllLockServiceTestSuites();
+    const allSuites = createAllDbLockServiceTestSuites();
     const targetSuite = allSuites.find(suite => suite.name === suiteName);
     
     if (!targetSuite) {

@@ -1,14 +1,16 @@
 /**
- * LockService Constructor Test Suite
+ * DbLockService Constructor Test Suite
  * Tests for LockService constructor validation and configuration
  */
 
 /**
- * Creates test suite for LockService constructor validation
+ * Creates test suite for DbLockService constructor validation
  * @returns {TestSuite} The constructor test suite
  */
-function createLockServiceConstructorTestSuite() {
+function createDbLockServiceConstructorTestSuite() {
   const suite = new TestSuite('LockService Constructor Tests');
+  // Update suite name to reflect DbLockService
+  suite.name = 'DbLockService Constructor Tests';
 
   suite.addTest('testDbLockServiceConstructorWithDefaultConfig', function() {
     // Arrange & Act
