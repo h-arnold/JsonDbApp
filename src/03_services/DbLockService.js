@@ -39,11 +39,7 @@ class DbLockService {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('timeout', timeout, 'timeout must be non-negative');
     }
 
-    // Require native GAS LockService
-    if (!globalThis.LockService || typeof globalThis.LockService.getScriptLock !== 'function') {
-      this._logger.error('Native GAS LockService not available');
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('LockService', null, 'Native GAS LockService is required');
-    }
+    this._validateLockServiceAvailable();
 
     // Acquire GAS script lock
     this._scriptLock = globalThis.LockService.getScriptLock();

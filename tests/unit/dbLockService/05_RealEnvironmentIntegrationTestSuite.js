@@ -23,19 +23,14 @@ function createRealEnvironmentIntegrationTestSuite() {
   suite.addTest('testLockServiceWithRealGASLockService', function() {
     // Arrange
     const lockService = new DbLockService();
-    // Act
-    const lock = lockService.acquireScriptLock(5000);
-    // Assert
-    TestFramework.assertDefined(lock, 'Should acquire real GAS lock');
-    TestFramework.assertEquals('object', typeof lock, 'Lock should be an object');
-    TestFramework.assertEquals('function', typeof lock.releaseLock, 'Lock should have releaseLock method');
-    TestFramework.assertEquals('function', typeof lock.waitLock, 'Lock should have waitLock method');
-    // GAS Lock has hasLock only on LockService.Lock - optional
-    if (typeof lock.hasLock === 'function') {
-      TestFramework.assertTrue(typeof lock.hasLock === 'function', 'Lock should have hasLock method');
-    }
+    // Act & Assert
+    TestFramework.assertNoThrow(() => {
+      lockService.acquireScriptLock(5000);
+    }, 'Should acquire real GAS lock without error');
     // Cleanup
-    lockService.releaseScriptLock(lock);
+    TestFramework.assertNoThrow(() => {
+      lockService.releaseScriptLock();
+    }, 'Should release real GAS lock without error');
   });
 
   suite.addTest('testLockServiceConcurrentOperations', function() {
@@ -43,19 +38,25 @@ function createRealEnvironmentIntegrationTestSuite() {
     const lockService1 = new DbLockService();
     const lockService2 = new DbLockService();
     // Act: first service acquires lock
-    const lock1 = lockService1.acquireScriptLock(1000);
-    TestFramework.assertDefined(lock1, 'First lock should be acquired');
+    TestFramework.assertNoThrow(() => {
+      lockService1.acquireScriptLock(1000);
+    }, 'First lock should be acquired');
     // Act & Assert: second acquisition should timeout
     TestFramework.assertThrows(() => {
       lockService2.acquireScriptLock(100); // Short timeout
     }, ErrorHandler.ErrorTypes.LOCK_TIMEOUT, 'Second lock acquisition should timeout');
     // Release first lock
-    lockService1.releaseScriptLock(lock1);
+    TestFramework.assertNoThrow(() => {
+      lockService1.releaseScriptLock();
+    }, 'Should release first lock without error');
     // Now second service should acquire
-    const lock2 = lockService2.acquireScriptLock(1000);
-    TestFramework.assertDefined(lock2, 'Second lock should be acquired after first is released');
+    TestFramework.assertNoThrow(() => {
+      lockService2.acquireScriptLock(1000);
+    }, 'Second lock should be acquired after first is released');
     // Cleanup
-    lockService2.releaseScriptLock(lock2);
+    TestFramework.assertNoThrow(() => {
+      lockService2.releaseScriptLock();
+    }, 'Should release second lock without error');
   });
 
   suite.addTest('testMasterIndexWithRealLockService', function() {

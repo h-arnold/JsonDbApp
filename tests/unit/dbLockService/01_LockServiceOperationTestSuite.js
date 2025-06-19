@@ -15,10 +15,10 @@ function createLockServiceOperationTestSuite() {
     const mockLock = { waitLock: function(timeout) {}, releaseLock: function() {} };
     globalThis.LockService = { getScriptLock: () => mockLock };
     const lockService = new DbLockService();
-    // Act
-    const lock = lockService.acquireScriptLock(5000);
-    // Assert
-    TestFramework.assertEquals(mockLock, lock, 'Should return mock GAS lock');
+    // Act & Assert
+    TestFramework.assertNoThrow(() => {
+      lockService.acquireScriptLock(5000);
+    }, 'Should acquire script lock without error');
   });
 
   suite.addTest('testAcquireScriptLockTimeout', function() {
@@ -34,7 +34,7 @@ function createLockServiceOperationTestSuite() {
 
   suite.addTest('testAcquireScriptLockInvalidTimeout', function() {
     // Arrange
-    const lockService = new DbLockService(); // Adjusted for invalid timeout test
+    const lockService = new DbLockService();
     // Act & Assert: negative timeout
     TestFramework.assertThrows(() => {
       lockService.acquireScriptLock(-1);
@@ -43,10 +43,12 @@ function createLockServiceOperationTestSuite() {
 
   suite.addTest('testReleaseScriptLockSuccess', function() {
     // Arrange
-    const mockLock = { releaseLock: function() { this.released = true; } };
+    const mockLock = { releaseLock: function() { this.released = true; }, waitLock: function() {} };
+    globalThis.LockService = { getScriptLock: () => mockLock };
     const lockService = new DbLockService();
+    lockService.acquireScriptLock(5000);
     // Act
-    lockService.releaseScriptLock(mockLock);
+    lockService.releaseScriptLock();
     // Assert
     TestFramework.assertTrue(mockLock.released === true, 'Mock lock should have been released');
   });
@@ -56,17 +58,8 @@ function createLockServiceOperationTestSuite() {
     const lockService = new DbLockService();
     // Act & Assert
     TestFramework.assertThrows(() => {
-      lockService.releaseScriptLock('not-a-lock');
-    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw INVALID_ARGUMENT for invalid lock instance');
-  });
-
-  suite.addTest('testReleaseScriptLockNullInstance', function() {
-    // Arrange
-    const lockService = new DbLockService();
-    // Act & Assert
-    TestFramework.assertThrows(() => {
-      lockService.releaseScriptLock(null);
-    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw INVALID_ARGUMENT for null lock instance');
+      lockService.releaseScriptLock();
+    }, ErrorHandler.ErrorTypes.INVALID_ARGUMENT, 'Should throw INVALID_ARGUMENT if no lock is held');
   });
 
   return suite;
