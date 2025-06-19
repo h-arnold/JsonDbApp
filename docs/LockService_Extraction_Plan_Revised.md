@@ -151,7 +151,6 @@ This ensures collections cannot be overwritten while operations are in progress.
 - **✅ COMPLETED**: Verified script lock method calls with correct parameters
 - **✅ COMPLETED**: Updated 5/7 integration tests for collection lock method delegation (major success)
 - **✅ COMPLETED**: Fixed missing `_addToModificationHistory` method in MasterIndex - now fully implemented
-- **⏳ PENDING**: Update 2 tests from TDD red-phase to green-phase expectations (TDD phase conflicts)
 - **⏳ PENDING**: Resolve lock timeout issues in test environment (5 tests across multiple suites)
 
 ### 7. ✅ COMPLETED: Fix TDD Phase Conflicts (RESOLVED)

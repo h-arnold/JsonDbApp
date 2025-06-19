@@ -197,6 +197,7 @@ function registerAllLockServiceTestSuites() {
  */
 function runAllLockServiceTests() {
   const logger = GASDBLogger.createComponentLogger('LockService-TestRunner');
+  const startTime = new Date();
   
   logger.info('Starting LockService test execution');
   
@@ -221,16 +222,21 @@ function runAllLockServiceTests() {
     
     testOrder.forEach(suiteName => {
       try {
+        const suiteStartTime = new Date();
         logger.info('Running test suite', { suiteName });
         const suiteResults = runTestSuite(suiteName);
         
         // Merge results
         suiteResults.results.forEach(result => allResults.addResult(result));
         
+        const suiteEndTime = new Date();
+        const suiteExecutionTime = suiteEndTime - suiteStartTime;
+        
         logger.info('Completed test suite', { 
           suiteName, 
           passed: suiteResults.getPassed().length,
-          failed: suiteResults.getFailed().length
+          failed: suiteResults.getFailed().length,
+          executionTimeMs: suiteExecutionTime
         });
         
       } catch (error) {
@@ -241,11 +247,17 @@ function runAllLockServiceTests() {
     
     allResults.finish();
     
+    const endTime = new Date();
+    const totalExecutionTime = endTime - startTime;
+    
     logger.info('LockService test execution completed', {
       totalTests: allResults.results.length,
       passed: allResults.getPassed().length,
       failed: allResults.getFailed().length,
-      passRate: allResults.getPassRate()
+      passRate: allResults.getPassRate(),
+      totalExecutionTimeMs: totalExecutionTime,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
     });
     
     return allResults;
@@ -271,6 +283,7 @@ function runAllLockServiceTests() {
  */
 function runLockServiceTestSuite(suiteName) {
   const logger = GASDBLogger.createComponentLogger('LockService-SuiteRunner');
+  const startTime = new Date();
   
   try {
     setupLockServiceTestEnvironment();
@@ -287,10 +300,16 @@ function runLockServiceTestSuite(suiteName) {
     
     const results = runTestSuite(suiteName);
     
+    const endTime = new Date();
+    const executionTime = endTime - startTime;
+    
     logger.info('LockService test suite completed', { 
       suiteName,
       passed: results.getPassed().length,
-      failed: results.getFailed().length
+      failed: results.getFailed().length,
+      executionTimeMs: executionTime,
+      startTime: startTime.toISOString(),
+      endTime: endTime.toISOString()
     });
     
     return results;
