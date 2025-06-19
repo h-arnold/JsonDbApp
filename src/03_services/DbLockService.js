@@ -22,12 +22,14 @@ class DbLockService {
 
     // Logger instance
     this._logger = GASDBLogger.createComponentLogger('DbLockService');
+
+    // Private script lock property
+    this._scriptLock = null;
   }
 
   /**
    * Acquire a script-level lock
    * @param {number} timeout - Timeout in milliseconds
-   * @returns {GoogleAppsScript.Lock.Lock} The acquired lock
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT|ErrorHandler.ErrorTypes.LOCK_TIMEOUT}
    */
   acquireScriptLock(timeout) {
@@ -37,35 +39,34 @@ class DbLockService {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('timeout', timeout, 'timeout must be non-negative');
     }
 
-    // If native GAS LockService not available, return no-op lock
+    // Require native GAS LockService
     if (!globalThis.LockService || typeof globalThis.LockService.getScriptLock !== 'function') {
-      this._logger.warn('Native GAS LockService not available: using no-op lock');
-      return { waitLock: () => {}, releaseLock: () => {} };
+      this._logger.error('Native GAS LockService not available');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('LockService', null, 'Native GAS LockService is required');
     }
 
     // Acquire GAS script lock
-    const gasLock = globalThis.LockService.getScriptLock();
+    this._scriptLock = globalThis.LockService.getScriptLock();
     try {
-      gasLock.waitLock(timeout);
-      return gasLock;
+      this._scriptLock.waitLock(timeout);
     } catch (err) {
       this._logger.error('Failed to acquire script lock', { timeout, error: err.message });
+      this._scriptLock = null;
       throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT('script', timeout);
     }
   }
 
   /**
    * Release a script-level lock
-   * @param {*} lock - The lock instance to release
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT}
    */
-  releaseScriptLock(lock) {
-    Validate.required(lock, 'lock');
-    if (typeof lock.releaseLock !== 'function') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lock', lock, 'invalid lock instance');
+  releaseScriptLock() {
+    if (!this._scriptLock || typeof this._scriptLock.releaseLock !== 'function') {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lock', this._scriptLock, 'invalid or missing script lock instance');
     }
     try {
-      lock.releaseLock();
+      this._scriptLock.releaseLock();
+      this._scriptLock = null;
     } catch (err) {
       this._logger.error('Failed to release script lock', { error: err.message });
       throw err;

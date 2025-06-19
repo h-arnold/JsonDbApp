@@ -463,11 +463,11 @@ class MasterIndex {
    * @private
    */
   _withScriptLock(operation, timeout = this._config.lockTimeout) {
-    const lock = this._lockService.acquireScriptLock(timeout);
+    this._lockService.acquireScriptLock(timeout);
     try {
       return operation();
     } finally {
-      this._lockService.releaseScriptLock(lock);
+      this._lockService.releaseScriptLock();
     }
   }
 
