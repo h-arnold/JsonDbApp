@@ -42,7 +42,7 @@ class DbLockService {
     this._validateLockServiceAvailable();
 
     // Acquire GAS script lock
-    this._scriptLock = globalThis.LockService.getScriptLock();
+    this._scriptLock = LockService.getScriptLock();
     try {
       this._scriptLock.waitLock(timeout);
     } catch (err) {
