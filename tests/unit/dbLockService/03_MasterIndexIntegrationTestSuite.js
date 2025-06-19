@@ -8,19 +8,19 @@
  * @returns {TestSuite} The integration test suite
  */
 function createMasterIndexLockServiceIntegrationTestSuite() {
-  const suite = new TestSuite('MasterIndex LockService Integration');
+  const suite = new TestSuite('MasterIndex DbLockService Integration');
 
   suite.addTest('testMasterIndexConstructorWithDefaultLockService', function() {
     // Arrange & Act
     const masterIndex = new MasterIndex();
     // Assert default LockService is injected
-    TestFramework.assertDefined(masterIndex._lockService, 'MasterIndex should have a LockService instance');
-    TestFramework.assertTrue(masterIndex._lockService instanceof LockService, 'Default _lockService should be LockService');
+    TestFramework.assertDefined(masterIndex._lockService, 'MasterIndex should have a DbLockService instance');
+    TestFramework.assertTrue(masterIndex._lockService instanceof DbLockService, 'Default _lockService should be DbLockService');
   });
 
   suite.addTest('testMasterIndexConstructorWithInjectedLockService', function() {
     // Arrange
-    const mockLockService = new LockService();
+    const mockLockService = new DbLockService();
     // Act
     const masterIndex = new MasterIndex({}, mockLockService);
     // Assert injected LockService is used
@@ -29,7 +29,7 @@ function createMasterIndexLockServiceIntegrationTestSuite() {
 
   suite.addTest('testMasterIndexUsesInjectedLockService', function() {
     // Arrange - Create MasterIndex with a real LockService
-    const testLockService = getTestLockService();
+    const testLockService = getTestDbLockService();
     const masterIndex = new MasterIndex({}, testLockService);
     
     // Act: perform an operation that uses script lock
@@ -46,7 +46,7 @@ function createMasterIndexLockServiceIntegrationTestSuite() {
 
   suite.addTest('testMasterIndexLockServiceMethodCalls', function() {
     // Arrange - Create MasterIndex with a real LockService
-    const testLockService = getTestLockService();
+    const testLockService = getTestDbLockService();
     const masterIndex = new MasterIndex({}, testLockService);
     
     // Clear any previous lock operations
@@ -73,9 +73,9 @@ function createMasterIndexLockServiceIntegrationTestSuite() {
     TestFramework.assertEquals('test', retrievedCollection.name, 'Collection name should match');
   });
 
-  suite.addTest('testMasterIndexLockServiceTimeout', function() {
+  suite.addTest('testMasterIndexDbLockServiceTimeout', function() {
     // Arrange - Create a LockService with very short timeout for testing
-    const testLockService = new LockService({
+    const testLockService = new DbLockService({
       scriptLockTimeout: 1, // Very short timeout to trigger timeout condition
       collectionLockTimeout: 1
     });
@@ -90,12 +90,12 @@ function createMasterIndexLockServiceIntegrationTestSuite() {
         modificationToken: 'test-token'
       };
       masterIndex.addCollection('test', testMetadata);
-    }, Error, 'LockService integration should properly handle timeouts');
+    }, Error, 'DbLockService integration should properly handle timeouts');
   });
 
   suite.addTest('testMasterIndexLockServiceRelease', function() {
     // Arrange - Create MasterIndex with a real LockService
-    const testLockService = getTestLockService();
+    const testLockService = getTestDbLockService();
     const masterIndex = new MasterIndex({}, testLockService);
     
     // Act - Perform operation that should acquire and release lock
