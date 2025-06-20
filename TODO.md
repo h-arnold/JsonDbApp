@@ -45,7 +45,6 @@
   - `testParallelOperationsOnSameCollection` - simulate concurrent access
   - `testConflictResolutionLastWriteWins` - test LAST_WRITE_WINS strategy
   - `testConflictResolutionReloadAndRetry` - test RELOAD_AND_RETRY strategy
-  - `testCoordinationDisabled` - bypass coordination when disabled
   - `testLockTimeoutHandling` - test various timeout scenarios
 - [ ] Update documentation:
   - Add code snippets for `CollectionCoordinator` usage.
