@@ -153,6 +153,8 @@ function runCollectionTests() {
       registerTestSuite(createCollectionUpdateOperationsTestSuite());
       registerTestSuite(createCollectionDeleteOperationsTestSuite());
       registerTestSuite(createCollectionCountOperationsTestSuite());
+      // Register Collection Lock Integration tests
+      registerTestSuite(createCollectionLockIntegrationTestSuite());
 
       // Run all tests
       const results = runAllTests();

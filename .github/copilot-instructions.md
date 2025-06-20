@@ -28,7 +28,7 @@ tests/framework/: AssertionUtilities.js, TestFramework.js, TestResult.js, TestRu
 
 ## Naming Conventions
 
-**Always descriptive, avoid abbreviations, use British English and follow these patterns**:
+**Always descriptive, use complete words, avoid abbreviations, use British English and follow these patterns**:
 
 **Classes**: PascalCase (`DocumentOperations`)  
 **Methods**: camelCase (`insertDocument`)  
