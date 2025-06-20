@@ -25,11 +25,12 @@
 | **Section 5** | ✅ **COMPLETE** | 100% | 61/61 | 100% | CollectionMetadata ✅, DocumentOperations ✅, Collection ✅ |
 | **Section 6** | ✅ **COMPLETE** | 100% | 95/95 | 100% | QueryEngine ✅, DocumentOperations ✅, Collection ✅, Date serialization fix ✅, Integration Tests ✅ |
 | **Section 7** | ✅ **COMPLETE** | 100% | 48/48 | 100% | UpdateEngine ✅, DocumentOperations ✅, Collection API ✅ Complete |
-| **Sections 8-9** | ⏳ **PENDING** | 0% | - | - | Awaiting next implementation |
+| **Section 8** | 🔴 **RED PHASE** | 20% | 15/15 | 87% | Collection Lock Integration tests created (13/15 passing) |
+| **Section 9** | ⏳ **PENDING** | 0% | - | - | Awaiting Section 8 completion |
 
-**Total Tests Implemented:** 324 tests across 7 sections (301 unit + 23 integration)  
-**Tests Passing:** 48/48 Collection tests (100% pass rate)  
-**Section 7 Status:** ✅ **COMPLETE - All Collection API methods successfully implemented**
+**Total Tests Implemented:** 339 tests across 7+ sections (316 unit + 23 integration)  
+**Tests Passing:** 61/63 Collection tests (96.8% pass rate)  
+**Section 8 Status:** 🔴 **RED PHASE - Collection Lock Integration test suite created**
 
 ##  **MILESTONE ACHIEVED: Section 7 - Collection API Update Tests (COMPLETE)**
 
@@ -96,9 +97,34 @@ Following the completion of Section 6, a refactoring pull request was merged, in
   5. Log the update with GASDBLogger.
 - All Section 7 tests pass, confirming a fully operational MongoDB-compatible update system.
 
-## Section 8: Cross-Instance Coordination
+## Section 8: Cross-Instance Coordination - RED PHASE COMPLETE
 
 > Note: Locking functionality has been refactored into `DbLockService` with full test coverage. Section 8 now focuses on integrating and orchestrating cross-instance coordination using the existing service.
+
+### Current Status: RED PHASE COMPLETE ✅
+
+**Test Suite 1: Collection Lock Integration (15 tests) - IMPLEMENTED**
+- ✅ All 15 RED phase tests created and running
+- ✅ Real service integration (no mocks)
+- ✅ 13/15 tests passing (87% pass rate)
+- 🔴 2 expected failures requiring implementation:
+  - `testCollectionHandlesLockTimeout` - requires proper timeout handling
+  - `testLockConsistencyAfterErrors` - requires error recovery logic
+
+**What We've Achieved:**
+- ✅ **Real Service Integration**: Removed all mock services, using actual `MasterIndex` and `DbLockService`
+- ✅ **Proper Test Environment**: Added `beforeAll`/`afterAll` hooks for test isolation
+- ✅ **Lock Acquisition**: Basic lock acquire/release functionality working
+- ✅ **Cross-Instance Coordination**: Multiple `MasterIndex` instances coordinate correctly
+- ✅ **Parameter Validation**: Lock operation validation working (unexpected pass indicates existing validation)
+- ✅ **Lock Status Tracking**: Metadata reflects lock status correctly
+- ✅ **Lock Persistence**: Locks persist across different instances
+
+**Next Steps for GREEN Phase:**
+1. Add proper `LockTimeoutError` throwing in `MasterIndex.acquireLock()` when `DbLockService` returns false
+2. Implement error recovery logic in lock consistency handling
+3. Add input validation for empty collection names and operation IDs
+4. Ensure script-level lock cleanup propagates to collection-level operations
 
 ### Objectives
 

@@ -269,9 +269,17 @@ class MasterIndex {
    * @param {string} collectionName - Collection to lock
    * @param {string} operationId - Operation identifier
    * @returns {boolean} True if lock acquired
+   * @throws {LockTimeoutError} If lock cannot be acquired within timeout
    */
   acquireLock(collectionName, operationId) {
-    return this._dbLockService.acquireCollectionLock(collectionName, operationId);
+    const acquired = this._dbLockService.acquireCollectionLock(collectionName, operationId);
+    if (!acquired) {
+      throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT(
+        collectionName,
+        this._config.lockTimeout
+      );
+    }
+    return true;
   }
 
   /**

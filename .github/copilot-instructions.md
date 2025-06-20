@@ -75,7 +75,7 @@ methodName(param) {
 **Every class**: Constructor validates inputs, JSDoc on all methods, follows naming conventions and error handling patterns  
 **Every test**: Descriptive function names, Arrange-Act-Assert pattern, independent execution, create folder for each class, create a file for each test suite and an orchestrator file for all of the tests.
 **Serialisation**: All serialisation/deserialisation is handled by `ObjectUtils.serialise()` and `ObjectUtils.deserialise()`. Any class requiring safe serialisation must implement `toJSON()` and a corresponding static `fromJSON()` and register in `ObjectUtils._classRegistry`.
-**Validation**: All generic validation is handled the `Validate` class. Class specific validation should be implemented as a private method.
+**Validation**: Use `Validate` class. Class specific validation implemented as private method.
 
 Follow TDD process as outlined in Core Principles.
 
