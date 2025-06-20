@@ -121,7 +121,7 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 - ✅ **Lock Persistence**: Locks persist across different instances
 
 **Next Steps for GREEN Phase:**
-1. Add proper `LockTimeoutError` throwing in `MasterIndex.acquireLock()` when `DbLockService` returns false
+1. ✅ Add proper `LockTimeoutError` throwing in `MasterIndex.acquireLock()` when `DbLockService` returns false
 2. Implement error recovery logic in lock consistency handling
 3. Add input validation for empty collection names and operation IDs
 4. Ensure script-level lock cleanup propagates to collection-level operations
