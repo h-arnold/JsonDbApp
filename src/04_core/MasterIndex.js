@@ -269,28 +269,27 @@ class MasterIndex {
    * @param {string} collectionName - Collection to lock
    * @param {string} operationId - Operation identifier
    * @returns {boolean} True if lock acquired, false if lock held
-   * @throws {LockTimeoutError} If lock cannot be acquired within timeout
+   * @throws {LockTimeoutError} If lock cannot be acquired within timeout for minimal timeout setting
    */
   acquireLock(collectionName, operationId) {
-    // Validate inputs
     Validate.nonEmptyString(collectionName, 'collectionName');
     Validate.nonEmptyString(operationId, 'operationId');
-    // Attempt to acquire the collection lock
+    // For minimal timeout, enforce immediate failure if already locked without expiration
+    if (this._config.lockTimeout <= 1) {
+      if (this._dbLockService.isCollectionLocked(collectionName)) {
+        throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT(collectionName, this._config.lockTimeout);
+      }
+      this._dbLockService.acquireCollectionLock(collectionName, operationId, this._config.lockTimeout);
+      return true;
+    }
+    // Standard lock acquisition
     const acquired = this._dbLockService.acquireCollectionLock(
       collectionName,
       operationId,
       this._config.lockTimeout
     );
     if (!acquired) {
-      // Immediate failure: return false for held locks when timeout is significant
-      if (this._config.lockTimeout > 1) {
-        return false;
-      }
-      // Treat minimal timeout as expiration: throw timeout error
-      throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT(
-        collectionName,
-        this._config.lockTimeout
-      );
+      return false;
     }
     return true;
   }
@@ -432,17 +431,15 @@ class MasterIndex {
   
   /**
    * Validate a modification token format
-   * @param {string} token - Token to validate
-   * @returns {boolean} True if valid
+   * @param {string} token - Token string to validate
+   * @returns {boolean} True if valid format (timestamp-random)
    */
   validateModificationToken(token) {
-    if (!token || typeof token !== 'string') {
+    if (typeof token !== 'string') {
       return false;
     }
-    
-    // Token should be in format: timestamp-randomstring
-    const tokenPattern = /^\d+-[a-z0-9]+$/;
-    return tokenPattern.test(token);
+    const regex = /^\d+-[a-z0-9]+$/;
+    return regex.test(token);
   }
   
   // ==================== PRIVATE HELPER METHODS ====================
