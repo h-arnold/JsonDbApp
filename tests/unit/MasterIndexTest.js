@@ -3,10 +3,10 @@
  * 
  * Comprehensive tests for the MasterIndex class including:
  * - Core CRUD operations
- * - Virtual locking mechanism  
  * - Conflict detection and resolution
  * - Component integration
  * 
+ * Note: Virtual locking mechanism tests moved to LockService test suite
  * Migrated from Section2Tests.js - All functions
  */
 
@@ -269,97 +269,6 @@ function createMasterIndexFunctionalityTestSuite() {
 }
 
 /**
- * Virtual Locking Mechanism Tests
- * Tests lock acquisition, timeout, and expiration
- */
-function createVirtualLockingTestSuite() {
-  const suite = new TestSuite('Virtual Locking Mechanism');
-  
-  suite.addTest('should acquire lock for collection successfully', function() {
-    // Arrange
-    const masterIndex = new MasterIndex();
-    const collectionName = 'lockTestCollection';
-    const operationId = 'test-operation-123';
-    
-    // Act
-    const lockAcquired = masterIndex.acquireLock(collectionName, operationId);
-    
-    // Assert
-    TestFramework.assertTrue(lockAcquired, 'Lock should be acquired successfully');
-    TestFramework.assertTrue(masterIndex.isLocked(collectionName), 'Collection should be locked');
-  });
-  
-  suite.addTest('should prevent multiple locks on same collection', function() {
-    // Arrange
-    const masterIndex = new MasterIndex();
-    const collectionName = 'conflictTestCollection';
-    
-    // Act
-    const firstLock = masterIndex.acquireLock(collectionName, 'operation-1');
-    const secondLock = masterIndex.acquireLock(collectionName, 'operation-2');
-    
-    // Assert
-    TestFramework.assertTrue(firstLock, 'First lock should be acquired');
-    TestFramework.assertFalse(secondLock, 'Second lock should be rejected');
-  });
-  
-  suite.addTest('should release lock correctly', function() {
-    // Arrange
-    const masterIndex = new MasterIndex();
-    const collectionName = 'releaseTestCollection';
-    const operationId = 'test-operation-456';
-    
-    // Act
-    masterIndex.acquireLock(collectionName, operationId);
-    const lockReleased = masterIndex.releaseLock(collectionName, operationId);
-    
-    // Assert
-    TestFramework.assertTrue(lockReleased, 'Lock should be released successfully');
-    TestFramework.assertFalse(masterIndex.isLocked(collectionName), 'Collection should not be locked');
-  });
-  
-  suite.addTest('should handle lock timeout correctly', function() {
-    // Arrange
-    const masterIndex = new MasterIndex({ lockTimeout: 100 }); // 100ms timeout for testing
-    const collectionName = 'timeoutTestCollection';
-    
-    // Act
-    masterIndex.acquireLock(collectionName, 'test-operation');
-    
-    // Wait for timeout (simulate with date manipulation)
-    const originalDate = Date.now;
-    Date.now = () => originalDate() + 150; // Simulate 150ms later
-    
-    const isExpired = masterIndex.cleanupExpiredLocks();
-    
-    // Restore Date.now
-    Date.now = originalDate;
-    
-    // Assert
-    TestFramework.assertTrue(isExpired, 'Should detect expired locks');
-    TestFramework.assertFalse(masterIndex.isLocked(collectionName), 'Expired lock should be cleaned up');
-  });
-  
-  suite.addTest('should persist locks to ScriptProperties', function() {
-    // Arrange
-    const masterIndex = new MasterIndex();
-    const collectionName = 'persistLockTest';
-    
-    // Act
-    masterIndex.acquireLock(collectionName, 'persist-operation');
-    masterIndex.save();
-    
-    // Create new instance
-    const newMasterIndex = new MasterIndex();
-    
-    // Assert
-    TestFramework.assertTrue(newMasterIndex.isLocked(collectionName), 'Lock should be persisted');
-  });
-  
-  return suite;
-}
-
-/**
  * Conflict Detection and Resolution Tests
  * Tests modification token generation and conflict resolution
  */
@@ -528,29 +437,6 @@ function createMasterIndexIntegrationTestSuite() {
 
   // RED PHASE TESTS: Phase 3 - CollectionMetadata Integration with Locking and Conflict Detection
 
-  suite.addTest('should coordinate CollectionMetadata with locking mechanism', function() {
-    // Arrange
-    const masterIndex = new MasterIndex();
-    const collectionName = 'metadataLockingTest';
-    const operationId = 'metadata-locking-operation';
-    const metadata = new CollectionMetadata(collectionName, 'locking-file-id', {
-      documentCount: 3,
-      modificationToken: 'locking-token-123'
-    });
-    
-    // Act
-    const lockAcquired = masterIndex.acquireLock(collectionName, operationId);
-    masterIndex.addCollection(collectionName, metadata);
-    const retrievedCollection = masterIndex.getCollection(collectionName);
-    
-    // Assert - RED PHASE: This will fail until CollectionMetadata supports lock status integration
-    TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
-    TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'Should return CollectionMetadata instance');
-    TestFramework.assertNotNull(retrievedCollection.lockStatus, 'CollectionMetadata should contain lock status');
-    TestFramework.assertTrue(retrievedCollection.lockStatus.isLocked, 'CollectionMetadata should reflect locked state');
-    TestFramework.assertEquals(retrievedCollection.lockStatus.lockedBy, operationId, 'CollectionMetadata should track operation ID');
-  });
-
   suite.addTest('should maintain CollectionMetadata integrity during conflict resolution', function() {
     // Arrange
     const masterIndex = new MasterIndex();
@@ -625,7 +511,6 @@ function createMasterIndexIntegrationTestSuite() {
 function registerMasterIndexTests() {
   const testFramework = new TestFramework();
   testFramework.registerTestSuite(createMasterIndexFunctionalityTestSuite());
-  testFramework.registerTestSuite(createVirtualLockingTestSuite());
   testFramework.registerTestSuite(createConflictDetectionTestSuite());
   testFramework.registerTestSuite(createMasterIndexIntegrationTestSuite());
   return testFramework;
@@ -645,7 +530,6 @@ function runMasterIndexTests() {
     // Run all MasterIndex test suites
     const results = [];
     results.push(testFramework.runTestSuite('MasterIndex Functionality'));
-    results.push(testFramework.runTestSuite('Virtual Locking Mechanism'));
     results.push(testFramework.runTestSuite('Conflict Detection and Resolution'));
     results.push(testFramework.runTestSuite('MasterIndex Integration'));
     

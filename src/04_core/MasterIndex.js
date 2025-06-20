@@ -11,8 +11,9 @@ class MasterIndex {
   /**
    * Create a new MasterIndex instance
    * @param {Object} config - Configuration options
+   * @param {DbLockService} [lockService] - Optional DbLockService instance for injection
    */
-  constructor(config = {}) {
+  constructor(config = {}, lockService = null) {
     this._config = {
       masterIndexKey: config.masterIndexKey || 'GASDB_MASTER_INDEX',
       lockTimeout: config.lockTimeout || 30000, // 30 seconds default
@@ -25,14 +26,15 @@ class MasterIndex {
       version: this._config.version,
       lastUpdated: new Date(),
       collections: {},
-      locks: {},
       modificationHistory: {}
     };
     
     // Load existing data from ScriptProperties if available
     this._loadFromScriptProperties();
+    // Initialise or inject DbLockService
+    this._dbLockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
   }
-  
+
   /**
    * Check if master index is initialised
    * @returns {boolean} True if initialised
@@ -50,9 +52,7 @@ class MasterIndex {
    * @throws {InvalidArgumentError} If name is invalid
    */
   _addCollectionInternal(name, metadata) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(name, 'name');
     let collectionMetadata;
     if (metadata instanceof CollectionMetadata) {
       collectionMetadata = metadata;
@@ -93,9 +93,7 @@ class MasterIndex {
    * @throws {InvalidArgumentError} When collectionsMap is invalid
    */
   addCollections(collectionsMap) {
-    if (!collectionsMap || typeof collectionsMap !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('collectionsMap must be a non-empty object');
-    }
+    Validate.object(collectionsMap, 'collectionsMap', false);
     return this._withScriptLock(() => {
       const results = [];
       Object.entries(collectionsMap).forEach(([name, meta]) => {
@@ -107,14 +105,31 @@ class MasterIndex {
   
   /**
    * Save master index to ScriptProperties
+   * @param {Object} [dataOverride] - Optional data to save instead of internal state
    */
-  save() {
+  save(dataOverride) {
     try {
-      this._data.lastUpdated = new Date();
-      const dataString = ObjectUtils.serialise(this._data);
+      const dataToSave = dataOverride || this._data;
+      dataToSave.lastUpdated = new Date();
+      const dataString = ObjectUtils.serialise(dataToSave);
       PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
     } catch (error) {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
+    }
+  }
+  
+  /**
+   * Load master index from ScriptProperties
+   * @returns {Object|null} Deserialized index data
+   */
+  load() {
+    try {
+      const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
+      const data = dataString ? ObjectUtils.deserialise(dataString) : null;
+      this._data = data;
+      return data;
+    } catch (error) {
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
   
@@ -136,9 +151,7 @@ class MasterIndex {
    * @returns {CollectionMetadata|null} Collection metadata instance or null if not found
    */
   getCollection(name) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(name, 'name');
     
     const rawData = this._data.collections[name];
     if (!rawData) {
@@ -149,22 +162,6 @@ class MasterIndex {
       ? rawData
       : new CollectionMetadata(rawData);
     
-    // Synchronise lock status from current locks
-    const currentLock = this._data.locks[name];
-    if (currentLock) {
-      // Check if lock is still valid (not expired)
-      const now = Date.now();
-      const expiresAt = currentLock.lockTimeout || currentLock.expiresAt;
-      
-      if (now < expiresAt) {
-        // Lock is still active, update metadata
-        collectionMetadata.setLockStatus(currentLock);
-      } else {
-        // Lock expired, remove it
-        this._removeLock(name);
-      }
-    }
-    
     return collectionMetadata;
   }
   
@@ -174,9 +171,8 @@ class MasterIndex {
    * @param {Object} updates - Metadata updates
    */
   updateCollectionMetadata(name, updates) {
-    if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(name, 'name');
+    Validate.object(updates, 'updates', false);
 
     return this._withScriptLock(() => {
       const rawData = this._data.collections[name];
@@ -248,19 +244,16 @@ class MasterIndex {
    * @returns {boolean} True if collection was found and removed, false otherwise
    */
   removeCollection(name) {
-    if (!name || typeof name !== 'string' || name.trim() === '') {
-      this._logger.warn('Invalid collection name for removal', { name });
+    if (!Validate.object(this._data.collections, 'collections', false) || !Validate.object(this._data, 'data', false)) {
+      this._logger.warn('Internal state corrupted', { name });
       return false;
     }
+    Validate.nonEmptyString(name, 'name');
 
     this._loadFromScriptProperties(); // Ensure current data
 
     if (this._data.collections && this._data.collections.hasOwnProperty(name)) {
       delete this._data.collections[name];
-      // Also remove any associated locks for the collection
-      if (this._data.locks && this._data.locks.hasOwnProperty(name)) {
-        delete this._data.locks[name];
-      }
       this._addToModificationHistory(name, 'removeCollection', { name });
       this.save(); // Persist changes
       this._logger.info('Collection removed from master index', { name });
@@ -278,77 +271,18 @@ class MasterIndex {
    * @returns {boolean} True if lock acquired
    */
   acquireLock(collectionName, operationId) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    
-    if (!operationId || typeof operationId !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Operation ID must be a non-empty string');
-    }
-    
-    return this._withScriptLock(() => {
-      // Clean up expired locks first (internal method to avoid deadlock)
-      this._internalCleanupExpiredLocks();
-      
-      // Check if already locked
-      if (this.isLocked(collectionName)) {
-        return false;
-      }
-      
-      const now = new Date();
-      const expiresAt = new Date(now.getTime() + this._config.lockTimeout);
-      
-      const lockInfo = {
-        isLocked: true,
-        lockedBy: operationId,
-        lockedAt: now.getTime(), // Use timestamp for consistency
-        lockTimeout: expiresAt.getTime() // Use timestamp for consistency
-      };
-      
-      // Store lock in both places for easier management
-      this._data.locks[collectionName] = lockInfo;
-      
-      // Also store in collection if it exists, using CollectionMetadata
-      if (this._data.collections[collectionName]) {
-        const collectionMetadata = this._data.collections[collectionName];
-        collectionMetadata.setLockStatus(lockInfo);
-        this._data.collections[collectionName] = collectionMetadata;
-      }
-      
-      this._data.lastUpdated = new Date();
-      
-      return true;
-    });
+    return this._dbLockService.acquireCollectionLock(collectionName, operationId);
   }
-  
+
   /**
    * Check if a collection is locked
    * @param {string} collectionName - Collection name
    * @returns {boolean} True if locked
    */
   isLocked(collectionName) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      return false;
-    }
-    
-    const lockInfo = this._data.locks[collectionName];
-    if (!lockInfo) {
-      return false;
-    }
-    
-    // Check if lock has expired
-    const now = Date.now();
-    const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
-    
-    if (now >= expiresAt) {
-      // Lock has expired, clean it up
-      this._removeLock(collectionName);
-      return false;
-    }
-    
-    return true;
+    return this._dbLockService.isCollectionLocked(collectionName);
   }
-  
+
   /**
    * Release a lock for a collection
    * @param {string} collectionName - Collection to unlock
@@ -356,38 +290,15 @@ class MasterIndex {
    * @returns {boolean} True if lock released
    */
   releaseLock(collectionName, operationId) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    
-    if (!operationId || typeof operationId !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Operation ID must be a non-empty string');
-    }
-    
-    return this._withScriptLock(() => {
-      const lockInfo = this._data.locks[collectionName];
-      if (!lockInfo) {
-        return false; // No lock to release
-      }
-      
-      // Verify the operation ID matches
-      if (lockInfo.lockedBy !== operationId) {
-        return false; // Cannot release lock held by another operation
-      }
-      
-      this._removeLock(collectionName);
-      return true;
-    });
+    return this._dbLockService.releaseCollectionLock(collectionName, operationId);
   }
-  
+
   /**
    * Clean up expired locks
    * @returns {boolean} True if any locks were cleaned up
    */
   cleanupExpiredLocks() {
-    return this._withScriptLock(() => {
-      return this._internalCleanupExpiredLocks();
-    });
+    return this._dbLockService.cleanupExpiredCollectionLocks();
   }
   
   /**
@@ -407,13 +318,8 @@ class MasterIndex {
    * @returns {boolean} True if there's a conflict
    */
   hasConflict(collectionName, expectedToken) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    
-    if (!expectedToken || typeof expectedToken !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Expected token must be a non-empty string');
-    }
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    Validate.nonEmptyString(expectedToken, 'expectedToken');
     
     const collection = this._data.collections[collectionName];
     if (!collection) {
@@ -431,12 +337,8 @@ class MasterIndex {
    * @returns {Object} Resolution result
    */
   resolveConflict(collectionName, newData, strategy) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
-    if (!newData || typeof newData !== 'object') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('New data must be an object');
-    }
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    Validate.object(newData, 'newData', false);
     strategy = strategy || 'LAST_WRITE_WINS';
 
     return this._withScriptLock(() => {
@@ -494,9 +396,7 @@ class MasterIndex {
    * @returns {Array} Modification history
    */
   getModificationHistory(collectionName) {
-    if (!collectionName || typeof collectionName !== 'string') {
-      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR('Collection name must be a non-empty string');
-    }
+    Validate.nonEmptyString(collectionName, 'collectionName');
     
     return this._data.modificationHistory[collectionName] || [];
   }
@@ -537,99 +437,7 @@ class MasterIndex {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
-  
-  /**
-   * Remove a lock from both storage locations
-   * @param {string} collectionName - Collection name
-   * @private
-   */
-  _removeLock(collectionName) {
-    delete this._data.locks[collectionName];
-    
-    if (this._data.collections[collectionName]) {
-      const instance = this._data.collections[collectionName] instanceof CollectionMetadata
-        ? this._data.collections[collectionName]
-        : new CollectionMetadata(this._data.collections[collectionName]);
-      instance.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
-      this._data.collections[collectionName] = instance;
-    }
-  }
-  
-  /**
-   * Add entry to modification history
-   * @param {string} collectionName - Collection name
-   * @param {string} operation - Operation type
-   * @param {Object} data - Operation data
-   * @private
-   */
-  _addToModificationHistory(collectionName, operation, data) {
-    if (!this._data.modificationHistory[collectionName]) {
-      this._data.modificationHistory[collectionName] = [];
-    }
-    
-    this._data.modificationHistory[collectionName].push({
-      operation: operation,
-      timestamp: new Date(),
-      data: data
-    });
-    
-    // Keep only last 50 entries to prevent excessive growth
-    if (this._data.modificationHistory[collectionName].length > 50) {
-      this._data.modificationHistory[collectionName] = 
-        this._data.modificationHistory[collectionName].slice(-50);
-    }
-  }
-  
-  /**
-   * Internal cleanup of expired locks (without ScriptLock wrapper to prevent deadlock)
-   * @returns {boolean} True if any locks were cleaned up
-   * @private
-   */
-  _internalCleanupExpiredLocks() {
-    const now = Date.now();
-    let anyExpired = false;
-    
-    Object.keys(this._data.locks).forEach(collectionName => {
-      const lockInfo = this._data.locks[collectionName];
-      const expiresAt = lockInfo.lockTimeout || lockInfo.expiresAt;
-      
-      if (now >= expiresAt) {
-        this._removeLock(collectionName);
-        anyExpired = true;
-      }
-    });
-    
-    if (anyExpired) {
-      this._data.lastUpdated = new Date();
-    }
-    
-    return anyExpired;
-  }
-  
-  /**
-   * Acquire Google Apps Script LockService lock
-   * @param {number} timeout - Lock timeout in milliseconds
-   * @returns {GoogleAppsScript.Lock.Lock} Lock instance
-   * @private
-   */
-  _acquireScriptLock(timeout = 10000) {
-    try {
-      const lock = LockService.getScriptLock();
-      const acquired = lock.tryLock(timeout);
-      
-      if (!acquired) {
-        throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT('MasterIndex ScriptLock', timeout);
-      }
-      
-      return lock;
-    } catch (error) {
-      if (error instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
-        throw error;
-      }
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('lock_acquisition', error.message);
-    }
-  }
-  
+
   /**
    * Execute operation with ScriptLock protection
    * @param {Function} operation - Operation to execute
@@ -637,22 +445,52 @@ class MasterIndex {
    * @returns {*} Operation result
    * @private
    */
-  _withScriptLock(operation, timeout = 10000) {
-    const lock = this._acquireScriptLock(timeout);
-    
+  _withScriptLock(operation, timeout = this._config.lockTimeout) {
+    this._dbLockService.acquireScriptLock(timeout);
     try {
-      // Skipping reload on each operation for in-memory performance
-      // this.loadFromScriptProperties(); //Keeping that here because I have a feeling that this may cause consistency issues if the data is changed by another instance
-      // Execute the operation
-      const result = operation();
-      
-      // Save updated data back to ScriptProperties
-      this.save();
-      
-      return result;
+      return operation();
     } finally {
-      // Always release the lock
-      lock.releaseLock();
+      this._dbLockService.releaseScriptLock();
+    }
+  }
+
+  /**
+   * Add entry to modification history for debugging and auditing
+   * @param {string} collectionName - Collection name
+   * @param {string} operation - Operation type (e.g., 'ADD_COLLECTION', 'UPDATE_METADATA')
+   * @param {Object} data - Operation data/payload
+   * @private
+   */
+  _addToModificationHistory(collectionName, operation, data) {
+    if (!Validate.isPlainObject(this._data.modificationHistory)) {
+      this._data.modificationHistory = {};
+    }
+    if (!collectionName || typeof collectionName !== 'string') {
+      return; // Silent fail for invalid collection names to avoid breaking existing operations
+    }
+    
+    // Ensure modificationHistory structure exists
+    if (!this._data.modificationHistory) {
+      this._data.modificationHistory = {};
+    }
+    
+    if (!this._data.modificationHistory[collectionName]) {
+      this._data.modificationHistory[collectionName] = [];
+    }
+    
+    // Add new history entry
+    const entry = {
+      operation: operation || 'UNKNOWN',
+      timestamp: new Date().toISOString(),
+      data: data || null
+    };
+    
+    this._data.modificationHistory[collectionName].push(entry);
+    
+    // Optional: Limit history size to prevent unbounded growth
+    const maxHistoryEntries = 100; // Keep last 100 operations
+    if (this._data.modificationHistory[collectionName].length > maxHistoryEntries) {
+      this._data.modificationHistory[collectionName] = this._data.modificationHistory[collectionName].slice(-maxHistoryEntries);
     }
   }
 }

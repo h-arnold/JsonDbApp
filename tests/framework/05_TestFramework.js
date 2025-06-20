@@ -81,6 +81,9 @@ class TestFramework {
     return AssertionUtilities.assertArrayEquals(expected, actual, message);
   }
   
+  static assertNoThrow(fn, message = '') {
+    return AssertionUtilities.assertNoThrow(fn, message);
+  }
   // ============= MAIN API METHODS =============
   
   /**
