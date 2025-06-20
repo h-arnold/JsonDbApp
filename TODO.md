@@ -2,53 +2,23 @@
 
 ## Section 8: Cross-Instance Coordination
 
-- [ ] Create `src/02_components/CollectionCoordinator.js` with constructor (Collection, MasterIndex, config, logger).
-- [ ] Implement `coordinate(operationName, callback)`:
-  - Generate `operationId` via `IdGenerator`.
-  - Acquire operation lock with retry/backoff.
-  - Validate modification token and detect conflicts.
-  - Resolve conflicts per strategy.
-  - Invoke core CRUD callback.
-  - Update master index metadata.
-  - Release operation lock in `finally`.
-- [ ] Add methods on `CollectionCoordinator`:
-  - `acquireOperationLock` (with exponential backoff).
-  - `releaseOperationLock`.
-  - `validateModificationToken`, `hasConflict`, `resolveConflict`.
-  - `updateMasterIndexMetadata`.
-- [ ] Refactor `Collection.js`:
-  - Inject `_coordinator` via constructor.
-  - Remove internal lock/token methods and retry loops.
-  - Delegate all public CRUD methods to `this._coordinator.coordinate()`.
-  - Extract existing core logic into private `_perform*` methods.
-- [ ] Update `DatabaseConfig.js` to include coordination settings:
-  - `coordinationEnabled`, `lockTimeoutMs`, `retryAttempts`, `retryDelayMs`, `conflictResolutionStrategy`.
-- [x] **RED PHASE**: Write failing unit tests for `CollectionCoordinator`:
-  - [x] `testCollectionCoordinatorConstructorValidation` - validates dependencies
-  - [x] `testCoordinateHappyPath` - lock → callback → metadata update → unlock
-  - [x] `testAcquireOperationLockRetrySuccess` - lock fails then succeeds with backoff
-  - [x] `testAcquireOperationLockRetryFailure` - all retries fail → LockAcquisitionFailureError
-  - [x] `testValidateModificationTokenNoConflict` - token matches, no conflict
-  - [x] `testValidateModificationTokenConflict` - stale token → ModificationConflictError
-  - [x] `testResolveConflictReloadAndRetry` - conflict resolved via reload strategy
-  - [x] `testResolveConflictLastWriteWins` - conflict resolved via overwrite strategy
-  - [x] `testUpdateMasterIndexMetadata` - metadata updated correctly
-  - [x] `testLockReleasedOnException` - lock released in finally block on error
-  - [x] `testCoordinationTimeout` - overall timeout → CoordinationTimeoutError
-- [ ] **RED PHASE**: Update existing `Collection` tests to verify delegation:
-  - `testInsertOneDelegatesToCoordinator` - insertOne calls coordinator.coordinate
-  - `testFindOneDelegatesToCoordinator` - findOne calls coordinator.coordinate
-  - `testUpdateOneDelegatesToCoordinator` - updateOne calls coordinator.coordinate
-  - `testDeleteOneDelegatesToCoordinator` - deleteOne calls coordinator.coordinate
-  - `testCollectionConstructorInjectsCoordinator` - coordinator dependency injected
-- [ ] **RED PHASE**: Create integration test cases:
-  - `testParallelOperationsOnSameCollection` - simulate concurrent access
-  - `testConflictResolutionLastWriteWins` - test LAST_WRITE_WINS strategy
-  - `testConflictResolutionReloadAndRetry` - test RELOAD_AND_RETRY strategy
-  - `testLockTimeoutHandling` - test various timeout scenarios
-- [ ] Update documentation:
-  - Add code snippets for `CollectionCoordinator` usage.
-  - Include sequence diagram of lock → conflict check → operation → update → release.
+- [x] Create `src/02_components/CollectionCoordinator.js` with constructor (Collection, MasterIndex, config, logger).
+- [x] Implement logger usage with `GASDBLogger.createComponentLogger('CollectionCoordinator')`.
+- [x] Implement `acquireOperationLock` (with exponential backoff, error logging, and correct error type for lock failure).
+- [x] Implement `releaseOperationLock` (with error logging, always called in finally).
+- [x] Implement `hasConflict` and `resolveConflict` (with reload and last-write-wins strategies).
+- [ ] Implement `coordinate(operationName, callback)` with full orchestration (currently partial, needs to handle all error and timeout scenarios, and call validateModificationToken).
+- [ ] Implement `validateModificationToken` (stubbed, not yet implemented; required for token validation and conflict error throwing).
+- [ ] Implement `updateMasterIndexMetadata` (stubbed, not yet implemented; required for metadata update test).
+- [ ] Implement correct error types: `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError` (currently missing or not referenced correctly).
+- [ ] Ensure lock release on exception and coordination timeout handling are robust and tested.
+- [ ] Refactor as needed for test coverage and green phase.
+
+### To move to GREEN PHASE:
+- Complete `coordinate`, `validateModificationToken`, and `updateMasterIndexMetadata` implementations.
+- Define and use all required error types in `ErrorHandler`.
+- Ensure all orchestration, error, and edge cases are handled as per test suite expectations.
+- Re-run tests and refactor for full pass rate.
 
 ## Section 9: Integration and System Testing
 
