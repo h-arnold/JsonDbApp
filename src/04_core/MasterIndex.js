@@ -244,11 +244,11 @@ class MasterIndex {
    * @returns {boolean} True if collection was found and removed, false otherwise
    */
   removeCollection(name) {
-    if (!Validate.isPlainObject(this._data.collections) || !Validate.isPlainObject(this._data)) {
+    if (!Validate.object(this._data.collections, 'collections', false) || !Validate.object(this._data, 'data', false)) {
       this._logger.warn('Internal state corrupted', { name });
       return false;
     }
-    if (!name || typeof name !== 'string' || name.trim() === '') {
+    Validate.nonEmptyString(name, 'name');
       this._logger.warn('Invalid collection name for removal', { name });
       return false;
     }
