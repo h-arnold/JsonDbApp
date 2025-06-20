@@ -1,8 +1,5 @@
 Here’s my diagnosis of the red-flag issues that are cascading through your DbLockService suites:
 
-1.  **Missing `_validateLockServiceAvailable` method**  
-    In `acquireScriptLock()` you call `this._validateLockServiceAvailable()` but no such private helper is implemented.  That immediately throws a `TypeError` and prevents any of your script‐lock tests from ever exercising the intended logic or catching `waitLock` failures.
-
 2.  **Hard-coded master-index key vs test-injected key**  
     Your service always reads/writes the ScriptProperties entry under `'GASDB_MASTER_INDEX'`, yet the LockService test harness is mounting everything under a test key (e.g. `"GASDB_TEST_LOCKSERVICE_MASTER_INDEX"`).  Without a way to inject or override the master-index key into `DbLockService`, your real-environment and MasterIndex integration tests will be out of sync with the setup/teardown routines.
 
