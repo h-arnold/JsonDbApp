@@ -1,6 +1,29 @@
 /**
  * DbLockService - Provides script and collection level locking
  */
+/**
+ * Service for managing script-level and per-collection locks in Google Apps Script.
+ *
+ * Provides mechanisms to acquire and release locks at both the script and collection level,
+ * using Google Apps Script's LockService and PropertiesService for coordination.
+ * Ensures safe concurrent access to shared resources and collections.
+ *
+ * @class
+ * @example
+ * const lockService = new DbLockService({ lockTimeout: 10000 });
+ * lockService.acquireScriptLock(5000);
+ * // ... critical section ...
+ * lockService.releaseScriptLock();
+ *
+ * @param {Object} [config={}] - Configuration options.
+ * @param {number} [config.lockTimeout=5000] - Default timeout for collection locks in milliseconds.
+ * @param {string} [config.masterIndexKey='GASDB_MASTER_INDEX'] - Key for storing the master lock index in script properties.
+ *
+ * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} If invalid arguments are provided.
+ * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} If LockService is unavailable.
+ * @throws {ErrorHandler.ErrorTypes.LOCK_TIMEOUT} If a lock cannot be acquired within the timeout.
+ * @throws {ErrorHandler.ErrorTypes.FILE_IO_ERROR} If reading or writing the master index fails.
+ */
 class DbLockService {
   /**
    * Constructor for DbLockService

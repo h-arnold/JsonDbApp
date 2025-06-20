@@ -32,7 +32,7 @@ class MasterIndex {
     // Load existing data from ScriptProperties if available
     this._loadFromScriptProperties();
     // Initialise or inject DbLockService
-    this._DbLockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
+    this._dbLockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
   }
 
   /**
@@ -249,9 +249,6 @@ class MasterIndex {
       return false;
     }
     Validate.nonEmptyString(name, 'name');
-      this._logger.warn('Invalid collection name for removal', { name });
-      return false;
-    }
 
     this._loadFromScriptProperties(); // Ensure current data
 
@@ -274,7 +271,7 @@ class MasterIndex {
    * @returns {boolean} True if lock acquired
    */
   acquireLock(collectionName, operationId) {
-    return this._DbLockService.acquireCollectionLock(collectionName, operationId);
+    return this._dbLockService.acquireCollectionLock(collectionName, operationId);
   }
 
   /**
@@ -283,7 +280,7 @@ class MasterIndex {
    * @returns {boolean} True if locked
    */
   isLocked(collectionName) {
-    return this._DbLockService.isCollectionLocked(collectionName);
+    return this._dbLockService.isCollectionLocked(collectionName);
   }
 
   /**
@@ -293,7 +290,7 @@ class MasterIndex {
    * @returns {boolean} True if lock released
    */
   releaseLock(collectionName, operationId) {
-    return this._DbLockService.releaseCollectionLock(collectionName, operationId);
+    return this._dbLockService.releaseCollectionLock(collectionName, operationId);
   }
 
   /**
@@ -301,7 +298,7 @@ class MasterIndex {
    * @returns {boolean} True if any locks were cleaned up
    */
   cleanupExpiredLocks() {
-    return this._DbLockService.cleanupExpiredCollectionLocks();
+    return this._dbLockService.cleanupExpiredCollectionLocks();
   }
   
   /**
@@ -449,11 +446,11 @@ class MasterIndex {
    * @private
    */
   _withScriptLock(operation, timeout = this._config.lockTimeout) {
-    this._DbLockService.acquireScriptLock(timeout);
+    this._dbLockService.acquireScriptLock(timeout);
     try {
       return operation();
     } finally {
-      this._DbLockService.releaseScriptLock();
+      this._dbLockService.releaseScriptLock();
     }
   }
 
