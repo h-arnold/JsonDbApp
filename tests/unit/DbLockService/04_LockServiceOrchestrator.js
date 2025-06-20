@@ -40,6 +40,7 @@ function registerLockServiceTests() {
   tf.registerTestSuite(createLockServiceCollectionLockTestSuite());
   tf.registerTestSuite(createLockServiceRemoveLockTestSuite());
   tf.registerTestSuite(createLockServiceExpiredCleanupTestSuite());
+  tf.registerTestSuite(createLockServiceMasterIndexKeyTestSuite());
   return tf;
 }
 

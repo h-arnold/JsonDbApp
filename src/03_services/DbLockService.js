@@ -23,6 +23,14 @@ class DbLockService {
     // Logger instance
     this._logger = GASDBLogger.createComponentLogger('DbLockService');
 
+    // Master index key configuration
+    if (config.masterIndexKey !== undefined) {
+      Validate.nonEmptyString(config.masterIndexKey, 'config.masterIndexKey');
+      this._masterIndexKey = config.masterIndexKey;
+    } else {
+      this._masterIndexKey = 'GASDB_MASTER_INDEX';
+    }
+
     // Private script lock property
     this._scriptLock = null;
   }
@@ -100,11 +108,11 @@ class DbLockService {
   // Internal helper to load and parse master index
   _loadIndex() {
     const props = PropertiesService.getScriptProperties();
-    const data = props.getProperty('GASDB_MASTER_INDEX');
+    const data = props.getProperty(this._masterIndexKey);
     try {
       return data ? JSON.parse(data) : { locks: {} };
     } catch (err) {
-      throw new ErrorHandler.ErrorTypes.FILE_IO_ERROR('parseMasterIndex', 'GASDB_MASTER_INDEX', err);
+      throw new ErrorHandler.ErrorTypes.FILE_IO_ERROR('parseMasterIndex', this._masterIndexKey, err);
     }
   }
 
@@ -112,9 +120,9 @@ class DbLockService {
   _saveIndex(index) {
     const props = PropertiesService.getScriptProperties();
     try {
-      props.setProperty('GASDB_MASTER_INDEX', JSON.stringify(index));
+      props.setProperty(this._masterIndexKey, JSON.stringify(index));
     } catch (err) {
-      throw new ErrorHandler.ErrorTypes.FILE_IO_ERROR('saveMasterIndex', 'GASDB_MASTER_INDEX', err);
+      throw new ErrorHandler.ErrorTypes.FILE_IO_ERROR('saveMasterIndex', this._masterIndexKey, err);
     }
   }
 
@@ -239,6 +247,3 @@ class DbLockService {
     }
   }
 }
-
-// Expose class
-this.DbLockService = DbLockService;
