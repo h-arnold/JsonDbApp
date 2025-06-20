@@ -58,6 +58,7 @@
         - [assertContains(array, element, message)](#assertcontainsarray-element-message)
         - [assertMatches(string, regex, message)](#assertmatchesstring-regex-message)
         - [assertArrayEquals(expected, actual, message)](#assertarrayequalsexpected-actual-message)
+        - [assertNoThrow(fn, message)](#assertnothrowfn-message)
     - [TestResult Class](#testresult-class)
       - [Constructor](#constructor-2)
       - [Properties](#properties)
@@ -609,6 +610,14 @@ Static assertion methods for test validation.
   - `message` (string, optional) - Custom error message
 - **Throws**: Error if arrays are not equal (different lengths or elements)
 - **Description**: Asserts that two arrays are equal by comparing length and element-wise equality using strict equality (===)
+
+##### assertNoThrow(fn, message)
+
+- **Parameters**:
+  - `fn` (function) - The function that should not throw
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if function throws
+- **Description**: Asserts that a function does not throw an error. Fails the test if an error is thrown.
 
 ### TestResult Class
 
