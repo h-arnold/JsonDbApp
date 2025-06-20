@@ -98,33 +98,33 @@ Following the completion of Section 6, a refactoring pull request was merged, in
 
 ## Section 8: Cross-Instance Coordination
 
+> Note: Locking functionality has been refactored into `DbLockService` with full test coverage. Section 8 now focuses on integrating and orchestrating cross-instance coordination using the existing service.
+
 ### Objectives
 
-- Implement cross-instance coordination using MasterIndex virtual locking
-- Test concurrent operations across multiple script instances
-- Ensure data consistency and conflict resolution
-- Integrate Collection operations with MasterIndex coordination
+- Integrate cross-instance coordination using the existing `DbLockService` through `MasterIndex`
+- Test concurrent operations across multiple script instances leveraging `DbLockService` locks
+- Ensure data consistency and conflict resolution in a multi-instance environment
+- Verify Collection operations obtain and release locks correctly via `MasterIndex`
 
 ### Requirements Analysis
 
-Based on the PRD and existing codebase, Section 8 focuses on:
+Based on the PRD and existing codebase, Section 8 focuses on leveraging the already extracted `DbLockService` to:
 
-1. **Virtual Locking Protocol**: ScriptProperties-based locking via MasterIndex to prevent concurrent modifications
-2. **Conflict Detection**: Modification tokens to identify when data has been changed by another instance
-3. **Atomic Operations**: Collection operations must be wrapped in lock acquisition/release cycles
-4. **Retry Mechanisms**: Handle lock timeouts and conflicts gracefully
-5. **Data Consistency**: Ensure Collection metadata stays synchronised with MasterIndex
+1. **Virtual Locking Protocol**: Use `DbLockService.acquireCollectionLock`/`releaseCollectionLock` via `MasterIndex`
+2. **Conflict Detection**: Utilize modification tokens managed in `CollectionMetadata` and synchronized in `MasterIndex`
+3. **Atomic Operations**: Wrap Collection CRUD calls in lock acquisition/release via `MasterIndex` delegation
+4. **Retry Mechanisms**: Handle lock timeouts and conflicts using `DbLockService` timeouts and retry patterns
+5. **Data Consistency**: Keep `CollectionMetadata` and Master Index in sync under concurrent modifications
 
 ### Implementation Steps
 
-#### 1. Collection Coordination Integration
+#### 1. Reuse `DbLockService` in Collection Coordination
 
-**Current State**: Collection class performs operations without MasterIndex coordination
-**Required Changes**:
-- Integrate Collection._saveData() with MasterIndex lock acquisition
-- Add modification token validation before saves
-- Implement conflict detection and retry logic
-- Update Collection operations to use virtual locking protocol
+**Current State**: Lock logic is fully implemented in `DbLockService` and delegated by `MasterIndex`
+**Required Integration**:
+- Ensure `DatabaseConfig` injects a `DbLockService` instance into `MasterIndex`
+- Update `Collection._saveData()` to call `MasterIndex.acquireCollectionLock`/`releaseCollectionLock` around persistence
 
 **Key Components**:
 - Collection._acquireOperationLock(operationId)
