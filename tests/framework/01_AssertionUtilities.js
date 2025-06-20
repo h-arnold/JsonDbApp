@@ -137,6 +137,20 @@ class AssertionUtilities {
   }
   
   /**
+   * Assert that a function does not throw an error
+   * @param {Function} fn - The function to test
+   * @param {string} message - Optional error message
+   */
+  static assertNoThrow(fn, message = '') {
+    try {
+      fn();
+    } catch (error) {
+      const errorMsg = message || `Expected function not to throw, but it threw: ${error.message}`;
+      throw new Error(errorMsg);
+    }
+  }
+  
+  /**
    * Assert that an array contains a specific element
    * @param {Array} array - The array to search
    * @param {*} element - The element to find
