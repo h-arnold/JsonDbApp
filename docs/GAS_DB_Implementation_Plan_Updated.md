@@ -97,40 +97,33 @@ Following the completion of Section 6, a refactoring pull request was merged, in
   5. Log the update with GASDBLogger.
 - All Section 7 tests pass, confirming a fully operational MongoDB-compatible update system.
 
-## Section 8: Cross-Instance Coordination - COMPLETE
+## Section 8: Cross-Instance Coordination (Revised)
 
-> Note: Locking functionality has been refactored. `DbLockService` now handles only script-level locks and `MasterIndex` manages collection-level locks via metadata, ensuring atomic, persistent cross-instance coordination.
+#### 8.1 Collection API Coordination (via CollectionCoordinator)
 
-### 8.1 Collection API Coordination
+All coordination logic (locking, conflict detection, retries, metadata updates) is encapsulated in a new `CollectionCoordinator` class. The `Collection` class delegates all coordinated operations to this class, ensuring a single, robust process for all CRUD actions.
 
-Wrap each Collection CRUD operation in a coordinated lock sequence:
+**Process for Each CRUD Operation:**
 
 1. Generate a unique `operationId` (via `IdGenerator`).
-2. Call `_acquireOperationLock(operationId)` (delegating to `MasterIndex.acquireCollectionLock`).
+2. Call `CollectionCoordinator.acquireOperationLock(operationId)` (delegates to `MasterIndex.acquireCollectionLock`).
 3. Within `try`:
-   - Detect stale data: call `_validateModificationToken()` on `CollectionMetadata`, then `hasConflict()` and `resolveConflict()` if needed.
+   - Detect stale data: call `CollectionCoordinator.validateModificationToken()` on `CollectionMetadata`, then `hasConflict()` and `resolveConflict()` if needed.
    - Perform the core operation (`insertOne`, `updateOne`, `deleteOne`, `replaceOne`, etc.) via `DocumentOperations` and `FileService`.
-   - Update collection metadata (document count, modification token) and call `_updateMasterIndexMetadata()`.
-4. In `finally`, call `_releaseOperationLock(operationId)` (delegating to `MasterIndex.releaseCollectionLock`).
+   - Update collection metadata (document count, modification token) and call `CollectionCoordinator.updateMasterIndexMetadata()`.
+4. In `finally`, call `CollectionCoordinator.releaseOperationLock(operationId)` (delegates to `MasterIndex.releaseCollectionLock`).
 
-Example pattern in `updateOne`:
+All public CRUD methods in `Collection` should delegate to `CollectionCoordinator`, passing the core operation as a callback. `CollectionCoordinator` is responsible for enforcing the correct sequence and handling all coordination concerns.
+
+**Example usage:**
 
 ```javascript
-_acquireOperationLock(opId);
-try {
-  if (this._detectConflict()) this._resolveConflict('RELOAD_AND_RETRY');
-  const result = this._performUpdate(filter, updateOps);
-  this._saveDataWithCoordination();
-  return result;
-} finally {
-  this._releaseOperationLock(opId);
-}
+this._coordinator.coordinate(() => this._performUpdate(filter, updateOps));
 ```
 
-### 8.2 New Error Types
+#### 8.2 Error Types
 
-Define custom error classes for coordination failures:
-
+All coordination errors are thrown by `CollectionCoordinator` and handled at the orchestration layer:
 - `LockAcquisitionFailureError` when `acquireCollectionLock` returns false
 - `LockTimeoutError` when script-level lock times out
 - `ModificationConflictError` on stale token detection
@@ -138,14 +131,12 @@ Define custom error classes for coordination failures:
 - `CoordinationTimeoutError` for overall coordination delays
 - `ConflictResolutionError` if reload-and-retry fails
 
-### 8.3 Retry and Recovery Mechanisms
+#### 8.3 Retry and Recovery Mechanisms
 
-Implement configurable retry with exponential backoff:
-
+Retry logic and exponential backoff are implemented in `CollectionCoordinator`, not in `Collection`:
 - `retryAttempts` (default 3)
 - `retryDelayMs` (default 1000)
-
-On `LockAcquisitionFailureError`:
+- On `LockAcquisitionFailureError`, retry with exponential backoff:
 
 ```javascript
 for (let attempt = 1; attempt <= retryAttempts; attempt++) {
@@ -157,26 +148,18 @@ if (!isCollectionLocked(name)) {
 }
 ```
 
-On conflict in core operation, use `resolveConflict('RELOAD_AND_RETRY')`, then retry once.
+- On conflict in core operation, use `resolveConflict('RELOAD_AND_RETRY')`, then retry once.
 
-### 8.4 Collection Class Enhancements
+#### 8.4 Collection Class Enhancements
 
-Add the following private methods on `Collection`:
+- `Collection` exposes only CRUD and validation logic.
+- Coordination helpers (`_acquireOperationLock`, `_releaseOperationLock`, `_validateModificationToken`, `_detectConflict`, `_resolveConflict`, `_reloadFromDrive`, `_updateMasterIndexMetadata`, `_saveDataWithCoordination`) are moved to `CollectionCoordinator`.
+- `Collection` is constructed with a `CollectionCoordinator` instance (dependency injection).
+- All public methods delegate to the coordinator for coordinated execution.
 
-- `_acquireOperationLock(operationId): boolean`
-- `_releaseOperationLock(operationId): boolean`
-- `_validateModificationToken(): void` (throws `ModificationConflictError`)
-- `_detectConflict(): boolean`
-- `_resolveConflict(strategy): void`
-- `_saveDataWithCoordination(): void` (calls FileService + updates metadata)
-- `_reloadFromDrive(): void` (in conflict recovery)
-- `_updateMasterIndexMetadata(): void`
+#### 8.5 Configuration Options
 
-Modify public methods to call these helpers in the correct sequence.
-
-### 8.5 Configuration Options
-
-Expose in `DatabaseConfig` or constructor:
+Coordination options are passed to `CollectionCoordinator` via config or `DatabaseConfig`:
 
 ```js
 coordinationEnabled: boolean (default: true)
