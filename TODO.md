@@ -1,0 +1,75 @@
+# TODO
+
+## Section 8: Cross-Instance Coordination
+
+- [ ] Create `src/02_components/CollectionCoordinator.js` with constructor (Collection, MasterIndex, config, logger).
+- [ ] Implement `coordinate(operationName, callback)`:
+  - Generate `operationId` via `IdGenerator`.
+  - Acquire operation lock with retry/backoff.
+  - Validate modification token and detect conflicts.
+  - Resolve conflicts per strategy.
+  - Invoke core CRUD callback.
+  - Update master index metadata.
+  - Release operation lock in `finally`.
+- [ ] Add methods on `CollectionCoordinator`:
+  - `acquireOperationLock` (with exponential backoff).
+  - `releaseOperationLock`.
+  - `validateModificationToken`, `hasConflict`, `resolveConflict`.
+  - `updateMasterIndexMetadata`.
+- [ ] Refactor `Collection.js`:
+  - Inject `_coordinator` via constructor.
+  - Remove internal lock/token methods and retry loops.
+  - Delegate all public CRUD methods to `this._coordinator.coordinate()`.
+  - Extract existing core logic into private `_perform*` methods.
+- [ ] Update `DatabaseConfig.js` to include coordination settings:
+  - `coordinationEnabled`, `lockTimeoutMs`, `retryAttempts`, `retryDelayMs`, `conflictResolutionStrategy`.
+- [ ] **RED PHASE**: Write failing unit tests for `CollectionCoordinator`:
+  - `testCollectionCoordinatorConstructorValidation` - validates dependencies
+  - `testCoordinateHappyPath` - lock → callback → metadata update → unlock
+  - `testAcquireOperationLockRetrySuccess` - lock fails then succeeds with backoff
+  - `testAcquireOperationLockRetryFailure` - all retries fail → LockAcquisitionFailureError
+  - `testValidateModificationTokenNoConflict` - token matches, no conflict
+  - `testValidateModificationTokenConflict` - stale token → ModificationConflictError
+  - `testResolveConflictReloadAndRetry` - conflict resolved via reload strategy
+  - `testResolveConflictLastWriteWins` - conflict resolved via overwrite strategy
+  - `testUpdateMasterIndexMetadata` - metadata updated correctly
+  - `testLockReleasedOnException` - lock released in finally block on error
+  - `testCoordinationTimeout` - overall timeout → CoordinationTimeoutError
+- [ ] **RED PHASE**: Update existing `Collection` tests to verify delegation:
+  - `testInsertOneDelegatesToCoordinator` - insertOne calls coordinator.coordinate
+  - `testFindOneDelegatesToCoordinator` - findOne calls coordinator.coordinate
+  - `testUpdateOneDelegatesToCoordinator` - updateOne calls coordinator.coordinate
+  - `testDeleteOneDelegatesToCoordinator` - deleteOne calls coordinator.coordinate
+  - `testCollectionConstructorInjectsCoordinator` - coordinator dependency injected
+- [ ] **RED PHASE**: Create integration test cases:
+  - `testParallelOperationsOnSameCollection` - simulate concurrent access
+  - `testConflictResolutionLastWriteWins` - test LAST_WRITE_WINS strategy
+  - `testConflictResolutionReloadAndRetry` - test RELOAD_AND_RETRY strategy
+  - `testCoordinationDisabled` - bypass coordination when disabled
+  - `testLockTimeoutHandling` - test various timeout scenarios
+- [ ] Update documentation:
+  - Add code snippets for `CollectionCoordinator` usage.
+  - Include sequence diagram of lock → conflict check → operation → update → release.
+
+## Section 9: Integration and System Testing
+
+- [ ] **RED PHASE**: Assemble full integration test suite covering:
+  - `testDatabaseCollectionIntegration` - Database with Collection components
+  - `testEndToEndCrudWorkflow` - complete CRUD workflow validation
+  - `testErrorHandlingAndRecovery` - error scenarios and recovery
+  - `testPerformanceUnderLoad` - performance with various data sizes
+  - `testQueryEngineIntegration` - Collection with QueryEngine integration
+  - `testUpdateEngineIntegration` - Collection with UpdateEngine integration
+  - `testFileServiceIntegration` - FileService with all components
+  - `testMasterIndexCoordination` - MasterIndex coordination scenarios
+  - `testConcurrentAccessScenarios` - multiple simultaneous operations
+  - `testConflictResolutionWorkflows` - end-to-end conflict handling
+- [ ] **RED PHASE**: Create validation test cases:
+  - `testMongoDbSyntaxCompatibility` - verify MongoDB API compatibility
+  - `testPrdRequirementsValidation` - validate against PRD requirements
+  - `testClassDiagramCompliance` - test against class diagrams
+  - `testComponentDependencyInjection` - verify proper DI patterns
+  - `testErrorHandlingConsistency` - consistent error types across components
+- [ ] Validate all PRD requirements and class diagrams in tests.
+- [ ] Ensure test-runner (`test-runner.sh`) includes new integration tests.
+- [ ] Run full test suite and confirm 100% pass.

@@ -157,6 +157,23 @@ if (!isCollectionLocked(name)) {
 - `Collection` is constructed with a `CollectionCoordinator` instance (dependency injection).
 - All public methods delegate to the coordinator for coordinated execution.
 
+#### 8.4.1 Responsibilities moved from Collection
+
+- `_acquireOperationLock`
+- `_releaseOperationLock`
+- `_validateModificationToken`
+- `_detectConflict`
+- `_resolveConflict`
+- `_reloadFromDrive`
+- `_updateMasterIndexMetadata`
+- `_saveDataWithCoordination`
+- generation of `operationId` and lock/retry loops
+
+#### 8.4.2 CollectionMetadata responsibilities
+
+- Remains a data holder with getters/setters (`getModificationToken`, `setModificationToken`, `getLockStatus`, `setLockStatus`, etc.)
+- No methods moved; Coordinator uses its public API for token and lockStatus management
+
 #### 8.5 Configuration Options
 
 Coordination options are passed to `CollectionCoordinator` via config or `DatabaseConfig`:
