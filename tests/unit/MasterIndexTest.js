@@ -386,19 +386,20 @@ function createMasterIndexIntegrationTestSuite() {
     const masterIndex = new MasterIndex();
     const collectionName = 'integrationTest';
     const operationId = 'integration-operation';
-    
-    // Act
-    const lockAcquired = masterIndex.acquireLock(collectionName, operationId);
-    const token = masterIndex.generateModificationToken();
     masterIndex.addCollection(collectionName, {
       name: collectionName,
       fileId: 'integration-file-id',
-      modificationToken: token
+      modificationToken: masterIndex.generateModificationToken()
     });
+    
+    // Act
+    const lockAcquired = masterIndex.acquireCollectionLock(collectionName, operationId);
+    const token = masterIndex.generateModificationToken();
+    masterIndex.updateCollectionMetadata(collectionName, { modificationToken: token });
     
     // Assert
     TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
-    TestFramework.assertTrue(masterIndex.isLocked(collectionName), 'Collection should be locked');
+    TestFramework.assertTrue(masterIndex.isCollectionLocked(collectionName), 'Collection should be locked');
     TestFramework.assertFalse(masterIndex.hasConflict(collectionName, token), 'Should not have conflict with same token');
   });
   
@@ -409,27 +410,25 @@ function createMasterIndexIntegrationTestSuite() {
     const operationId = 'lifecycle-operation';
     
     // Act - Complete operation lifecycle
-    const lockAcquired = masterIndex.acquireLock(collectionName, operationId);
-    const token = masterIndex.generateModificationToken();
-    
     masterIndex.addCollection(collectionName, {
       name: collectionName,
       fileId: 'lifecycle-file-id',
-      modificationToken: token
+      modificationToken: masterIndex.generateModificationToken()
     });
+    const lockAcquired = masterIndex.acquireCollectionLock(collectionName, operationId);
     
     masterIndex.updateCollectionMetadata(collectionName, {
       documentCount: 10,
       lastModified: new Date().toISOString()
     });
     
-    const lockReleased = masterIndex.releaseLock(collectionName, operationId);
+    const lockReleased = masterIndex.releaseCollectionLock(collectionName, operationId);
     masterIndex.save();
     
     // Assert
     TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
     TestFramework.assertTrue(lockReleased, 'Lock should be released');
-    TestFramework.assertFalse(masterIndex.isLocked(collectionName), 'Collection should not be locked after release');
+    TestFramework.assertFalse(masterIndex.isCollectionLocked(collectionName), 'Collection should not be locked after release');
     
     const collection = masterIndex.getCollection(collectionName);
     TestFramework.assertEquals(collection.documentCount, 10, 'Metadata should be updated');
@@ -477,14 +476,14 @@ function createMasterIndexIntegrationTestSuite() {
     });
     
     // Act - Complete operation lifecycle with CollectionMetadata
-    const lockAcquired = masterIndex.acquireLock(collectionName, operationId);
     masterIndex.addCollection(collectionName, metadata);
+    const lockAcquired = masterIndex.acquireCollectionLock(collectionName, operationId);
     
     masterIndex.updateCollectionMetadata(collectionName, {
       documentCount: 12
     });
     
-    const lockReleased = masterIndex.releaseLock(collectionName, operationId);
+    const lockReleased = masterIndex.releaseCollectionLock(collectionName, operationId);
     masterIndex.save();
     
     // Create new instance to test persistence
@@ -498,7 +497,7 @@ function createMasterIndexIntegrationTestSuite() {
     TestFramework.assertEquals(persistedCollection.documentCount, 12, 'Should persist updated metadata');
     TestFramework.assertEquals(persistedCollection.name, collectionName, 'Should persist collection name');
     TestFramework.assertEquals(persistedCollection.fileId, 'lifecycle-file-id', 'Should persist fileId');
-    TestFramework.assertFalse(persistedCollection.lockStatus.isLocked, 'Lock should be released in persisted metadata');
+    TestFramework.assertFalse(persistedCollection.getLockStatus().isLocked, 'Lock should be released in persisted metadata');
   });
 
   return suite;

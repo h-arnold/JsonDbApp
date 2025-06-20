@@ -1,15 +1,4 @@
 /**
- * CollectionMetadata.js - Collection Metadata Management
- * 
- * Manages collection metadata as plain objects with methods for:
- * - Timestamp tracking (created, lastUpdated)
- * - Document count management
- * - Metadata serialisation and cloning
- * 
- * Part of Section 5: Collection Components and Basic CRUD Operations
- */
-
-/**
  * CollectionMetadata - Manages collection metadata as plain objects
  * 
  * Handles metadata properties:

@@ -11,28 +11,33 @@ class MasterIndex {
   /**
    * Create a new MasterIndex instance
    * @param {Object} config - Configuration options
-   * @param {DbLockService} [lockService] - Optional DbLockService instance for injection
    */
-  constructor(config = {}, lockService = null) {
+  constructor(config = {}) {
     this._config = {
       masterIndexKey: config.masterIndexKey || 'GASDB_MASTER_INDEX',
       lockTimeout: config.lockTimeout || 30000, // 30 seconds default
       version: config.version || 1
     };
     
-    this._logger = GASDBLogger.createComponentLogger('MasterIndex'); // Initialise logger
+    this._logger = GASDBLogger.createComponentLogger('MasterIndex');
 
-    this._data = {
-      version: this._config.version,
-      lastUpdated: new Date(),
-      collections: {},
-      modificationHistory: {}
-    };
+    // DbLockService is now only for script-level locks
+    this._dbLockService = new DbLockService({ defaultTimeout: this._config.lockTimeout });
     
-    // Load existing data from ScriptProperties if available
+    // Load data first
     this._loadFromScriptProperties();
-    // Initialise or inject DbLockService
-    this._dbLockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
+
+    // If no data, initialise
+    if (!this._data) {
+      this._data = {
+        version: this._config.version,
+        lastUpdated: new Date(),
+        collections: {},
+        modificationHistory: {}
+      };
+      // Persist the initial empty index
+      this.save();
+    }
   }
 
   /**
@@ -246,87 +251,165 @@ class MasterIndex {
   removeCollection(name) {
     if (!Validate.object(this._data.collections, 'collections', false) || !Validate.object(this._data, 'data', false)) {
       this._logger.warn('Internal state corrupted', { name });
-      return false;
+      return false; // Should not happen in normal operation
     }
     Validate.nonEmptyString(name, 'name');
 
-    this._loadFromScriptProperties(); // Ensure current data
+    return this._withScriptLock(() => {
+      this._loadFromScriptProperties(); // Ensure current data
 
-    if (this._data.collections && this._data.collections.hasOwnProperty(name)) {
-      delete this._data.collections[name];
-      this._addToModificationHistory(name, 'removeCollection', { name });
-      this.save(); // Persist changes
-      this._logger.info('Collection removed from master index', { name });
-      return true;
-    }
-    
-    this._logger.warn('Attempted to remove non-existent collection from master index', { name });
-    return false;
+      if (this._data.collections && this._data.collections.hasOwnProperty(name)) {
+        delete this._data.collections[name];
+        this._addToModificationHistory(name, 'removeCollection', { name });
+        this.save(); // Persist changes
+        this._logger.info('Collection removed from master index', { name });
+        return true;
+      }
+      
+      this._logger.warn('Attempted to remove non-existent collection from master index', { name });
+      return false;
+    });
   }
   
   /**
-   * Acquire a lock for a collection
-   * @param {string} collectionName - Collection to lock
-   * @param {string} operationId - Operation identifier
-   * @returns {boolean} True if lock acquired, false if lock held
-   * @throws {LockTimeoutError} If lock cannot be acquired within timeout for minimal timeout setting
+   * Acquire a lock for a collection by updating its metadata.
+   * This operation is protected by a script-level lock to ensure atomicity.
+   * @param {string} collectionName - The name of the collection to lock.
+   * @param {string} operationId - A unique identifier for the operation acquiring the lock.
+   * @param {number} [timeout=this._config.lockTimeout] - The duration for which the lock is valid in milliseconds.
+   * @returns {boolean} True if the lock was acquired successfully, false otherwise.
+   * @throws {ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND} If the collection does not exist.
    */
-  acquireLock(collectionName, operationId) {
+  acquireCollectionLock(collectionName, operationId, timeout = this._config.lockTimeout) {
     Validate.nonEmptyString(collectionName, 'collectionName');
     Validate.nonEmptyString(operationId, 'operationId');
-    // For minimal timeout, enforce immediate failure if already locked without expiration
-    if (this._config.lockTimeout <= 1) {
-      if (this._dbLockService.isCollectionLocked(collectionName)) {
-        throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT(collectionName, this._config.lockTimeout);
+    Validate.number(timeout, 'timeout');
+
+    return this._withScriptLock(() => {
+      const collection = this.getCollection(collectionName);
+      if (!collection) {
+        throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
       }
-      this._dbLockService.acquireCollectionLock(collectionName, operationId, this._config.lockTimeout);
+
+      const lockStatus = collection.getLockStatus();
+      const now = Date.now();
+
+      if (lockStatus && lockStatus.isLocked) {
+        const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
+        if (now < expiry) {
+          this._logger.warn('Failed to acquire lock; collection is already locked.', { collectionName, operationId });
+          return false; // Lock is held by another operation
+        }
+      }
+
+      // Acquire lock
+      const newLockStatus = {
+        isLocked: true,
+        lockedBy: operationId,
+        lockedAt: now,
+        lockTimeout: timeout
+      };
+      collection.setLockStatus(newLockStatus);
+      this.updateCollectionMetadata(collectionName, { lockStatus: newLockStatus });
+      
+      this._logger.info('Collection lock acquired.', { collectionName, operationId });
       return true;
-    }
-    // Standard lock acquisition
-    const acquired = this._dbLockService.acquireCollectionLock(
-      collectionName,
-      operationId,
-      this._config.lockTimeout
-    );
-    if (!acquired) {
+    });
+  }
+
+  /**
+   * Release a lock for a collection.
+   * This operation is protected by a script-level lock.
+   * @param {string} collectionName - The name of the collection to unlock.
+   * @param {string} operationId - The identifier of the operation that holds the lock.
+   * @returns {boolean} True if the lock was released, false if the operationId does not match or no lock was held.
+   */
+  releaseCollectionLock(collectionName, operationId) {
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    Validate.nonEmptyString(operationId, 'operationId');
+
+    return this._withScriptLock(() => {
+      const collection = this.getCollection(collectionName);
+      if (!collection) {
+        return true;
+      }
+
+      const lockStatus = collection.getLockStatus();
+
+      if (!lockStatus || !lockStatus.isLocked) {
+        return true; // Not locked, so release is successful.
+      }
+
+      if (lockStatus.lockedBy !== operationId) {
+        this._logger.warn('Attempted to release lock with incorrect operationId.', { collectionName, operationId, owner: lockStatus.lockedBy });
+        return false; // Lock held by someone else.
+      }
+
+      // Release lock
+      collection.setLockStatus(null);
+      this.updateCollectionMetadata(collectionName, { lockStatus: null });
+      
+      this._logger.info('Collection lock released.', { collectionName, operationId });
+      return true;
+    });
+  }
+
+  /**
+   * Check if a collection is currently locked.
+   * This method does not require a script lock for a read-only check.
+   * @param {string} collectionName - The name of the collection.
+   * @returns {boolean} True if the collection is locked, false otherwise.
+   */
+  isCollectionLocked(collectionName) {
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    
+    this._loadFromScriptProperties();
+    const collection = this.getCollection(collectionName);
+
+    if (!collection) {
       return false;
     }
+
+    const lockStatus = collection.getLockStatus();
+    if (!lockStatus || !lockStatus.isLocked) {
+      return false;
+    }
+
+    const now = Date.now();
+    const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
+
+    if (now >= expiry) {
+      return false;
+    }
+
     return true;
   }
 
   /**
-   * Check if a collection is locked
-   * @param {string} collectionName - Collection name
-   * @returns {boolean} True if locked
-   */
-  isLocked(collectionName) {
-    return this._dbLockService.isCollectionLocked(collectionName);
-  }
-
-  /**
-   * Release a lock for a collection
-   * @param {string} collectionName - Collection to unlock
-   * @param {string} operationId - Operation identifier
-   * @returns {boolean} True if lock released
-   */
-  releaseLock(collectionName, operationId) {
-    return this._dbLockService.releaseCollectionLock(collectionName, operationId);
-  }
-
-  /**
-   * Clean up expired locks
-   * @returns {boolean} True if operation successful
+   * Cleans up expired locks for all collections.
+   * This is a write operation and is protected by a script lock.
    */
   cleanupExpiredLocks() {
-    try {
-      // Attempt to clean up any expired collection locks
-      this._dbLockService.cleanupExpiredCollectionLocks();
-    } catch (error) {
-      // Log and recover from errors to maintain consistency
-      this._logger.error('Error during cleanupExpiredLocks', { error: error.message });
-    }
-    // Always return true to indicate consistency check executed
-    return true;
+    return this._withScriptLock(() => {
+      const collections = this.getCollections();
+      const now = Date.now();
+
+      for (const name in collections) {
+        if (collections.hasOwnProperty(name)) {
+          const collection = collections[name];
+          const lockStatus = collection.getLockStatus();
+
+          if (lockStatus && lockStatus.isLocked) {
+            const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
+            if (now >= expiry) {
+              this._logger.info('Cleaning up expired lock.', { collectionName: name });
+              collection.setLockStatus(null);
+              this.updateCollectionMetadata(name, { lockStatus: null });
+            }
+          }
+        }
+      }
+    });
   }
   
   /**
@@ -452,14 +535,12 @@ class MasterIndex {
     try {
       const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
       if (dataString) {
-        const loadedData = ObjectUtils.deserialise(dataString);
-        // Merge loaded data with defaults
-        this._data = {
-          ...this._data,
-          ...loadedData
-        };
+        this._data = ObjectUtils.deserialise(dataString);
+      } else {
+        this._data = null;
       }
     } catch (error) {
+      this._logger.error('Failed to load master index from ScriptProperties', { error: error.message });
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
