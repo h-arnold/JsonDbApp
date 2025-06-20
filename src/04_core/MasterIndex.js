@@ -32,7 +32,7 @@ class MasterIndex {
     // Load existing data from ScriptProperties if available
     this._loadFromScriptProperties();
     // Initialise or inject DbLockService
-    this._lockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
+    this._DbLockService = lockService || new DbLockService({ lockTimeout: this._config.lockTimeout });
   }
 
   /**
@@ -274,7 +274,7 @@ class MasterIndex {
    * @returns {boolean} True if lock acquired
    */
   acquireLock(collectionName, operationId) {
-    return this._lockService.acquireCollectionLock(collectionName, operationId);
+    return this._DbLockService.acquireCollectionLock(collectionName, operationId);
   }
 
   /**
@@ -283,7 +283,7 @@ class MasterIndex {
    * @returns {boolean} True if locked
    */
   isLocked(collectionName) {
-    return this._lockService.isCollectionLocked(collectionName);
+    return this._DbLockService.isCollectionLocked(collectionName);
   }
 
   /**
@@ -293,7 +293,7 @@ class MasterIndex {
    * @returns {boolean} True if lock released
    */
   releaseLock(collectionName, operationId) {
-    return this._lockService.releaseCollectionLock(collectionName, operationId);
+    return this._DbLockService.releaseCollectionLock(collectionName, operationId);
   }
 
   /**
@@ -301,7 +301,7 @@ class MasterIndex {
    * @returns {boolean} True if any locks were cleaned up
    */
   cleanupExpiredLocks() {
-    return this._lockService.cleanupExpiredCollectionLocks();
+    return this._DbLockService.cleanupExpiredCollectionLocks();
   }
   
   /**
@@ -449,11 +449,11 @@ class MasterIndex {
    * @private
    */
   _withScriptLock(operation, timeout = this._config.lockTimeout) {
-    this._lockService.acquireScriptLock(timeout);
+    this._DbLockService.acquireScriptLock(timeout);
     try {
       return operation();
     } finally {
-      this._lockService.releaseScriptLock();
+      this._DbLockService.releaseScriptLock();
     }
   }
 

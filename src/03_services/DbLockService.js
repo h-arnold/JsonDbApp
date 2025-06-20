@@ -33,16 +33,45 @@ class DbLockService {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT|ErrorHandler.ErrorTypes.LOCK_TIMEOUT}
    */
   acquireScriptLock(timeout) {
+    // Validate the timeout argument
+    this._validateTimeout(timeout);
+    // Acquire the GAS script lock instance (throws if unavailable)
+    this._acquireScriptLockInstance();
+    // Wait for the lock, throw if timeout occurs
+    this._waitForScriptLock(timeout);
+  }
+
+  /**
+   * Private: Validate timeout argument for script lock
+   * @param {number} timeout
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT}
+   */
+  _validateTimeout(timeout) {
+    // Ensures timeout is required, a number, and non-negative
     Validate.required(timeout, 'timeout');
     Validate.number(timeout, 'timeout');
-    if (timeout < 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('timeout', timeout, 'timeout must be non-negative');
+    Validate.nonNegativeNumber(timeout, 'timeout');
+  }
+
+  /**
+   * Private: Acquire the GAS script lock instance, or throw if unavailable
+   */
+  _acquireScriptLockInstance() {
+    // Attempts to get the script lock; throws OPERATION_ERROR if LockService is unavailable
+    try {
+      this._scriptLock = LockService.getScriptLock();
+    } catch (err) {
+      this._logger.error('LockService unavailable', { error: err.message });
+      throw new ErrorHandler.ErrorTypes.OPERATION_ERROR('LockServiceUnavailable', err.message);
     }
+  }
 
-    this._validateLockServiceAvailable();
-
-    // Acquire GAS script lock
-    this._scriptLock = LockService.getScriptLock();
+  /**
+   * Private: Wait for the script lock, or throw LOCK_TIMEOUT on failure
+   * @param {number} timeout
+   */
+  _waitForScriptLock(timeout) {
+    // Attempts to acquire the lock within the timeout; throws LOCK_TIMEOUT if not acquired
     try {
       this._scriptLock.waitLock(timeout);
     } catch (err) {
@@ -57,9 +86,8 @@ class DbLockService {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT}
    */
   releaseScriptLock() {
-    if (!this._scriptLock || typeof this._scriptLock.releaseLock !== 'function') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lock', this._scriptLock, 'invalid or missing script lock instance');
-    }
+    // Validate that _scriptLock is a non-empty object with a releaseLock function
+    Validate.func(this._scriptLock.releaseLock, 'lock.releaseLock');
     try {
       this._scriptLock.releaseLock();
       this._scriptLock = null;
