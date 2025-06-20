@@ -38,6 +38,6 @@ function runAllCollectionCoordinatorUnitTests() {
 
   // Print summary
   Logger.log('CollectionCoordinator Unit Test Results:');
-  Logger.log(results.toString());
+  Logger.log(results.getSummary());
   return results;
 }

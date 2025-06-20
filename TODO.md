@@ -23,18 +23,18 @@
   - Extract existing core logic into private `_perform*` methods.
 - [ ] Update `DatabaseConfig.js` to include coordination settings:
   - `coordinationEnabled`, `lockTimeoutMs`, `retryAttempts`, `retryDelayMs`, `conflictResolutionStrategy`.
-- [ ] **RED PHASE**: Write failing unit tests for `CollectionCoordinator`:
-  - `testCollectionCoordinatorConstructorValidation` - validates dependencies
-  - `testCoordinateHappyPath` - lock → callback → metadata update → unlock
-  - `testAcquireOperationLockRetrySuccess` - lock fails then succeeds with backoff
-  - `testAcquireOperationLockRetryFailure` - all retries fail → LockAcquisitionFailureError
-  - `testValidateModificationTokenNoConflict` - token matches, no conflict
-  - `testValidateModificationTokenConflict` - stale token → ModificationConflictError
-  - `testResolveConflictReloadAndRetry` - conflict resolved via reload strategy
-  - `testResolveConflictLastWriteWins` - conflict resolved via overwrite strategy
-  - `testUpdateMasterIndexMetadata` - metadata updated correctly
-  - `testLockReleasedOnException` - lock released in finally block on error
-  - `testCoordinationTimeout` - overall timeout → CoordinationTimeoutError
+- [x] **RED PHASE**: Write failing unit tests for `CollectionCoordinator`:
+  - [x] `testCollectionCoordinatorConstructorValidation` - validates dependencies
+  - [x] `testCoordinateHappyPath` - lock → callback → metadata update → unlock
+  - [x] `testAcquireOperationLockRetrySuccess` - lock fails then succeeds with backoff
+  - [x] `testAcquireOperationLockRetryFailure` - all retries fail → LockAcquisitionFailureError
+  - [x] `testValidateModificationTokenNoConflict` - token matches, no conflict
+  - [x] `testValidateModificationTokenConflict` - stale token → ModificationConflictError
+  - [x] `testResolveConflictReloadAndRetry` - conflict resolved via reload strategy
+  - [x] `testResolveConflictLastWriteWins` - conflict resolved via overwrite strategy
+  - [x] `testUpdateMasterIndexMetadata` - metadata updated correctly
+  - [x] `testLockReleasedOnException` - lock released in finally block on error
+  - [x] `testCoordinationTimeout` - overall timeout → CoordinationTimeoutError
 - [ ] **RED PHASE**: Update existing `Collection` tests to verify delegation:
   - `testInsertOneDelegatesToCoordinator` - insertOne calls coordinator.coordinate
   - `testFindOneDelegatesToCoordinator` - findOne calls coordinator.coordinate
