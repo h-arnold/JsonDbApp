@@ -62,3 +62,8 @@ collectionCoordinatorDelegationSuite.addTest('testDeleteOneDelegatesToCoordinato
 collectionCoordinatorDelegationSuite.addTest('testCollectionConstructorInjectsCoordinator', () => {
   AssertionUtilities.assertEquals(collection._coordinator, collectionCoordinator, 'Constructor should inject coordinator');
 });
+
+function createCollectionCoordinatorDelegationTestSuite() {
+  return collectionCoordinatorDelegationSuite;
+}
+

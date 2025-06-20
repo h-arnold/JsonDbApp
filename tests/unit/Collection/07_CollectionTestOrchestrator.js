@@ -153,6 +153,8 @@ function runCollectionTests() {
       registerTestSuite(createCollectionUpdateOperationsTestSuite());
       registerTestSuite(createCollectionDeleteOperationsTestSuite());
       registerTestSuite(createCollectionCountOperationsTestSuite());
+      // Register the new delegation test suite
+      registerTestSuite(createCollectionCoordinatorDelegationTestSuite());
 
 
       // Run all tests
