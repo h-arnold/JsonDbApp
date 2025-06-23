@@ -201,6 +201,36 @@ class OperationError extends GASDBError {
 }
 
 /**
+ * Lock acquisition failure error (distinct from timeout)
+ */
+class LockAcquisitionFailureError extends GASDBError {
+  constructor(resource, reason = null) {
+    const message = `Failed to acquire lock for resource: ${resource}`;
+    super(message, 'LOCK_ACQUISITION_FAILURE', { resource, reason });
+  }
+}
+
+/**
+ * Modification conflict error (distinct from general conflict)
+ */
+class ModificationConflictError extends GASDBError {
+  constructor(resource, expectedToken, actualToken, reason = null) {
+    const message = `Modification conflict detected for resource: ${resource}`;
+    super(message, 'MODIFICATION_CONFLICT', { resource, expectedToken, actualToken, reason });
+  }
+}
+
+/**
+ * Coordination timeout error
+ */
+class CoordinationTimeoutError extends GASDBError {
+  constructor(operation, timeout, reason = null) {
+    const message = `Coordination timeout during ${operation} after ${timeout}ms`;
+    super(message, 'COORDINATION_TIMEOUT', { operation, timeout, reason });
+  }
+}
+
+/**
  * ErrorHandler - Main error handling utility class
  */
 class ErrorHandler {
@@ -409,5 +439,8 @@ ErrorHandler.ErrorTypes = {
   QUOTA_EXCEEDED: QuotaExceededError,
   INVALID_FILE_FORMAT: InvalidFileFormatError,
   INVALID_ARGUMENT: InvalidArgumentError,
-  OPERATION_ERROR: OperationError
+  OPERATION_ERROR: OperationError,
+  LOCK_ACQUISITION_FAILURE: LockAcquisitionFailureError,
+  MODIFICATION_CONFLICT: ModificationConflictError,
+  COORDINATION_TIMEOUT: CoordinationTimeoutError
 };

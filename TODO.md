@@ -10,7 +10,7 @@
 - [ ] Implement `coordinate(operationName, callback)` with full orchestration (currently partial, needs to handle all error and timeout scenarios, and call validateModificationToken).
 - [ ] Implement `validateModificationToken` (stubbed, not yet implemented; required for token validation and conflict error throwing).
 - [ ] Implement `updateMasterIndexMetadata` (stubbed, not yet implemented; required for metadata update test).
-- [ ] Implement correct error types: `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError` (currently missing or not referenced correctly).
+- [x] Implement correct error types: `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError` (currently missing or not referenced correctly).
 - [ ] Ensure lock release on exception and coordination timeout handling are robust and tested.
 - [ ] Refactor as needed for test coverage and green phase.
 
