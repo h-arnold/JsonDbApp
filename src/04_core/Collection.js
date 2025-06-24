@@ -54,8 +54,8 @@ class Collection {
     this._loaded = false;
     this._dirty = false;
     this._documents = {};
-    this._metadata = null;
-    this._collectionMetadata = null;
+    // Initialise collection metadata for both coordination and persistence
+    this._metadata = CollectionMetadata.create(name, driveFileId);
     this._documentOperations = null;
   }
 
@@ -96,9 +96,8 @@ class Collection {
       // Initialise documents and metadata with defaults
       this._documents = data.documents || {};
       const metadataObj = data.metadata || {};
-
-      // Create CollectionMetadata instance with name and fileId
-      this._collectionMetadata = new CollectionMetadata(
+      // Rehydrate metadata instance from stored JSON
+      this._metadata = new CollectionMetadata(
         this._name,
         this._driveFileId,
         metadataObj
@@ -109,7 +108,7 @@ class Collection {
 
       this._logger.debug("Collection data loaded successfully", {
         documentCount: Object.keys(this._documents).length,
-        metadata: this._collectionMetadata.toJSON(),
+        metadata: this._metadata.toJSON(),
       });
     } catch (error) {
       this._logger.error("Failed to load collection data", {
@@ -138,7 +137,7 @@ class Collection {
 
       const data = {
         documents: this._documents,
-        metadata: this._collectionMetadata.toJSON(),
+        metadata: this._metadata.toJSON(),
       };
 
       this._fileService.writeFile(this._driveFileId, data);
@@ -173,18 +172,17 @@ class Collection {
     this._ensureLoaded();
 
     if (changes.documentCount !== undefined) {
-      this._collectionMetadata.setDocumentCount(changes.documentCount);
+      this._metadata.setDocumentCount(changes.documentCount);
     }
 
-    this._collectionMetadata.updateLastModified();
+    this._metadata.updateLastModified();
     this._logger.debug("Collection metadata updated", { changes });
 
     // Propagate metadata change to MasterIndex
     if (this._database && this._database._masterIndex) {
-      // Push full metadata object for atomic replace
       this._database._masterIndex.updateCollectionMetadata(
         this._name,
-        this._collectionMetadata.toJSON()
+        this._metadata.toJSON()
       );
     }
   }
@@ -446,10 +444,6 @@ class Collection {
     // Validate update object structure - require operators only
     Validate.validateUpdateObject(update, "update", { requireOperators: true });
 
-    // Determine operator presence
-    const updateKeys = Object.keys(update);
-    const hasOperators = updateKeys.some((key) => key.startsWith("$"));
-
     // Find all matching documents first
     const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
     const matchedCount = matchingDocs.length;
@@ -536,10 +530,7 @@ class Collection {
         };
       }
 
-      const result = this._documentOperations.replaceDocument(
-        matchingDoc._id,
-        doc
-      );
+      const result = this._documentOperations.replaceDocument(matchingDoc._id, doc);
 
       if (result.modifiedCount > 0) {
         this._updateMetadata();
@@ -555,7 +546,7 @@ class Collection {
   }
 
   /**
-   * Delete a single document by filter (MongoDB-compatible with QueryEngine support)
+   * Deletes a single document by filter (MongoDB-compatible with QueryEngine support)
    * @param {Object} filter - Query filter (supports field-based queries, _id queries, and empty filter)
    * @returns {Object} {deletedCount: number, acknowledged: boolean}
    * @throws {InvalidArgumentError} For invalid filters
@@ -566,34 +557,17 @@ class Collection {
 
     const filterKeys = Object.keys(filter);
 
-    // Empty filter {} - delete first document found
+    // Empty filter {} - no operation
     if (filterKeys.length === 0) {
-      const allDocs = this._documentOperations.findAllDocuments();
-      if (allDocs.length === 0) {
-        return {
-          deletedCount: 0,
-          acknowledged: true,
-        };
-      }
-
-      const result = this._documentOperations.deleteDocument(allDocs[0]._id);
-
-      if (result.deletedCount > 0) {
-        this._updateMetadata({
-          documentCount: Object.keys(this._documents).length,
-        });
-        this._markDirty();
-      }
-
       return {
-        deletedCount: result.deletedCount,
+        deletedCount: 0,
         acknowledged: true,
       };
     }
 
-    // ID filter {_id: "id"} - use direct lookup for performance
+    // ID filter {_id: "id"} - use direct delete for performance
     if (filterKeys.length === 1 && filterKeys[0] === "_id") {
-      const result = this._documentOperations.deleteDocument(filter._id);
+      const result = this._documentOperations.deleteDocumentById(filter._id);
 
       if (result.deletedCount > 0) {
         this._updateMetadata({
@@ -609,18 +583,23 @@ class Collection {
     }
 
     // Field-based or complex queries - use QueryEngine
-    const matchingDoc = this._documentOperations.findByQuery(filter);
+    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
 
-    if (!matchingDoc) {
+    if (matchingDocs.length === 0) {
       return {
         deletedCount: 0,
         acknowledged: true,
       };
     }
 
-    const result = this._documentOperations.deleteDocument(matchingDoc._id);
+    // Delete all matching documents
+    let deletedCount = 0;
+    for (const doc of matchingDocs) {
+      const result = this._documentOperations.deleteDocument(doc._id);
+      deletedCount += result.deletedCount;
+    }
 
-    if (result.deletedCount > 0) {
+    if (deletedCount > 0) {
       this._updateMetadata({
         documentCount: Object.keys(this._documents).length,
       });
@@ -628,15 +607,65 @@ class Collection {
     }
 
     return {
-      deletedCount: result.deletedCount,
+      deletedCount: deletedCount,
       acknowledged: true,
     };
   }
 
   /**
-   * Count documents matching filter (MongoDB-compatible with QueryEngine support)
+   * Deletes multiple documents by filter (MongoDB-compatible with QueryEngine support)
    * @param {Object} filter - Query filter (supports field-based queries and empty filter)
-   * @returns {number} Count of matching documents
+   * @returns {Object} {deletedCount: number, acknowledged: boolean}
+   * @throws {InvalidArgumentError} For invalid filters
+   */
+  deleteMany(filter = {}) {
+    this._ensureLoaded();
+    this._validateFilter(filter, "deleteMany");
+
+    const filterKeys = Object.keys(filter);
+
+    // Empty filter {} - no operation
+    if (filterKeys.length === 0) {
+      return {
+        deletedCount: 0,
+        acknowledged: true,
+      };
+    }
+
+    // Field-based or complex queries - use QueryEngine
+    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
+
+    if (matchingDocs.length === 0) {
+      return {
+        deletedCount: 0,
+        acknowledged: true,
+      };
+    }
+
+    // Delete all matching documents
+    let deletedCount = 0;
+    for (const doc of matchingDocs) {
+      const result = this._documentOperations.deleteDocument(doc._id);
+      deletedCount += result.deletedCount;
+    }
+
+    if (deletedCount > 0) {
+      this._updateMetadata({
+        documentCount: Object.keys(this._documents).length,
+      });
+      this._markDirty();
+    }
+
+    return {
+      deletedCount: deletedCount,
+      acknowledged: true,
+    };
+  }
+
+  /**
+   * Counts the number of documents matching a filter (MongoDB-compatible with QueryEngine support)
+   * @param {Object} filter - Query filter (supports field-based queries and empty filter)
+   * @returns {number} Document count
    * @throws {InvalidArgumentError} For invalid filters
    */
   countDocuments(filter = {}) {
@@ -647,15 +676,131 @@ class Collection {
 
     // Empty filter {} - count all documents
     if (filterKeys.length === 0) {
-      return this._documentOperations.countDocuments();
+      return Object.keys(this._documents).length;
     }
 
     // Field-based or complex queries - use QueryEngine
-    return this._documentOperations.countByQuery(filter);
+    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
+    return matchingDocs.length;
   }
 
   /**
-   * Get collection name
+   * Aggregates documents with a pipeline (MongoDB-compatible with QueryEngine support)
+   * @param {Array} pipeline - Aggregation pipeline stages
+   * @returns {Array} Array of aggregated document objects
+   * @throws {InvalidArgumentError} For invalid pipeline stages
+   */
+  aggregate(pipeline = []) {
+    this._ensureLoaded();
+
+    // Use Validate for pipeline validation
+    Validate.array(pipeline, "pipeline");
+
+    // Directly return all documents for empty pipeline
+    if (pipeline.length === 0) {
+      return this._documentOperations.findAllDocuments();
+    }
+
+    // For now, only $match stage is supported (filtering)
+    const matchStage = pipeline.find((stage) => stage.$match);
+
+    if (!matchStage) {
+      throw new InvalidArgumentError("Invalid pipeline", "Missing $match stage");
+    }
+
+    // Extract and validate the filter from $match stage
+    const filter = matchStage.$match;
+    this._validateFilter(filter, "aggregate");
+
+    // Use QueryEngine to execute the filtered query
+    return this._documentOperations.findMultipleByQuery(filter);
+  }
+
+  /**
+   * Creates an index on the collection (MongoDB-compatible)
+   * @param {Array} fields - Array of field names to index
+   * @param {Object} options - Index options (e.g. {unique: true})
+   * @returns {Object} Index description
+   * @throws {InvalidArgumentError} For invalid index specifications
+   */
+  createIndex(fields, options = {}) {
+    this._ensureLoaded();
+
+    // Use Validate for index specification validation
+    Validate.array(fields, "fields");
+    Validate.object(options, "options", false);
+
+    // For now, only single-field indexes are supported
+    if (fields.length !== 1) {
+      throw new InvalidArgumentError("Invalid index specification", "Only single-field indexes are supported");
+    }
+
+    const field = fields[0];
+
+    // Ensure the field is a valid string
+    Validate.nonEmptyString(field, "field");
+
+    // Create index metadata
+    const index = {
+      field: field,
+      unique: options.unique === true,
+    };
+
+    // Add to collection metadata
+    this._metadata.addIndex(index);
+
+    this._markDirty();
+
+    return index;
+  }
+
+  /**
+   * Drops an index from the collection (MongoDB-compatible)
+   * @param {string} field - Field name of the index to drop
+   * @returns {boolean} True if the index was dropped, false if not found
+   * @throws {InvalidArgumentError} For invalid index specifications
+   */
+  dropIndex(field) {
+    this._ensureLoaded();
+
+    // Use Validate for index specification validation
+    Validate.nonEmptyString(field, "field");
+
+    const indexExists = this._metadata.indexes.some((index) => index.field === field);
+
+    if (!indexExists) {
+      return false; // Index not found
+    }
+
+    // Remove from collection metadata
+    this._metadata.dropIndex(field);
+
+    this._markDirty();
+
+    return true;
+  }
+
+  /**
+   * Gets the list of indexes on the collection (MongoDB-compatible)
+   * @returns {Array} Array of index descriptions
+   */
+  getIndexes() {
+    this._ensureLoaded();
+
+    return this._metadata.getIndexes();
+  }
+
+  /**
+   * Gets the metadata for the collection
+   * @returns {Object} Metadata object
+   */
+  getMetadata() {
+    this._ensureLoaded();
+    return this._metadata.toJSON();
+  }
+
+  /**
+   * Gets the name of the collection
    * @returns {string} Collection name
    */
   getName() {
@@ -663,29 +808,34 @@ class Collection {
   }
 
   /**
-   * Get collection metadata
-   * @returns {Object} Metadata object
+   * Gets the Google Drive file ID for the collection
+   * @returns {string} Drive file ID
    */
-  getMetadata() {
-    this._ensureLoaded();
-    return this._collectionMetadata;
+  getDriveFileId() {
+    return this._driveFileId;
   }
 
   /**
-   * Check if collection has unsaved changes
-   * @returns {boolean} True if dirty
+   * Gets the database instance reference
+   * @returns {Database} Database instance
    */
-  isDirty() {
-    return this._dirty;
+  getDatabase() {
+    return this._database;
   }
 
   /**
-   * Force save collection to Drive
-   * @throws {OperationError} If save fails
+   * Gets the FileService instance for Drive operations
+   * @returns {FileService} FileService instance
    */
-  save() {
-    if (this._loaded && this._dirty) {
-      this._saveData();
-    }
+  getFileService() {
+    return this._fileService;
+  }
+
+  /**
+   * Gets the logger instance
+   * @returns {Logger} Logger instance
+   */
+  getLogger() {
+    return this._logger;
   }
 }

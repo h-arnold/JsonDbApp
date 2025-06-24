@@ -13,7 +13,7 @@ class CollectionCoordinator {
    * @param {GASDBLogger} logger - Logger for operation tracing
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
-  constructor(collection, masterIndex, config = {}, logger = GASDBLogger) {
+  constructor(collection, masterIndex, config = {}, _logger = GASDBLogger) {
     Validate.object(collection, 'collection');
     Validate.object(masterIndex, 'masterIndex');
     Validate.object(config, 'config');
