@@ -2,28 +2,46 @@
 
 ## Section 8: Cross-Instance Coordination
 
+### Observations
+
+- `Collection` constructor lacks injection of a `CollectionCoordinator` instance.
+- Public CRUD methods in `Collection` bypass the coordinator entirely.
+- `Collection._updateMetadata` calls `MasterIndex` directly with full JSON instead of using coordinator's incremental updates.
+- `acquireOperationLock` does not throw `LockAcquisitionFailureError` upon retry exhaustion.
+- `coordinate` method signature (`operationName, callback`) differs from plan's simpler callback-only design.
+
 - [x] Create `src/02_components/CollectionCoordinator.js` with constructor (Collection, MasterIndex, config, logger).
 - [x] Implement logger usage with `GASDBLogger.createComponentLogger('CollectionCoordinator')`.
 - [x] Implement `acquireOperationLock` (with exponential backoff, error logging, and correct error type for lock failure).
 - [x] Implement `releaseOperationLock` (with error logging, always called in finally).
 - [x] Implement `hasConflict` and `resolveConflict` (with reload and last-write-wins strategies).
-- [x] **IMPLEMENTED** Implement `coordinate(operationName, callback)` with full orchestration (handles error and timeout scenarios, calls validateModificationToken).
-- [x] **IMPLEMENTED** Implement `validateModificationToken` (throws ModificationConflictError when tokens differ).
-- [x] **IMPLEMENTED** Implement `updateMasterIndexMetadata` (updates master index or adds new collection, wrapped with error handling).
-- [x] **IMPLEMENTED** Implement correct error types: `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError`.
-- [x] **PARTIALLY COMPLETE** Promoted tests to green phase (6/11 passing, 54.5% pass rate).
-- [ ] **BLOCKED** Fix remaining test failures and achieve 100% pass rate.
+- [x] Implement `coordinate(operationName, callback)` with full orchestration (handles error and timeout scenarios).
+- [x] Implement `validateModificationToken` (throws ModificationConflictError when tokens differ).
+- [x] Implement `updateMasterIndexMetadata` (updates master index or adds new collection, wrapped with error handling).
+- [x] Implement correct error types: `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError`.
+- [x] Promoted tests to green phase (6/11 passing, 54.5% pass rate).
+- [ ] Fix remaining test failures and achieve 100% pass rate.
 
-### To move to GREEN PHASE:
+### To move to GREEN PHASE
+
 - Complete `coordinate`, `validateModificationToken`, and `updateMasterIndexMetadata` implementations.
 - Define and use all required error types in `ErrorHandler`.
 - Ensure all orchestration, error, and edge cases are handled as per test suite expectations.
 - Re-run tests and refactor for full pass rate.
 
-### CURRENT STATUS (54.5% pass rate - 6/11 tests passing):
-**PASSING TESTS:**
+#### Additional refactoring tasks
+
+- [ ] Inject a `CollectionCoordinator` instance into the `Collection` constructor and store as `this._coordinator`.
+- [ ] Refactor every public CRUD method in `Collection` (e.g. `insertOne`, `updateOne`, etc.) to delegate via `this._coordinator.coordinate(operationName, callback)`.
+- [ ] Remove all direct `MasterIndex` calls from `Collection._updateMetadata`, so that only the coordinator handles master-index updates.
+- [ ] Adjust `acquireOperationLock` to throw `LockAcquisitionFailureError` when unable to acquire a collection lock after retries.
+- [ ] Align `coordinate` method signature and error types exactly with the Section 8.1 implementation plan.
+- [ ] Update tests `testLockReleasedOnException` and `testCoordinationTimeout` to expect green-phase coordination behaviour rather than legacy errors.
+
+### CURRENT STATUS (54.5% pass rate - 6/11 tests passing)
+
 - Constructor validation (1/1)
-- Acquire operation lock (2/2) 
+- Acquire operation lock (2/2)
 - Token validation - no conflict case (1/2)
 - Conflict resolution (2/2)
 
@@ -55,6 +73,7 @@
    - FIX NEEDED: Either remove timeout check or create genuinely slow callback
 
 **COORDINATION ERRORS:**
+
 - Lock acquisition errors: "Invalid argument: collectionName - must be a non-empty string"
 - CAUSE: Collection.name property is empty/null when passed to acquireCollectionLock()
 - FIX NEEDED: Verify Collection constructor properly sets name property
