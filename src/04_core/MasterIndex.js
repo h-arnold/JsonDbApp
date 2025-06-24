@@ -309,8 +309,11 @@ class MasterIndex {
         lockedAt: now,
         lockTimeout: timeout
       };
+      // Preserve existing modification token to avoid conflict
+      const existingToken = collection.getModificationToken();
       collection.setLockStatus(newLockStatus);
-      this.updateCollectionMetadata(collectionName, { lockStatus: newLockStatus });
+      // Update lockStatus without altering modificationToken
+      this.updateCollectionMetadata(collectionName, { lockStatus: newLockStatus, modificationToken: existingToken });
       
       this._logger.info('Collection lock acquired.', { collectionName, operationId });
       return true;
