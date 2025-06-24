@@ -67,12 +67,6 @@ class CollectionCoordinator {
         throw e;
       }
 
-      // Validate tokens before proceeding
-      const localToken = this._collection._metadata.getModificationToken();
-      const masterMeta = this._masterIndex.getCollection(name);
-      const remoteToken = masterMeta ? masterMeta.getModificationToken() : null;
-      this.validateModificationToken(localToken, remoteToken);
-
       // Conflict detection and resolution
       if (this.hasConflict()) {
         this._logger.warn('Conflict detected, resolving', { collection: name });
