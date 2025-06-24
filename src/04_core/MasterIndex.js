@@ -188,12 +188,12 @@ class MasterIndex {
       // Apply updates to the collection metadata
       Object.assign(collection, updates);
 
-      // Only generate a new modification token if one wasn't provided in the updates
-      if (!updates.modificationToken) {
-        collection.updateModificationToken();
-      }
+      // Remove implicit modification-token generation; token should be provided by caller
+//      if (!updates.modificationToken) {
+//        collection.updateModificationToken();
+//      }
 
-      this._data.collections[name] = collection.toJSON();
+      this._data.collections[name] = collection;
       this.save();
       this._logger.info('Collection metadata updated.', { collection: name, updates });
       return collection;

@@ -58,6 +58,7 @@
 - ✅ **Fixed collection name access**: All `this._collection.name` changed to `this._collection.getName()`
 - ✅ **Lock acquisition working**: Both lock acquisition tests now pass
 - ✅ **Master index updates working**: updateMasterIndexMetadata test now passes
+- ✅ **Fixed MasterIndex token generation**: Removed implicit `collection.updateModificationToken()` calls
 - ⚠️ **DbLockService warning**: "Attempted to release a lock that was not held" - may indicate lock release timing issue
 - 🔍 **Remaining issue**: The `coordinate()` method itself is still failing in the main coordination flow
 
@@ -67,6 +68,12 @@
 - Issue may be in the coordination workflow after lock acquisition
 - Could be related to token validation, conflict detection, or callback execution within coordinate()
 - DbLockService warning suggests potential lock management issue
+
+**Recent fixes:**
+
+- Removed implicit modification token generation from `MasterIndex.updateCollectionMetadata`
+- Fixed type mismatch where `CollectionMetadata` instances were being converted to plain objects
+- Ensured `CollectionCoordinator` is responsible for token management, not `MasterIndex`
 
 **Next investigation needed:**
 
