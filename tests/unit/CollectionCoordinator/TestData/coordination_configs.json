@@ -1,0 +1,19 @@
+{
+  "default": {
+    "coordinationEnabled": true,
+    "lockTimeoutMs": 2000,
+    "retryAttempts": 3,
+    "retryDelayMs": 100,
+    "conflictResolutionStrategy": "reload"
+  },
+  "disabled": {
+    "coordinationEnabled": false
+  },
+  "aggressive": {
+    "coordinationEnabled": true,
+    "lockTimeoutMs": 500,
+    "retryAttempts": 5,
+    "retryDelayMs": 50,
+    "conflictResolutionStrategy": "reload"
+  }
+}

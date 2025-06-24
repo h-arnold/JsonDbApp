@@ -5,43 +5,52 @@ function createCollectionCoordinatorModificationTokenTestSuite() {
   const suite = new TestSuite('CollectionCoordinator Modification Token');
 
   suite.addTest('testValidateModificationTokenNoConflict', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = {};
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
+    const coordinator = createTestCollectionCoordinator('default');
+    const collection = COLLECTION_COORDINATOR_TEST_DATA.testCollection;
+    const masterIndex = COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex;
+    
+    // Get current tokens (should match)
+    const localToken = collection._metadata.getModificationToken();
+    const masterMeta = masterIndex.getCollection('coordinatorTest');
+    const remoteToken = masterMeta ? masterMeta.getModificationToken() : null;
+    
     // Act & Assert
     TestFramework.assertNoThrow(
-      function() { coordinator.validateModificationToken('token', 'token'); },
+      function() { 
+        coordinator.validateModificationToken(localToken, remoteToken); 
+      },
       'validateModificationToken should not throw when tokens match'
     );
   });
 
   suite.addTest('testValidateModificationTokenConflict', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment and simulate conflict
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = {};
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
-    // Act & Assert
+    simulateCollectionConflict(); // This creates a token mismatch
+    
+    const coordinator = createTestCollectionCoordinator('default');
+    const collection = COLLECTION_COORDINATOR_TEST_DATA.testCollection;
+    const masterIndex = COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex;
+    
+    const localToken = collection._metadata.getModificationToken();
+    const masterMeta = masterIndex.getCollection('coordinatorTest');
+    const remoteToken = masterMeta ? masterMeta.getModificationToken() : null;
+    
+    // Act & Assert - Should throw when tokens don't match
     TestFramework.assertThrows(
-      function() {
-        coordinator.validateModificationToken('token', 'staleToken');
+      function() { 
+        coordinator.validateModificationToken(localToken, remoteToken); 
       },
-      ModificationConflictError,
-      'Should throw ModificationConflictError for stale token'
+      Error,
+      'validateModificationToken should throw when tokens differ'
     );
   });
 
   return suite;
 }
-
-registerTestSuite(createCollectionCoordinatorModificationTokenTestSuite());

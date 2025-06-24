@@ -1,0 +1,32 @@
+{
+  "generatedAt": "2025-06-24T12:31:31.628Z",
+  "testFolderId": "1srjQKsKGALNUIhzqdmQDGa5l9kRSXd6M",
+  "testFolderName": "GASDB_TestData_Generator_1750768278233",
+  "collectionFileId": "1K_3VaPD0XEd0eTWzEsXjBKK_8mj-vQsY",
+  "components": {
+    "masterIndex": {
+      "created": true,
+      "collections": [],
+      "dataKeys": [
+        "version",
+        "lastUpdated",
+        "collections",
+        "modificationHistory"
+      ]
+    },
+    "collection": {
+      "created": true,
+      "documentCount": 3,
+      "loaded": true
+    },
+    "coordinator": {
+      "created": true,
+      "coordinationEnabled": true
+    }
+  },
+  "serialization": {
+    "objectUtilsAvailable": true,
+    "collectionMetadataSerializable": true,
+    "deserializationWorks": true
+  }
+}

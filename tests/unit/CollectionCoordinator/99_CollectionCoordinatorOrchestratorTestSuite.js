@@ -4,7 +4,65 @@
 function runAllCollectionCoordinatorUnitTests() {
   const testFramework = new TestFramework();
 
-  // Register all CollectionCoordinator test suites
+  try {
+    // Set up test environment before registering suites
+    setupCollectionCoordinatorTestEnvironment();
+    
+    // Track test environment resources for cleanup
+    if (COLLECTION_COORDINATOR_TEST_DATA.testFolderId) {
+      testFramework.trackResourceFile(COLLECTION_COORDINATOR_TEST_DATA.testFolderId);
+    }
+    if (COLLECTION_COORDINATOR_TEST_DATA.testCollectionFileId) {
+      testFramework.trackResourceFile(COLLECTION_COORDINATOR_TEST_DATA.testCollectionFileId);
+    }
+
+    // Register all CollectionCoordinator test suites
+    testFramework.registerTestSuite(createCollectionCoordinatorConstructorValidationTestSuite());
+    testFramework.registerTestSuite(createCollectionCoordinatorCoordinateTestSuite());
+    testFramework.registerTestSuite(createCollectionCoordinatorAcquireOperationLockTestSuite());
+    testFramework.registerTestSuite(createCollectionCoordinatorModificationTokenTestSuite());
+    testFramework.registerTestSuite(createCollectionCoordinatorConflictResolutionTestSuite());
+    testFramework.registerTestSuite(createCollectionCoordinatorUpdateMasterIndexTestSuite());
+    testFramework.registerTestSuite(createCollectionCoordinatorLockReleaseAndTimeoutTestSuite());
+
+    // Run all tests
+    const results = testFramework.runAllTests();
+    
+    // Log results
+    GASDBLogger.info('CollectionCoordinator Unit Tests Complete', {
+      totalTests: results.results.length,
+      passed: results.getPassed().length,
+      failed: results.getFailed().length,
+      success: results.getFailed().length === 0
+    });
+    
+    return results;
+
+  } catch (error) {
+    GASDBLogger.error('CollectionCoordinator test execution failed', { 
+      error: error.message, 
+      stack: error.stack 
+    });
+    throw error;
+    
+  } finally {
+    // Always clean up test environment
+    try {
+      cleanupCollectionCoordinatorTestEnvironment();
+    } catch (cleanupError) {
+      GASDBLogger.warn('Error during test environment cleanup', { 
+        error: cleanupError.message 
+      });
+    }
+  }
+}
+
+/**
+ * Register CollectionCoordinator test suites with a TestFramework instance
+ * Useful for external test orchestration
+ */
+function registerCollectionCoordinatorTests() {
+  const testFramework = new TestFramework();
   testFramework.registerTestSuite(createCollectionCoordinatorConstructorValidationTestSuite());
   testFramework.registerTestSuite(createCollectionCoordinatorCoordinateTestSuite());
   testFramework.registerTestSuite(createCollectionCoordinatorAcquireOperationLockTestSuite());
@@ -12,47 +70,5 @@ function runAllCollectionCoordinatorUnitTests() {
   testFramework.registerTestSuite(createCollectionCoordinatorConflictResolutionTestSuite());
   testFramework.registerTestSuite(createCollectionCoordinatorUpdateMasterIndexTestSuite());
   testFramework.registerTestSuite(createCollectionCoordinatorLockReleaseAndTimeoutTestSuite());
-
-  // Register the test folder for cleanup with the correct TestFramework instance
-  // This must be done after setup, but before running tests, and before teardown
-  // So we use the beforeAll/afterAll hooks of the first suite to ensure correct timing
-  // Determine first and last suites for proper setup/teardown
-  const suites = Array.from(testFramework.getTestSuites().values());
-  const firstSuite = suites[0];
-  const lastSuite = suites[suites.length - 1];
-  if (firstSuite) {
-    firstSuite
-      .setBeforeAll(function() {
-        if (typeof setupCollectionCoordinatorTestEnvironment === 'function') {
-          setupCollectionCoordinatorTestEnvironment();
-          if (COLLECTION_COORDINATOR_TEST_DATA && COLLECTION_COORDINATOR_TEST_DATA.testFolderId) {
-            testFramework.trackResourceFile(COLLECTION_COORDINATOR_TEST_DATA.testFolderId);
-          }
-        }
-      })
-      .setBeforeEach(function() {
-        // Track any files created by individual tests
-        if (Array.isArray(COLLECTION_COORDINATOR_TEST_DATA.createdFileIds)) {
-          COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.forEach(function(fileId) {
-            testFramework.trackResourceFile(fileId);
-          });
-          COLLECTION_COORDINATOR_TEST_DATA.createdFileIds = [];
-        }
-      });
-  }
-  if (lastSuite) {
-    lastSuite.setAfterAll(function() {
-      if (typeof cleanupCollectionCoordinatorTestEnvironment === 'function') {
-        cleanupCollectionCoordinatorTestEnvironment();
-      }
-    });
-  }
-
-  // Run all tests
-  const results = testFramework.runAllTests();
-
-  // Print summary
-  Logger.log('CollectionCoordinator Unit Test Results:');
-  Logger.log(results.getSummary());
-  return results;
+  return testFramework;
 }

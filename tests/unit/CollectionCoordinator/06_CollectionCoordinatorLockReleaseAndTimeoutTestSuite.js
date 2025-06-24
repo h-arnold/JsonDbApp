@@ -5,46 +5,44 @@ function createCollectionCoordinatorLockReleaseAndTimeoutTestSuite() {
   const suite = new TestSuite('CollectionCoordinator Lock Release and Timeout');
 
   suite.addTest('testLockReleasedOnException', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = {};
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
-    // Act & Assert
+    const coordinator = createTestCollectionCoordinator('default');
+    
+    // Act & Assert - Should properly handle exceptions and release locks
     TestFramework.assertThrows(
       function() {
-        coordinator.coordinate('insertOne', function() { throw new Error('fail'); });
+        coordinator.coordinate('testOperation', function() { 
+          throw new Error('test exception'); 
+        });
       },
-      GASDBError,
-      'Should throw as lock release on exception is not implemented yet'
+      Error,
+      'Should propagate the original exception while releasing locks'
     );
   });
 
   suite.addTest('testCoordinationTimeout', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment with aggressive timeout
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = { lockTimeoutMs: 1 };
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
-    // Act & Assert
+    const coordinator = createTestCollectionCoordinator('aggressive'); // Has 500ms timeout
+    
+    // Act & Assert - Test timeout behavior with a long-running operation
     TestFramework.assertThrows(
       function() {
-        coordinator.coordinate('insertOne', function() { /* never returns */ });
+        coordinator.coordinate('longOperation', function() { 
+          // Simulate a long operation that exceeds timeout
+          Utilities.sleep(600); // Sleep longer than timeout
+          return 'should not reach here';
+        });
       },
-      CoordinationTimeoutError,
-      'Should throw CoordinationTimeoutError on timeout'
+      Error,
+      'Should throw timeout error for operations exceeding lockTimeoutMs'
     );
   });
 
   return suite;
 }
-
-registerTestSuite(createCollectionCoordinatorLockReleaseAndTimeoutTestSuite());

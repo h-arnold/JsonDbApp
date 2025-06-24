@@ -5,23 +5,31 @@ function createCollectionCoordinatorUpdateMasterIndexTestSuite() {
   const suite = new TestSuite('CollectionCoordinator Update Master Index Metadata');
 
   suite.addTest('testUpdateMasterIndexMetadata', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = {};
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
+    const coordinator = createTestCollectionCoordinator('default');
+    const masterIndex = COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex;
+    
+    // Get initial state
+    const initialCollections = Object.keys(masterIndex.getCollections());
+    
     // Act & Assert
     TestFramework.assertNoThrow(
-      function() { coordinator.updateMasterIndexMetadata(); },
+      function() { 
+        coordinator.updateMasterIndexMetadata(); 
+      },
       'updateMasterIndexMetadata should not throw in green phase'
+    );
+    
+    // Verify the collection is still registered
+    const updatedCollections = Object.keys(masterIndex.getCollections());
+    TestFramework.assertTrue(
+      updatedCollections.includes('coordinatorTest'),
+      'Collection should be registered in master index after update'
     );
   });
 
   return suite;
 }
-
-registerTestSuite(createCollectionCoordinatorUpdateMasterIndexTestSuite());

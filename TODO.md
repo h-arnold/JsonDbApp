@@ -38,23 +38,45 @@
 - [ ] Align `coordinate` method signature and error types exactly with the Section 8.1 implementation plan.
 - [ ] Update tests `testLockReleasedOnException` and `testCoordinationTimeout` to expect green-phase coordination behaviour rather than legacy errors.
 
-### CURRENT STATUS (9.1% pass rate - 1/11 tests passing)
+### CURRENT STATUS (86.7% pass rate - 13/15 tests passing) ✅ EXCELLENT IMPROVEMENT
 
-- Constructor validation (1/1)
-- Acquire operation lock (0/2)
-- Token validation - no conflict case (0/2)
-- Conflict resolution (0/2)
-- Coordination (0/1)
-- Update master index (0/1)
-- Lock release/timeout (0/2)
+- Constructor validation (3/3) ✅
+- Coordinate operations (1/3) - coordination disabled works, but happy path and conflict resolution still fail
+- Acquire operation lock (2/2) ✅ **FIXED**
+- Token validation (2/2) ✅
+- Conflict resolution (2/2) ✅
+- Update master index (1/1) ✅ **FIXED**
+- Lock release/timeout (2/2) ✅
 
-**FAILING TESTS - SUMMARY:**
+**REMAINING FAILING TESTS (Only 2 left!):**
 
-- All failing tests report: `Invalid argument: masterIndex - must be an object`.
-- Root cause: Test suites instantiate `Collection` with an empty object `{}` for the `database` parameter, so `this._database._masterIndex` is undefined. This causes the `CollectionCoordinator` constructor to throw during validation.
-- Action needed: Update test setup to provide a valid `MasterIndex` instance on the `database` mock, or refactor `Collection` to allow injection/mocking for tests.
+- `testCoordinateHappyPath`: coordinate method still throwing in happy path scenario
+- `testCoordinateWithConflictResolution`: coordinate method failing during conflict resolution
+
+**Analysis:**
+
+- ✅ **Fixed collection name access**: All `this._collection.name` changed to `this._collection.getName()`
+- ✅ **Lock acquisition working**: Both lock acquisition tests now pass
+- ✅ **Master index updates working**: updateMasterIndexMetadata test now passes
+- ⚠️ **DbLockService warning**: "Attempted to release a lock that was not held" - may indicate lock release timing issue
+- 🔍 **Remaining issue**: The `coordinate()` method itself is still failing in the main coordination flow
+
+**Root cause likely:**
+
+- Lock is being acquired successfully (logs show "Collection lock acquired")
+- Issue may be in the coordination workflow after lock acquisition
+- Could be related to token validation, conflict detection, or callback execution within coordinate()
+- DbLockService warning suggests potential lock management issue
+
+**Next investigation needed:**
+
+- Debug the specific exception being thrown in `coordinate()` method
+- Check if callback execution is failing
+- Verify token validation logic in coordinate flow
+- Review lock release timing in finally block
 
 **Next steps:**
+
 - Remove direct MasterIndex calls from `Collection._updateMetadata`.
 - Update test mocks to provide a valid `masterIndex` for `CollectionCoordinator`.
 - Re-run tests after fixing test setup.

@@ -5,42 +5,36 @@ function createCollectionCoordinatorAcquireOperationLockTestSuite() {
   const suite = new TestSuite('CollectionCoordinator Acquire Operation Lock');
 
   suite.addTest('testAcquireOperationLockRetrySuccess', function() {
-    // Arrange
-    // Create test file in the test folder for Collection
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    // Use real coordinator, but lock logic not implemented so should fail
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = { retryAttempts: 2, retryDelayMs: 10 };
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
+    const coordinator = createTestCollectionCoordinator('default');
+    
     // Act & Assert
     TestFramework.assertNoThrow(
-      function() { coordinator.acquireOperationLock('opId'); },
+      function() { 
+        coordinator.acquireOperationLock('test-op-id'); 
+      },
       'acquireOperationLock should not throw in green phase'
     );
   });
 
   suite.addTest('testAcquireOperationLockRetryFailure', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment with aggressive timeout
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = { retryAttempts: 1, retryDelayMs: 10 };
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
-    // Act & Assert
+    const coordinator = createTestCollectionCoordinator('aggressive');
+    
+    // Act & Assert - With aggressive timeouts, should handle retries
     TestFramework.assertNoThrow(
-      function() { coordinator.acquireOperationLock('opId'); },
-      'acquireOperationLock should succeed even if retries configured low'
+      function() { 
+        coordinator.acquireOperationLock('test-op-id-2'); 
+      },
+      'acquireOperationLock should handle retries gracefully'
     );
   });
 
   return suite;
 }
-
-registerTestSuite(createCollectionCoordinatorAcquireOperationLockTestSuite());

@@ -5,30 +5,71 @@ function createCollectionCoordinatorCoordinateTestSuite() {
   const suite = new TestSuite('CollectionCoordinator Coordinate');
 
   suite.addTest('testCoordinateHappyPath', function() {
-    // Arrange
-    // Create test file in the test folder for Collection
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    // Use real Collection, MasterIndex, config, logger
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    // Ensure the collection is registered in masterIndex for coordination
-    masterIndex.addCollection('test', collection._metadata);
-    const config = {};
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
+    const coordinator = createTestCollectionCoordinator('default');
+    
     // Act
     let result;
     TestFramework.assertNoThrow(
-      function() { result = coordinator.coordinate('insertOne', function() { return 'result'; }); },
+      function() { 
+        result = coordinator.coordinate('insertOne', function() { 
+          return 'operation-result'; 
+        }); 
+      },
       'coordinate should not throw in happy path'
     );
-    // Assert return value
-    AssertionUtilities.assertEquals('result', result, 'coordinate should return the callback result');
+    
+    // Assert
+    TestFramework.assertEquals('operation-result', result, 'coordinate should return the callback result');
+  });
+
+  suite.addTest('testCoordinateWithCoordinationDisabled', function() {
+    // Arrange
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
+    
+    const coordinator = createTestCollectionCoordinator('disabled');
+    
+    // Act & Assert
+    let result;
+    TestFramework.assertNoThrow(
+      function() { 
+        result = coordinator.coordinate('findOne', function() { 
+          return 'bypass-result'; 
+        }); 
+      },
+      'coordinate should bypass locking when coordination disabled'
+    );
+    
+    TestFramework.assertEquals('bypass-result', result, 'should return callback result when coordination disabled');
+  });
+
+  suite.addTest('testCoordinateWithConflictResolution', function() {
+    // Arrange
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
+    
+    // Simulate conflict by modifying master index token
+    simulateCollectionConflict();
+    
+    const coordinator = createTestCollectionCoordinator('default');
+    
+    // Act & Assert - Should resolve conflict and complete operation
+    let result;
+    TestFramework.assertNoThrow(
+      function() { 
+        result = coordinator.coordinate('updateOne', function() { 
+          return 'conflict-resolved-result'; 
+        }); 
+      },
+      'coordinate should resolve conflicts and complete operation'
+    );
+    
+    TestFramework.assertEquals('conflict-resolved-result', result, 'should return callback result after conflict resolution');
   });
 
   return suite;
 }
-
-registerTestSuite(createCollectionCoordinatorCoordinateTestSuite());

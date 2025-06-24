@@ -1,0 +1,24 @@
+{
+  "original": {
+    "__type": "CollectionMetadata",
+    "created": "2025-06-24T12:31:19.185Z",
+    "lastUpdated": "2025-06-24T12:31:21.890Z",
+    "documentCount": 3,
+    "name": "coordinatorTest",
+    "fileId": "1K_3VaPD0XEd0eTWzEsXjBKK_8mj-vQsY",
+    "modificationToken": "initial-token-1750768279185",
+    "lockStatus": null
+  },
+  "serialized": "{\"__type\":\"CollectionMetadata\",\"created\":\"2025-06-24T12:31:19.185Z\",\"lastUpdated\":\"2025-06-24T12:31:21.890Z\",\"documentCount\":3,\"name\":\"coordinatorTest\",\"fileId\":\"1K_3VaPD0XEd0eTWzEsXjBKK_8mj-vQsY\",\"modificationToken\":\"initial-token-1750768279185\",\"lockStatus\":null}",
+  "deserialized": {
+    "__type": "CollectionMetadata",
+    "created": "2025-06-24T12:31:19.185Z",
+    "lastUpdated": "2025-06-24T12:31:21.890Z",
+    "documentCount": 3,
+    "name": "coordinatorTest",
+    "fileId": "1K_3VaPD0XEd0eTWzEsXjBKK_8mj-vQsY",
+    "modificationToken": "initial-token-1750768279185",
+    "lockStatus": null
+  },
+  "testPassed": true
+}

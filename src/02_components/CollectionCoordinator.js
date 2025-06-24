@@ -43,7 +43,7 @@ class CollectionCoordinator {
     Validate.type(callback, 'function', 'callback');
 
     const opId = IdGenerator.generateUUID();
-    const name = this._collection.name;
+    const name = this._collection.getName();
     let result;
     let lockAcquired = false;
     // Start timer for coordination timeout
@@ -114,10 +114,10 @@ class CollectionCoordinator {
     if (remoteToken != null && localToken !== remoteToken) {
       // Throw a specific modification conflict error when tokens differ
       throw new ErrorHandler.ErrorTypes.ModificationConflictError(
-        this._collection.name,
+        this._collection.getName(),
         localToken,
         remoteToken,
-        `Modification token mismatch for collection: ${this._collection.name}`
+        `Modification token mismatch for collection: ${this._collection.getName()}`
       );
     }
   }
@@ -128,7 +128,7 @@ class CollectionCoordinator {
    * @throws {ErrorHandler.ErrorTypes.LOCK_TIMEOUT} When lock cannot be acquired
    */
   acquireOperationLock(operationId) {
-    const name = this._collection.name;
+    const name = this._collection.getName();
     const { retryAttempts, retryDelayMs, lockTimeoutMs } = this._config;
     let acquired = false;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
@@ -159,7 +159,7 @@ class CollectionCoordinator {
    * @param {string} operationId - Unique operation identifier
    */
   releaseOperationLock(operationId) {
-    const name = this._collection.name;
+    const name = this._collection.getName();
     try {
       this._masterIndex.releaseCollectionLock(name, operationId);
     } catch (e) {
@@ -173,7 +173,7 @@ class CollectionCoordinator {
    * @returns {boolean} True if there is a conflict
    */
   hasConflict() {
-    const name = this._collection.name;
+    const name = this._collection.getName();
     const localToken = this._collection._metadata.getModificationToken();
     const masterMeta = this._masterIndex.getCollection(name);
     const remoteToken = masterMeta ? masterMeta.getModificationToken() : null;
@@ -200,7 +200,7 @@ class CollectionCoordinator {
    * Update the master index with latest collection metadata
    */
   updateMasterIndexMetadata() {
-    const name = this._collection.name;
+    const name = this._collection.getName();
     const meta = this._collection._metadata;
     const updates = {
       documentCount: meta.documentCount,

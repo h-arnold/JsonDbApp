@@ -59,12 +59,11 @@ class Collection {
     this._metadata = CollectionMetadata.create(name, driveFileId);
     this._documentOperations = null;
 
-    // Inject coordinator for cross-instance operations, with respect for autoCreateCollections
-    const { masterIndexInstance, dbConfig } = this._handleCollectionAutocreation();
+    // Inject coordinator for cross-instance operations
     this._coordinator = new CollectionCoordinator(
       this,
-      masterIndexInstance,
-      dbConfig,
+      this._database._masterIndex,
+      this._database.config,
       this._logger
     );
   }
@@ -767,37 +766,5 @@ class Collection {
    */
   getLogger() {
     return this._logger;
-  }
-
-  /**
-   * Resolves dependencies for CollectionCoordinator respecting autoCreateCollections and test mode
-   * @private
-   * @returns {{masterIndexInstance: MasterIndex, dbConfig: Object}}
-   * @throws {InvalidArgumentError} If autoCreateCollections is false and no MasterIndex is provided
-   */
-  _handleCollectionAutocreation() {
-    let masterIndexInstance;
-    let dbConfig;
-    if (this._database && this._database._masterIndex instanceof MasterIndex) {
-      masterIndexInstance = this._database._masterIndex;
-      dbConfig = this._database.config || {};
-    } else {
-      const configObj = (this._database && typeof this._database.config === 'object')
-        ? this._database.config
-        : {};
-      const autoCreate = (typeof configObj.autoCreateCollections === 'boolean')
-        ? configObj.autoCreateCollections
-        : true;
-      if (!autoCreate && !Collection._testMode) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-          'database._masterIndex',
-          this._database ? this._database._masterIndex : undefined,
-          'MasterIndex must be provided when autoCreateCollections is false'
-        );
-      }
-      masterIndexInstance = new MasterIndex();
-      dbConfig = configObj;
-    }
-    return { masterIndexInstance, dbConfig };
   }
 }

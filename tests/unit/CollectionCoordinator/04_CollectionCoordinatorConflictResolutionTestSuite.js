@@ -5,46 +5,49 @@ function createCollectionCoordinatorConflictResolutionTestSuite() {
   const suite = new TestSuite('CollectionCoordinator Conflict Resolution');
 
   suite.addTest('testResolveConflictReloadAndRetry', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment and simulate conflict
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = { conflictResolutionStrategy: 'RELOAD_AND_RETRY' };
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
-    // Act & Assert
-    TestFramework.assertThrows(
+    simulateCollectionConflict(); // Creates a token mismatch
+    
+    const coordinator = createTestCollectionCoordinator('default'); // Uses 'reload' strategy
+    
+    // Act & Assert - Should resolve conflict using reload strategy
+    TestFramework.assertNoThrow(
       function() {
-        coordinator.resolveConflict('reload');
+        coordinator.resolveConflict();
       },
-      GASDBError,
-      'Should throw as resolveConflict is not implemented yet'
+      'resolveConflict should handle reload strategy'
     );
   });
 
   suite.addTest('testResolveConflictLastWriteWins', function() {
-    // Arrange
-    var testFile = DriveApp.createFile('test_collection.json', '[]');
-    COLLECTION_COORDINATOR_TEST_DATA.createdFileIds.push(testFile.getId());
+    // Arrange - Use test environment
+    validateCollectionCoordinatorTestEnvironment();
+    resetCollectionCoordinatorCollectionState();
     
-    const collection = new Collection('test', testFile.getId(), {}, { readFile: function(){}, writeFile: function(){} });
-    const masterIndex = new MasterIndex();
-    const config = { conflictResolutionStrategy: 'LAST_WRITE_WINS' };
-    const logger = GASDBLogger.createComponentLogger('Test');
-    const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
-    // Act & Assert
+    // Create coordinator with unsupported strategy to test error handling
+    const invalidConfig = {
+      coordinationEnabled: true,
+      conflictResolutionStrategy: 'last-write-wins' // Unsupported strategy
+    };
+    
+    const coordinator = new CollectionCoordinator(
+      COLLECTION_COORDINATOR_TEST_DATA.testCollection,
+      COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex,
+      invalidConfig
+    );
+    
+    // Act & Assert - Should throw for unsupported strategy
     TestFramework.assertThrows(
       function() {
-        coordinator.resolveConflict('overwrite');
+        coordinator.resolveConflict();
       },
-      GASDBError,
-      'Should throw as resolveConflict is not implemented yet'
+      Error,
+      'Should throw for unsupported conflict resolution strategy'
     );
   });
 
   return suite;
 }
-
-registerTestSuite(createCollectionCoordinatorConflictResolutionTestSuite());
