@@ -53,7 +53,7 @@ class CollectionCoordinator {
       return callback();
     }
 
-    this._logger.startOperation(operationName, { collection: name, opId });
+    this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
     // Acquire lock with timeout mapping
     try {
       try {
@@ -113,7 +113,7 @@ class CollectionCoordinator {
   validateModificationToken(localToken, remoteToken) {
     if (remoteToken != null && localToken !== remoteToken) {
       // Throw a specific modification conflict error when tokens differ
-      throw new ErrorHandler.ErrorTypes.ModificationConflictError(
+      throw new ErrorHandler.ErrorTypes.MODIFICATION_CONFLICT(
         this._collection.getName(),
         localToken,
         remoteToken,
@@ -216,7 +216,7 @@ class CollectionCoordinator {
     } catch (e) {
       // Log and wrap any failure in a MasterIndexError
       this._logger.error('Master index metadata update failed', { collection: name, error: e.message });
-      throw new ErrorHandler.ErrorTypes.MasterIndexError(
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
         'updateCollectionMetadata',
         e.message
       );

@@ -19,8 +19,9 @@
 - [x] Implement `validateModificationToken` (throws ModificationConflictError when tokens differ).
 - [x] Implement `updateMasterIndexMetadata` (updates master index or adds new collection, wrapped with error handling).
 - [x] Implement correct error types: `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError`.
-- [x] Promoted tests to green phase (6/11 passing, 54.5% pass rate).
-- [ ] Fix remaining test failures and achieve 100% pass rate.
+- [x] Promoted tests to green phase (14/15 passing, 93.3% pass rate).
+- [x] Fixed logger method calls and error type references.
+- [ ] Fix final test failure in conflict resolution workflow and achieve 100% pass rate.
 
 ### To move to GREEN PHASE
 
@@ -38,49 +39,49 @@
 - [ ] Align `coordinate` method signature and error types exactly with the Section 8.1 implementation plan.
 - [ ] Update tests `testLockReleasedOnException` and `testCoordinationTimeout` to expect green-phase coordination behaviour rather than legacy errors.
 
-### CURRENT STATUS (86.7% pass rate - 13/15 tests passing) ✅ EXCELLENT IMPROVEMENT
+### CURRENT STATUS (93.3% pass rate - 14/15 tests passing) ✅ OUTSTANDING PROGRESS
 
 - Constructor validation (3/3) ✅
-- Coordinate operations (1/3) - coordination disabled works, but happy path and conflict resolution still fail
+- Coordinate operations (2/3) ✅ **MAJOR IMPROVEMENT** - happy path now works, only conflict resolution failing
 - Acquire operation lock (2/2) ✅ **FIXED**
 - Token validation (2/2) ✅
 - Conflict resolution (2/2) ✅
 - Update master index (1/1) ✅ **FIXED**
 - Lock release/timeout (2/2) ✅
 
-**REMAINING FAILING TESTS (Only 2 left!):**
+**REMAINING FAILING TESTS (Only 1 left!):**
 
-- `testCoordinateHappyPath`: coordinate method still throwing in happy path scenario
-- `testCoordinateWithConflictResolution`: coordinate method failing during conflict resolution
+- `testCoordinateWithConflictResolution`: conflict resolution workflow still failing
 
 **Analysis:**
 
-- ✅ **Fixed collection name access**: All `this._collection.name` changed to `this._collection.getName()`
-- ✅ **Lock acquisition working**: Both lock acquisition tests now pass
-- ✅ **Master index updates working**: updateMasterIndexMetadata test now passes
-- ✅ **Fixed MasterIndex token generation**: Removed implicit `collection.updateModificationToken()` calls
-- ⚠️ **DbLockService warning**: "Attempted to release a lock that was not held" - may indicate lock release timing issue
-- 🔍 **Remaining issue**: The `coordinate()` method itself is still failing in the main coordination flow
+- ✅ **Fixed startOperation logger call**: Changed from `this._logger.startOperation()` to `this._logger.debug()`
+- ✅ **Fixed error type references**: All ErrorHandler.ErrorTypes now use correct UPPER_SNAKE_CASE constants
+- ✅ **Happy path coordination working**: `testCoordinateHappyPath` now passes successfully
+- ✅ **Lock acquisition working**: Both lock acquisition tests pass
+- ✅ **Master index updates working**: updateMasterIndexMetadata test passes
+- ⚠️ **DbLockService warning**: "Attempted to release a lock that was not held" - persistent timing issue
+- 🔍 **Remaining issue**: Conflict resolution workflow in `coordinate()` method
 
-**Root cause likely:**
+**Root cause analysis:**
 
 - Lock is being acquired successfully (logs show "Collection lock acquired")
-- Issue may be in the coordination workflow after lock acquisition
-- Could be related to token validation, conflict detection, or callback execution within coordinate()
-- DbLockService warning suggests potential lock management issue
+- Conflict detection is working (logs show "Modification conflict detected")
+- Issue appears to be in the conflict resolution workflow specifically
+- The `ModificationConflictError` is being thrown as expected, but test expects resolution to succeed
 
 **Recent fixes:**
 
-- Removed implicit modification token generation from `MasterIndex.updateCollectionMetadata`
-- Fixed type mismatch where `CollectionMetadata` instances were being converted to plain objects
-- Ensured `CollectionCoordinator` is responsible for token management, not `MasterIndex`
+- Fixed `this._logger.startOperation()` → `this._logger.debug()` (component logger doesn't have startOperation)
+- Fixed `ErrorHandler.ErrorTypes.ModificationConflictError` → `ErrorHandler.ErrorTypes.MODIFICATION_CONFLICT`
+- Fixed `ErrorHandler.ErrorTypes.MasterIndexError` → `ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR`
 
 **Next investigation needed:**
 
-- Debug the specific exception being thrown in `coordinate()` method
-- Check if callback execution is failing
-- Verify token validation logic in coordinate flow
-- Review lock release timing in finally block
+- Review the conflict resolution logic in `coordinate()` method
+- Check if `resolveConflict()` is being called properly after conflict detection
+- Verify that the test expects automatic conflict resolution rather than error throwing
+- Analyze the specific test case `testCoordinateWithConflictResolution` expectations
 
 **Next steps:**
 
