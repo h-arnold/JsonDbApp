@@ -97,6 +97,7 @@ class DbLockService {
     // Attempts to acquire the lock within the timeout; throws LOCK_TIMEOUT if not acquired
     try {
       this._scriptLock.waitLock(timeout);
+      this._logger.debug('Script lock acquired successfully', { timeout });
     } catch (err) {
       this._logger.error('Failed to acquire script lock', { timeout, error: err.message });
       this._scriptLock = null;
@@ -109,6 +110,7 @@ class DbLockService {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} If no lock is held.
    */
   releaseScriptLock() {
+    this._logger.debug('Attempting to release script lock', { lockStatus: !!this._scriptLock });
     if (!this._scriptLock) {
       this._logger.warn('Attempted to release a lock that was not held.');
       return;
@@ -118,6 +120,7 @@ class DbLockService {
     try {
       this._scriptLock.releaseLock();
       this._scriptLock = null;
+      this._logger.debug('Script lock released successfully');
     } catch (err) {
       this._logger.error('Failed to release script lock', { error: err.message });
       // Re-throw the original error to allow for higher-level handling
