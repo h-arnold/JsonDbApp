@@ -111,3 +111,7 @@
 - [ ] Validate all PRD requirements and class diagrams in tests.
 - [ ] Ensure test-runner (`test-runner.sh`) includes new integration tests.
 - [ ] Run full test suite and confirm 100% pass.
+
+- [ ] Refactor `resolveConflict` in `CollectionCoordinator` to support retry-after-resolution and integrate with MasterIndex's `LAST_WRITE_WINS` strategy.
+- [ ] Update `MasterIndex.resolveConflict` to ensure correct application of the 'LAST_WRITE_WINS' strategy and synchronise with coordinator logic.
+- [ ] Ensure all conflict resolution strategies are consistently handled across both `CollectionCoordinator` and `MasterIndex`.
