@@ -15,12 +15,9 @@ function createCollectionCoordinatorModificationTokenTestSuite() {
     const logger = GASDBLogger.createComponentLogger('Test');
     const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
     // Act & Assert
-    TestFramework.assertThrows(
-      function() {
-        coordinator.validateModificationToken('token', 'token');
-      },
-      GASDBError,
-      'Should throw as validateModificationToken is not implemented yet'
+    TestFramework.assertNoThrow(
+      function() { coordinator.validateModificationToken('token', 'token'); },
+      'validateModificationToken should not throw when tokens match'
     );
   });
 

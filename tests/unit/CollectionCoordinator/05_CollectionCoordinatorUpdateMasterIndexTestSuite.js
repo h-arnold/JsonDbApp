@@ -15,12 +15,9 @@ function createCollectionCoordinatorUpdateMasterIndexTestSuite() {
     const logger = GASDBLogger.createComponentLogger('Test');
     const coordinator = new CollectionCoordinator(collection, masterIndex, config, logger);
     // Act & Assert
-    TestFramework.assertThrows(
-      function() {
-        coordinator.updateMasterIndexMetadata();
-      },
-      GASDBError,
-      'Should throw as updateMasterIndexMetadata is not implemented yet'
+    TestFramework.assertNoThrow(
+      function() { coordinator.updateMasterIndexMetadata(); },
+      'updateMasterIndexMetadata should not throw in green phase'
     );
   });
 

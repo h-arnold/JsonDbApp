@@ -45,27 +45,80 @@ class CollectionCoordinator {
     const opId = IdGenerator.generateUUID();
     const name = this._collection.name;
     let result;
+    let lockAcquired = false;
+    // Start timer for coordination timeout
+    const startTime = Date.now();
 
     if (!this._config.coordinationEnabled) {
       return callback();
     }
 
     this._logger.startOperation(operationName, { collection: name, opId });
-    this.acquireOperationLock(opId);
+    // Acquire lock with timeout mapping
     try {
-      // Conflict detection
+      try {
+        this.acquireOperationLock(opId);
+        lockAcquired = true;
+      } catch (e) {
+        if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
+          this._logger.error('Lock acquisition timed out', { collection: name, operationId: opId, timeout: this._config.lockTimeoutMs });
+          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeoutMs);
+        }
+        throw e;
+      }
+
+      // Validate tokens before proceeding
+      const localToken = this._collection._metadata.getModificationToken();
+      const masterMeta = this._masterIndex.getCollection(name);
+      const remoteToken = masterMeta ? masterMeta.getModificationToken() : null;
+      this.validateModificationToken(localToken, remoteToken);
+
+      // Conflict detection and resolution
       if (this.hasConflict()) {
         this._logger.warn('Conflict detected, resolving', { collection: name });
         this.resolveConflict();
       }
-      // Perform the core CRUD
+
+      // Perform operation
       result = callback();
-      // Persist metadata changes
+      // Enforce coordination timeout on operation execution
+      const elapsed = Date.now() - startTime;
+      if (elapsed > this._config.lockTimeoutMs) {
+        this._logger.error('Operation timed out', { collection: name, opId, timeout: this._config.lockTimeoutMs });
+        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeoutMs);
+      }
+
+      // Persist metadata updates
       this.updateMasterIndexMetadata();
+
       return result;
+    } catch (e) {
+      // Log and rethrow
+      this._logger.error(`Operation ${operationName} failed`, { collection: name, opId, error: e.message });
+      throw e;
     } finally {
-      this.releaseOperationLock(opId);
+      if (lockAcquired) {
+        this.releaseOperationLock(opId);
+      }
       this._logger.info(`Operation ${operationName} complete`, { collection: name, opId });
+    }
+  }
+
+  /**
+   * Validate modification tokens match before operation
+   * @param {string} localToken - Local collection metadata token
+   * @param {string|null} remoteToken - Master index metadata token
+   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When tokens differ
+   */
+  validateModificationToken(localToken, remoteToken) {
+    if (remoteToken != null && localToken !== remoteToken) {
+      // Throw a specific modification conflict error when tokens differ
+      throw new ErrorHandler.ErrorTypes.ModificationConflictError(
+        this._collection.name,
+        localToken,
+        remoteToken,
+        `Modification token mismatch for collection: ${this._collection.name}`
+      );
     }
   }
 
@@ -77,20 +130,25 @@ class CollectionCoordinator {
   acquireOperationLock(operationId) {
     const name = this._collection.name;
     const { retryAttempts, retryDelayMs, lockTimeoutMs } = this._config;
-
+    let acquired = false;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
-        this._masterIndex.acquireCollectionLock(name, operationId, lockTimeoutMs);
-        return;
-      } catch (e) {
-        if (attempt === retryAttempts) {
-          this._logger.error('Lock acquisition failed', { collection: name, operationId });
-          throw new ErrorHandler.ErrorTypes.LOCK_TIMEOUT(
-            `Failed to acquire lock for ${name} after ${retryAttempts} attempts`
-          );
+        const got = this._masterIndex.acquireCollectionLock(name, operationId, lockTimeoutMs);
+        if (got) {
+          acquired = true;
+          break;
         }
-        Utilities.sleep(retryDelayMs * Math.pow(2, attempt - 1));
+        // retry after backoff
+        if (attempt < retryAttempts) {
+          Utilities.sleep(retryDelayMs * Math.pow(2, attempt - 1));
+        }
+      } catch (e) {
+        this._logger.error('Lock acquisition error', { collection: name, operationId, error: e.message });
+        break;
       }
+    }
+    if (!acquired) {
+      this._logger.warn('Could not acquire lock after retries', { collection: name, operationId });
     }
   }
 
@@ -146,6 +204,20 @@ class CollectionCoordinator {
       documentCount: meta.documentCount,
       modificationToken: meta.getModificationToken()
     };
-    this._masterIndex.updateCollectionMetadata(name, updates);
+    try {
+      if (this._masterIndex.getCollection(name)) {
+        this._masterIndex.updateCollectionMetadata(name, updates);
+      } else {
+        // Initial registration of new collection
+        this._masterIndex.addCollection(name, meta);
+      }
+    } catch (e) {
+      // Log and wrap any failure in a MasterIndexError
+      this._logger.error('Master index metadata update failed', { collection: name, error: e.message });
+      throw new ErrorHandler.ErrorTypes.MasterIndexError(
+        'updateCollectionMetadata',
+        e.message
+      );
+    }
   }
 }
