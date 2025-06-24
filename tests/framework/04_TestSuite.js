@@ -59,6 +59,7 @@ class TestSuite {
     
     // Run each test
     for (const [testName, testFn] of this.tests) {
+      GASDBLogger.info(`Running test: ${testName}`);
       results.push(this.runTest(testName));
     }
     
