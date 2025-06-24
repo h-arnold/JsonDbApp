@@ -177,69 +177,26 @@ class MasterIndex {
    */
   updateCollectionMetadata(name, updates) {
     Validate.nonEmptyString(name, 'name');
-    Validate.object(updates, 'updates', false);
+    Validate.object(updates, 'updates');
 
     return this._withScriptLock(() => {
-      const rawData = this._data.collections[name];
-      if (!rawData) {
+      const collection = this.getCollection(name);
+      if (!collection) {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
       }
 
-      // Full replace if a complete metadata object is provided
-      if (updates && typeof updates === 'object' && updates.name) {
-        const newMetadata = updates instanceof CollectionMetadata
-          ? updates
-          : new CollectionMetadata(updates);
-        this._data.collections[name] = newMetadata;
-        this._data.lastUpdated = new Date();
-        this._addToModificationHistory(name, 'FULL_METADATA_UPDATE', newMetadata);
-        return newMetadata;
+      // Apply updates to the collection metadata
+      Object.assign(collection, updates);
+
+      // Only generate a new modification token if one wasn't provided in the updates
+      if (!updates.modificationToken) {
+        collection.updateModificationToken();
       }
 
-      // Instantiate CollectionMetadata for incremental updates
-      const collectionMetadata = new CollectionMetadata(rawData);
-      
-      // Apply updates using CollectionMetadata methods where available
-      Object.keys(updates).forEach(key => {
-        switch (key) {
-          case 'documentCount':
-            collectionMetadata.setDocumentCount(updates[key]);
-            break;
-          case 'modificationToken':
-            collectionMetadata.setModificationToken(updates[key]);
-            break;
-          case 'lockStatus':
-            collectionMetadata.setLockStatus(updates[key]);
-            break;
-          case 'lastModified':
-          case 'lastUpdated':
-            // Set specific timestamp if provided
-            collectionMetadata.lastUpdated = updates[key] instanceof Date ? updates[key] : new Date(updates[key]);
-            break;
-          default:
-            // For other fields, update directly on metadata instance
-            collectionMetadata[key] = updates[key];
-        }
-      });
-      
-      // Update lastUpdated only if not explicitly provided
-      if (!updates.hasOwnProperty('lastModified') && !updates.hasOwnProperty('lastUpdated')) {
-        collectionMetadata.touch();
-      }
-      
-      // Generate new modification token if not provided
-      if (!updates.modificationToken) {
-        collectionMetadata.setModificationToken(this.generateModificationToken());
-      }
-      
-      // Store the updated metadata instance directly
-      this._data.collections[name] = collectionMetadata;
-      this._data.lastUpdated = new Date();
-      
-      // Track modification history
-      this._addToModificationHistory(name, 'UPDATE_METADATA', updates);
-      
-      return this._data.collections[name];
+      this._data.collections[name] = collection.toJSON();
+      this.save();
+      this._logger.info('Collection metadata updated.', { collection: name, updates });
+      return collection;
     });
   }
 
@@ -309,11 +266,10 @@ class MasterIndex {
         lockedAt: now,
         lockTimeout: timeout
       };
-      // Preserve existing modification token to avoid conflict
-      const existingToken = collection.getModificationToken();
       collection.setLockStatus(newLockStatus);
-      // Update lockStatus without altering modificationToken
-      this.updateCollectionMetadata(collectionName, { lockStatus: newLockStatus, modificationToken: existingToken });
+      this.updateCollectionMetadata(collectionName, { 
+        lockStatus: collection.getLockStatus(),
+      });
       
       this._logger.info('Collection lock acquired.', { collectionName, operationId });
       return true;
@@ -350,7 +306,9 @@ class MasterIndex {
 
       // Release lock
       collection.setLockStatus(null);
-      this.updateCollectionMetadata(collectionName, { lockStatus: null });
+      this.updateCollectionMetadata(collectionName, { 
+        lockStatus: null,
+      });
       
       this._logger.info('Collection lock released.', { collectionName, operationId });
       return true;
