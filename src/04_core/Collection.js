@@ -26,6 +26,7 @@
  * - File persistence and dirty tracking
  * - Field-based query support through QueryEngine
  */
+
 class Collection {
   /**
    * Creates a new Collection instance
@@ -57,6 +58,13 @@ class Collection {
     // Initialise collection metadata for both coordination and persistence
     this._metadata = CollectionMetadata.create(name, driveFileId);
     this._documentOperations = null;
+    // Inject coordinator for cross-instance operations
+    this._coordinator = new CollectionCoordinator(
+      this,
+      this._database._masterIndex,
+      this._database.config,
+      this._logger
+    );
   }
 
   /**
@@ -177,14 +185,6 @@ class Collection {
 
     this._metadata.updateLastModified();
     this._logger.debug("Collection metadata updated", { changes });
-
-    // Propagate metadata change to MasterIndex
-    if (this._database && this._database._masterIndex) {
-      this._database._masterIndex.updateCollectionMetadata(
-        this._name,
-        this._metadata.toJSON()
-      );
-    }
   }
 
   /**
@@ -214,20 +214,14 @@ class Collection {
    * @throws {ConflictError} For duplicate IDs
    */
   insertOne(doc) {
-    this._ensureLoaded();
-
-    const insertedDoc = this._documentOperations.insertDocument(doc);
-
-    // Update metadata and mark dirty
-    this._updateMetadata({
-      documentCount: Object.keys(this._documents).length,
+    return this._coordinator.coordinate("insertOne", () => {
+      this._ensureLoaded();
+      const insertedDoc = this._documentOperations.insertDocument(doc);
+      // Update metadata and mark dirty locally
+      this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+      this._markDirty();
+      return { insertedId: insertedDoc._id, acknowledged: true };
     });
-    this._markDirty();
-
-    return {
-      insertedId: insertedDoc._id,
-      acknowledged: true,
-    };
   }
 
   /**
@@ -286,31 +280,29 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid parameters
    */
   updateOne(filterOrId, update) {
-    this._ensureLoaded();
+    return this._coordinator.coordinate("updateOne", () => {
+      this._ensureLoaded();
+      // Use Validate for update validation - disallow empty objects
+      Validate.object(update, "update", false);
 
-    // Use Validate for update validation - disallow empty objects
-    Validate.object(update, "update", false);
+      // Determine if this is a filter or ID
+      const isIdFilter = typeof filterOrId === "string";
+      const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
 
-    // Determine if this is a filter or ID
-    const isIdFilter = typeof filterOrId === "string";
-    const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
+      if (!isIdFilter) {
+        this._validateFilter(filter, "updateOne");
+      }
 
-    if (!isIdFilter) {
-      this._validateFilter(filter, "updateOne");
-    }
+      // Validate update object structure
+      Validate.validateUpdateObject(update, "update");
 
-    // Validate update object structure - forbid mixing operators and document fields
-    Validate.validateUpdateObject(update, "update");
-
-    // Determine operation type and delegate to appropriate helper
-    const updateKeys = Object.keys(update);
-    const hasOperators = updateKeys.some((key) => key.startsWith("$"));
-
-    if (hasOperators) {
-      return this._updateOneWithOperators(filter, update);
-    } else {
-      return this._updateOneWithReplacement(filter, update);
-    }
+      // Delegate to appropriate helper
+      const updateKeys = Object.keys(update);
+      const hasOperators = updateKeys.some((key) => key.startsWith("$"));
+      return hasOperators
+        ? this._updateOneWithOperators(filter, update)
+        : this._updateOneWithReplacement(filter, update);
+    });
   }
 
   /**
@@ -552,64 +544,39 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid filters
    */
   deleteOne(filter = {}) {
-    this._ensureLoaded();
-    this._validateFilter(filter, "deleteOne");
-
-    const filterKeys = Object.keys(filter);
-
-    // Empty filter {} - no operation
-    if (filterKeys.length === 0) {
-      return {
-        deletedCount: 0,
-        acknowledged: true,
-      };
-    }
-
-    // ID filter {_id: "id"} - use direct delete for performance
-    if (filterKeys.length === 1 && filterKeys[0] === "_id") {
-      const result = this._documentOperations.deleteDocumentById(filter._id);
-
-      if (result.deletedCount > 0) {
-        this._updateMetadata({
-          documentCount: Object.keys(this._documents).length,
-        });
+    return this._coordinator.coordinate("deleteOne", () => {
+      this._ensureLoaded();
+      this._validateFilter(filter, "deleteOne");
+      const filterKeys = Object.keys(filter);
+      // Empty filter {} - no op
+      if (filterKeys.length === 0) {
+        return { deletedCount: 0, acknowledged: true };
+      }
+      // ID filter
+      if (filterKeys.length === 1 && filterKeys[0] === "_id") {
+        const result = this._documentOperations.deleteDocumentById(filter._id);
+        if (result.deletedCount > 0) {
+          this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+          this._markDirty();
+        }
+        return { deletedCount: result.deletedCount, acknowledged: true };
+      }
+      // Field-based
+      const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
+      if (matchingDocs.length === 0) {
+        return { deletedCount: 0, acknowledged: true };
+      }
+      let deletedCount = 0;
+      for (const doc of matchingDocs) {
+        const res = this._documentOperations.deleteDocument(doc._id);
+        deletedCount += res.deletedCount;
+      }
+      if (deletedCount > 0) {
+        this._updateMetadata({ documentCount: Object.keys(this._documents).length });
         this._markDirty();
       }
-
-      return {
-        deletedCount: result.deletedCount,
-        acknowledged: true,
-      };
-    }
-
-    // Field-based or complex queries - use QueryEngine
-    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
-
-    if (matchingDocs.length === 0) {
-      return {
-        deletedCount: 0,
-        acknowledged: true,
-      };
-    }
-
-    // Delete all matching documents
-    let deletedCount = 0;
-    for (const doc of matchingDocs) {
-      const result = this._documentOperations.deleteDocument(doc._id);
-      deletedCount += result.deletedCount;
-    }
-
-    if (deletedCount > 0) {
-      this._updateMetadata({
-        documentCount: Object.keys(this._documents).length,
-      });
-      this._markDirty();
-    }
-
-    return {
-      deletedCount: deletedCount,
-      acknowledged: true,
-    };
+      return { deletedCount, acknowledged: true };
+    });
   }
 
   /**
@@ -619,47 +586,24 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid filters
    */
   deleteMany(filter = {}) {
-    this._ensureLoaded();
-    this._validateFilter(filter, "deleteMany");
-
-    const filterKeys = Object.keys(filter);
-
-    // Empty filter {} - no operation
-    if (filterKeys.length === 0) {
-      return {
-        deletedCount: 0,
-        acknowledged: true,
-      };
-    }
-
-    // Field-based or complex queries - use QueryEngine
-    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
-
-    if (matchingDocs.length === 0) {
-      return {
-        deletedCount: 0,
-        acknowledged: true,
-      };
-    }
-
-    // Delete all matching documents
-    let deletedCount = 0;
-    for (const doc of matchingDocs) {
-      const result = this._documentOperations.deleteDocument(doc._id);
-      deletedCount += result.deletedCount;
-    }
-
-    if (deletedCount > 0) {
-      this._updateMetadata({
-        documentCount: Object.keys(this._documents).length,
-      });
-      this._markDirty();
-    }
-
-    return {
-      deletedCount: deletedCount,
-      acknowledged: true,
-    };
+    return this._coordinator.coordinate("deleteMany", () => {
+      this._ensureLoaded();
+      this._validateFilter(filter, "deleteMany");
+      const filterKeys = Object.keys(filter);
+      if (filterKeys.length === 0) return { deletedCount: 0, acknowledged: true };
+      const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
+      if (matchingDocs.length === 0) return { deletedCount: 0, acknowledged: true };
+      let deletedCount = 0;
+      for (const doc of matchingDocs) {
+        const res = this._documentOperations.deleteDocument(doc._id);
+        deletedCount += res.deletedCount;
+      }
+      if (deletedCount > 0) {
+        this._updateMetadata({ documentCount: Object.keys(this._documents).length });
+        this._markDirty();
+      }
+      return { deletedCount, acknowledged: true };
+    });
   }
 
   /**

@@ -7,6 +7,18 @@ var COLLECTION_COORDINATOR_TEST_DATA = {
 };
 
 function setupCollectionCoordinatorTestEnvironment() {
+  // Reset master index in ScriptProperties for a clean environment
+  try {
+    PropertiesService.getScriptProperties().deleteProperty('GASDB_MASTER_INDEX');
+  } catch (e) {}
+  // Bypass script-level locks to avoid lock timeouts in unit tests
+  if (typeof MasterIndex === 'function') {
+    MasterIndex.prototype._withScriptLock = function(operation) { return operation(); };
+  }
+  if (typeof DbLockService === 'function') {
+    DbLockService.prototype.acquireScriptLock = function() {};
+    DbLockService.prototype.releaseScriptLock = function() {};
+  }
   var logger = GASDBLogger.createComponentLogger('CollectionCoordinator-Setup');
   logger.info('Setting up CollectionCoordinator test environment');
   // Create a dedicated test folder in Drive

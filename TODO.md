@@ -31,7 +31,7 @@
 
 #### Additional refactoring tasks
 
-- [ ] Inject a `CollectionCoordinator` instance into the `Collection` constructor and store as `this._coordinator`.
+- [x] Inject a `CollectionCoordinator` instance into the `Collection` constructor and store as `this._coordinator`.
 - [ ] Refactor every public CRUD method in `Collection` (e.g. `insertOne`, `updateOne`, etc.) to delegate via `this._coordinator.coordinate(operationName, callback)`.
 - [ ] Remove all direct `MasterIndex` calls from `Collection._updateMetadata`, so that only the coordinator handles master-index updates.
 - [ ] Adjust `acquireOperationLock` to throw `LockAcquisitionFailureError` when unable to acquire a collection lock after retries.
