@@ -32,17 +32,17 @@
 1. **testCoordinateHappyPath** - `Cannot read properties of null (reading 'created')`
    - ISSUE: MasterIndex._addCollectionInternal expects CollectionMetadata object but receives null
    - CAUSE: Collection._metadata is null/undefined when passed to masterIndex.addCollection()
-   - FIX NEEDED: Ensure Collection constructor properly initialises _metadata
+   - HYPOTHESIS: The Collection constructor is not initialising _metadata. Fix by initialising this._metadata (likely via new CollectionMetadata(...)).
 
 2. **testValidateModificationTokenConflict** - `Should throw ModificationConflictError for stale token`
    - ISSUE: Test expects ModificationConflictError but no error is thrown
    - CAUSE: validateModificationToken() test case needs to call with mismatched tokens
-   - FIX NEEDED: Update test to provide different local vs remote tokens
+   - HYPOTHESIS: The validateModificationToken method does not throw when tokens differ. Fix by ensuring it throws ModificationConflictError on mismatch.
 
 3. **testUpdateMasterIndexMetadata** - `updateMasterIndexMetadata should not throw in green phase`
    - ISSUE: Method is throwing when it should succeed
    - CAUSE: Likely related to collection not being registered in master index
-   - FIX NEEDED: Ensure collection is pre-registered in test setup
+   - HYPOTHESIS: The implementation throws if the collection is not pre-registered. Fix by making updateMasterIndexMetadata add or update the collection entry without error.
 
 4. **testLockReleasedOnException** - `Should throw as lock release on exception is not implemented yet`
    - ISSUE: Test not updated for green phase - still expects red phase behaviour
