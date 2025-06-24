@@ -32,51 +32,32 @@
 #### Additional refactoring tasks
 
 - [x] Inject a `CollectionCoordinator` instance into the `Collection` constructor and store as `this._coordinator`.
-- [ ] Refactor every public CRUD method in `Collection` (e.g. `insertOne`, `updateOne`, etc.) to delegate via `this._coordinator.coordinate(operationName, callback)`.
+- [x] Refactor every public CRUD method in `Collection` (e.g. `insertOne`, `updateOne`, etc.) to delegate via `this._coordinator.coordinate(operationName, callback)`.
 - [ ] Remove all direct `MasterIndex` calls from `Collection._updateMetadata`, so that only the coordinator handles master-index updates.
-- [ ] Adjust `acquireOperationLock` to throw `LockAcquisitionFailureError` when unable to acquire a collection lock after retries.
+- [x] Adjust `acquireOperationLock` to throw `LockAcquisitionFailureError` when unable to acquire a collection lock after retries.
 - [ ] Align `coordinate` method signature and error types exactly with the Section 8.1 implementation plan.
 - [ ] Update tests `testLockReleasedOnException` and `testCoordinationTimeout` to expect green-phase coordination behaviour rather than legacy errors.
 
-### CURRENT STATUS (54.5% pass rate - 6/11 tests passing)
+### CURRENT STATUS (9.1% pass rate - 1/11 tests passing)
 
 - Constructor validation (1/1)
-- Acquire operation lock (2/2)
-- Token validation - no conflict case (1/2)
-- Conflict resolution (2/2)
+- Acquire operation lock (0/2)
+- Token validation - no conflict case (0/2)
+- Conflict resolution (0/2)
+- Coordination (0/1)
+- Update master index (0/1)
+- Lock release/timeout (0/2)
 
-**FAILING TESTS - DETAILED ANALYSIS:**
+**FAILING TESTS - SUMMARY:**
 
-1. **testCoordinateHappyPath** - *NOTE*: this bug will need for `Collection` to be fully refactored, ensuring that the metadata handling is properly delegated to pass. - Cannot read properties of null (reading 'created')`
-   - ISSUE: MasterIndex._addCollectionInternal expects CollectionMetadata object but receives null
-   - CAUSE: Collection._metadata is null/undefined when passed to masterIndex.addCollection()
-   - HYPOTHESIS: The Collection constructor is not initialising _metadata. Fix by initialising this._metadata (likely via new CollectionMetadata(...)).
+- All failing tests report: `Invalid argument: masterIndex - must be an object`.
+- Root cause: Test suites instantiate `Collection` with an empty object `{}` for the `database` parameter, so `this._database._masterIndex` is undefined. This causes the `CollectionCoordinator` constructor to throw during validation.
+- Action needed: Update test setup to provide a valid `MasterIndex` instance on the `database` mock, or refactor `Collection` to allow injection/mocking for tests.
 
-2. **testValidateModificationTokenConflict** - `Should throw ModificationConflictError for stale token`
-   - ISSUE: Test expects ModificationConflictError but no error is thrown
-   - CAUSE: validateModificationToken() test case needs to call with mismatched tokens
-   - HYPOTHESIS: The validateModificationToken method does not throw when tokens differ. Fix by ensuring it throws ModificationConflictError on mismatch.
-
-3. **testUpdateMasterIndexMetadata** - `updateMasterIndexMetadata should not throw in green phase`
-   - ISSUE: Method is throwing when it should succeed
-   - CAUSE: Likely related to collection not being registered in master index
-   - HYPOTHESIS: The implementation throws if the collection is not pre-registered. Fix by making updateMasterIndexMetadata add or update the collection entry without error.
-
-4. **testLockReleasedOnException** - `Should throw as lock release on exception is not implemented yet`
-   - ISSUE: Test not updated for green phase - still expects red phase behaviour
-   - CAUSE: Test assertion not updated when promoting to green phase
-   - FIX NEEDED: Update test to verify exception propagation rather than implementation error
-
-5. **testCoordinationTimeout** - `Should throw CoordinationTimeoutError on timeout`
-   - ISSUE: Test not updated for green phase - still expects timeout error
-   - CAUSE: Test uses 1ms timeout but current implementation doesn't timeout on fast callbacks
-   - FIX NEEDED: Either remove timeout check or create genuinely slow callback
-
-**COORDINATION ERRORS:**
-
-- Lock acquisition errors: "Invalid argument: collectionName - must be a non-empty string"
-- CAUSE: Collection.name property is empty/null when passed to acquireCollectionLock()
-- FIX NEEDED: Verify Collection constructor properly sets name property
+**Next steps:**
+- Remove direct MasterIndex calls from `Collection._updateMetadata`.
+- Update test mocks to provide a valid `masterIndex` for `CollectionCoordinator`.
+- Re-run tests after fixing test setup.
 
 ## Section 9: Integration and System Testing
 

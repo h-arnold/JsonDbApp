@@ -427,47 +427,41 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid parameters
    */
   updateMany(filter, update) {
-    this._ensureLoaded();
-    this._validateFilter(filter, "updateMany");
+    return this._coordinator.coordinate("updateMany", () => {
+      this._ensureLoaded();
+      this._validateFilter(filter, "updateMany");
 
-    // Use Validate for update validation - disallow empty objects
-    Validate.object(update, "update", false);
+      // Use Validate for update validation - disallow empty objects
+      Validate.object(update, "update", false);
 
-    // Validate update object structure - require operators only
-    Validate.validateUpdateObject(update, "update", { requireOperators: true });
+      // Validate update object structure - require operators only
+      Validate.validateUpdateObject(update, "update", { requireOperators: true });
 
-    // Find all matching documents first
-    const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
-    const matchedCount = matchingDocs.length;
+      // Find all matching documents first
+      const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
+      const matchedCount = matchingDocs.length;
 
-    if (matchedCount === 0) {
-      return {
-        matchedCount: 0,
-        modifiedCount: 0,
-        acknowledged: true,
-      };
-    }
+      if (matchedCount === 0) {
+        return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
+      }
 
-    // Apply updates to all matching documents
-    let modifiedCount = 0;
-    for (const doc of matchingDocs) {
-      const result = this._documentOperations.updateDocumentWithOperators(
-        doc._id,
-        update
-      );
-      modifiedCount += result.modifiedCount;
-    }
+      // Apply updates to all matching documents
+      let modifiedCount = 0;
+      for (const doc of matchingDocs) {
+        const result = this._documentOperations.updateDocumentWithOperators(
+          doc._id,
+          update
+        );
+        modifiedCount += result.modifiedCount;
+      }
 
-    if (modifiedCount > 0) {
-      this._updateMetadata();
-      this._markDirty();
-    }
+      if (modifiedCount > 0) {
+        this._updateMetadata();
+        this._markDirty();
+      }
 
-    return {
-      matchedCount: matchedCount,
-      modifiedCount: modifiedCount,
-      acknowledged: true,
-    };
+      return { matchedCount, modifiedCount, acknowledged: true };
+    });
   }
 
   /**
@@ -478,48 +472,42 @@ class Collection {
    * @throws {InvalidArgumentError} For invalid parameters
    */
   replaceOne(filterOrId, doc) {
-    this._ensureLoaded();
+    return this._coordinator.coordinate("replaceOne", () => {
+      this._ensureLoaded();
 
-    // Use Validate for doc validation - disallow empty objects
-    Validate.object(doc, "doc", false);
+      // Use Validate for doc validation - disallow empty objects
+      Validate.object(doc, "doc", false);
 
-    // Validate that replacement document contains no operators
-    Validate.validateUpdateObject(doc, "doc", { forbidOperators: true });
+      // Validate that replacement document contains no operators
+      Validate.validateUpdateObject(doc, "doc", { forbidOperators: true });
 
-    // Determine if this is a filter or ID
-    const isIdFilter = typeof filterOrId === "string";
-    const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
+      // Determine if this is a filter or ID
+      const isIdFilter = typeof filterOrId === "string";
+      const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
 
-    if (!isIdFilter) {
-      this._validateFilter(filter, "replaceOne");
-    }
-
-    const filterKeys = Object.keys(filter);
-
-    if (filterKeys.length === 1 && filterKeys[0] === "_id") {
-      // ID-based replacement
-      const result = this._documentOperations.replaceDocument(filter._id, doc);
-
-      if (result.modifiedCount > 0) {
-        this._updateMetadata();
-        this._markDirty();
+      if (!isIdFilter) {
+        this._validateFilter(filter, "replaceOne");
       }
 
-      return {
-        matchedCount: result.modifiedCount > 0 ? 1 : 0,
-        modifiedCount: result.modifiedCount,
-        acknowledged: true,
-      };
-    } else {
+      const filterKeys = Object.keys(filter);
+
+      if (filterKeys.length === 1 && filterKeys[0] === "_id") {
+        // ID-based replacement
+        const result = this._documentOperations.replaceDocument(filter._id, doc);
+
+        if (result.modifiedCount > 0) {
+          this._updateMetadata();
+          this._markDirty();
+        }
+
+        return { matchedCount: result.modifiedCount > 0 ? 1 : 0, modifiedCount: result.modifiedCount, acknowledged: true };
+      }
+
       // Field-based filter replacement
       const matchingDoc = this._documentOperations.findByQuery(filter);
 
       if (!matchingDoc) {
-        return {
-          matchedCount: 0,
-          modifiedCount: 0,
-          acknowledged: true,
-        };
+        return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
       }
 
       const result = this._documentOperations.replaceDocument(matchingDoc._id, doc);
@@ -529,12 +517,8 @@ class Collection {
         this._markDirty();
       }
 
-      return {
-        matchedCount: 1,
-        modifiedCount: result.modifiedCount,
-        acknowledged: true,
-      };
-    }
+      return { matchedCount: 1, modifiedCount: result.modifiedCount, acknowledged: true };
+    });
   }
 
   /**

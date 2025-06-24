@@ -149,6 +149,8 @@ class CollectionCoordinator {
     }
     if (!acquired) {
       this._logger.warn('Could not acquire lock after retries', { collection: name, operationId });
+      // Throw specific error when lock acquisition fails
+      throw new ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE(name);
     }
   }
 
