@@ -47,7 +47,7 @@
 
 **FAILING TESTS - DETAILED ANALYSIS:**
 
-1. **testCoordinateHappyPath** - `Cannot read properties of null (reading 'created')`
+1. **testCoordinateHappyPath** - *NOTE*: this bug will need for `Collection` to be fully refactored, ensuring that the metadata handling is properly delegated to pass. - Cannot read properties of null (reading 'created')`
    - ISSUE: MasterIndex._addCollectionInternal expects CollectionMetadata object but receives null
    - CAUSE: Collection._metadata is null/undefined when passed to masterIndex.addCollection()
    - HYPOTHESIS: The Collection constructor is not initialising _metadata. Fix by initialising this._metadata (likely via new CollectionMetadata(...)).
