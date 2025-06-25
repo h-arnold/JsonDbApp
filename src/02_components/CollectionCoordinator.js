@@ -114,7 +114,8 @@ class CollectionCoordinator {
   /**
    * Acquire operation lock with retry/backoff
    * @param {string} operationId - Unique operation identifier
-   * @throws {ErrorHandler.ErrorTypes.LOCK_TIMEOUT} When lock cannot be acquired
+   * @throws {ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE} When lock cannot be acquired
+   * @throws {Error} For unexpected errors during lock acquisition.
    */
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
@@ -132,8 +133,10 @@ class CollectionCoordinator {
           Utilities.sleep(retryDelayMs * Math.pow(2, attempt - 1));
         }
       } catch (e) {
-        this._logger.error('Lock acquisition error', { collection: name, operationId, error: e.message });
-        break;
+        this._logger.error('Unexpected error during lock acquisition attempt', { collection: name, operationId, error: e.message });
+        // Re-throw unexpected errors immediately, as they are not contention issues
+        // and should not be handled by the standard retry/fail mechanism.
+        throw e;
       }
     }
     if (!acquired) {

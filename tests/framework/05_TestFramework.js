@@ -1,11 +1,4 @@
 /**
- * TestFramework.js - Main framework coordination and environment management
- * 
- * Main consolidated testing framework that coordinates test execution,
- * manages environment validation, and provides resource tracking.
- */
-
-/**
  * TestFramework - Main consolidated testing framework
  * 
  * Provides unified API for test execution, environment validation,

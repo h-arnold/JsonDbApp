@@ -27,12 +27,13 @@ function createCollectionCoordinatorAcquireOperationLockTestSuite() {
     
     const coordinator = createTestCollectionCoordinator('aggressive');
     
-    // Act & Assert - With aggressive timeouts, should handle retries
-    TestFramework.assertNoThrow(
+    // Act & Assert - With aggressive timeouts, should throw after failing retries
+    TestFramework.assertThrows(
       function() { 
         coordinator.acquireOperationLock('test-op-id-2'); 
       },
-      'acquireOperationLock should handle retries gracefully'
+      ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE,
+      'acquireOperationLock should throw LOCK_ACQUISITION_FAILURE after retries'
     );
   });
 
