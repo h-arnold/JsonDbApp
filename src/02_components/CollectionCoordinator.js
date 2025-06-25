@@ -21,14 +21,18 @@ class CollectionCoordinator {
     this._masterIndex = masterIndex;
     this._logger = GASDBLogger.createComponentLogger('CollectionCoordinator');
 
-    // Support config as DatabaseConfig or plain object
-    const getCfg = (key, def) => (config[key] !== undefined ? config[key] : (typeof config.clone === 'function' && config[key] !== undefined ? config[key] : def));
+    // Improved config extraction logic for both plain objects and DatabaseConfig
+    function getCfg(key, def) {
+      if (config && Object.prototype.hasOwnProperty.call(config, key)) return config[key];
+      if (config && key in config && config[key] !== undefined) return config[key];
+      return def;
+    }
     this._config = {
-      coordinationEnabled: config.coordinationEnabled !== false,
-      lockTimeoutMs: getCfg('lockTimeoutMs', 30000),
+      coordinationEnabled: getCfg('coordinationEnabled', true),
+      lockTimeout: getCfg('lockTimeout', 30000),
       retryAttempts: getCfg('retryAttempts', 3),
       retryDelayMs: getCfg('retryDelayMs', 1000),
-      conflictResolutionStrategy: config.conflictResolutionStrategy || 'reload'
+      conflictResolutionStrategy: getCfg('conflictResolutionStrategy', 'reload')
     };
   }
 
@@ -49,11 +53,9 @@ class CollectionCoordinator {
     let lockAcquired = false;
     // Start timer for coordination timeout
     const startTime = Date.now();
-
     if (!this._config.coordinationEnabled) {
       return callback();
     }
-
     this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
     // Acquire lock with timeout mapping
     try {
@@ -62,8 +64,8 @@ class CollectionCoordinator {
         lockAcquired = true;
       } catch (e) {
         if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
-          this._logger.error('Lock acquisition timed out', { collection: name, operationId: opId, timeout: this._config.lockTimeoutMs });
-          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeoutMs);
+          this._logger.error('Lock acquisition timed out', { collection: name, operationId: opId, timeout: this._config.lockTimeout });
+          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeout);
         }
         throw e;
       }
@@ -78,9 +80,9 @@ class CollectionCoordinator {
       result = callback();
       // Enforce coordination timeout on operation execution
       const elapsed = Date.now() - startTime;
-      if (elapsed > this._config.lockTimeoutMs) {
-        this._logger.error('Operation timed out', { collection: name, opId, timeout: this._config.lockTimeoutMs });
-        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeoutMs);
+      if (elapsed > this._config.lockTimeout) {
+        this._logger.error('Operation timed out', { collection: name, opId, timeout: this._config.lockTimeout });
+        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeout);
       }
 
       // Persist metadata updates
@@ -124,11 +126,11 @@ class CollectionCoordinator {
    */
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
-    const { retryAttempts, retryDelayMs, lockTimeoutMs } = this._config;
+    const { retryAttempts, retryDelayMs, lockTimeout } = this._config;
     let acquired = false;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
-        const got = this._masterIndex.acquireCollectionLock(name, operationId, lockTimeoutMs);
+        const got = this._masterIndex.acquireCollectionLock(name, operationId, lockTimeout);
         if (got) {
           acquired = true;
           break;

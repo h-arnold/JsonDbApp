@@ -14,7 +14,7 @@ class DatabaseConfig {
    * @param {Object} config - Configuration options
    * @param {string} [config.rootFolderId] - Root folder ID for database files
    * @param {boolean} [config.autoCreateCollections=true] - Auto-create collections when accessed
-   * @param {number} [config.lockTimeoutMs=30000] - Lock timeout in milliseconds (coordination)
+   * @param {number} [config.lockTimeout=30000] - Lock timeout in milliseconds (coordination)
    * @param {number} [config.retryAttempts=3] - Number of lock acquisition attempts
    * @param {number} [config.retryDelayMs=1000] - Delay between lock retries (ms)
    * @param {boolean} [config.cacheEnabled=true] - Enable caching
@@ -26,14 +26,12 @@ class DatabaseConfig {
     // Set default values
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
     this.autoCreateCollections = config.autoCreateCollections !== undefined ? config.autoCreateCollections : true;
-    this.lockTimeoutMs = config.lockTimeoutMs !== undefined ? config.lockTimeoutMs : 30000;
+    this.lockTimeout = config.lockTimeout !== undefined ? config.lockTimeout : 30000;
     this.retryAttempts = config.retryAttempts !== undefined ? config.retryAttempts : 3;
     this.retryDelayMs = config.retryDelayMs !== undefined ? config.retryDelayMs : 1000;
     this.cacheEnabled = config.cacheEnabled !== undefined ? config.cacheEnabled : true;
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
-    // Deprecated: lockTimeout (use lockTimeoutMs)
-    this.lockTimeout = this.lockTimeoutMs;
     // Validate configuration
     this._validateConfig();
   }
@@ -60,13 +58,13 @@ class DatabaseConfig {
    * @private
    */
   _validateConfig() {
-    // Validate lock timeout (non-negative)
-    if (typeof this.lockTimeoutMs !== 'number' || this.lockTimeoutMs < 0) {
-      throw new Error('Lock timeout (lockTimeoutMs) must be a non-negative number');
+    // Validate lockTimeout (non-negative)
+    if (typeof this.lockTimeout !== 'number' || this.lockTimeout < 0) {
+      throw new Error('Lock timeout must be a non-negative number');
     }
     // Enforce minimum lock timeout of 500ms
-    if (this.lockTimeoutMs < 500) {
-      throw new Error('Lock timeout (lockTimeoutMs) must be at least 500ms');
+    if (this.lockTimeout < 500) {
+      throw new Error('Lock timeout must be at least 500ms');
     }
     // Validate retryAttempts
     if (typeof this.retryAttempts !== 'number' || this.retryAttempts < 1) {
@@ -112,7 +110,7 @@ class DatabaseConfig {
     return new DatabaseConfig({
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
-      lockTimeoutMs: this.lockTimeoutMs,
+      lockTimeout: this.lockTimeout,
       retryAttempts: this.retryAttempts,
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
@@ -130,7 +128,7 @@ class DatabaseConfig {
       __type: this.constructor.name,
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
-      lockTimeoutMs: this.lockTimeoutMs,
+      lockTimeout: this.lockTimeout,
       retryAttempts: this.retryAttempts,
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
@@ -152,7 +150,7 @@ class DatabaseConfig {
     const config = {
       rootFolderId: obj.rootFolderId,
       autoCreateCollections: obj.autoCreateCollections,
-      lockTimeoutMs: obj.lockTimeoutMs,
+      lockTimeout: obj.lockTimeout,
       retryAttempts: obj.retryAttempts,
       retryDelayMs: obj.retryDelayMs,
       cacheEnabled: obj.cacheEnabled,

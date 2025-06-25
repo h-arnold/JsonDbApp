@@ -58,57 +58,59 @@ function createDatabaseConfigCreationTestSuite() {
     // Act - This should fail initially (TDD Red phase)
     try {
       const config = new DatabaseConfig();
-      
       // Assert - These assertions will fail until DatabaseConfig is implemented
       TestFramework.assertNotNull(config, 'DatabaseConfig should be created');
       TestFramework.assertDefined(config.rootFolderId, 'Root folder ID should be defined');
       TestFramework.assertTrue(config.autoCreateCollections, 'Auto create collections should be true by default');
-      TestFramework.assertEquals(config.lockTimeout, 30000, 'Default lock timeout should be 30 seconds');
+      TestFramework.assertEquals(config.lockTimeout, 30000, 'Default lockTimeout should be 30000ms');
+      TestFramework.assertEquals(config.retryAttempts, 3, 'Default retryAttempts should be 3');
+      TestFramework.assertEquals(config.retryDelayMs, 1000, 'Default retryDelayMs should be 1000ms');
       TestFramework.assertTrue(config.cacheEnabled, 'Cache should be enabled by default');
       TestFramework.assertEquals(config.logLevel, 'INFO', 'Default log level should be INFO');
     } catch (error) {
       throw new Error('DatabaseConfig not implemented: ' + error.message);
     }
   });
-  
   suite.addTest('should create DatabaseConfig with custom values', function() {
     // Arrange
     const customConfig = {
       rootFolderId: DATABASECONFIG_TEST_DATA.testFolderId,
       autoCreateCollections: false,
       lockTimeout: 60000,
+      retryAttempts: 5,
+      retryDelayMs: 2000,
       cacheEnabled: false,
       logLevel: 'DEBUG'
     };
-    
     // Act - This should fail initially (TDD Red phase)
     try {
       const config = new DatabaseConfig(customConfig);
-      
       // Assert
       TestFramework.assertEquals(config.rootFolderId, customConfig.rootFolderId, 'Root folder ID should match');
       TestFramework.assertFalse(config.autoCreateCollections, 'Auto create should be disabled');
-      TestFramework.assertEquals(config.lockTimeout, 60000, 'Lock timeout should be custom value');
+      TestFramework.assertEquals(config.lockTimeout, 60000, 'Custom lockTimeout should be used');
+      TestFramework.assertEquals(config.retryAttempts, 5, 'Custom retryAttempts should be used');
+      TestFramework.assertEquals(config.retryDelayMs, 2000, 'Custom retryDelayMs should be used');
       TestFramework.assertFalse(config.cacheEnabled, 'Cache should be disabled');
       TestFramework.assertEquals(config.logLevel, 'DEBUG', 'Log level should be DEBUG');
     } catch (error) {
       throw new Error('DatabaseConfig constructor not implemented: ' + error.message);
     }
   });
-  
   suite.addTest('should merge custom config with defaults', function() {
     // Arrange
     const partialConfig = {
       lockTimeout: 45000,
+      retryAttempts: 7,
       logLevel: 'WARN'
     };
-    
     // Act
     try {
       const config = new DatabaseConfig(partialConfig);
-      
       // Assert - partial config should override defaults, others should remain default
-      TestFramework.assertEquals(config.lockTimeout, 45000, 'Custom lock timeout should be used');
+      TestFramework.assertEquals(config.lockTimeout, 45000, 'Custom lockTimeout should be used');
+      TestFramework.assertEquals(config.retryAttempts, 7, 'Custom retryAttempts should be used');
+      TestFramework.assertEquals(config.retryDelayMs, 1000, 'Default retryDelayMs should be preserved');
       TestFramework.assertEquals(config.logLevel, 'WARN', 'Custom log level should be used');
       TestFramework.assertTrue(config.autoCreateCollections, 'Default autoCreateCollections should be preserved');
       TestFramework.assertTrue(config.cacheEnabled, 'Default cacheEnabled should be preserved');
@@ -147,7 +149,29 @@ function createDatabaseConfigValidationTestSuite() {
     const cfg = new DatabaseConfig({ lockTimeout: 500 });
     TestFramework.assertEquals(cfg.lockTimeout, 500, 'lockTimeout should be accepted at minimum value');
   });
-  
+  suite.addTest('should validate retryAttempts and retryDelayMs parameters', function() {
+    // retryAttempts: non-number
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ retryAttempts: 'invalid' });
+    }, Error, 'Should throw error for non-number retryAttempts');
+    // retryAttempts: less than 1
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ retryAttempts: 0 });
+    }, Error, 'Should throw error for retryAttempts < 1');
+    // retryDelayMs: non-number
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ retryDelayMs: 'invalid' });
+    }, Error, 'Should throw error for non-number retryDelayMs');
+    // retryDelayMs: negative
+    TestFramework.assertThrows(() => {
+      new DatabaseConfig({ retryDelayMs: -1 });
+    }, Error, 'Should throw error for negative retryDelayMs');
+    // Valid minimums
+    const cfg = new DatabaseConfig({ lockTimeout: 500, retryAttempts: 1, retryDelayMs: 0 });
+    TestFramework.assertEquals(cfg.lockTimeout, 500, 'lockTimeout should be accepted at minimum value');
+    TestFramework.assertEquals(cfg.retryAttempts, 1, 'retryAttempts should be accepted at minimum value');
+    TestFramework.assertEquals(cfg.retryDelayMs, 0, 'retryDelayMs should be accepted at minimum value');
+  });
   suite.addTest('should validate log level parameter', function() {
     // Act & Assert - Test invalid log level values
     try {
@@ -175,7 +199,6 @@ function createDatabaseConfigValidationTestSuite() {
       throw new Error('DatabaseConfig log level validation not implemented: ' + error.message);
     }
   });
-  
   suite.addTest('should validate boolean parameters', function() {
     // Act & Assert - Test invalid boolean values
     try {
@@ -198,7 +221,6 @@ function createDatabaseConfigValidationTestSuite() {
       throw new Error('DatabaseConfig boolean validation not implemented: ' + error.message);
     }
   });
-  
   suite.addTest('should validate rootFolderId parameter', function() {
     // Act & Assert - Test invalid rootFolderId values
     try {
