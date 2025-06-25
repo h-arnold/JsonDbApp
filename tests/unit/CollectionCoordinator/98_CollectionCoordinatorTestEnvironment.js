@@ -84,11 +84,7 @@ const COLLECTION_COORDINATOR_TEST_DATA = {
   // Coordination test configurations
   coordinationConfigs: {
     default: {
-      coordinationEnabled: true,
-      lockTimeout: 2000,
-      retryAttempts: 3,
-      retryDelayMs: 100,
-      conflictResolutionStrategy: 'reload'
+      // Empty config to test constructor defaults
     },
     disabled: {
       coordinationEnabled: false
@@ -332,11 +328,7 @@ function createTestCollectionCoordinator(configName = 'default', overrideConfig 
   // Fetch base profile and merge with any overrides
   const baseConfig = COLLECTION_COORDINATOR_TEST_DATA.coordinationConfigs[configName] || {};
   const mergedConfig = Object.assign({}, baseConfig, overrideConfig);
-  // Map lockTimeout (test harness) to lockTimeout (constructor API)
-  if (mergedConfig.lockTimeout !== undefined) {
-    mergedConfig.lockTimeout = mergedConfig.lockTimeout;
-    delete mergedConfig.lockTimeout;
-  }
+  
   return new CollectionCoordinator(
     COLLECTION_COORDINATOR_TEST_DATA.testCollection,
     COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex,
