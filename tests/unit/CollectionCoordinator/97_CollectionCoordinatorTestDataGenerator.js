@@ -140,21 +140,14 @@ function generateCollectionCoordinatorTestData() {
     // Create test coordination configurations
     const coordinationConfigs = {
       default: {
-        coordinationEnabled: true,
         lockTimeout: 2000,
         retryAttempts: 3,
-        retryDelayMs: 100,
-        conflictResolutionStrategy: 'reload'
-      },
-      disabled: {
-        coordinationEnabled: false
+        retryDelayMs: 100
       },
       aggressive: {
-        coordinationEnabled: true,
         lockTimeout: 500,
         retryAttempts: 5,
-        retryDelayMs: 50,
-        conflictResolutionStrategy: 'reload'
+        retryDelayMs: 50
       }
     };
     
@@ -201,8 +194,7 @@ function generateCollectionCoordinatorTestData() {
           loaded: collection._loaded
         },
         coordinator: {
-          created: !!coordinator,
-          coordinationEnabled: coordinator._config.coordinationEnabled
+          created: !!coordinator
         }
       },
       serialization: {

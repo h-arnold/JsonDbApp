@@ -20,8 +20,7 @@
       "loaded": true
     },
     "coordinator": {
-      "created": true,
-      "coordinationEnabled": true
+      "created": true
     }
   },
   "serialization": {

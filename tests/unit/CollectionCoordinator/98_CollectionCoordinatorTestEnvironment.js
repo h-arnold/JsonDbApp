@@ -86,15 +86,10 @@ const COLLECTION_COORDINATOR_TEST_DATA = {
     default: {
       // Empty config to test constructor defaults
     },
-    disabled: {
-      coordinationEnabled: false
-    },
     aggressive: {
-      coordinationEnabled: true,
       lockTimeout: 500,
       retryAttempts: 5,
-      retryDelayMs: 50,
-      conflictResolutionStrategy: 'reload'
+      retryDelayMs: 50
     }
   }
 };

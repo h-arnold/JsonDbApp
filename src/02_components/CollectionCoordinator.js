@@ -21,19 +21,13 @@ class CollectionCoordinator {
     this._masterIndex = masterIndex;
     this._logger = GASDBLogger.createComponentLogger('CollectionCoordinator');
 
-    // Improved config extraction logic for both plain objects and DatabaseConfig
-    function getCfg(key, def) {
-      if (config && Object.prototype.hasOwnProperty.call(config, key)) return config[key];
-      if (config && key in config && config[key] !== undefined) return config[key];
-      return def;
-    }
-    this._config = {
-      coordinationEnabled: getCfg('coordinationEnabled', true),
-      lockTimeout: getCfg('lockTimeout', 30000),
-      retryAttempts: getCfg('retryAttempts', 3),
-      retryDelayMs: getCfg('retryDelayMs', 1000),
-      conflictResolutionStrategy: getCfg('conflictResolutionStrategy', 'reload')
+    // Use DatabaseConfig defaults if not supplied in config
+    const DEFAULTS = {
+      lockTimeout: 30000,
+      retryAttempts: 3,
+      retryDelayMs: 1000
     };
+    this._config = Object.assign({}, DEFAULTS, config);
   }
 
   /**
@@ -53,9 +47,7 @@ class CollectionCoordinator {
     let lockAcquired = false;
     // Start timer for coordination timeout
     const startTime = Date.now();
-    if (!this._config.coordinationEnabled) {
-      return callback();
-    }
+    // coordinationEnabled config removed: always coordinate
     this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
     // Acquire lock with timeout mapping
     try {
@@ -178,19 +170,12 @@ class CollectionCoordinator {
   }
 
   /**
-   * Resolve a metadata conflict based on configured strategy
-   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When strategy unsupported or resolution fails
+   * Resolve a metadata conflict. Only reload is supported, so just reload.
+   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When resolution fails
    */
   resolveConflict() {
-    const strategy = this._config.conflictResolutionStrategy;
-    if (strategy === 'reload') {
-      // Reload data and metadata from storage
-      this._collection._ensureLoaded();
-    } else {
-      throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR(
-        `Unsupported conflict resolution strategy: ${strategy}`
-      );
-    }
+    // Only reload is supported, so always reload
+    this._collection._ensureLoaded();
   }
 
   /**

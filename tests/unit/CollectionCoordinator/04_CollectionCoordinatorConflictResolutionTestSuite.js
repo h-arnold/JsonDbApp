@@ -22,32 +22,7 @@ function createCollectionCoordinatorConflictResolutionTestSuite() {
     );
   });
 
-  suite.addTest('testResolveConflictLastWriteWins', function() {
-    // Arrange - Use test environment
-    validateCollectionCoordinatorTestEnvironment();
-    resetCollectionCoordinatorCollectionState();
-    
-    // Create coordinator with unsupported strategy to test error handling
-    const invalidConfig = {
-      coordinationEnabled: true,
-      conflictResolutionStrategy: 'last-write-wins' // Unsupported strategy
-    };
-    
-    const coordinator = new CollectionCoordinator(
-      COLLECTION_COORDINATOR_TEST_DATA.testCollection,
-      COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex,
-      invalidConfig
-    );
-    
-    // Act & Assert - Should throw for unsupported strategy
-    TestFramework.assertThrows(
-      function() {
-        coordinator.resolveConflict();
-      },
-      Error,
-      'Should throw for unsupported conflict resolution strategy'
-    );
-  });
+  // Removed test for unsupported conflictResolutionStrategy as only reload is supported
 
   return suite;
 }
