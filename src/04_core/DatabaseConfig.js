@@ -14,7 +14,9 @@ class DatabaseConfig {
    * @param {Object} config - Configuration options
    * @param {string} [config.rootFolderId] - Root folder ID for database files
    * @param {boolean} [config.autoCreateCollections=true] - Auto-create collections when accessed
-   * @param {number} [config.lockTimeout=30000] - Lock timeout in milliseconds
+   * @param {number} [config.lockTimeoutMs=30000] - Lock timeout in milliseconds (coordination)
+   * @param {number} [config.retryAttempts=3] - Number of lock acquisition attempts
+   * @param {number} [config.retryDelayMs=1000] - Delay between lock retries (ms)
    * @param {boolean} [config.cacheEnabled=true] - Enable caching
    * @param {string} [config.logLevel='INFO'] - Log level (DEBUG, INFO, WARN, ERROR)
    * @param {string} [config.masterIndexKey] - Master index key for ScriptProperties
@@ -24,11 +26,14 @@ class DatabaseConfig {
     // Set default values
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
     this.autoCreateCollections = config.autoCreateCollections !== undefined ? config.autoCreateCollections : true;
-    this.lockTimeout = config.lockTimeout !== undefined ? config.lockTimeout : 30000;
+    this.lockTimeoutMs = config.lockTimeoutMs !== undefined ? config.lockTimeoutMs : 30000;
+    this.retryAttempts = config.retryAttempts !== undefined ? config.retryAttempts : 3;
+    this.retryDelayMs = config.retryDelayMs !== undefined ? config.retryDelayMs : 1000;
     this.cacheEnabled = config.cacheEnabled !== undefined ? config.cacheEnabled : true;
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
-    
+    // Deprecated: lockTimeout (use lockTimeoutMs)
+    this.lockTimeout = this.lockTimeoutMs;
     // Validate configuration
     this._validateConfig();
   }
@@ -56,12 +61,20 @@ class DatabaseConfig {
    */
   _validateConfig() {
     // Validate lock timeout (non-negative)
-    if (typeof this.lockTimeout !== 'number' || this.lockTimeout < 0) {
-      throw new Error('Lock timeout must be a non-negative number');
+    if (typeof this.lockTimeoutMs !== 'number' || this.lockTimeoutMs < 0) {
+      throw new Error('Lock timeout (lockTimeoutMs) must be a non-negative number');
     }
     // Enforce minimum lock timeout of 500ms
-    if (this.lockTimeout < 500) {
-      throw new Error('Lock timeout must be at least 500ms');
+    if (this.lockTimeoutMs < 500) {
+      throw new Error('Lock timeout (lockTimeoutMs) must be at least 500ms');
+    }
+    // Validate retryAttempts
+    if (typeof this.retryAttempts !== 'number' || this.retryAttempts < 1) {
+      throw new Error('retryAttempts must be a positive integer');
+    }
+    // Validate retryDelayMs
+    if (typeof this.retryDelayMs !== 'number' || this.retryDelayMs < 0) {
+      throw new Error('retryDelayMs must be a non-negative number');
     }
     
     // Validate log level
@@ -99,7 +112,9 @@ class DatabaseConfig {
     return new DatabaseConfig({
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
-      lockTimeout: this.lockTimeout,
+      lockTimeoutMs: this.lockTimeoutMs,
+      retryAttempts: this.retryAttempts,
+      retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
       masterIndexKey: this.masterIndexKey
@@ -115,7 +130,9 @@ class DatabaseConfig {
       __type: this.constructor.name,
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
-      lockTimeout: this.lockTimeout,
+      lockTimeoutMs: this.lockTimeoutMs,
+      retryAttempts: this.retryAttempts,
+      retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
       masterIndexKey: this.masterIndexKey
@@ -135,7 +152,9 @@ class DatabaseConfig {
     const config = {
       rootFolderId: obj.rootFolderId,
       autoCreateCollections: obj.autoCreateCollections,
-      lockTimeout: obj.lockTimeout,
+      lockTimeoutMs: obj.lockTimeoutMs,
+      retryAttempts: obj.retryAttempts,
+      retryDelayMs: obj.retryDelayMs,
       cacheEnabled: obj.cacheEnabled,
       logLevel: obj.logLevel,
       masterIndexKey: obj.masterIndexKey

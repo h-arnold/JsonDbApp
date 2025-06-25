@@ -9,7 +9,7 @@ class CollectionCoordinator {
    * Create a new CollectionCoordinator
    * @param {Collection} collection - Collection instance to coordinate
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
-   * @param {Object} config - Coordination settings
+   * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
    * @param {GASDBLogger} logger - Logger for operation tracing
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
@@ -21,12 +21,13 @@ class CollectionCoordinator {
     this._masterIndex = masterIndex;
     this._logger = GASDBLogger.createComponentLogger('CollectionCoordinator');
 
-    // Default coordination settings
+    // Support config as DatabaseConfig or plain object
+    const getCfg = (key, def) => (config[key] !== undefined ? config[key] : (typeof config.clone === 'function' && config[key] !== undefined ? config[key] : def));
     this._config = {
       coordinationEnabled: config.coordinationEnabled !== false,
-      lockTimeoutMs: config.lockTimeoutMs || 5000,
-      retryAttempts: config.retryAttempts || 3,
-      retryDelayMs: config.retryDelayMs || 100,
+      lockTimeoutMs: getCfg('lockTimeoutMs', 30000),
+      retryAttempts: getCfg('retryAttempts', 3),
+      retryDelayMs: getCfg('retryDelayMs', 1000),
       conflictResolutionStrategy: config.conflictResolutionStrategy || 'reload'
     };
   }
