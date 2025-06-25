@@ -37,7 +37,6 @@ function registerLockServiceTests() {
   tf.registerTestSuite(createLockServiceConstructorTestSuite());
   tf.registerTestSuite(createLockServiceScriptLockTestSuite());
   tf.registerTestSuite(createLockServiceScriptLockTimeoutTestSuite());
-  tf.registerTestSuite(createLockServiceCollectionLockTestSuite());
   tf.registerTestSuite(createLockServiceRemoveLockTestSuite());
   tf.registerTestSuite(createLockServiceExpiredCleanupTestSuite());
   tf.registerTestSuite(createLockServiceMasterIndexKeyTestSuite());

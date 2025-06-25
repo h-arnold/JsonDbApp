@@ -222,4 +222,4 @@ GASDBLogger.LOG_LEVELS = {
   DEBUG: 3
 };
 
-GASDBLogger.currentLevel = GASDBLogger.LOG_LEVELS.INFO;
+GASDBLogger.currentLevel = GASDBLogger.LOG_LEVELS.DEBUG;

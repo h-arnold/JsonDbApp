@@ -1,50 +1,49 @@
-# GAS DB Code Generation Instructions
+# GAS DB Code Generation Guidelines (LLM-Optimised)
 
 ## Overview
-
-A synchronous document database for Google Apps Script, using MongoDB-like syntax. Supports CRUD on named collections, each stored as a JSON file in Google Drive. Access is via authenticated Apps Script libraries. Data consistency is managed with a ScriptProperties-based master index.
+- Synchronous document DB for Google Apps Script (GAS), MongoDB-like syntax.
+- CRUD on named collections (JSON files in Google Drive).
+- Access via authenticated Apps Script libraries.
+- Consistency via ScriptProperties-based master index.
 
 ## Core Principles
-
-**TDD**: Red-Green-Refactor cycle. Write failing tests first, implement minimal passing code, then refactor.  
-**Component Separation**: Single responsibility classes with dependency injection via constructor.
-**SOLID Principles**: Follow SOLID principles for maintainable code.
-**Search for existing functionality**: Before implementing new features, check if they already exist in the codebase.
-**GAS Limitations**: Remember that Google App Script uses the V8 Engine, but this does not provide full javascript support.
-**Communication style**: Always concise and analytical. Always challenge incorrect assumptions or requirements. No fluff.
-**British English**: All naming, documentation, comments use British English unless referencing American English APIs.
+- **TDD**: Red-Green-Refactor. Write failing tests first, minimal passing code, then refactor.
+- **Component Separation**: Single responsibility, dependency injection via constructor.
+- **SOLID**: Follow SOLID principles.
+- **Reuse**: Check for existing functionality before new code.
+- **GAS Limitations**: V8 engine, not full JS support.
+- **Style**: Concise, analytical, British English (except for American APIs). Challenge incorrect assumptions.
 
 ## File Structure
 
-```
-docs/developers/: docs for all implemented features
-src/core/: Collection.js, Database.js, DatabaseConfig.js, MasterIndex.js
-src/components/: CollectionMetadata.js, DocumentOperations.js, FileOperations.js
-src/services/: FileService.js
-src/utils/: ErrorHandler.js, GASDBLogger.js, IdGenerator.js
-tests/unit/: All component test files
-tests/framework/: AssertionUtilities.js, TestFramework.js, TestResult.js, TestRunner.js, TestSuite.js
-```
+- `docs/`: General and planning docs
+- `docs/developers/`: Feature and class docs
+- `src/01_utils/`: ErrorHandler.js, GASDBLogger.js, IdGenerator.js, ObjectUtils.js, Validation.js
+- `src/02_components/`: CollectionMetadata.js, DocumentOperations.js, FileOperations.js, QueryEngine.js, UpdateEngine.js
+- `src/03_services/`: DbLockService.js, FileService.js
+- `src/04_core/`: Collection.js, Database.js, DatabaseConfig.js, MasterIndex.js
+- `tests/data/`: Mock data for tests
+- `tests/framework/`: AssertionUtilities.js, TestFramework.js, TestResult.js, TestRunner.js, TestSuite.js
+- `tests/integration/`: Integration test suites (e.g. Collection, MasterIndexCollectionMetadataIntegrationTest.js)
+- `tests/unit/`: Unit test suites (e.g. Collection, DbLockService, DocumentOperations, UtilityTests, etc.)
+- `test-runner.sh`: Test runner script
+- `clasp-watch.sh`: Clasp watch script
+- `README.md`, `LICENSE`, `package.json`, `appsscript.json`: Project config and metadata
 
 ## Naming Conventions
+- **Classes**: PascalCase (e.g. `DocumentOperations`)
+- **Methods**: camelCase (`insertDocument`)
+- **Private methods**: `_underscore` prefix
+- **Variables**: camelCase
+- **Constants**: UPPER_SNAKE_CASE
+- **Private properties**: `this._underscore`
+- **Files**: Match class name
+- **Tests**: `ClassNameTest.js`
+- **Test functions**: `testClassNameScenario`
+- **Errors**: End with `Error`
+- **Config**: `config` or `componentConfig`
 
-**Always descriptive, avoid abbreviations, use British English and follow these patterns**:
-
-**Classes**: PascalCase (`DocumentOperations`)  
-**Methods**: camelCase (`insertDocument`)  
-**Private methods**: `_underscore` prefix (`_validateDocument`)  
-**Variables**: camelCase (`collectionName`)  
-**Constants**: `UPPER_SNAKE_CASE` (`LOCK_TIMEOUT`)  
-**Private properties**: `this._underscore` (`this._documents`)  
-**Files**: Match class name (`DocumentOperations.js`)  
-**Tests**: `ClassNameTest.js` (`DocumentOperationsTest.js`)  
-**Test functions**: `testClassNameScenario` (`testCollectionInsertOne`)  
-**Mock objects**: `createMockClassName` (`createMockFileService`)  
-**Error classes**: End with `Error` (`DocumentNotFoundError`)  
-**Config objects**: `config` or `componentConfig` (`dbConfig`)
-
-## Method Structure
-
+## Method Template
 ```javascript
 /**
  * Description
@@ -53,34 +52,27 @@ tests/framework/: AssertionUtilities.js, TestFramework.js, TestResult.js, TestRu
  * @throws {ErrorType} When thrown
  */
 methodName(param) {
-  if (!param) {
-    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('param', param, 'param is required');
-  }
-  
+  if (!param) throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('param', param, 'param is required');
   const result = this._performOperation(param);
   return result;
 }
 ```
 
 ## Error Standards
-
-**Base error**: `GASDBError`  
-**Common errors**: `DocumentNotFoundError`, `DuplicateKeyError`, `InvalidQueryError`, `LockTimeoutError`, `FileIOError`, `ConflictError`, `InvalidArgumentError`, and similar domain-specific errors  
-**Error codes**: `'DOCUMENT_NOT_FOUND'`, `'DUPLICATE_KEY'`, `'INVALID_QUERY'`, `'LOCK_TIMEOUT'`, `'FILE_IO_ERROR'`, `'CONFLICT_ERROR'`, `'INVALID_ARGUMENT'`, etc.  
-**Message format**: `"Operation failed: specific reason"`
-
+- **Base**: `GASDBError`
+- **Common**: `DocumentNotFoundError`, `DuplicateKeyError`, `InvalidQueryError`, `LockTimeoutError`, `FileIOError`, `ConflictError`, `InvalidArgumentError`
+- **Codes**: `'DOCUMENT_NOT_FOUND'`, `'DUPLICATE_KEY'`, etc.
+- **Message**: `"Operation failed: specific reason"`
 
 ## Implementation Requirements
-
-**Every class**: Constructor validates inputs, JSDoc on all methods, follows naming conventions and error handling patterns  
-**Every test**: Descriptive function names, Arrange-Act-Assert pattern, independent execution, create folder for each class, create a file for each test suite and an orchestrator file for all of the tests.
-**Serialisation**: All serialisation/deserialisation is handled by `ObjectUtils.serialise()` and `ObjectUtils.deserialise()`. Any class requiring safe serialisation must implement `toJSON()` and a corresponding static `fromJSON()` and register in `ObjectUtils._classRegistry`.
-**Validation**: All generic validation is handled the `Validate` class. Class specific validation should be implemented as a private method.
-
-Follow TDD process as outlined in Core Principles.
+- **Classes**: Constructor validates inputs, JSDoc on all methods, naming/error patterns.
+- **Tests**: Descriptive, Arrange-Act-Assert, independent, per-class folder, per-suite file, orchestrator for all tests.
+- **Serialisation**: Use `ObjectUtils.serialise()`/`deserialise()`. Classes needing serialisation: implement `toJSON()`, static `fromJSON()`, register in `ObjectUtils._classRegistry`.
+- **Validation**: Use `Validate` class; class-specific validation as private method.
+- **TDD**: Always follow Red-Green-Refactor.
 
 ## After Implementation
 1. Run `clasp push`.
-2. Ask the user to run the tests and await further instructions.
+2. Ask user to run tests and await instructions.
 
-** REMEMBER **: Always write concisely using British English
+**Always write concisely in British English.**
