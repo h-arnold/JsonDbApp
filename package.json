@@ -16,10 +16,18 @@
     "deploy": "clasp deploy",
     "logs": "clasp logs"
   },
-  "keywords": ["google-apps-script", "database", "nosql", "document-database"],
+  "keywords": [
+    "google-apps-script",
+    "database",
+    "nosql",
+    "document-database"
+  ],
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@google/clasp": "^2.4.2"
+    "@google/clasp": "^2.4.2",
+    "eslint": "^9.29.0",
+    "eslint-config-google": "^0.14.0",
+    "eslint-plugin-googleappsscript": "^1.0.5"
   }
 }
