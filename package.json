@@ -29,5 +29,6 @@
     "eslint": "^9.29.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-googleappsscript": "^1.0.5"
-  }
+  },
+  "type": "module"
 }
