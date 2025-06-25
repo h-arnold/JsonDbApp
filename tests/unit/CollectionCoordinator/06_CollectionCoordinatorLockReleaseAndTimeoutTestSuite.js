@@ -40,7 +40,7 @@ function createCollectionCoordinatorLockReleaseAndTimeoutTestSuite() {
         });
       },
       Error,
-      'Should throw timeout error for operations exceeding lockTimeoutMs'
+      'Should throw timeout error for operations exceeding lockTimeout'
     );
   });
 

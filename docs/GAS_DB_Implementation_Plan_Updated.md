@@ -182,7 +182,7 @@ if (!isCollectionLocked(name)) {
 Coordination options are passed to `CollectionCoordinator` via config or `DatabaseConfig`:
 
 ```js
-lockTimeoutMs: number     (default: 30000)
+lockTimeout: number     (default: 30000)
 retryAttempts: number     (default: 3)
 retryDelayMs: number      (default: 1000)
 ```

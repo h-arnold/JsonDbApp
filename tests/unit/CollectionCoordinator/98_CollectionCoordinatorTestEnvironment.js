@@ -85,7 +85,7 @@ const COLLECTION_COORDINATOR_TEST_DATA = {
   coordinationConfigs: {
     default: {
       coordinationEnabled: true,
-      lockTimeoutMs: 2000,
+      lockTimeout: 2000,
       retryAttempts: 3,
       retryDelayMs: 100,
       conflictResolutionStrategy: 'reload'
@@ -95,7 +95,7 @@ const COLLECTION_COORDINATOR_TEST_DATA = {
     },
     aggressive: {
       coordinationEnabled: true,
-      lockTimeoutMs: 500,
+      lockTimeout: 500,
       retryAttempts: 5,
       retryDelayMs: 50,
       conflictResolutionStrategy: 'reload'
@@ -322,22 +322,25 @@ function resetCollectionCoordinatorCollectionState() {
 /**
  * Create a CollectionCoordinator instance with specified configuration
  * @param {string} configName - Name of configuration from coordinationConfigs
+ * @param {Object} [overrideConfig] - Optional overrides to merge into base config
  * @returns {CollectionCoordinator} Configured coordinator instance
  */
-function createTestCollectionCoordinator(configName = 'default') {
+function createTestCollectionCoordinator(configName = 'default', overrideConfig = {}) {
   if (!COLLECTION_COORDINATOR_TEST_DATA.testEnvironmentReady) {
     throw new Error('Test environment not ready');
   }
-
-  const config = COLLECTION_COORDINATOR_TEST_DATA.coordinationConfigs[configName];
-  if (!config) {
-    throw new Error(`Unknown coordination config: ${configName}`);
+  // Fetch base profile and merge with any overrides
+  const baseConfig = COLLECTION_COORDINATOR_TEST_DATA.coordinationConfigs[configName] || {};
+  const mergedConfig = Object.assign({}, baseConfig, overrideConfig);
+  // Map lockTimeout (test harness) to lockTimeout (constructor API)
+  if (mergedConfig.lockTimeout !== undefined) {
+    mergedConfig.lockTimeout = mergedConfig.lockTimeout;
+    delete mergedConfig.lockTimeout;
   }
-
   return new CollectionCoordinator(
     COLLECTION_COORDINATOR_TEST_DATA.testCollection,
     COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex,
-    config
+    mergedConfig
   );
 }
 

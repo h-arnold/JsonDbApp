@@ -141,7 +141,7 @@ function generateCollectionCoordinatorTestData() {
     const coordinationConfigs = {
       default: {
         coordinationEnabled: true,
-        lockTimeoutMs: 2000,
+        lockTimeout: 2000,
         retryAttempts: 3,
         retryDelayMs: 100,
         conflictResolutionStrategy: 'reload'
@@ -151,7 +151,7 @@ function generateCollectionCoordinatorTestData() {
       },
       aggressive: {
         coordinationEnabled: true,
-        lockTimeoutMs: 500,
+        lockTimeout: 500,
         retryAttempts: 5,
         retryDelayMs: 50,
         conflictResolutionStrategy: 'reload'
