@@ -8,9 +8,6 @@
     "github.copilot.chat.edits.newNotebook.enabled": false,
     "github.copilot.chat.edits.suggestRelatedFilesForTests": false,
     // ESLint integration for GAS
-    "eslint.options": {
-        "configFile": ".eslintrc.json"
-    },
     "eslint.validate": [
         "javascript"
     ],

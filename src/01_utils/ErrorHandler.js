@@ -86,7 +86,7 @@ class LockTimeoutError extends GASDBError {
     super(message, 'LOCK_TIMEOUT', { resource, timeout });
   }
 }
-
+ 
 /**
  * File I/O error
  */

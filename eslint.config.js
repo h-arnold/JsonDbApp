@@ -1,7 +1,7 @@
 // ESLint configuration for Google Apps Script (GAS) projects
-import googleappsscript from 'eslint-plugin-googleappsscript';
+const googleappsscript = require('eslint-plugin-googleappsscript');
 
-export default [
+module.exports = [
   {
     files: ['eslint.config.js'],
     languageOptions: {
@@ -21,9 +21,9 @@ export default [
     },
     rules: {
       // Add project-specific rules here
-      'max-len': ['warn', { code: 120 }],
-      'require-jsdoc': 'off',
-      'valid-jsdoc': 'off',
+      'max-len': ['warn', { code: 200 }],
+      'require-jsdoc': 'on',
+      'valid-jsdoc': 'on',
       'no-unused-vars': ['warn', { args: 'none' }],
       'no-console': 'off'
     }
