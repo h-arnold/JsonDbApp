@@ -737,6 +737,14 @@ class Collection {
   }
 
   /**
+   * Gets the name of the collection (property accessor)
+   * @returns {string} Collection name
+   */
+  get name() {
+    return this._name;
+  }
+
+  /**
    * Gets the Google Drive file ID for the collection
    * @returns {string} Drive file ID
    */

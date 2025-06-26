@@ -78,6 +78,7 @@ class MasterIndex {
     this._data.collections[name] = collectionMetadata;
     this._data.lastUpdated = new Date();
     this._addToModificationHistory(name, 'ADD_COLLECTION', collectionMetadata);
+    this.save(); // Persist changes
     return collectionMetadata;
   }
   
@@ -206,7 +207,7 @@ class MasterIndex {
    * @returns {boolean} True if collection was found and removed, false otherwise
    */
   removeCollection(name) {
-    if (!Validate.object(this._data.collections, 'collections', false) || !Validate.object(this._data, 'data', false)) {
+    if (!this._data || !this._data.collections) {
       this._logger.warn('Internal state corrupted', { name });
       return false; // Should not happen in normal operation
     }
