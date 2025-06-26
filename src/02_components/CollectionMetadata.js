@@ -33,14 +33,10 @@ class CollectionMetadata {
       name = nameOrInitialMetadata;
       
       // Validate name
-      if (name === '') {
-        throw new InvalidArgumentError('name', name, 'Cannot be empty string');
-      }
+      Validate.nonEmptyString(name, 'name');
       
       // Validate fileId
-      if (fileId !== null && typeof fileId !== 'string') {
-        throw new InvalidArgumentError('fileId', fileId, 'Must be a string or null');
-      }
+      Validate.optional(fileId, Validate.string, 'fileId');
       
       metadata = initialMetadata || {};
     } else if (typeof nameOrInitialMetadata === 'object' && nameOrInitialMetadata !== null && !Array.isArray(nameOrInitialMetadata)) {
@@ -56,23 +52,17 @@ class CollectionMetadata {
     }
 
     // Validate metadata is an object
-    if (typeof metadata !== 'object' || metadata === null || Array.isArray(metadata)) {
-      throw new InvalidArgumentError('initialMetadata', metadata, 'Must be an object');
-    }
+    Validate.object(metadata, 'initialMetadata');
 
     // Set name and fileId properties
     this.name = name;
     this.fileId = fileId;
 
     // Validate that both name and fileId are provided - required for usable metadata
-    if (!this.name || typeof this.name !== 'string' || this.name.trim() === '') {
-      throw new InvalidArgumentError('name', this.name, 'Collection name is required and must be a non-empty string');
-    }
-    
-    if (!this.fileId || typeof this.fileId !== 'string' || this.fileId.trim() === '') {
-      throw new InvalidArgumentError('fileId', this.fileId, 'File ID is required and must be a non-empty string');
-    }
+    Validate.nonEmptyString(this.name, 'name');
+    Validate.nonEmptyString(this.fileId, 'fileId');
 
+    // Use a single 'now' variable for both created and lastUpdated
     const now = new Date();
     
     // Set created timestamp
@@ -97,9 +87,7 @@ class CollectionMetadata {
 
     // Set document count with validation
     if (metadata.documentCount !== undefined) {
-      if (typeof metadata.documentCount !== 'number' || !Number.isInteger(metadata.documentCount)) {
-        throw new InvalidArgumentError('documentCount', metadata.documentCount, 'Must be an integer');
-      }
+      Validate.integer(metadata.documentCount, 'documentCount');
       if (metadata.documentCount < 0) {
         throw new InvalidArgumentError('documentCount', metadata.documentCount, 'Cannot be negative');
       }
@@ -110,8 +98,8 @@ class CollectionMetadata {
 
     // Set modification token
     if (metadata.modificationToken !== undefined) {
-      if (metadata.modificationToken !== null && (typeof metadata.modificationToken !== 'string' || metadata.modificationToken === '')) {
-        throw new InvalidArgumentError('modificationToken', metadata.modificationToken, 'Must be a non-empty string or null');
+      if (metadata.modificationToken !== null) {
+        Validate.nonEmptyString(metadata.modificationToken, 'modificationToken');
       }
       this.modificationToken = metadata.modificationToken;
     } else {
@@ -136,32 +124,13 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} For invalid lock status
    */
   _validateLockStatus(lockStatus) {
-    if (typeof lockStatus !== 'object' || lockStatus === null || Array.isArray(lockStatus)) {
-      throw new InvalidArgumentError('lockStatus', lockStatus, 'Must be an object');
-    }
+    Validate.object(lockStatus, 'lockStatus');
+    Validate.objectProperties(lockStatus, ['isLocked', 'lockedBy', 'lockedAt', 'lockTimeout'], 'lockStatus');
 
-    const requiredProperties = ['isLocked', 'lockedBy', 'lockedAt', 'lockTimeout'];
-    for (const prop of requiredProperties) {
-      if (!lockStatus.hasOwnProperty(prop)) {
-        throw new InvalidArgumentError('lockStatus', lockStatus, `Must have ${prop} property`);
-      }
-    }
-
-    if (typeof lockStatus.isLocked !== 'boolean') {
-      throw new InvalidArgumentError('lockStatus.isLocked', lockStatus.isLocked, 'Must be a boolean');
-    }
-
-    if (lockStatus.lockedBy !== null && typeof lockStatus.lockedBy !== 'string') {
-      throw new InvalidArgumentError('lockStatus.lockedBy', lockStatus.lockedBy, 'Must be a string or null');
-    }
-
-    if (lockStatus.lockedAt !== null && typeof lockStatus.lockedAt !== 'number') {
-      throw new InvalidArgumentError('lockStatus.lockedAt', lockStatus.lockedAt, 'Must be a number timestamp or null');
-    }
-
-    if (lockStatus.lockTimeout !== null && typeof lockStatus.lockTimeout !== 'number') {
-      throw new InvalidArgumentError('lockStatus.lockTimeout', lockStatus.lockTimeout, 'Must be a number or null');
-    }
+    Validate.boolean(lockStatus.isLocked, 'lockStatus.isLocked');
+    Validate.optional(lockStatus.lockedBy, Validate.string, 'lockStatus.lockedBy');
+    Validate.optional(lockStatus.lockedAt, Validate.number, 'lockStatus.lockedAt');
+    Validate.optional(lockStatus.lockTimeout, Validate.number, 'lockStatus.lockTimeout');
   }
 
   /**
@@ -178,8 +147,8 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} For invalid token values
    */
   setModificationToken(token) {
-    if (token !== null && (typeof token !== 'string' || token === '')) {
-      throw new InvalidArgumentError('modificationToken', token, 'Must be a non-empty string or null');
+    if (token !== null) {
+      Validate.nonEmptyString(token, 'modificationToken');
     }
     this.modificationToken = token;
   }
@@ -245,9 +214,7 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} For invalid count values
    */
   setDocumentCount(count) {
-    if (typeof count !== 'number' || !Number.isInteger(count)) {
-      throw new InvalidArgumentError('count', count, 'Must be an integer');
-    }
+    Validate.integer(count, 'count');
     if (count < 0) {
       throw new InvalidArgumentError('count', count, 'Cannot be negative');
     }
@@ -314,14 +281,8 @@ class CollectionMetadata {
    * @static
    */
   static fromJSON(obj) {
-     if (typeof obj !== 'object' || obj === null || Array.isArray(obj)) {
-       throw new InvalidArgumentError('obj', obj, 'Must be an object');
-     }
-
-     // Check for required fields
-     if (!obj.hasOwnProperty('name') || !obj.hasOwnProperty('fileId')) {
-       throw new InvalidArgumentError('obj', obj, 'Must have name and fileId properties');
-     }
+     Validate.object(obj, 'obj');
+     Validate.objectProperties(obj, ['name', 'fileId'], 'obj');
 
      const name = obj.name;
      const fileId = obj.fileId;
