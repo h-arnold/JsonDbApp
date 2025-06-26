@@ -1,4 +1,4 @@
-# GAS DB Code Generation Guidelines (LLM-Optimised)
+# JsonDbApp DB Code Generation Guidelines (LLM-Optimised)
 
 ## Overview
 - Synchronous document DB for Google Apps Script (GAS), MongoDB-like syntax.
@@ -18,16 +18,20 @@
 
 - `docs/`: General and planning docs
 - `docs/developers/`: Feature and class docs
-- `src/01_utils/`: ErrorHandler.js, GASDBLogger.js, IdGenerator.js, ObjectUtils.js, Validation.js
-- `src/02_components/`: CollectionMetadata.js, DocumentOperations.js, FileOperations.js, QueryEngine.js, UpdateEngine.js
+- `src/01_utils/`: ErrorHandler.js, JDbLogger.js, IdGenerator.js, ObjectUtils.js, Validation.js
+- `src/02_components/`: CollectionCoordinator.js, CollectionMetadata.js, DocumentOperations.js, FileOperations.js, QueryEngine.js, UpdateEngine.js
 - `src/03_services/`: DbLockService.js, FileService.js
 - `src/04_core/`: Collection.js, Database.js, DatabaseConfig.js, MasterIndex.js
-- `tests/data/`: Mock data for tests
-- `tests/framework/`: AssertionUtilities.js, TestFramework.js, TestResult.js, TestRunner.js, TestSuite.js
+- `tests/data/`: MockQueryData.js (and other mock data)
+- `tests/framework/`: 01_AssertionUtilities.js, 02_TestResult.js, 03_TestRunner.js, 04_TestSuite.js, 05_TestFramework.js
+- `tests/unit/`: Unit test suites by class/component:
+    - Collection/ (multiple test suites)
+    - CollectionCoordinator/ (multiple test suites)
+    - DbLockService/
+    - DocumentOperations/
+    - UtilityTests/
+    - ...
 - `tests/integration/`: Integration test suites (e.g. Collection, MasterIndexCollectionMetadataIntegrationTest.js)
-- `tests/unit/`: Unit test suites (e.g. Collection, DbLockService, DocumentOperations, UtilityTests, etc.)
-- `test-runner.sh`: Test runner script
-- `clasp-watch.sh`: Clasp watch script
 - `README.md`, `LICENSE`, `package.json`, `appsscript.json`: Project config and metadata
 
 ## Naming Conventions
