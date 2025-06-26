@@ -16,11 +16,12 @@ function createCollectionInsertOperationsTestSuite() {
   
   suite.addTest('testCollectionInsertOne', function() {
     // Arrange
-    const fileId = createTestCollectionFile();
+    const collectionName = 'insertTestCollection';
+    const fileId = createTestCollectionFile(collectionName);
     
     // Act & Assert - Should fail in Red phase
     const collection = new Collection(
-      'insertTestCollection',
+      collectionName,
       fileId,
       COLLECTION_TEST_DATA.testDatabase,
       COLLECTION_TEST_DATA.testFileService
@@ -38,11 +39,12 @@ function createCollectionInsertOperationsTestSuite() {
   
   suite.addTest('testCollectionInsertOneWithExplicitId', function() {
     // Arrange
-    const fileId = createTestCollectionFile();
+    const collectionName = 'insertExplicitIdTestCollection';
+    const fileId = createTestCollectionFile(collectionName);
     
     // Act & Assert - Should fail in Red phase
     const collection = new Collection(
-      'insertExplicitIdTestCollection',
+      collectionName,
       fileId,
       COLLECTION_TEST_DATA.testDatabase,
       COLLECTION_TEST_DATA.testFileService

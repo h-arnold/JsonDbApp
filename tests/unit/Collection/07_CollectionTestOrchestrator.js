@@ -22,6 +22,27 @@ const COLLECTION_TEST_DATA = {
   testCollection: null,
   testFileService: null,
   testDatabase: null,
+  testMasterIndex: null,
+
+  // Master index data structure (similar to CollectionCoordinator tests)
+  masterIndexData: {
+    "version": 1,
+    "lastUpdated": new Date().toISOString(),
+    "collections": {},
+    "modificationHistory": {}
+  },
+
+  // Collection metadata structure
+  collectionMetadataData: {
+    "__type": "CollectionMetadata",
+    "created": new Date().toISOString(),
+    "lastUpdated": new Date().toISOString(),
+    "documentCount": 0,
+    "name": "test_collection",
+    "fileId": "placeholder-file-id", // Will be replaced with actual file ID
+    "modificationToken": "initial-token-" + new Date().getTime(),
+    "lockStatus": null
+  }
 };
 
 /**
@@ -41,8 +62,27 @@ function setupCollectionTestEnvironment() {
     const fileOps = new FileOperations(logger);
     COLLECTION_TEST_DATA.testFileService = new FileService(fileOps, logger);
 
-    // Create mock database object
+    // Create real MasterIndex instance with initial data (following CollectionCoordinator pattern)
+    COLLECTION_TEST_DATA.testMasterIndex = new MasterIndex();
+    
+    // Initialize master index with the proper data structure
+    const masterIndexData = ObjectUtils.deepClone(COLLECTION_TEST_DATA.masterIndexData);
+    COLLECTION_TEST_DATA.testMasterIndex._data = masterIndexData;
+
+    // Create DatabaseConfig for proper database structure
+    const dbConfig = new DatabaseConfig({
+      name: 'testDB',
+      rootFolderId: COLLECTION_TEST_DATA.testFolderId
+    });
+
+    // Create proper database object that matches real Database structure
     COLLECTION_TEST_DATA.testDatabase = {
+      name: 'testDB',
+      config: dbConfig,
+      _masterIndex: COLLECTION_TEST_DATA.testMasterIndex,
+      _fileOps: fileOps,
+      _fileService: COLLECTION_TEST_DATA.testFileService,
+      getMasterIndex: () => COLLECTION_TEST_DATA.testMasterIndex,
       _markDirty: function () {
         /* mock implementation */
       },
@@ -102,6 +142,9 @@ function cleanupCollectionTestEnvironment() {
   COLLECTION_TEST_DATA.createdFolderIds = [];
   COLLECTION_TEST_DATA.testCollection = null;
   COLLECTION_TEST_DATA.testFileId = null;
+  COLLECTION_TEST_DATA.testMasterIndex = null;
+  COLLECTION_TEST_DATA.testDatabase = null;
+  COLLECTION_TEST_DATA.testFileService = null;
 
   logger.info("Collection test cleanup completed", {
     cleanedFiles,
@@ -113,10 +156,13 @@ function cleanupCollectionTestEnvironment() {
 
 /**
  * Helper function to create a test collection file
+ * @param {string} [collectionName] - Optional collection name, defaults to timestamped name
  */
-function createTestCollectionFile() {
+function createTestCollectionFile(collectionName) {
   const folder = DriveApp.getFolderById(COLLECTION_TEST_DATA.testFolderId);
-  const fileName = "test_collection_" + new Date().getTime() + ".json";
+  const defaultName = "test_collection_" + new Date().getTime();
+  const actualCollectionName = collectionName || defaultName;
+  const fileName = actualCollectionName + ".json";
 
   // Create proper test data with ISO date strings
   const testData = {
@@ -131,6 +177,23 @@ function createTestCollectionFile() {
   const file = folder.createFile(fileName, JSON.stringify(testData, null, 2));
   const fileId = file.getId();
   COLLECTION_TEST_DATA.createdFileIds.push(fileId);
+
+  // Create and register CollectionMetadata with MasterIndex (following CollectionCoordinator pattern)
+  if (COLLECTION_TEST_DATA.testMasterIndex) {
+    const metadataData = ObjectUtils.deepClone(COLLECTION_TEST_DATA.collectionMetadataData);
+    metadataData.fileId = fileId; // Use actual file ID
+    metadataData.name = actualCollectionName; // Use the specified collection name
+    
+    // Create CollectionMetadata instance using ObjectUtils deserialization
+    const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
+    
+    // Register collection with master index
+    COLLECTION_TEST_DATA.testMasterIndex.addCollection(
+      actualCollectionName,
+      collectionMetadata
+    );
+  }
+
   return fileId;
 }
 /**

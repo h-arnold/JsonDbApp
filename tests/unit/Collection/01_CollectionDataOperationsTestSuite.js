@@ -70,11 +70,12 @@ function createCollectionDataOperationsTestSuite() {
   
   suite.addTest('testCollectionSaveDataToDrive', function() {
     // Arrange
-    const fileId = createTestCollectionFile();
+    const collectionName = 'saveTestCollection';
+    const fileId = createTestCollectionFile(collectionName);
     
     // Act & Assert - Should fail in Red phase
     const collection = new Collection(
-      'saveTestCollection',
+      collectionName,
       fileId,
       COLLECTION_TEST_DATA.testDatabase,
       COLLECTION_TEST_DATA.testFileService

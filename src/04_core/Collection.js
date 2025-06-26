@@ -737,6 +737,37 @@ class Collection {
   }
 
   /**
+   * Checks if the collection has unsaved changes
+   * @returns {boolean} True if collection is dirty, false otherwise
+   */
+  isDirty() {
+    return this._dirty;
+  }
+
+  /**
+   * Saves the collection data to Drive if dirty (coordinated operation)
+   * @returns {Object} Save result
+   * @throws {OperationError} If save operation fails
+   */
+  save() {
+    return this._coordinator.coordinate("save", () => {
+      this._ensureLoaded();
+      if (this._dirty) {
+        this._saveData();
+      }
+      return { acknowledged: true };
+    });
+  }
+
+  /**
+   * Gets the name of the collection
+   * @returns {string} Collection name
+   */
+  getName() {
+    return this._name;
+  }
+
+  /**
    * Gets the name of the collection (property accessor)
    * @returns {string} Collection name
    */
