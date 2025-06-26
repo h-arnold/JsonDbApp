@@ -1,7 +1,6 @@
 /**
  * Comprehensive test data for QueryEngine tests
  * Contains documents with various data types, nested objects, arrays and edge cases
- * Designed to test all query patterns in Section 6 implementation
  */
 
 const MockQueryData = {

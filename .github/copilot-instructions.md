@@ -1,4 +1,4 @@
-# JsonDbApp DB Code Generation Guidelines (LLM-Optimised)
+# JsonDbApp Code Generation Guidelines
 
 ## Overview
 - Synchronous document DB for Google Apps Script (GAS), MongoDB-like syntax.
