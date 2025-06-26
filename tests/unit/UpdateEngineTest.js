@@ -597,7 +597,7 @@ function createUpdateEngineTestSuite() {
 }
 
 // Logger for file-level operations like initial suite registration
-const updateEngineTestFileLogger = GASDBLogger.createComponentLogger('UpdateEngineTestFile');
+const updateEngineTestFileLogger = JDbLogger.createComponentLogger('UpdateEngineTestFile');
 
 // Register suite on default TestFramework instance
 try {
@@ -626,15 +626,15 @@ try {
  * Convenience function to run the UpdateEngine-related suite
  */
 function runUpdateEngineTests() {
-  GASDBLogger.info('Running UpdateEngine Tests: Testing Update Operators');
+  JDbLogger.info('Running UpdateEngine Tests: Testing Update Operators');
   
   const testFramework = new TestFramework();
   testFramework.registerTestSuite(createUpdateEngineTestSuite());
   const results = testFramework.runTestSuite('UpdateEngine Tests');
   
   // Log summary
-  GASDBLogger.info('UpdateEngine Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('UpdateEngine Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

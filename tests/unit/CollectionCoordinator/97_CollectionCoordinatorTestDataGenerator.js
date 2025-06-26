@@ -10,7 +10,7 @@
  * This creates real data structures that can be inspected and used for testing
  */
 function generateCollectionCoordinatorTestData() {
-  const logger = GASDBLogger.createComponentLogger('TestDataGenerator');
+  const logger = JDbLogger.createComponentLogger('TestDataGenerator');
   
   try {
     logger.info('Generating CollectionCoordinator test data');
@@ -140,14 +140,21 @@ function generateCollectionCoordinatorTestData() {
     // Create test coordination configurations
     const coordinationConfigs = {
       default: {
+        coordinationEnabled: true,
         lockTimeout: 2000,
         retryAttempts: 3,
-        retryDelayMs: 100
+        retryDelayMs: 100,
+        conflictResolutionStrategy: 'reload'
+      },
+      disabled: {
+        coordinationEnabled: false
       },
       aggressive: {
+        coordinationEnabled: true,
         lockTimeout: 500,
         retryAttempts: 5,
-        retryDelayMs: 50
+        retryDelayMs: 50,
+        conflictResolutionStrategy: 'reload'
       }
     };
     
@@ -194,7 +201,8 @@ function generateCollectionCoordinatorTestData() {
           loaded: collection._loaded
         },
         coordinator: {
-          created: !!coordinator
+          created: !!coordinator,
+          coordinationEnabled: coordinator._config.coordinationEnabled
         }
       },
       serialization: {
@@ -252,7 +260,7 @@ function generateCollectionCoordinatorTestData() {
  * @param {string} folderId - Folder ID to clean up
  */
 function cleanupTestDataFolder(folderId) {
-  const logger = GASDBLogger.createComponentLogger('TestDataCleanup');
+  const logger = JDbLogger.createComponentLogger('TestDataCleanup');
   
   try {
     if (folderId) {

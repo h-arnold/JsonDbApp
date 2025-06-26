@@ -26,7 +26,7 @@ const QUERY_ENGINE_TEST_DATA = {
  * Setup test environment with mock data
  */
 function setupQueryEngineTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('QueryEngine-Setup');
+  const logger = JDbLogger.createComponentLogger('QueryEngine-Setup');
   
   try {
     QUERY_ENGINE_TEST_DATA.testStartTime = new Date();
@@ -48,7 +48,7 @@ function setupQueryEngineTestEnvironment() {
  * Cleanup test environment
  */
 function cleanupQueryEngineTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('QueryEngine-Cleanup');
+  const logger = JDbLogger.createComponentLogger('QueryEngine-Cleanup');
   
   QUERY_ENGINE_TEST_DATA.testDocuments = [];
   QUERY_ENGINE_TEST_DATA.edgeCaseDocuments = [];
@@ -811,7 +811,7 @@ function createQueryEngineEdgeCasesTestSuite() {
  * Register all QueryEngine test suites
  */
 function createQueryEngineTestSuites() {
-  const logger = GASDBLogger.createComponentLogger('QueryEngine-TestRegistration');
+  const logger = JDbLogger.createComponentLogger('QueryEngine-TestRegistration');
   
   try {
     // Register all test suites
@@ -858,7 +858,7 @@ function createQueryEngineTestSuites() {
  * Convenience function to run all QueryEngine-related test suites
  */
 function runQueryEngineTests() {
-  const logger = GASDBLogger.createComponentLogger('QueryEngine-TestRunner');
+  const logger = JDbLogger.createComponentLogger('QueryEngine-TestRunner');
   
   try {
     logger.info('Starting QueryEngine test execution');
@@ -896,7 +896,7 @@ function runQueryEngineTests() {
  * For use with external test runners
  */
 function registerQueryEngineTests() {
-  const logger = GASDBLogger.createComponentLogger('QueryEngine-TestRegistration');
+  const logger = JDbLogger.createComponentLogger('QueryEngine-TestRegistration');
   
   try {
     const testFramework = new TestFramework();

@@ -25,7 +25,7 @@ class DocumentOperations {
    */
   constructor(collection) {
     this._collection = collection;
-    this._logger = GASDBLogger.createComponentLogger('DocumentOperations');
+    this._logger = JDbLogger.createComponentLogger('DocumentOperations');
     this._queryEngine = null; // Lazy-loaded QueryEngine instance
     this._updateEngine = null; // Lazy-loaded UpdateEngine instance
   }

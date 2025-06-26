@@ -24,7 +24,7 @@ const DOCUMENT_OPERATIONS_TEST_DATA = {
 };
 
 function setupDocumentOperationsTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('DocumentOperations-Setup');
+  const logger = JDbLogger.createComponentLogger('DocumentOperations-Setup');
   try {
     logger.info('Setting up DocumentOperations test environment');
     DOCUMENT_OPERATIONS_TEST_DATA.testStartTime = new Date();
@@ -113,7 +113,7 @@ function setupDocumentOperationsTestEnvironment() {
 }
 
 function cleanupDocumentOperationsTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('DocumentOperations-Cleanup');
+  const logger = JDbLogger.createComponentLogger('DocumentOperations-Cleanup');
   try {
     logger.info('Cleaning up DocumentOperations test environment');
     // Clean up created files
@@ -186,7 +186,7 @@ function registerDocumentOperationsTests() {
 
 function runDocumentOperationsTests() {
   try {
-    GASDBLogger.info('Starting DocumentOperations Test Execution');
+    JDbLogger.info('Starting DocumentOperations Test Execution');
     // Register all test suites
     const testFramework = registerDocumentOperationsTests();
     // Run all DocumentOperations test suites
@@ -198,14 +198,14 @@ function runDocumentOperationsTests() {
     results.push(testFramework.runTestSuite('DocumentOperations Delete Operations'));
     results.push(testFramework.runTestSuite('DocumentOperations Utility Operations'));
     results.push(testFramework.runTestSuite('DocumentOperations Query Enhancement'));
-    GASDBLogger.info('DocumentOperations Test Execution Complete');
+    JDbLogger.info('DocumentOperations Test Execution Complete');
     // Log summary for each result set
     results.forEach((result, index) => {
-      GASDBLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
+      JDbLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
     });
     return results;
   } catch (error) {
-    GASDBLogger.error('Failed to execute DocumentOperations tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute DocumentOperations tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }

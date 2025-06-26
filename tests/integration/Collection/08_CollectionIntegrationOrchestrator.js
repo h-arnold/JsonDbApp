@@ -21,7 +21,7 @@ const INTEGRATION_TEST_DATA = {
  * Setup integration test environment with realistic data volumes
  */
 function setupIntegrationTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('Integration-Setup');
+  const logger = JDbLogger.createComponentLogger('Integration-Setup');
   try {
     // Create test folder
     const folder = DriveApp.createFolder(INTEGRATION_TEST_DATA.testFolderName);
@@ -53,7 +53,7 @@ function setupIntegrationTestEnvironment() {
  * Clean up integration test environment
  */
 function cleanupIntegrationTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('Integration-Cleanup');
+  const logger = JDbLogger.createComponentLogger('Integration-Cleanup');
   let cleanedFiles = 0;
   let failedFiles = 0;
   let cleanedFolders = 0;
@@ -177,7 +177,7 @@ function createPopulatedTestCollection(documents = []) {
 function runCollectionIntegrationTests() {
   try {
     setupIntegrationTestEnvironment();
-    const logger = GASDBLogger.createComponentLogger('Integration-TestExecution');
+    const logger = JDbLogger.createComponentLogger('Integration-TestExecution');
     logger.info('Starting Collection integration tests');
     const testFramework = registerCollectionIntegrationTests();
     console.log('\n=== COLLECTION INTEGRATION TESTS ===');
@@ -223,7 +223,7 @@ function registerCollectionIntegrationTests() {
 function runCollectionIntegrationTestsWithFramework() {
   try {
     setupIntegrationTestEnvironment();
-    const logger = GASDBLogger.createComponentLogger('Integration-TestExecution');
+    const logger = JDbLogger.createComponentLogger('Integration-TestExecution');
     logger.info('Starting Collection integration tests');
     const testFramework = registerCollectionIntegrationTests();
     const results = testFramework.runAllTests();
@@ -237,7 +237,7 @@ function runCollectionIntegrationTestsWithFramework() {
     });
     return results;
   } catch (error) {
-    const logger = GASDBLogger.createComponentLogger('Integration-TestExecution');
+    const logger = JDbLogger.createComponentLogger('Integration-TestExecution');
     logger.error('Failed to run Collection integration tests', { error: error.message });
     throw error;
   } finally {

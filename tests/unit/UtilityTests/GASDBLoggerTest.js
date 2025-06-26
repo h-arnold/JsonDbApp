@@ -17,28 +17,28 @@ function createGASDBLoggerTestSuite() {
   // Logger basic functionality tests
   suite.addTest('testLoggerBasicFunctionality', function() {
     // Test that Logger methods exist
-    TestFramework.assertEquals('function', typeof GASDBLogger.error, 'GASDBLogger should have error method');
-    TestFramework.assertEquals('function', typeof GASDBLogger.warn, 'GASDBLogger should have warn method');
-    TestFramework.assertEquals('function', typeof GASDBLogger.info, 'GASDBLogger should have info method');
-    TestFramework.assertEquals('function', typeof GASDBLogger.debug, 'GASDBLogger should have debug method');
+    TestFramework.assertEquals('function', typeof JDbLogger.error, 'GASDBLogger should have error method');
+    TestFramework.assertEquals('function', typeof JDbLogger.warn, 'GASDBLogger should have warn method');
+    TestFramework.assertEquals('function', typeof JDbLogger.info, 'GASDBLogger should have info method');
+    TestFramework.assertEquals('function', typeof JDbLogger.debug, 'GASDBLogger should have debug method');
   });
   
   suite.addTest('testLoggerLevels', function() {
     // Test log level setting
-    const originalLevel = GASDBLogger.getLevel();
+    const originalLevel = JDbLogger.getLevel();
     
-    GASDBLogger.setLevel(GASDBLogger.LOG_LEVELS.ERROR);
-    TestFramework.assertEquals(GASDBLogger.LOG_LEVELS.ERROR, GASDBLogger.getLevel(), 'Should set ERROR level');
+    JDbLogger.setLevel(JDbLogger.LOG_LEVELS.ERROR);
+    TestFramework.assertEquals(JDbLogger.LOG_LEVELS.ERROR, JDbLogger.getLevel(), 'Should set ERROR level');
     
-    GASDBLogger.setLevelByName('DEBUG');
-    TestFramework.assertEquals(GASDBLogger.LOG_LEVELS.DEBUG, GASDBLogger.getLevel(), 'Should set DEBUG level by name');
+    JDbLogger.setLevelByName('DEBUG');
+    TestFramework.assertEquals(JDbLogger.LOG_LEVELS.DEBUG, JDbLogger.getLevel(), 'Should set DEBUG level by name');
     
     // Restore original level
-    GASDBLogger.setLevel(originalLevel);
+    JDbLogger.setLevel(originalLevel);
   });
   
   suite.addTest('testLoggerComponentLogger', function() {
-    const componentLogger = GASDBLogger.createComponentLogger('TestComponent');
+    const componentLogger = JDbLogger.createComponentLogger('TestComponent');
     TestFramework.assertEquals('function', typeof componentLogger.error, 'Component logger should have error method');
     TestFramework.assertEquals('function', typeof componentLogger.info, 'Component logger should have info method');
   });
@@ -59,14 +59,14 @@ function registerGASDBLoggerTests() {
  * Run GASDBLogger Tests independently
  */
 function runGASDBLoggerTests() {
-  GASDBLogger.info('Running GASDBLogger Tests: Logger Functionality');
+  JDbLogger.info('Running GASDBLogger Tests: Logger Functionality');
   
   const testFramework = registerGASDBLoggerTests();
   const results = testFramework.runTestSuite('GASDBLogger Tests');
   
   // Log summary
-  GASDBLogger.info('GASDBLogger Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('GASDBLogger Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

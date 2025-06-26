@@ -44,7 +44,7 @@ class DbLockService {
     }
 
     // Logger instance
-    this._logger = GASDBLogger.createComponentLogger('DbLockService');
+    this._logger = JDbLogger.createComponentLogger('DbLockService');
 
     // Private script lock property
     this._scriptLock = null;

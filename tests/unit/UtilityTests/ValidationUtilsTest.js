@@ -503,19 +503,19 @@ function registerValidationUtilsTests() {
  */
 function runValidationUtilsTests() {
   try {
-    GASDBLogger.info('Starting ValidationUtils Test Execution');
+    JDbLogger.info('Starting ValidationUtils Test Execution');
     
     const testFramework = registerValidationUtilsTests();
     const results = testFramework.runTestSuite('ValidationUtils Tests');
     
     // Log summary
-    GASDBLogger.info('ValidationUtils Test Results:');
-    GASDBLogger.info(results.getSummary());
+    JDbLogger.info('ValidationUtils Test Results:');
+    JDbLogger.info(results.getSummary());
     
     return results;
     
   } catch (error) {
-    GASDBLogger.error('Failed to execute ValidationUtils tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute ValidationUtils tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }

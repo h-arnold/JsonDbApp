@@ -8,7 +8,7 @@ class UpdateEngine {
    * Creates a new UpdateEngine instance
    */
   constructor() {
-    this._logger = GASDBLogger.createComponentLogger('UpdateEngine');
+    this._logger = JDbLogger.createComponentLogger('UpdateEngine');
     
     // Map of supported operators to their handler methods
     this._operatorHandlers = {

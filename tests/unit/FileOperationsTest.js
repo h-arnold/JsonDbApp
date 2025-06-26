@@ -40,7 +40,7 @@ function createFileOperationsSetupTestSuite() {
   
   suite.addTest('should create test folder in Drive root', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-Setup');
+    const logger = JDbLogger.createComponentLogger('FileOperations-Setup');
     
     // Act
     try {
@@ -61,7 +61,7 @@ function createFileOperationsSetupTestSuite() {
   
   suite.addTest('should create initial test file with JSON content', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-Setup');
+    const logger = JDbLogger.createComponentLogger('FileOperations-Setup');
     FILEOPERATIONS_TEST_DATA.testData.metadata.created = new Date().toISOString();
     FILEOPERATIONS_TEST_DATA.testData.metadata.updated = new Date().toISOString();
     
@@ -118,7 +118,7 @@ function createFileOperationsFunctionalityTestSuite() {
   
   suite.addTest('should read file content from Drive using real file ID', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     
     // Act
@@ -132,7 +132,7 @@ function createFileOperationsFunctionalityTestSuite() {
   
   suite.addTest('should write data to existing Drive file', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const updatedData = { 
       test: 'updated_data', 
@@ -155,7 +155,7 @@ function createFileOperationsFunctionalityTestSuite() {
   
   suite.addTest('should create new file in test folder', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const fileName = 'test-collection-' + new Date().getTime() + '.json';
     const testData = { documents: {}, metadata: { created: new Date().toISOString() } };
@@ -176,7 +176,7 @@ function createFileOperationsFunctionalityTestSuite() {
   
   suite.addTest('should check if file exists in Drive', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const nonExistentFileId = 'definitely-non-existent-file-id-12345';
     
@@ -191,7 +191,7 @@ function createFileOperationsFunctionalityTestSuite() {
   
   suite.addTest('should delete file from Drive', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     
     // Create a file specifically for deletion test
@@ -212,7 +212,7 @@ function createFileOperationsFunctionalityTestSuite() {
   
   suite.addTest('should retrieve file metadata from Drive', function() {
     // Arrange  
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     
     // Act
@@ -237,7 +237,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle Drive API quota exceeded error with retry', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'quota-error-file-id-nonexistent';
     
@@ -249,7 +249,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle Drive API permission denied error', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const restrictedFileId = 'permission-denied-file-id-nonexistent';
     
@@ -261,7 +261,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle Drive API file not found error', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const missingFileId = 'missing-file-id-nonexistent';
     
@@ -273,7 +273,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should retry operations on transient failures', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     const testFileId = 'transient-error-file-id-nonexistent';
     
@@ -285,7 +285,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle malformed JSON in file content', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations');
+    const logger = JDbLogger.createComponentLogger('FileOperations');
     const fileOps = new FileOperations(logger);
     
     // Create a file with definitively malformed JSON
@@ -326,7 +326,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle corrupted files with partial JSON and date strings', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-ErrorHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-ErrorHandling');
     const fileOps = new FileOperations(logger);
     
     // Create a file with corrupted JSON that contains what looks like dates
@@ -345,7 +345,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle files with invalid JSON that could trigger double-parsing detection', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-ErrorHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-ErrorHandling');
     const fileOps = new FileOperations(logger);
     
     // Create a file with content that might trigger double-parsing detection
@@ -371,7 +371,7 @@ function createFileOperationsErrorHandlingTestSuite() {
   
   suite.addTest('should handle empty files gracefully without date processing', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-ErrorHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-ErrorHandling');
     const fileOps = new FileOperations(logger);
     
     // Create an empty file
@@ -399,7 +399,7 @@ function createFileOperationsEdgeCasesTestSuite() {
   
   suite.addTest('should handle very large file content gracefully', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-EdgeCases');
+    const logger = JDbLogger.createComponentLogger('FileOperations-EdgeCases');
     const fileOps = new FileOperations(logger);
     const largeData = { 
       content: new Array(100).fill('large content chunk').join(' '), // Reduced size for testing
@@ -419,7 +419,7 @@ function createFileOperationsEdgeCasesTestSuite() {
   
   suite.addTest('should handle special characters in file names and content', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-EdgeCases');
+    const logger = JDbLogger.createComponentLogger('FileOperations-EdgeCases');
     const fileOps = new FileOperations(logger);
     const specialFileName = 'test-file-with-special-chars-' + new Date().getTime() + '.json';
     const specialData = { 
@@ -442,7 +442,7 @@ function createFileOperationsEdgeCasesTestSuite() {
   
   suite.addTest('should handle empty files and null data appropriately', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-EdgeCases');
+    const logger = JDbLogger.createComponentLogger('FileOperations-EdgeCases');
     const fileOps = new FileOperations(logger);
     const emptyData = {};
     
@@ -466,7 +466,7 @@ function createFileOperationsCleanupTestSuite() {
   
   suite.addTest('should delete all created test files', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-Cleanup');
+    const logger = JDbLogger.createComponentLogger('FileOperations-Cleanup');
     let deletedCount = 0;
     let failedCount = 0;
     
@@ -490,7 +490,7 @@ function createFileOperationsCleanupTestSuite() {
   
   suite.addTest('should delete all created test folders', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-Cleanup');
+    const logger = JDbLogger.createComponentLogger('FileOperations-Cleanup');
     let deletedCount = 0;
     let failedCount = 0;
     
@@ -547,7 +547,7 @@ function registerFileOperationsTests() {
  */
 function runFileOperationsTests() {
   try {
-    GASDBLogger.info('Starting FileOperations Test Execution');
+    JDbLogger.info('Starting FileOperations Test Execution');
     
     // Register all test suites
     const testFramework = registerFileOperationsTests();
@@ -561,17 +561,17 @@ function runFileOperationsTests() {
     results.push(testFramework.runTestSuite('FileOperations Edge Cases'));
     results.push(testFramework.runTestSuite('FileOperations Cleanup - Remove Test Files'));
     
-    GASDBLogger.info('FileOperations Test Execution Complete');
+    JDbLogger.info('FileOperations Test Execution Complete');
     
     // Log summary for each result set
     results.forEach((result, index) => {
-      GASDBLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
+      JDbLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
     });
     
     return results;
     
   } catch (error) {
-    GASDBLogger.error('Failed to execute FileOperations tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute FileOperations tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }
@@ -585,7 +585,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should preserve Date objects through write-read cycle', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testDate = new Date('2023-06-15T10:30:00.000Z');
     const testData = {
@@ -624,7 +624,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should store Date objects as ISO strings in actual file content', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testDate = new Date('2023-12-25T12:00:00.000Z');
     const testData = {
@@ -648,7 +648,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should handle arrays with multiple Date objects', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testData = {
       events: [
@@ -688,7 +688,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should handle deeply nested Date objects', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testData = {
       user: {
@@ -732,7 +732,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should handle mixed Date objects and ISO strings correctly', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testData = {
       actualDate: new Date('2023-06-15T10:30:00.000Z'),
@@ -763,7 +763,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should handle edge cases with invalid date-like strings', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testData = {
       validDate: new Date('2023-06-15T10:30:00.000Z'),
@@ -793,7 +793,7 @@ function createFileOperationsDateHandlingTestSuite() {
   
   suite.addTest('should handle Date objects with various time zones and precision', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileOperations-DateHandling');
+    const logger = JDbLogger.createComponentLogger('FileOperations-DateHandling');
     const fileOps = new FileOperations(logger);
     const testData = {
       utcDate: new Date('2023-06-15T10:30:00.000Z'),

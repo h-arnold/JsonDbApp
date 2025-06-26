@@ -153,14 +153,14 @@ function registerErrorHandlerTests() {
  * Run ErrorHandler Tests independently
  */
 function runErrorHandlerTests() {
-  GASDBLogger.info('Running ErrorHandler Tests: Error Handling Functionality');
+  JDbLogger.info('Running ErrorHandler Tests: Error Handling Functionality');
   
   const testFramework = registerErrorHandlerTests();
   const results = testFramework.runTestSuite('ErrorHandler Tests');
   
   // Log summary
-  GASDBLogger.info('ErrorHandler Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('ErrorHandler Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

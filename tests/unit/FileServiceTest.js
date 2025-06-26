@@ -42,7 +42,7 @@ function createFileServiceSetupTestSuite() {
   
   suite.addTest('should create test folder in Drive root', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Setup');
+    const logger = JDbLogger.createComponentLogger('FileService-Setup');
     
     // Act
     try {
@@ -63,7 +63,7 @@ function createFileServiceSetupTestSuite() {
   
   suite.addTest('should create initial test file with JSON content', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Setup');
+    const logger = JDbLogger.createComponentLogger('FileService-Setup');
     FILESERVICE_TEST_DATA.testData.metadata.created = new Date().toISOString();
     FILESERVICE_TEST_DATA.testData.metadata.updated = new Date().toISOString();
     
@@ -90,7 +90,7 @@ function createFileServiceSetupTestSuite() {
   
   suite.addTest('should initialise mock FileOperations for dependency injection', function() {
     // Arrange & Act
-    const logger = GASDBLogger.createComponentLogger('FileService-Setup');
+    const logger = JDbLogger.createComponentLogger('FileService-Setup');
     FILESERVICE_TEST_DATA.mockFileOperations = createMockFileOperations();
     
     // Assert
@@ -113,9 +113,9 @@ function createFileServiceFunctionalityTestSuite() {
   
   suite.addTest('should initialise with FileOperations dependency', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService');
+    const logger = JDbLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     
     // Act
     const fileService = new FileService(fileOps, fileServiceLogger);
@@ -127,9 +127,9 @@ function createFileServiceFunctionalityTestSuite() {
   
   suite.addTest('should read file through optimised interface', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService');
+    const logger = JDbLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Act
@@ -144,9 +144,9 @@ function createFileServiceFunctionalityTestSuite() {
   
   suite.addTest('should write file through optimised interface', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService');
+    const logger = JDbLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     const updatedData = { 
       test: 'fileservice_updated_data', 
@@ -169,9 +169,9 @@ function createFileServiceFunctionalityTestSuite() {
   
   suite.addTest('should create file through optimised interface', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService');
+    const logger = JDbLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     const fileName = 'fileservice-collection-' + new Date().getTime() + '.json';
     const testData = { 
@@ -199,9 +199,9 @@ function createFileServiceFunctionalityTestSuite() {
   
   suite.addTest('should check file existence through optimised interface', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService');
+    const logger = JDbLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     const nonExistentFileId = 'fileservice-non-existent-file-id-12345';
     
@@ -216,9 +216,9 @@ function createFileServiceFunctionalityTestSuite() {
   
   suite.addTest('should get file metadata through optimised interface', function() {
     // Arrange  
-    const logger = GASDBLogger.createComponentLogger('FileService');
+    const logger = JDbLogger.createComponentLogger('FileService');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Act
@@ -243,9 +243,9 @@ function createFileServiceOptimisationTestSuite() {
   
   suite.addTest('should batch multiple read operations when possible', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Optimisation');
+    const logger = JDbLogger.createComponentLogger('FileService-Optimisation');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Create multiple test files for batch reading
@@ -276,9 +276,9 @@ function createFileServiceOptimisationTestSuite() {
   
   suite.addTest('should optimise metadata retrieval for multiple files', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Optimisation');
+    const logger = JDbLogger.createComponentLogger('FileService-Optimisation');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Use existing files from previous test
@@ -303,9 +303,9 @@ function createFileServiceOptimisationTestSuite() {
   
   suite.addTest('should handle mixed success and failure in batch operations', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Optimisation');
+    const logger = JDbLogger.createComponentLogger('FileService-Optimisation');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     const mixedFileIds = [
@@ -338,9 +338,9 @@ function createFileServiceOptimisationTestSuite() {
   
   suite.addTest('should implement intelligent caching for frequently accessed files', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Optimisation');
+    const logger = JDbLogger.createComponentLogger('FileService-Optimisation');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Act - Read same file multiple times to test caching
@@ -385,9 +385,9 @@ function createFileServiceErrorRecoveryTestSuite() {
   
   suite.addTest('should implement exponential backoff for quota limits', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-ErrorRecovery');
+    const logger = JDbLogger.createComponentLogger('FileService-ErrorRecovery');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     const nonExistentFileId = 'quota-limit-test-file-id';
     
@@ -416,9 +416,9 @@ function createFileServiceErrorRecoveryTestSuite() {
   
   suite.addTest('should gracefully degrade batch operations on partial failures', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-ErrorRecovery');
+    const logger = JDbLogger.createComponentLogger('FileService-ErrorRecovery');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     const mixedFileIds = [
@@ -453,9 +453,9 @@ function createFileServiceErrorRecoveryTestSuite() {
   
   suite.addTest('should implement circuit breaker pattern for failing operations', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-ErrorRecovery');
+    const logger = JDbLogger.createComponentLogger('FileService-ErrorRecovery');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Act - Test multiple failing operations to trigger circuit breaker
@@ -505,9 +505,9 @@ function createFileServiceIntegrationTestSuite() {
   
   suite.addTest('should coordinate operations between FileOperations and FileService', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Integration');
+    const logger = JDbLogger.createComponentLogger('FileService-Integration');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     const fileName = 'integration-test-file-' + new Date().getTime() + '.json';
@@ -536,9 +536,9 @@ function createFileServiceIntegrationTestSuite() {
   
   suite.addTest('should minimise Drive API calls through intelligent coordination', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Integration');
+    const logger = JDbLogger.createComponentLogger('FileService-Integration');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     // Act - Perform multiple operations that could be optimised
@@ -577,9 +577,9 @@ function createFileServiceIntegrationTestSuite() {
   
   suite.addTest('should maintain consistency during concurrent file operations', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Integration');
+    const logger = JDbLogger.createComponentLogger('FileService-Integration');
     const fileOps = new FileOperations(logger);
-    const fileServiceLogger = GASDBLogger.createComponentLogger('FileService-Test');
+    const fileServiceLogger = JDbLogger.createComponentLogger('FileService-Test');
     const fileService = new FileService(fileOps, fileServiceLogger);
     
     const fileName = 'consistency-test-' + new Date().getTime() + '.json';
@@ -627,7 +627,7 @@ function createFileServiceCleanupTestSuite() {
   
   suite.addTest('should delete all created test files', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Cleanup');
+    const logger = JDbLogger.createComponentLogger('FileService-Cleanup');
     let deletedCount = 0;
     let failedCount = 0;
     
@@ -651,7 +651,7 @@ function createFileServiceCleanupTestSuite() {
   
   suite.addTest('should delete all created test folders', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('FileService-Cleanup');
+    const logger = JDbLogger.createComponentLogger('FileService-Cleanup');
     let deletedCount = 0;
     let failedCount = 0;
     
@@ -755,7 +755,7 @@ function registerFileServiceTests() {
  */
 function runFileServiceTests() {
   try {
-    GASDBLogger.info('Starting FileService Test Execution');
+    JDbLogger.info('Starting FileService Test Execution');
     
     // Register all test suites
     const testFramework = registerFileServiceTests();
@@ -769,17 +769,17 @@ function runFileServiceTests() {
     results.push(testFramework.runTestSuite('FileService Integration'));
     results.push(testFramework.runTestSuite('FileService Cleanup - Remove Test Files'));
     
-    GASDBLogger.info('FileService Test Execution Complete');
+    JDbLogger.info('FileService Test Execution Complete');
     
     // Log summary for each result set
     results.forEach((result, index) => {
-      GASDBLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
+      JDbLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
     });
     
     return results;
     
   } catch (error) {
-    GASDBLogger.error('Failed to execute FileService tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute FileService tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }

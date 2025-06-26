@@ -664,7 +664,7 @@ function createCollectionMetadataEdgeCasesTestSuite() {
  * Setup function for CollectionMetadata tests (not a test suite)
  */
 function setupCollectionMetadataTests() {
-  const logger = GASDBLogger.createComponentLogger('CollectionMetadata-Setup');
+  const logger = JDbLogger.createComponentLogger('CollectionMetadata-Setup');
   COLLECTION_METADATA_TEST_DATA.testStartTime = new Date();
   
   // Prepare test metadata objects for testing
@@ -698,7 +698,7 @@ function setupCollectionMetadataTests() {
  * Cleanup function for CollectionMetadata tests (not a test suite)
  */
 function cleanupCollectionMetadataTests() {
-  const logger = GASDBLogger.createComponentLogger('CollectionMetadata-Cleanup');
+  const logger = JDbLogger.createComponentLogger('CollectionMetadata-Cleanup');
   const testEndTime = new Date();
   const testDuration = testEndTime - COLLECTION_METADATA_TEST_DATA.testStartTime;
   
@@ -731,7 +731,7 @@ function registerCollectionMetadataTests() {
  */
 function runCollectionMetadataTests() {
   try {
-    GASDBLogger.info('Starting CollectionMetadata Test Execution');
+    JDbLogger.info('Starting CollectionMetadata Test Execution');
     
     // Setup
     setupCollectionMetadataTests();
@@ -745,7 +745,7 @@ function runCollectionMetadataTests() {
     // Cleanup
     cleanupCollectionMetadataTests();
     
-    GASDBLogger.info('CollectionMetadata Test Execution Complete', {
+    JDbLogger.info('CollectionMetadata Test Execution Complete', {
       totalSuites: testFramework.testSuites.size,
       totalTests: results.results.length,
       passedTests: results.getPassed().length,
@@ -756,7 +756,7 @@ function runCollectionMetadataTests() {
     return results;
     
   } catch (error) {
-    GASDBLogger.error('CollectionMetadata Test Execution Failed', { error: error.message, stack: error.stack });
+    JDbLogger.error('CollectionMetadata Test Execution Failed', { error: error.message, stack: error.stack });
     cleanupCollectionMetadataTests(); // Ensure cleanup even on error
     throw error;
   }
@@ -768,7 +768,7 @@ function runCollectionMetadataTests() {
  */
 function runCollectionMetadataQuickTests() {
   try {
-    GASDBLogger.info('Starting CollectionMetadata Quick Test Execution');
+    JDbLogger.info('Starting CollectionMetadata Quick Test Execution');
     
     // Setup
     setupCollectionMetadataTests();
@@ -783,7 +783,7 @@ function runCollectionMetadataQuickTests() {
     // Cleanup
     cleanupCollectionMetadataTests();
     
-    GASDBLogger.info('CollectionMetadata Quick Test Execution Complete', {
+    JDbLogger.info('CollectionMetadata Quick Test Execution Complete', {
       totalSuites: results.suites?.length || 'unknown',
       totalTests: results.results?.length || 'unknown',
       passedTests: results.getPassed()?.length || 'unknown',
@@ -794,7 +794,7 @@ function runCollectionMetadataQuickTests() {
     return results;
     
   } catch (error) {
-    GASDBLogger.error('CollectionMetadata Quick Test Execution Failed', { error: error.message, stack: error.stack });
+    JDbLogger.error('CollectionMetadata Quick Test Execution Failed', { error: error.message, stack: error.stack });
     cleanupCollectionMetadataTests(); // Ensure cleanup even on error
     throw error;
   }

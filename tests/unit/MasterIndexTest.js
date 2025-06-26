@@ -521,7 +521,7 @@ function registerMasterIndexTests() {
  */
 function runMasterIndexTests() {
   try {
-    GASDBLogger.info('Starting MasterIndex Test Execution');
+    JDbLogger.info('Starting MasterIndex Test Execution');
     
     // Register all test suites
     const testFramework = registerMasterIndexTests();
@@ -532,17 +532,17 @@ function runMasterIndexTests() {
     results.push(testFramework.runTestSuite('Conflict Detection and Resolution'));
     results.push(testFramework.runTestSuite('MasterIndex Integration'));
     
-    GASDBLogger.info('MasterIndex Test Execution Complete');
+    JDbLogger.info('MasterIndex Test Execution Complete');
     
     // Log summary for each result set
     results.forEach((result, index) => {
-      GASDBLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
+      JDbLogger.info(`Result Set ${index + 1}: ${result.getSummary()}`);
     });
     
     return results;
     
   } catch (error) {
-    GASDBLogger.error('Failed to execute MasterIndex tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute MasterIndex tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }

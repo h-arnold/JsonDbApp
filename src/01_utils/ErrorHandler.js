@@ -267,7 +267,7 @@ class ErrorHandler {
       errorInfo.errorContext = error.context;
     }
     
-    GASDBLogger.error(`Error in ${context}: ${error.message}`, errorInfo);
+    JDbLogger.error(`Error in ${context}: ${error.message}`, errorInfo);
     
     if (rethrow) {
       throw error;
@@ -408,7 +408,7 @@ class ErrorHandler {
         '\n\n' +
         'Common fix: Change "JSON.parse(fileService.readFile(id))" to "fileService.readFile(id)"';
       
-      GASDBLogger.error('Double JSON parsing detected', {
+      JDbLogger.error('Double JSON parsing detected', {
         context,
         dataType: typeof data,
         isArray: Array.isArray(data),

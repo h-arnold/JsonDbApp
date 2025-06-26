@@ -99,7 +99,7 @@ const COLLECTION_COORDINATOR_TEST_DATA = {
  * Creates Drive folder, collection file, Collection instance, MasterIndex, and test data
  */
 function setupCollectionCoordinatorTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('CollectionCoordinator-Setup');
+  const logger = JDbLogger.createComponentLogger('CollectionCoordinator-Setup');
   
   try {
     logger.info('Setting up CollectionCoordinator test environment');
@@ -209,7 +209,7 @@ function setupCollectionCoordinatorTestEnvironment() {
  * Removes all created Drive files and folders, clears ScriptProperties
  */
 function cleanupCollectionCoordinatorTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('CollectionCoordinator-Cleanup');
+  const logger = JDbLogger.createComponentLogger('CollectionCoordinator-Cleanup');
   
   try {
     logger.info('Cleaning up CollectionCoordinator test environment');
@@ -279,7 +279,7 @@ function resetCollectionCoordinatorCollectionState() {
   }
 
   try {
-    const logger = GASDBLogger.createComponentLogger('CollectionCoordinator-Reset');
+    const logger = JDbLogger.createComponentLogger('CollectionCoordinator-Reset');
     logger.debug('Resetting collection state to initial test data');
 
     // Reset the collection file content
@@ -304,7 +304,7 @@ function resetCollectionCoordinatorCollectionState() {
     logger.debug('Collection state reset complete');
 
   } catch (error) {
-    const logger = GASDBLogger.createComponentLogger('CollectionCoordinator-Reset');
+    const logger = JDbLogger.createComponentLogger('CollectionCoordinator-Reset');
     logger.error('Failed to reset collection state', { error: error.message });
     throw error;
   }

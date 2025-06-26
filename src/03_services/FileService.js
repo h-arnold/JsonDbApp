@@ -15,7 +15,7 @@ class FileService {
   /**
    * Creates a new FileService instance
    * @param {FileOperations} fileOps - FileOperations instance for Drive API calls
-   * @param {GASDBLogger} logger - Logger instance for operation tracking
+   * @param {JDbLogger} logger - Logger instance for operation tracking
    */
   constructor(fileOps, logger) {
     if (!fileOps) {

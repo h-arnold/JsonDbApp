@@ -113,7 +113,7 @@ class TestFramework {
     this.setupEnvironment();
     
     try {
-      GASDBLogger.info('Running tests...');
+      JDbLogger.info('Running tests...');
       
       for (const [suiteName, suite] of this.testSuites) {
         const suiteResults = suite.runTests();
@@ -146,7 +146,7 @@ class TestFramework {
     this.setupEnvironment();
     
     try {
-      GASDBLogger.info(`Running test suite: ${name}`);
+      JDbLogger.info(`Running test suite: ${name}`);
       const suiteResults = suite.runTests();
       suiteResults.forEach(result => this.results.addResult(result));
       
@@ -181,7 +181,7 @@ class TestFramework {
     this.setupEnvironment();
     
     try {
-      GASDBLogger.info(`Running test: ${suiteName}.${testName}`);
+      JDbLogger.info(`Running test: ${suiteName}.${testName}`);
       const result = suite.runTest(testName);
       this.results.addResult(result);
       
@@ -221,7 +221,7 @@ class TestFramework {
       return; // Already validated
     }
     
-    GASDBLogger.debug('Validating test environment...');
+    JDbLogger.debug('Validating test environment...');
     
     // Check GAS APIs
     this._validateGASAPI('DriveApp', () => DriveApp.getRootFolder());
@@ -229,7 +229,7 @@ class TestFramework {
     this._validateGASAPI('Logger', () => Logger.log('Test log'));
     
     // Check GAS DB components
-    this._validateComponent('GASDBLogger', GASDBLogger);
+    this._validateComponent('GASDBLogger', JDbLogger);
     this._validateComponent('ErrorHandler', ErrorHandler);
     this._validateComponent('IdGenerator', IdGenerator);
     
@@ -237,7 +237,7 @@ class TestFramework {
     this._testBasicFunctionality();
     
     this.environmentValidated = true;
-    GASDBLogger.info('Environment validated ✓');
+    JDbLogger.info('Environment validated ✓');
   }
   
   /**
@@ -247,7 +247,7 @@ class TestFramework {
   _validateGASAPI(name, testFn) {
     try {
       testFn();
-      GASDBLogger.debug(`✓ ${name} API available`);
+      JDbLogger.debug(`✓ ${name} API available`);
     } catch (error) {
       throw new Error(`${name} API not available: ${error.message}`);
     }
@@ -261,7 +261,7 @@ class TestFramework {
     if (typeof component === 'undefined') {
       throw new Error(`${name} component not available`);
     }
-    GASDBLogger.debug(`✓ ${name} component available`);
+    JDbLogger.debug(`✓ ${name} component available`);
   }
   
   /**
@@ -284,7 +284,7 @@ class TestFramework {
         throw new Error('Error handling test failed');
       }
       
-      GASDBLogger.debug('✓ Basic functionality tests passed');
+      JDbLogger.debug('✓ Basic functionality tests passed');
       
     } catch (error) {
       throw new Error(`Basic functionality test failed: ${error.message}`);
@@ -296,7 +296,7 @@ class TestFramework {
    * @private
    */
   setupEnvironment() {
-    GASDBLogger.debug('Setting up test environment');
+    JDbLogger.debug('Setting up test environment');
     this.resourceFiles.clear();
   }
   
@@ -305,16 +305,16 @@ class TestFramework {
    * @private
    */
   teardownEnvironment() {
-    GASDBLogger.debug('Cleaning up test environment');
+    JDbLogger.debug('Cleaning up test environment');
     
     // Clean up any tracked resource files
     if (this.resourceFiles.size > 0) {
-      GASDBLogger.debug(`Cleaning up ${this.resourceFiles.size} test resource files`);
+      JDbLogger.debug(`Cleaning up ${this.resourceFiles.size} test resource files`);
       this.resourceFiles.forEach(fileId => {
         try {
           DriveApp.getFileById(fileId).setTrashed(true);
         } catch (error) {
-          GASDBLogger.warn(`Failed to clean up file ${fileId}: ${error.message}`);
+          JDbLogger.warn(`Failed to clean up file ${fileId}: ${error.message}`);
         }
       });
       this.resourceFiles.clear();

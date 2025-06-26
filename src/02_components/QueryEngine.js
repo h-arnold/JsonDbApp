@@ -26,7 +26,7 @@ class QueryEngine {
    * @param {number} [config.maxNestedDepth=10] - Maximum allowed query nesting depth
    */
   constructor(config = {}) {
-    this._logger = GASDBLogger.createComponentLogger('QueryEngine');
+    this._logger = JDbLogger.createComponentLogger('QueryEngine');
     this._config = {
       supportedOperators: ['$eq', '$gt', '$lt', '$and', '$or'],
       maxNestedDepth: config.maxNestedDepth || 10

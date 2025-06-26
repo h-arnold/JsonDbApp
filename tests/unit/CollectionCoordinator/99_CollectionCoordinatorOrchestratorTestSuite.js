@@ -29,7 +29,7 @@ function runAllCollectionCoordinatorUnitTests() {
     const results = testFramework.runAllTests();
     
     // Log results
-    GASDBLogger.info('CollectionCoordinator Unit Tests Complete', {
+    JDbLogger.info('CollectionCoordinator Unit Tests Complete', {
       totalTests: results.results.length,
       passed: results.getPassed().length,
       failed: results.getFailed().length,
@@ -39,7 +39,7 @@ function runAllCollectionCoordinatorUnitTests() {
     return results;
 
   } catch (error) {
-    GASDBLogger.error('CollectionCoordinator test execution failed', { 
+    JDbLogger.error('CollectionCoordinator test execution failed', { 
       error: error.message, 
       stack: error.stack 
     });
@@ -50,7 +50,7 @@ function runAllCollectionCoordinatorUnitTests() {
     try {
       cleanupCollectionCoordinatorTestEnvironment();
     } catch (cleanupError) {
-      GASDBLogger.warn('Error during test environment cleanup', { 
+      JDbLogger.warn('Error during test environment cleanup', { 
         error: cleanupError.message 
       });
     }

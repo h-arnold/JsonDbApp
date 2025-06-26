@@ -16,7 +16,7 @@ class FileOperations {
    */
   constructor(logger = null) {
     // Create component logger if no logger provided, or use provided logger
-    this._logger = logger || GASDBLogger.createComponentLogger('FileOperations');
+    this._logger = logger || JDbLogger.createComponentLogger('FileOperations');
     this._maxRetries = 3;
     this._retryDelayMs = 1000;
     

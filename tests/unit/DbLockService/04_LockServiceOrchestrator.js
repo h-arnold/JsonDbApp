@@ -11,7 +11,7 @@ const LOCKSERVICE_TEST_ENV = {
  * Setup test environment: clear master index before tests
  */
 function setupLockServiceTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('LockService-Setup');
+  const logger = JDbLogger.createComponentLogger('LockService-Setup');
   logger.info('Clearing master index before tests');
   const props = PropertiesService.getScriptProperties();
   props.deleteProperty(LOCKSERVICE_TEST_ENV.masterIndexKey);
@@ -21,7 +21,7 @@ function setupLockServiceTestEnvironment() {
  * Cleanup test environment: clear master index after tests
  */
 function cleanupLockServiceTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('LockService-Teardown');
+  const logger = JDbLogger.createComponentLogger('LockService-Teardown');
   logger.info('Clearing master index after tests');
   const props = PropertiesService.getScriptProperties();
   props.deleteProperty(LOCKSERVICE_TEST_ENV.masterIndexKey);
@@ -49,7 +49,7 @@ function registerLockServiceTests() {
  */
 function runLockServiceTests() {
   setupLockServiceTestEnvironment();
-  const logger = GASDBLogger.createComponentLogger('LockService-TestRunner');
+  const logger = JDbLogger.createComponentLogger('LockService-TestRunner');
   logger.info('Starting LockService unit tests');
   const tf = registerLockServiceTests();
   const results = tf.runAllTests();

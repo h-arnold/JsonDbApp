@@ -19,7 +19,7 @@ class MasterIndex {
       version: config.version || 1
     };
     
-    this._logger = GASDBLogger.createComponentLogger('MasterIndex');
+    this._logger = JDbLogger.createComponentLogger('MasterIndex');
 
     // DbLockService is now only for script-level locks
     this._dbLockService = new DbLockService({ defaultTimeout: this._config.lockTimeout });

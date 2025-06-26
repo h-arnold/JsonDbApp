@@ -69,14 +69,14 @@ function registerTestFrameworkTests() {
  * Run TestFramework Tests independently
  */
 function runTestFrameworkTests() {
-  GASDBLogger.info('Running TestFramework Tests: Testing Framework Functionality');
+  JDbLogger.info('Running TestFramework Tests: Testing Framework Functionality');
   
   const testFramework = registerTestFrameworkTests();
   const results = testFramework.runTestSuite('TestFramework Tests');
   
   // Log summary
-  GASDBLogger.info('TestFramework Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('TestFramework Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

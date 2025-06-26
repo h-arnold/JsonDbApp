@@ -17,7 +17,7 @@ function createEnvironmentTestSuite() {
   // Test clasp configuration and basic dependencies
   suite.addTest('testClaspConfiguration', function() {
     // Test that clasp.json exists and has required dependencies available
-    TestFramework.assertTrue(typeof GASDBLogger !== 'undefined', 'GASDBLogger should be available');
+    TestFramework.assertTrue(typeof JDbLogger !== 'undefined', 'GASDBLogger should be available');
     TestFramework.assertTrue(typeof ErrorHandler !== 'undefined', 'ErrorHandler should be available');
     TestFramework.assertTrue(typeof TestFramework !== 'undefined', 'TestFramework should be available');
   });
@@ -49,14 +49,14 @@ function registerEnvironmentTests() {
  * Run Environment Tests independently
  */
 function runEnvironmentTests() {
-  GASDBLogger.info('Running Environment Tests: Project Setup and Configuration');
+  JDbLogger.info('Running Environment Tests: Project Setup and Configuration');
   
   const testFramework = registerEnvironmentTests();
   const results = testFramework.runTestSuite('Environment Tests');
   
   // Log summary
-  GASDBLogger.info('Environment Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('Environment Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

@@ -30,7 +30,7 @@ const DATABASE_TEST_DATA = {
  * Setup database test environment
  */
 function setupDatabaseTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('Database-Setup');
+  const logger = JDbLogger.createComponentLogger('Database-Setup');
   
   try {
     const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
@@ -63,7 +63,7 @@ function setupDatabaseTestEnvironment() {
  * Clean up database test environment
  */
 function cleanupDatabaseTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('Database-Cleanup');
+  const logger = JDbLogger.createComponentLogger('Database-Cleanup');
   let cleanedFiles = 0;
   let failedFiles = 0;
   let cleanedFolders = 0;
@@ -578,7 +578,7 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
  */
 function runDatabaseTests() {
   try {
-    GASDBLogger.info('Starting Database Test Execution');
+    JDbLogger.info('Starting Database Test Execution');
     
     // Setup test environment once for all suites
     setupDatabaseTestEnvironment();
@@ -601,9 +601,9 @@ function runDatabaseTests() {
     }
     
   } catch (error) {
-    GASDBLogger.error('Failed to execute Database tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute Database tests', { error: error.message, stack: error.stack });
     throw error;
   } finally {
-    GASDBLogger.info('Database Test Execution Complete');
+    JDbLogger.info('Database Test Execution Complete');
   }
 }

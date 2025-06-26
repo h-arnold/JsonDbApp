@@ -772,14 +772,14 @@ function registerObjectUtilsTests() {
  * Run ObjectUtils Tests independently
  */
 function runObjectUtilsTests() {
-  GASDBLogger.info('Running ObjectUtils Tests: Object Manipulation and Date Preservation');
+  JDbLogger.info('Running ObjectUtils Tests: Object Manipulation and Date Preservation');
   
   const testFramework = registerObjectUtilsTests();
   const results = testFramework.runTestSuite('ObjectUtils Tests');
   
   // Log summary
-  GASDBLogger.info('ObjectUtils Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('ObjectUtils Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

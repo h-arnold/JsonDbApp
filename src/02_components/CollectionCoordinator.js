@@ -10,16 +10,16 @@ class CollectionCoordinator {
    * @param {Collection} collection - Collection instance to coordinate
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
    * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
-   * @param {GASDBLogger} logger - Logger for operation tracing
+   * @param {JDbLogger} logger - Logger for operation tracing
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
-  constructor(collection, masterIndex, config = {}, _logger = GASDBLogger) {
+  constructor(collection, masterIndex, config = {}, _logger = JDbLogger) {
     Validate.object(collection, 'collection');
     Validate.object(masterIndex, 'masterIndex');
     Validate.object(config, 'config');
     this._collection = collection;
     this._masterIndex = masterIndex;
-    this._logger = GASDBLogger.createComponentLogger('CollectionCoordinator');
+    this._logger = JDbLogger.createComponentLogger('CollectionCoordinator');
 
     // Use DatabaseConfig defaults if not supplied in config
     const DEFAULTS = {

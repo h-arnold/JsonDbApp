@@ -23,7 +23,7 @@ function createDatabaseConfigSetupTestSuite() {
   
   suite.addTest('should create test folder for DatabaseConfig tests', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('DatabaseConfig-Setup');
+    const logger = JDbLogger.createComponentLogger('DatabaseConfig-Setup');
     
     // Act
     try {
@@ -262,7 +262,7 @@ function createDatabaseConfigCleanupTestSuite() {
   
   suite.addTest('should clean up test folders', function() {
     // Arrange
-    const logger = GASDBLogger.createComponentLogger('DatabaseConfig-Cleanup');
+    const logger = JDbLogger.createComponentLogger('DatabaseConfig-Cleanup');
     let cleanedFolders = 0;
     let failedFolders = 0;
     
@@ -297,7 +297,7 @@ function createDatabaseConfigCleanupTestSuite() {
  */
 function runDatabaseConfigTests() {
   try {
-    GASDBLogger.info('Starting DatabaseConfig Test Execution');
+    JDbLogger.info('Starting DatabaseConfig Test Execution');
     
     // Register all test suites using global convenience functions
     registerTestSuite(createDatabaseConfigSetupTestSuite());
@@ -308,12 +308,12 @@ function runDatabaseConfigTests() {
     // Run all tests
     const results = runAllTests();
     
-    GASDBLogger.info('DatabaseConfig Test Execution Complete');
+    JDbLogger.info('DatabaseConfig Test Execution Complete');
     
     return results;
     
   } catch (error) {
-    GASDBLogger.error('Failed to execute DatabaseConfig tests', { error: error.message, stack: error.stack });
+    JDbLogger.error('Failed to execute DatabaseConfig tests', { error: error.message, stack: error.stack });
     throw error;
   }
 }

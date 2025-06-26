@@ -28,7 +28,7 @@ const COLLECTION_TEST_DATA = {
  * Setup collection test environment
  */
 function setupCollectionTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger("Collection-Setup");
+  const logger = JDbLogger.createComponentLogger("Collection-Setup");
 
   try {
     const folder = DriveApp.createFolder(COLLECTION_TEST_DATA.testFolderName);
@@ -64,7 +64,7 @@ function setupCollectionTestEnvironment() {
  * Clean up collection test environment
  */
 function cleanupCollectionTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger("Collection-Cleanup");
+  const logger = JDbLogger.createComponentLogger("Collection-Cleanup");
   let cleanedFiles = 0;
   let failedFiles = 0;
   let cleanedFolders = 0;
@@ -139,7 +139,7 @@ function createTestCollectionFile() {
  */
 function runCollectionTests() {
   try {
-    GASDBLogger.info("Starting Collection Test Execution");
+    JDbLogger.info("Starting Collection Test Execution");
 
     // Setup test environment once for all suites
     setupCollectionTestEnvironment();
@@ -166,12 +166,12 @@ function runCollectionTests() {
       cleanupCollectionTestEnvironment();
     }
   } catch (error) {
-    GASDBLogger.error("Failed to execute Collection tests", {
+    JDbLogger.error("Failed to execute Collection tests", {
       error: error.message,
       stack: error.stack,
     });
     throw error;
   } finally {
-    GASDBLogger.info("Collection Test Execution Complete");
+    JDbLogger.info("Collection Test Execution Complete");
   }
 }

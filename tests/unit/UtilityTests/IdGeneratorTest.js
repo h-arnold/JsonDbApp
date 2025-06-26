@@ -71,14 +71,14 @@ function registerIdGeneratorTests() {
  * Run IdGenerator Tests independently
  */
 function runIdGeneratorTests() {
-  GASDBLogger.info('Running IdGenerator Tests: ID Generation Functionality');
+  JDbLogger.info('Running IdGenerator Tests: ID Generation Functionality');
   
   const testFramework = registerIdGeneratorTests();
   const results = testFramework.runTestSuite('IdGenerator Tests');
   
   // Log summary
-  GASDBLogger.info('IdGenerator Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('IdGenerator Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }

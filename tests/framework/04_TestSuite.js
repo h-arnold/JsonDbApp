@@ -51,7 +51,7 @@ class TestSuite {
       try {
         this.beforeAll();
       } catch (error) {
-        GASDBLogger.error(`BeforeAll failed for suite ${this.name}: ${error.message}`);
+        JDbLogger.error(`BeforeAll failed for suite ${this.name}: ${error.message}`);
         results.push(new TestResult(this.name, 'beforeAll', false, error, 0));
         return results;
       }
@@ -59,7 +59,7 @@ class TestSuite {
     
     // Run each test
     for (const [testName, testFn] of this.tests) {
-      GASDBLogger.info(`\n ============ \n Running test: ${testName} \n ============`);
+      JDbLogger.info(`\n ============ \n Running test: ${testName} \n ============`);
       results.push(this.runTest(testName));
     }
     
@@ -68,7 +68,7 @@ class TestSuite {
       try {
         this.afterAll();
       } catch (error) {
-        GASDBLogger.error(`AfterAll failed for suite ${this.name}: ${error.message}`);
+        JDbLogger.error(`AfterAll failed for suite ${this.name}: ${error.message}`);
         results.push(new TestResult(this.name, 'afterAll', false, error, 0));
       }
     }

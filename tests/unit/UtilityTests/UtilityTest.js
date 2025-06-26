@@ -33,14 +33,14 @@ function createUtilityTestFramework() {
  * Run all utility tests as a batch
  */
 function runUtilityTests() {
-  GASDBLogger.info('Running Utility Tests: GASDBLogger, ErrorHandler, and IdGenerator');
+  JDbLogger.info('Running Utility Tests: GASDBLogger, ErrorHandler, and IdGenerator');
   
   const testFramework = createUtilityTestFramework();
   const results = testFramework.runAllTests();
   
   // Log summary
-  GASDBLogger.info('Utility Test Results:');
-  GASDBLogger.info(results.getSummary());
+  JDbLogger.info('Utility Test Results:');
+  JDbLogger.info(results.getSummary());
   
   return results;
 }
@@ -68,8 +68,8 @@ function listUtilityTestSuites() {
   const testFramework = createUtilityTestFramework();
   const suiteNames = Array.from(testFramework.testSuites.keys());
   
-  GASDBLogger.info('Available Utility Test Suites:');
-  suiteNames.forEach(name => GASDBLogger.info(`  - ${name}`));
+  JDbLogger.info('Available Utility Test Suites:');
+  suiteNames.forEach(name => JDbLogger.info(`  - ${name}`));
   
   return suiteNames;
 }

@@ -5,15 +5,15 @@
  * across the entire library. Designed to work with Google Apps Script's
  * console logging capabilities.
  */
-class GASDBLogger {
+class JDbLogger {
   
   /**
    * Set the current logging level
    * @param {number} level - The log level from LOG_LEVELS
    */
   static setLevel(level) {
-    if (Object.values(GASDBLogger.LOG_LEVELS).includes(level)) {
-      GASDBLogger.currentLevel = level;
+    if (Object.values(JDbLogger.LOG_LEVELS).includes(level)) {
+      JDbLogger.currentLevel = level;
     } else {
       throw new Error(`Invalid log level: ${level}`);
     }
@@ -24,9 +24,9 @@ class GASDBLogger {
    * @param {string} levelName - The log level name (ERROR, WARN, INFO, DEBUG)
    */
   static setLevelByName(levelName) {
-    const level = GASDBLogger.LOG_LEVELS[levelName.toUpperCase()];
+    const level = JDbLogger.LOG_LEVELS[levelName.toUpperCase()];
     if (level !== undefined) {
-      GASDBLogger.currentLevel = level;
+      JDbLogger.currentLevel = level;
     } else {
       throw new Error(`Invalid log level name: ${levelName}`);
     }
@@ -37,7 +37,7 @@ class GASDBLogger {
    * @returns {number} The current log level
    */
   static getLevel() {
-    return GASDBLogger.currentLevel;
+    return JDbLogger.currentLevel;
   }
   
   /**
@@ -45,8 +45,8 @@ class GASDBLogger {
    * @returns {string} The current log level name
    */
   static getLevelName() {
-    for (const [name, level] of Object.entries(GASDBLogger.LOG_LEVELS)) {
-      if (level === GASDBLogger.currentLevel) {
+    for (const [name, level] of Object.entries(JDbLogger.LOG_LEVELS)) {
+      if (level === JDbLogger.currentLevel) {
         return name;
       }
     }
@@ -77,8 +77,8 @@ class GASDBLogger {
    * @param {Object} context - Optional context object
    */
   static error(message, context = null) {
-    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.ERROR) {
-      const formatted = GASDBLogger.formatMessage('ERROR', message, context);
+    if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.ERROR) {
+      const formatted = JDbLogger.formatMessage('ERROR', message, context);
       console.error(formatted);
     }
   }
@@ -89,8 +89,8 @@ class GASDBLogger {
    * @param {Object} context - Optional context object
    */
   static warn(message, context = null) {
-    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.WARN) {
-      const formatted = GASDBLogger.formatMessage('WARN', message, context);
+    if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.WARN) {
+      const formatted = JDbLogger.formatMessage('WARN', message, context);
       console.warn(formatted);
     }
   }
@@ -101,8 +101,8 @@ class GASDBLogger {
    * @param {Object} context - Optional context object
    */
   static info(message, context = null) {
-    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.INFO) {
-      const formatted = GASDBLogger.formatMessage('INFO', message, context);
+    if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.INFO) {
+      const formatted = JDbLogger.formatMessage('INFO', message, context);
       console.log(formatted);
     }
   }
@@ -113,8 +113,8 @@ class GASDBLogger {
    * @param {Object} context - Optional context object
    */
   static debug(message, context = null) {
-    if (GASDBLogger.currentLevel >= GASDBLogger.LOG_LEVELS.DEBUG) {
-      const formatted = GASDBLogger.formatMessage('DEBUG', message, context);
+    if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.DEBUG) {
+      const formatted = JDbLogger.formatMessage('DEBUG', message, context);
       console.log(formatted);
     }
   }
@@ -126,9 +126,9 @@ class GASDBLogger {
    * @param {Object} context - Optional context object
    */
   static log(level, message, context = null) {
-    const levelValue = GASDBLogger.LOG_LEVELS[level.toUpperCase()];
-    if (levelValue !== undefined && GASDBLogger.currentLevel >= levelValue) {
-      const formatted = GASDBLogger.formatMessage(level.toUpperCase(), message, context);
+    const levelValue = JDbLogger.LOG_LEVELS[level.toUpperCase()];
+    if (levelValue !== undefined && JDbLogger.currentLevel >= levelValue) {
+      const formatted = JDbLogger.formatMessage(level.toUpperCase(), message, context);
       
       // Use appropriate console method based on level
       switch (level.toUpperCase()) {
@@ -152,16 +152,16 @@ class GASDBLogger {
   static createComponentLogger(component) {
     return {
       error: (message, context = null) => {
-        GASDBLogger.error(`[${component}] ${message}`, context);
+        JDbLogger.error(`[${component}] ${message}`, context);
       },
       warn: (message, context = null) => {
-        GASDBLogger.warn(`[${component}] ${message}`, context);
+        JDbLogger.warn(`[${component}] ${message}`, context);
       },
       info: (message, context = null) => {
-        GASDBLogger.info(`[${component}] ${message}`, context);
+        JDbLogger.info(`[${component}] ${message}`, context);
       },
       debug: (message, context = null) => {
-        GASDBLogger.debug(`[${component}] ${message}`, context);
+        JDbLogger.debug(`[${component}] ${message}`, context);
       }
     };
   }
@@ -172,7 +172,7 @@ class GASDBLogger {
    * @param {Object} context - Optional context object
    */
   static startOperation(operation, context = null) {
-    GASDBLogger.debug(`Starting operation: ${operation}`, context);
+    JDbLogger.debug(`Starting operation: ${operation}`, context);
   }
   
   /**
@@ -186,7 +186,7 @@ class GASDBLogger {
     if (duration !== null) {
       message += ` (${duration}ms)`;
     }
-    GASDBLogger.debug(message, context);
+    JDbLogger.debug(message, context);
   }
   
   /**
@@ -198,28 +198,28 @@ class GASDBLogger {
    */
   static timeOperation(operation, fn, context = null) {
     const startTime = Date.now();
-    GASDBLogger.startOperation(operation, context);
+    JDbLogger.startOperation(operation, context);
     
     try {
       const result = fn();
       const duration = Date.now() - startTime;
-      GASDBLogger.endOperation(operation, duration, context);
+      JDbLogger.endOperation(operation, duration, context);
       return result;
     } catch (error) {
       const duration = Date.now() - startTime;
       const errorContext = Object.assign({}, context, { error: error.message });
-      GASDBLogger.error(`Operation failed: ${operation} (${duration}ms)`, errorContext);
+      JDbLogger.error(`Operation failed: ${operation} (${duration}ms)`, errorContext);
       throw error;
     }
   }
 }
 
 // initialise static properties after class declaration
-GASDBLogger.LOG_LEVELS = {
+JDbLogger.LOG_LEVELS = {
   ERROR: 0,
   WARN: 1,
   INFO: 2,
   DEBUG: 3
 };
 
-GASDBLogger.currentLevel = GASDBLogger.LOG_LEVELS.DEBUG;
+JDbLogger.currentLevel = JDbLogger.LOG_LEVELS.DEBUG;

@@ -49,7 +49,7 @@ class Collection {
     this._driveFileId = driveFileId;
     this._database = database;
     this._fileService = fileService;
-    this._logger = GASDBLogger.createComponentLogger("Collection");
+    this._logger = JDbLogger.createComponentLogger("Collection");
 
     // Internal state management
     this._loaded = false;

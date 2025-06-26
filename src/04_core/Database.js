@@ -29,7 +29,7 @@ class Database {
     this.collections = new Map();
     
     // initialise logging
-    this._logger = GASDBLogger.createComponentLogger('Database');
+    this._logger = JDbLogger.createComponentLogger('Database');
     
     // initialise services
     this._fileOps = new FileOperations(this._logger);

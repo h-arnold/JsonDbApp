@@ -11,7 +11,7 @@ let masterIndex, collectionCoordinator, collection;
 
 collectionCoordinatorDelegationSuite.setBeforeEach(function() {
   const databaseConfig = new DatabaseConfig({ name: 'test_delegation_collection' });
-  const logger = new GASDBLogger('test_delegation_collection');
+  const logger = new JDbLogger('test_delegation_collection');
   masterIndex = new MasterIndex(databaseConfig, logger);
   collectionCoordinator = new CollectionCoordinator(null, masterIndex, databaseConfig, logger);
   collection = new Collection(databaseConfig, logger, collectionCoordinator);
