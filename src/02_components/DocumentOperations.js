@@ -169,7 +169,7 @@ class DocumentOperations {
     
     return { acknowledged: true, deletedCount: 1 };
   }
-  
+
   /**
    * Count total documents in collection
    * @returns {number} Total number of documents

@@ -539,23 +539,22 @@ class Collection {
       }
       // ID filter
       if (filterKeys.length === 1 && filterKeys[0] === "_id") {
-        const result = this._documentOperations.deleteDocumentById(filter._id);
+        const result = this._documentOperations.deleteDocument(filter._id);
         if (result.deletedCount > 0) {
           this._updateMetadata({ documentCount: Object.keys(this._documents).length });
           this._markDirty();
         }
         return { deletedCount: result.deletedCount, acknowledged: true };
       }
-      // Field-based
+      // Field-based - only delete the FIRST matching document
       const matchingDocs = this._documentOperations.findMultipleByQuery(filter);
       if (matchingDocs.length === 0) {
         return { deletedCount: 0, acknowledged: true };
       }
-      let deletedCount = 0;
-      for (const doc of matchingDocs) {
-        const res = this._documentOperations.deleteDocument(doc._id);
-        deletedCount += res.deletedCount;
-      }
+      // Only delete the first matching document for deleteOne()
+      const firstDoc = matchingDocs[0];
+      const res = this._documentOperations.deleteDocument(firstDoc._id);
+      const deletedCount = res.deletedCount;
       if (deletedCount > 0) {
         this._updateMetadata({ documentCount: Object.keys(this._documents).length });
         this._markDirty();
