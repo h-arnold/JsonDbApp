@@ -45,12 +45,12 @@ class Database {
   }
   
   /**
-   * initialise the database and create/load index file
+   * Initialise the database and create/load index file
    * 
-   * @throws {Error} When initialization fails
+   * @throws {Error} When initialisation fails
    */
   initialise() {
-    this._logger.info('Initializing database');
+    this._logger.info('Initialising database');
     
     try {
       // First, load any collections that already exist in MasterIndex
@@ -78,7 +78,7 @@ class Database {
         this.indexFileId = existingIndexFileId;
         this._logger.debug('Found existing index file', { indexFileId: this.indexFileId });
         
-        // Load any additional collections from index file and sync to MasterIndex
+        // Load any additional collections from index file and synchronise to MasterIndex
         this._loadIndexFile();
       } else if (!this.indexFileId) {
         // Create new index file if none exists
@@ -90,14 +90,14 @@ class Database {
         }
       }
       
-      this._logger.info('Database initialization complete', {
+      this._logger.info('Database initialisation complete', {
         indexFileId: this.indexFileId,
         collectionCount: this.collections.size
       });
       
     } catch (error) {
-      this._logger.error('Database initialization failed', { error: error.message });
-      throw new Error('Database initialization failed: ' + error.message);
+      this._logger.error('Database initialisation failed', { error: error.message });
+      throw new Error('Database initialisation failed: ' + error.message);
     }
   }
   
@@ -225,26 +225,21 @@ class Database {
       const masterIndexCollections = this._masterIndex.getCollections();
       if (masterIndexCollections && Object.keys(masterIndexCollections).length > 0) {
         const collectionNames = Object.keys(masterIndexCollections);
-        
         this._logger.debug('Listed collections from MasterIndex', {
           count: collectionNames.length,
           names: collectionNames
         });
-        
         return collectionNames;
       }
-      
       // Fall back to Drive-based index file if MasterIndex is empty
       const indexData = this.loadIndex();
       const collectionNames = Object.keys(indexData.collections || {});
-      
       // If we found collections in the index file but not in MasterIndex, 
-      // sync them to MasterIndex
+      // synchronise them to MasterIndex
       if (collectionNames.length > 0) {
-        this._logger.info('Synchronizing collections from index file to MasterIndex', {
+        this._logger.info('Synchronising collections from index file to MasterIndex', {
           count: collectionNames.length
         });
-        
         for (const name of collectionNames) {
           const collectionData = indexData.collections[name];
           if (collectionData && collectionData.fileId) {
@@ -252,14 +247,11 @@ class Database {
           }
         }
       }
-      
       this._logger.debug('Listed collections from index file', {
         count: collectionNames.length,
         names: collectionNames
       });
-      
       return collectionNames;
-      
     } catch (error) {
       this._logger.warn('Failed to list collections', { error: error.message });
       return [];
@@ -478,14 +470,14 @@ class Database {
       const indexData = this.loadIndex();
       const masterIndexCollections = this._masterIndex.getCollections();
       
-      // Load collection references from index and sync to MasterIndex
+      // Load collection references from index and synchronise to MasterIndex
       for (const [name, collectionData] of Object.entries(indexData.collections || {})) {
         if (collectionData.fileId) {
           // Add to memory
           const collection = this._createCollectionObject(name, collectionData.fileId);
           this.collections.set(name, collection);
           
-          // Sync to MasterIndex if not already there
+          // Synchronise to MasterIndex if not already there
           if (!masterIndexCollections[name]) {
             this._logger.debug('Adding collection from index file to MasterIndex', { name });
             this._addCollectionToMasterIndex(name, collectionData.fileId);
