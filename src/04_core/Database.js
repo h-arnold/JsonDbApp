@@ -109,6 +109,7 @@ class Database {
    * @throws {Error} When collection name is invalid or creation fails
    */
   collection(name) {
+    Validate.nonEmptyString(name, 'name');
     this._validateCollectionName(name);
     
     // Check if collection already exists in memory
@@ -153,6 +154,7 @@ class Database {
    * @throws {Error} When collection name is invalid or creation fails
    */
   createCollection(name) {
+    Validate.nonEmptyString(name, 'name');
     this._validateCollectionName(name);
     
     this._logger.debug('Creating new collection', { name });
@@ -272,6 +274,7 @@ class Database {
    * @throws {Error} When collection name is invalid
    */
   dropCollection(name) {
+    Validate.nonEmptyString(name, 'name');
     this._validateCollectionName(name);
     
     this._logger.debug('Dropping collection', { name });
@@ -524,10 +527,10 @@ class Database {
   
   /**
    * Backup MasterIndex to Drive-based index file
-   * 
+   *
    * This explicitly backs up the MasterIndex data to the Drive-based index file.
    * This is useful for ensuring data durability and for migration purposes.
-   * 
+   *
    * @returns {boolean} True if backup succeeded
    */
   backupIndexToDrive() {
@@ -535,23 +538,18 @@ class Database {
       this._logger.warn('Cannot backup index - no index file exists');
       return false;
     }
-    
     try {
       this._logger.info('Backing up MasterIndex to Drive index file');
-      
       // Get all collections from MasterIndex
       const miCollections = this._masterIndex.getCollections();
-      
       // Create a new index data structure based on MasterIndex
       const backupData = {
         collections: {},
         lastUpdated: new Date(),
         version: 1
       };
-      
       // Copy collection data from MasterIndex
       for (const [name, miCollection] of Object.entries(miCollections)) {
-        // Only include essential collection metadata
         backupData.collections[name] = {
           name: miCollection.name || name,
           fileId: miCollection.fileId,
@@ -560,23 +558,18 @@ class Database {
           documentCount: miCollection.documentCount || 0
         };
       }
-      
       // Write to index file
       this._fileService.writeFile(this.indexFileId, backupData);
-      
       this._logger.info('MasterIndex backup successful', {
         collectionCount: Object.keys(miCollections).length,
         indexFileId: this.indexFileId
       });
-      
       return true;
-      
     } catch (error) {
       this._logger.error('MasterIndex backup failed', { error: error.message });
       return false;
     }
   }
-  
   /**
    * Add collection to index file
    * 
@@ -695,20 +688,12 @@ class Database {
    * @private
    */
   _validateCollectionName(name) {
-    if (!name || typeof name !== 'string') {
-      throw new Error('Collection name must be a non-empty string');
-    }
-    
-    if (name.trim() === '') {
-      throw new Error('Collection name cannot be empty or only whitespace');
-    }
-    
+    Validate.nonEmptyString(name, 'name');
     // Check for invalid characters
     const invalidChars = /[\/\\:*?"<>|]/;
     if (invalidChars.test(name)) {
       throw new Error('Collection name contains invalid characters');
     }
-    
     // Check for reserved names
     const reservedNames = ['index', 'master', 'system', 'admin'];
     if (reservedNames.includes(name.toLowerCase())) {
