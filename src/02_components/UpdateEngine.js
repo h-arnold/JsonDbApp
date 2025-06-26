@@ -202,7 +202,7 @@ class UpdateEngine {
    * @param {Object} ops - An object mapping field paths to values or modifiers to push.
    *   Each value can be a direct value to push, or an object with a `$each` array.
    * @returns {Object} The updated document after applying the push operations.
-   * @throws {Error} If the operations object is empty, or if any target field is not an array when required.
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If the operations object is empty, or if any target field is not an array when required.
    *
    * @example
    * // Push a single value
@@ -293,8 +293,14 @@ class UpdateEngine {
        const eachValues = valueOrModifier.$each;
         this._validateArrayValue(eachValues, fieldPath, '$addToSet');
         if (current === undefined) {
-          // Initialise new array from provided values
-          this._setFieldValue(document, fieldPath, [...eachValues]);
+          // Initialise new array from provided values, ensuring uniqueness
+          const uniqueValues = [];
+          eachValues.forEach(val => {
+            if (!uniqueValues.some(item => this._valuesEqual(item, val))) {
+              uniqueValues.push(val);
+            }
+          });
+          this._setFieldValue(document, fieldPath, uniqueValues);
         } else {
           this._validateArrayValue(current, fieldPath, '$addToSet');
           // Add each unique element

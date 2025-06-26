@@ -16,6 +16,8 @@
       - [`_applyPush(document, ops)`](#_applypushdocument-ops)
       - [`_applyPull(document, ops)`](#_applypulldocument-ops)
       - [`_applyAddToSet(document, ops)`](#_applyaddtosetdocument-ops)
+      - [`$each` Modifier in Array Operators](#each-modifier-in-array-operators)
+      - [`_valuesEqual(a, b)`](#_valuesequala-b)
     - [Utility Methods](#utility-methods)
       - [`_getFieldValue(document, fieldPath)`](#_getfieldvaluedocument-fieldpath)
       - [`_setFieldValue(document, fieldPath, value)`](#_setfieldvaluedocument-fieldpath-value)
@@ -24,7 +26,9 @@
     - [Updating Nested Fields](#updating-nested-fields)
     - [Array Manipulations](#array-manipulations)
   - [Error Handling](#error-handling)
+    - [Private Validation Methods](#private-validation-methods)
   - [Best Practices](#best-practices)
+    - [Dot Notation and Nested Paths](#dot-notation-and-nested-paths)
 
 ## Overview
 
@@ -40,6 +44,8 @@ The `UpdateEngine` class is responsible for applying MongoDB-style update operat
 **Dependencies:**
 
 - `ErrorHandler`: For standardised error reporting.
+- `JDbLogger`: For component-level logging.
+- `ObjectUtils`: For deep cloning documents.
 
 ## Core Principles
 
@@ -71,7 +77,7 @@ Applies a set of MongoDB-style update operators to a given document. This is the
 
 **Returns:**
 
-- `Object`: The modified document.
+- `Object`: A deep clone of the original document, with the updates applied. The original document is not mutated.
 
 **Throws:**
 
@@ -323,6 +329,28 @@ updateEngine._applyAddToSet(doc, { categories: { $each: ["sports", "tech"] } });
 // doc is now: { categories: ["news", "tech", "sports"] }
 ```
 
+#### `$each` Modifier in Array Operators
+
+For array operators like `$push` and `$addToSet`, the `$each` modifier allows multiple values to be added at once. The `UpdateEngine` enforces that the value of `$each` must be an array. If `$each` is not an array, an `ErrorHandler.ErrorTypes.INVALID_QUERY` error is thrown. This ensures consistent and predictable behaviour when using array modifiers.
+
+#### `_valuesEqual(a, b)`
+
+Performs a deep comparison between two values (primitives, arrays, or objects) to determine equality. Used internally for array and object matching, especially in operators like `$pull` and `$addToSet`.
+
+**Parameters:**
+- `a` (*): First value for comparison.
+- `b` (*): Second value for comparison.
+
+**Returns:**
+- `boolean`: `true` if values are deeply equal, `false` otherwise.
+
+**Example:**
+```javascript
+updateEngine._valuesEqual([1, 2], [1, 2]); // true
+updateEngine._valuesEqual({x: 1}, {x: 1}); // true
+updateEngine._valuesEqual({x: 1}, {x: 2}); // false
+```
+
 ### Utility Methods
 
 #### `_getFieldValue(document, fieldPath)`
@@ -367,6 +395,28 @@ updateEngine._setFieldValue(doc, "user.contact.email", "jane@example.com");
 updateEngine._setFieldValue(doc, "user.age", 30);
 // doc is now:
 // { user: { name: "Jane", age: 30, contact: { email: "jane@example.com" } } }
+```
+
+#### `_unsetFieldValue(document, fieldPath)`
+
+Removes a field or array element at a given dot-notation path.
+
+**Parameters:**
+
+- `document` (Object): The document to modify.
+- `fieldPath` (String): The dot-notation path of the field or element to remove.
+
+**Example:**
+
+```javascript
+let doc = { user: { name: "Jane", age: 30, temp: "delete me" } };
+updateEngine._unsetFieldValue(doc, "user.temp");
+// doc is now: { user: { name: "Jane", age: 30 } }
+
+// For arrays
+let doc2 = { items: ["a", "b", "c"] };
+updateEngine._unsetFieldValue(doc2, "items.1");
+// doc2 is now: { items: ["a", undefined, "c"] } // preserves array length
 ```
 
 ## Usage Examples
@@ -455,12 +505,13 @@ let article = {
     { user: "UserA", text: "Great!" },
     { user: "UserB", text: "Helpful." }
   ],
-  tags: ["database", "apps script"]
+  tags: ["database", "apps script"],
+  scores: [10, 20, 30, 20, 40]
 };
 
 const arrayUpdates = {
   $push: { authors: "Jane" },
-  $pull: { comments: { user: "UserA" } }, // Note: This pulls if the object matches exactly
+  $pull: { scores: 20 }, // Removes all instances of 20
   $addToSet: { tags: "guide" }
 };
 
@@ -471,9 +522,11 @@ article is now:
   title: "GAS DB Guide",
   authors: ["John", "Jane"],
   comments: [
+    { user: "UserA", text: "Great!" },
     { user: "UserB", text: "Helpful." }
   ],
-  tags: ["database", "apps script", "guide"]
+  tags: ["database", "apps script", "guide"],
+  scores: [10, 30, 40]
 }
 */
 ```
@@ -487,7 +540,23 @@ The `UpdateEngine` uses `ErrorHandler.ErrorTypes.INVALID_QUERY` for most operati
 - Providing an empty `updateOps` object or one with no valid `$`-prefixed operators to `applyOperators`.
 - Encountering an unknown update operator.
 
-Refer to `ErrorHandler.js` for details on error objects.
+It also uses `ErrorHandler.ErrorTypes.INVALID_ARGUMENT` for invalid or missing arguments, such as when required parameters are not provided or are of the wrong type.
+
+Refer to `ErrorHandler.js` for details on error objects and codes.
+
+### Private Validation Methods
+
+The `UpdateEngine` class includes several private validation methods to ensure robust error handling and input correctness. These methods are invoked internally before or during operator application:
+
+- `_validateApplyOperatorsInputs(document, updateOps)`: Ensures both arguments are valid objects.
+- `_validateUpdateOperationsNotEmpty(updateOps)`: Ensures the update operations object is not empty.
+- `_validateOperationsNotEmpty(ops, operatorName)`: Ensures the operator-specific operations object is not empty.
+- `_validateNumericValue(value, fieldPath, operation)`: Ensures a value is numeric for arithmetic operations.
+- `_validateCurrentFieldNumeric(value, fieldPath, operation)`: Ensures the current field value is numeric before arithmetic operations.
+- `_validateArrayValue(value, fieldPath, operation)`: Ensures a value is an array for array operations.
+- `_validateComparableValues(currentValue, newValue, fieldPath, operation)`: Ensures two values can be compared (same type or both numeric).
+
+These methods throw `ErrorHandler.ErrorTypes.INVALID_ARGUMENT` or `INVALID_QUERY` as appropriate, providing clear error messages for invalid input or misuse of operators.
 
 ## Best Practices
 
@@ -496,3 +565,16 @@ Refer to `ErrorHandler.js` for details on error objects.
 - **Nested paths**: Use dot notation carefully for nested fields. The `_setFieldValue` utility will create intermediate objects if they don't exist when using `$set`. Other operators might behave differently if parent paths are missing.
 - **Array operations**: Be mindful of how array operators like `$pull` match elements (e.g., exact match for objects in an array).
 - **Performance**: For very large documents or frequent updates, consider the performance implications, as each operation involves traversing and potentially restructuring parts of the document.
+
+### Dot Notation and Nested Paths
+
+The `UpdateEngine` supports dot notation for targeting nested fields in documents (e.g., `profile.name`).
+
+- The `_setFieldValue` utility will create intermediate objects as needed when using `$set` or similar operators.
+- For other operators, if a parent path does not exist, behaviour may differ:
+  - `$inc`, `$mul`, `$min`, `$max` will create the field if it does not exist, but only if the operation is valid for the value type.
+  - `$unset` will silently do nothing if the path does not exist.
+  - Array operators (`$push`, `$pull`, `$addToSet`) will throw an error if the target is not an array or does not exist (unless the operator is designed to create the array).
+- Edge cases: If an intermediate object in the path is not an object (e.g., a string or number), an error will be thrown.
+
+Careful use of dot notation is recommended to avoid unexpected behaviour, especially with deeply nested or missing paths.

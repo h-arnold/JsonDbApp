@@ -4,23 +4,41 @@
   - [Overview](#overview)
   - [Core Principles](#core-principles)
   - [API Reference](#api-reference)
-    - [`constructor()`](#constructor)
+    - [`constructor(config)`](#constructorconfig)
     - [`executeQuery(documents, query)`](#executequerydocuments-query)
-    - [`_matches(document, query)`](#_matchesdocument-query)
-    - [`_evaluateCondition(value, condition)`](#_evaluateconditionvalue-condition)
+    - [`_matchDocument(document, query)`](#_matchdocumentdocument-query)
+    - [`_matchField(document, fieldPath, queryValue)`](#_matchfielddocument-fieldpath-queryvalue)
+    - [`_compareValues(documentValue, queryValue, operator)`](#_comparevaluesdocumentvalue-queryvalue-operator)
     - [`_getFieldValue(document, fieldPath)`](#_getfieldvaluedocument-fieldpath)
+    - [`_isOperatorObject(value)`](#_isoperatorobjectvalue)
+    - [`_matchOperators(documentValue, operators)`](#_matchoperatorsdocumentvalue-operators)
+    - [`_equalityComparison(docValue, queryValue)`](#_equalitycomparisondocvalue-queryvalue)
+    - [`_greaterThanComparison(docValue, queryValue)`](#_greaterthancomparisondocvalue-queryvalue)
+    - [`_lessThanComparison(docValue, queryValue)`](#_lessthancomparisondocvalue-queryvalue)
+    - [`_validateQuery(documents, query)`](#_validatequerydocuments-query)
+    - [`_validateQueryInputs(documents, query)`](#_validatequeryinputsdocuments-query)
+    - [`_validateQueryDepth(obj, depth)`](#_validatequerydepthobj-depth)
+    - [`_validateOperators(query)`](#_validateoperatorsquery)
+    - [`_findOperators(obj, operators)`](#_findoperatorsobj-operators)
+    - [`_validateOperatorValues(query)`](#_validateoperatorvaluesquery)
+    - [`_validateOperatorValuesRecursive(obj, depth)`](#_validateoperatorvaluesrecursiveobj-depth)
+    - [`_matchLogicalAnd(document, conditions)`](#_matchlogicalanddocument-conditions)
+    - [`_matchLogicalOr(document, conditions)`](#_matchlogicalordocument-conditions)
   - [Supported Query Operators](#supported-query-operators)
-    - [Comparison Operators](#comparison-operators)
-    - [Logical Operators](#logical-operators)
-    - [Element Operators](#element-operators)
-    - [Array Operators](#array-operators)
+    - [Currently Supported Operators](#currently-supported-operators)
   - [Usage Examples](#usage-examples)
     - [Simple Equality Match](#simple-equality-match)
     - [Using Comparison Operators](#using-comparison-operators)
     - [Using Logical Operators](#using-logical-operators)
     - [Querying Nested Fields](#querying-nested-fields)
     - [Querying Array Fields](#querying-array-fields)
+    - [Future Array Operators (Not Yet Implemented)](#future-array-operators-not-yet-implemented)
   - [Error Handling](#error-handling)
+  - [Query Validation System](#query-validation-system)
+    - [Input Validation](#input-validation)
+    - [Structure Validation](#structure-validation)
+    - [Security Features](#security-features)
+    - [Validation Process](#validation-process)
   - [Best Practices](#best-practices)
 
 ## Overview
@@ -36,8 +54,9 @@ The `QueryEngine` class is responsible for filtering a list of documents based o
 
 **Dependencies:**
 
-- `ErrorHandler`: For standardised error reporting.
-- `ObjectUtils`: For deep equality checks, particularly with array operators.
+- `InvalidQueryError` and `InvalidArgumentError`: For standardised error reporting.
+- `Validate`: For input validation and type checking.
+- `JDbLogger`: For component logging and debugging.
 
 ## Core Principles
 
@@ -48,12 +67,23 @@ The `QueryEngine` class is responsible for filtering a list of documents based o
 
 ## API Reference
 
-### `constructor()`
+### `constructor(config)`
 
-Creates a new `QueryEngine` instance.
+Creates a new `QueryEngine` instance with optional configuration.
+
+**Parameters:**
+
+- `config` (Object, optional): Configuration object with the following optional properties:
+  - `maxNestedDepth` (Number): Maximum allowed query nesting depth (defaults to 10)
+
+**Example:**
 
 ```javascript
+// Default configuration
 const queryEngine = new QueryEngine();
+
+// Custom configuration
+const queryEngine = new QueryEngine({ maxNestedDepth: 5 });
 ```
 
 ### `executeQuery(documents, query)`
@@ -83,9 +113,9 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 // results: [{ name: "Alice", age: 30, city: "New York" }]
 ```
 
-### `_matches(document, query)`
+### `_matchDocument(document, query)`
 
-(Private) Determines if a single document matches the given query. This method iterates through the query conditions and evaluates them against the document.
+(Private) Determines if a single document matches the given query. This method iterates through the query conditions and evaluates them against the document, handling both logical operators and field-based queries.
 
 **Parameters:**
 
@@ -96,22 +126,37 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 - `Boolean`: `true` if the document matches the query, `false` otherwise.
 
-### `_evaluateCondition(value, condition)`
+### `_matchField(document, fieldPath, queryValue)`
 
-(Private) Evaluates a specific field's value against a condition, which can be a simple value for equality or an object containing query operators (e.g., `{ $gt: 10 }`).
+(Private) Evaluates a specific field's value against a query condition, which can be a simple value for equality or an object containing query operators (e.g., `{ $gt: 10 }`).
 
 **Parameters:**
 
-- `value` (*): The actual value from the document field.
-- `condition` (*|Object): The condition from the query to evaluate against.
+- `document` (Object): The document to test.
+- `fieldPath` (String): Field path (supports dot notation).
+- `queryValue` (*|Object): Expected value or operator object.
 
 **Returns:**
 
-- `Boolean`: `true` if the value satisfies the condition, `false` otherwise.
+- `Boolean`: `true` if the field matches the query, `false` otherwise.
+
+### `_compareValues(documentValue, queryValue, operator)`
+
+(Private) Compares values using a specified operator such as `$eq`, `$gt`, or `$lt`.
+
+**Parameters:**
+
+- `documentValue` (*): Value from document.
+- `queryValue` (*): Value from query.
+- `operator` (String): Comparison operator (`$eq`, `$gt`, `$lt`).
+
+**Returns:**
+
+- `Boolean`: `true` if comparison succeeds, `false` otherwise.
 
 **Throws:**
 
-- `ErrorHandler.ErrorTypes.INVALID_QUERY`: If an unrecognised operator is encountered.
+- `InvalidQueryError`: If an unsupported operator is encountered.
 
 ### `_getFieldValue(document, fieldPath)`
 
@@ -126,41 +171,225 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 - `*`: The value at the specified path, or `undefined` if the path does not exist.
 
+### `_isOperatorObject(value)`
+
+(Private) Checks if a value represents an operator object (plain object, not Date or Array).
+
+**Parameters:**
+
+- `value` (*): Value to check.
+
+**Returns:**
+
+- `Boolean`: `true` if value is a plain operator object, `false` otherwise.
+
+### `_matchOperators(documentValue, operators)`
+
+(Private) Matches operators against a document value, ensuring all operators in the object match.
+
+**Parameters:**
+
+- `documentValue` (*): Value from document.
+- `operators` (Object): Operator object (e.g., `{$gt: 5, $lt: 10}`).
+
+**Returns:**
+
+- `Boolean`: `true` if all operators match, `false` otherwise.
+
+### `_equalityComparison(docValue, queryValue)`
+
+(Private) Performs equality comparison with special handling for Date objects, arrays, and null/undefined values.
+
+**Parameters:**
+
+- `docValue` (*): Document value.
+- `queryValue` (*): Query value.
+
+**Returns:**
+
+- `Boolean`: `true` if values are equal, `false` otherwise.
+
+### `_greaterThanComparison(docValue, queryValue)`
+
+(Private) Performs greater than comparison with type checking and Date object support.
+
+**Parameters:**
+
+- `docValue` (*): Document value.
+- `queryValue` (*): Query value.
+
+**Returns:**
+
+- `Boolean`: `true` if docValue > queryValue, `false` otherwise.
+
+### `_lessThanComparison(docValue, queryValue)`
+
+(Private) Performs less than comparison with type checking and Date object support.
+
+**Parameters:**
+
+- `docValue` (*): Document value.
+- `queryValue` (*): Query value.
+
+**Returns:**
+
+- `Boolean`: `true` if docValue < queryValue, `false` otherwise.
+
+### `_validateQuery(documents, query)`
+
+(Private) Validates query structure and operators comprehensively for security and robustness.
+
+**Parameters:**
+
+- `documents` (Array): Documents array to validate.
+- `query` (Object): Query object to validate.
+
+**Throws:**
+
+- `InvalidArgumentError`: When inputs are invalid.
+- `InvalidQueryError`: When query structure or operators are invalid.
+
+### `_validateQueryInputs(documents, query)`
+
+(Private) Validates basic input types for executeQuery method.
+
+**Parameters:**
+
+- `documents` (Array): Documents array to validate.
+- `query` (Object): Query object to validate.
+
+**Throws:**
+
+- `InvalidArgumentError`: When inputs are invalid.
+
+### `_validateQueryDepth(obj, depth)`
+
+(Private) Validates query depth to prevent excessive nesting attacks.
+
+**Parameters:**
+
+- `obj` (*): Object to check.
+- `depth` (Number): Current depth.
+
+**Throws:**
+
+- `InvalidQueryError`: When depth exceeds configured limit.
+
+### `_validateOperators(query)`
+
+(Private) Validates that all operators used in query are supported.
+
+**Parameters:**
+
+- `query` (Object): Query object.
+
+**Throws:**
+
+- `InvalidQueryError`: When unsupported operator is found.
+
+### `_findOperators(obj, operators)`
+
+(Private) Recursively finds all operators used in a query object.
+
+**Parameters:**
+
+- `obj` (*): Object to search.
+- `operators` (Array): Array to collect operators (optional, defaults to empty array).
+
+**Returns:**
+
+- `Array`: Array of operator strings found.
+
+### `_validateOperatorValues(query)`
+
+(Private) Validates operator values in query for correctness.
+
+**Parameters:**
+
+- `query` (Object): Query object to validate.
+
+**Throws:**
+
+- `InvalidQueryError`: When operator values are invalid.
+
+### `_validateOperatorValuesRecursive(obj, depth)`
+
+(Private) Recursively validates operator values in query with depth protection.
+
+**Parameters:**
+
+- `obj` (*): Object to validate.
+- `depth` (Number): Current recursion depth.
+
+**Throws:**
+
+- `InvalidQueryError`: When operator values are invalid or depth exceeds limit.
+
+### `_matchLogicalAnd(document, conditions)`
+
+(Private) Handles `$and` logical operator evaluation.
+
+**Parameters:**
+
+- `document` (Object): Document to test.
+- `conditions` (Array): Array of conditions that must all match.
+
+**Returns:**
+
+- `Boolean`: `true` if all conditions match, `false` otherwise.
+
+**Throws:**
+
+- `InvalidQueryError`: When conditions is not an array.
+
+### `_matchLogicalOr(document, conditions)`
+
+(Private) Handles `$or` logical operator evaluation.
+
+**Parameters:**
+
+- `document` (Object): Document to test.
+- `conditions` (Array): Array of conditions where at least one must match.
+
+**Returns:**
+
+- `Boolean`: `true` if any condition matches, `false` otherwise.
+
+**Throws:**
+
+- `InvalidQueryError`: When conditions is not an array.
+
 ## Supported Query Operators
 
-The `QueryEngine` supports a subset of MongoDB query operators.
+> **Note:** The following table summarises operator support in the current implementation. Only operators marked as "✔ Implemented" are available. Others are planned for future development.
 
-### Comparison Operators
+| Operator         | Implemented | Notes                                      |
+|------------------|:-----------:|---------------------------------------------|
+| `$eq`            |      ✔      | Supported                                   |
+| `$gt`            |      ✔      | Supported                                   |
+| `$lt`            |      ✔      | Supported                                   |
+| `$and`           |      ✔      | Supported                                   |
+| `$or`            |      ✔      | Supported                                   |
+| `$ne`            |      ✖      | Planned                                     |
+| `$gte`           |      ✖      | Planned                                     |
+| `$lte`           |      ✖      | Planned                                     |
+| `$in`            |      ✖      | Planned                                     |
+| `$nin`           |      ✖      | Planned                                     |
+| `$not`           |      ✖      | Planned                                     |
+| `$nor`           |      ✖      | Planned                                     |
+| `$exists`        |      ✖      | Planned                                     |
+| `$type`          |      ✖      | Planned                                     |
+| `$all`           |      ✖      | Planned                                     |
+| `$elemMatch`     |      ✖      | Planned                                     |
+| `$size`          |      ✖      | Planned                                     |
+
+### Currently Supported Operators
 
 - `$eq`: Matches values that are equal to a specified value. (Implicit for simple key-value pairs)
-- `$ne`: Matches all values that are not equal to a specified value.
 - `$gt`: Matches values that are greater than a specified value.
-- `$gte`: Matches values that are greater than or equal to a specified value.
 - `$lt`: Matches values that are less than a specified value.
-- `$lte`: Matches values that are less than or equal to a specified value.
-- `$in`: Matches any of the values specified in an array.
-- `$nin`: Matches none of the values specified in an array.
-
-### Logical Operators
-
 - `$and`: Joins query clauses with a logical AND. Returns all documents that match the conditions of all clauses. (Implicit when multiple fields are specified at the same level)
 - `$or`: Joins query clauses with a logical OR. Returns all documents that match the conditions of at least one clause.
-- `$not`: Inverts the effect of a query expression. Returns documents that do not match the query expression. (Applied to an operator, e.g. `{ $not: { $eq: "value" } }`)
-- `$nor`: Joins query clauses with a logical NOR. Returns all documents that fail to match all clauses.
-
-### Element Operators
-
-- `$exists`: Matches documents that have (or do not have, if `false`) the specified field.
-- `$type`: Matches documents where the type of a field matches a specified BSON type string (e.g., "string", "number", "array", "object", "bool", "date", "null").
-
-### Array Operators
-
-*(Support for these may vary or be in development)*
-
-- `$all`: Matches arrays that contain all elements specified in the query.
-- `$elemMatch`: Selects documents if an element in its array field matches all specified `$elemMatch` conditions.
-- `$size`: Selects documents if the array field is a specific size.
-
 
 ## Usage Examples
 
@@ -189,9 +418,9 @@ const documents = [
 const expensive = queryEngine.executeQuery(documents, { price: { $gt: 15 } });
 // expensive: [{ product: "B", price: 20 }, { product: "C", price: 30 }]
 
-// Price is 10 or 30
-const specificPrices = queryEngine.executeQuery(documents, { price: { $in: [10, 30] } });
-// specificPrices: [{ product: "A", price: 10 }, { product: "C", price: 30 }]
+// Price less than 25
+const affordable = queryEngine.executeQuery(documents, { price: { $lt: 25 } });
+// affordable: [{ product: "A", price: 10 }, { product: "B", price: 20 }]
 ```
 
 ### Using Logical Operators
@@ -269,40 +498,82 @@ const redItems = queryEngine.executeQuery(documents, { tags: "red" });
 // Items with a rating of 9
 const highRated = queryEngine.executeQuery(documents, { ratings: 9 });
 // highRated: [{ item: "A", tags: ["red", "round"], ratings: [5, 8, 9] }]
+```
 
+### Future Array Operators (Not Yet Implemented)
 
-// Using $all - item must have both "red" and "square" tags
-const redSquareItems = queryEngine.executeQuery(documents, { tags: { $all: ["red", "square"] } });
-// redSquareItems: [{ item: "C", tags: ["red", "square"], ratings: [6] }]
+The following examples show planned functionality for future releases:
 
-// Using $elemMatch - find documents where at least one rating is between 7 and 8 inclusive
-// (Assuming $elemMatch is implemented for complex conditions on array elements)
+```javascript
+// PLANNED: Using $all - item must have both "red" and "square" tags
+// const redSquareItems = queryEngine.executeQuery(documents, { tags: { $all: ["red", "square"] } });
+
+// PLANNED: Using $elemMatch - find documents where at least one rating is between 7 and 8 inclusive
 // const specificRatingRange = queryEngine.executeQuery(documents, {
 //   ratings: { $elemMatch: { $gte: 7, $lte: 8 } }
 // });
-// specificRatingRange might be:
-// [
-//   { item: "A", tags: ["red", "round"], ratings: [5, 8, 9] }, (due to 8)
-//   { item: "B", tags: ["blue", "square"], ratings: [7, 8] }  (due to 7 and 8)
-// ]
 
-// Using $size - find documents where tags array has exactly 2 elements
-const twoTagsItems = queryEngine.executeQuery(documents, { tags: { $size: 2 } });
-// twoTagsItems: [
-//  { item: "A", tags: ["red", "round"], ratings: [5, 8, 9] },
-//  { item: "B", tags: ["blue", "square"], ratings: [7, 8] },
-//  { item: "C", tags: ["red", "square"], ratings: [6] }
-// ]
+// PLANNED: Using $size - find documents where tags array has exactly 2 elements
+// const twoTagsItems = queryEngine.executeQuery(documents, { tags: { $size: 2 } });
 ```
 
 ## Error Handling
 
-The `QueryEngine` uses `ErrorHandler.ErrorTypes.INVALID_QUERY` for issues such as:
+The `QueryEngine` uses the following error types for different issues:
 
-- Unrecognised query operators.
-- Invalid operator syntax or values (e.g., `$in` without an array value).
+- `InvalidQueryError`: For query structure problems such as:
+  - Unrecognised query operators
+  - Invalid operator syntax or values (e.g., `$and` without an array value)
+  - Query nesting depth exceeded
+  
+- `InvalidArgumentError`: For input validation problems such as:
+  - Non-array documents parameter
+  - Null, undefined, string, or array query parameters
 
-Refer to `ErrorHandler.js` for details on error objects.
+**Example error handling:**
+
+```javascript
+try {
+  const results = queryEngine.executeQuery(documents, query);
+} catch (error) {
+  if (error instanceof InvalidQueryError) {
+    console.error('Invalid query:', error.message);
+  } else if (error instanceof InvalidArgumentError) {
+    console.error('Invalid argument:', error.message);
+  }
+}
+```
+
+## Query Validation System
+
+The `QueryEngine` includes a comprehensive validation system to ensure query security and robustness:
+
+### Input Validation
+
+- **Type Checking**: Ensures `documents` is an array and `query` is a valid object
+- **Null Safety**: Prevents null, undefined, string, or array query parameters
+- **Fail-Fast**: Basic input validation occurs before expensive query processing
+
+### Structure Validation
+
+- **Depth Protection**: Prevents excessive query nesting (configurable via `maxNestedDepth`)
+- **Operator Validation**: Ensures only supported operators are used
+- **Recursive Validation**: Validates nested query structures thoroughly
+
+### Security Features
+
+- **Malicious Query Prevention**: Deep validation prevents potential security exploits
+- **Resource Protection**: Depth limits prevent stack overflow or excessive processing
+- **Comprehensive Error Reporting**: Clear error messages for debugging
+
+### Validation Process
+
+1. **Input Types**: Validates basic parameter types (documents array, query object)
+2. **Query Depth**: Recursively checks nesting doesn't exceed configured limit
+3. **Operator Support**: Verifies all operators in query are supported
+4. **Operator Values**: Validates operator values are correctly structured (e.g., `$and` requires arrays)
+
+This multi-layered approach ensures queries are safe, valid, and performant before execution begins.
 
 ## Best Practices
 
