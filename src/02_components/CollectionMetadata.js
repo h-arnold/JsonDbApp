@@ -39,16 +39,14 @@ class CollectionMetadata {
       Validate.optional(fileId, Validate.string, 'fileId');
       
       metadata = initialMetadata || {};
-    } else if (typeof nameOrInitialMetadata === 'object' && nameOrInitialMetadata !== null && !Array.isArray(nameOrInitialMetadata)) {
+    } else if (Validate.isPlainObject(nameOrInitialMetadata)) {
       // Constructor called with legacy signature: new CollectionMetadata(initialMetadata)
       metadata = nameOrInitialMetadata;
       name = metadata.name || null;
       fileId = metadata.fileId || null;
     } else if (nameOrInitialMetadata !== null) {
       // Invalid first parameter
-      if (typeof nameOrInitialMetadata !== 'string') {
-        throw new InvalidArgumentError('name', nameOrInitialMetadata, 'Must be a string');
-      }
+      Validate.string(nameOrInitialMetadata, 'name');
     }
 
     // Validate metadata is an object
@@ -67,6 +65,7 @@ class CollectionMetadata {
     
     // Set created timestamp
     if (metadata.created !== undefined) {
+      Validate.required(metadata.created, 'created');
       if (!(metadata.created instanceof Date) || isNaN(metadata.created.getTime())) {
         throw new InvalidArgumentError('created', metadata.created, 'Must be a valid Date object');
       }
@@ -77,6 +76,7 @@ class CollectionMetadata {
 
     // Set lastUpdated timestamp
     if (metadata.lastUpdated !== undefined) {
+      Validate.required(metadata.lastUpdated, 'lastUpdated');
       if (!(metadata.lastUpdated instanceof Date) || isNaN(metadata.lastUpdated.getTime())) {
         throw new InvalidArgumentError('lastUpdated', metadata.lastUpdated, 'Must be a valid Date object');
       }
@@ -88,9 +88,7 @@ class CollectionMetadata {
     // Set document count with validation
     if (metadata.documentCount !== undefined) {
       Validate.integer(metadata.documentCount, 'documentCount');
-      if (metadata.documentCount < 0) {
-        throw new InvalidArgumentError('documentCount', metadata.documentCount, 'Cannot be negative');
-      }
+      Validate.nonNegativeNumber(metadata.documentCount, 'documentCount');
       this.documentCount = metadata.documentCount;
     } else {
       this.documentCount = 0;
@@ -201,9 +199,7 @@ class CollectionMetadata {
    * @throws {InvalidArgumentError} If count would go below zero
    */
   decrementDocumentCount() {
-    if (this.documentCount <= 0) {
-      throw new InvalidArgumentError('documentCount', this.documentCount, 'Cannot decrement below zero');
-    }
+    Validate.positiveNumber(this.documentCount, 'documentCount');
     this.documentCount--;
     this.updateLastModified();
   }
@@ -215,9 +211,7 @@ class CollectionMetadata {
    */
   setDocumentCount(count) {
     Validate.integer(count, 'count');
-    if (count < 0) {
-      throw new InvalidArgumentError('count', count, 'Cannot be negative');
-    }
+    Validate.nonNegativeNumber(count, 'count');
     this.documentCount = count;
     this.updateLastModified();
   }
