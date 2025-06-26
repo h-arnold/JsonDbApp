@@ -7,7 +7,6 @@
  * - File persistence and dirty tracking
  * - Integration with CollectionMetadata and DocumentOperations
  *
- * Following TDD Red-Green-Refactor cycle for Section 5 implementation
  */
 
 // Global test data storage for Collection tests
@@ -47,6 +46,19 @@ const COLLECTION_TEST_DATA = {
 
 /**
  * Setup collection test environment
+ */
+/**
+ * Sets up the test environment for Collection-related unit tests.
+ * 
+ * This function performs the following:
+ * - Creates a test folder in Google Drive and stores its ID in COLLECTION_TEST_DATA.
+ * - Initializes FileOperations and FileService instances for file handling.
+ * - Creates and initializes a MasterIndex instance with deep-cloned test data.
+ * - Configures a DatabaseConfig object for the test database.
+ * - Constructs a mock database object with the necessary properties and methods.
+ * - Logs the creation of the test folder.
+ * 
+ * @throws {Error} Throws an error if folder creation or setup fails.
  */
 function setupCollectionTestEnvironment() {
   const logger = JDbLogger.createComponentLogger("Collection-Setup");

@@ -19,16 +19,8 @@ function createCollectionDeleteOperationsTestSuite() {
   const suite = new TestSuite('Collection Delete Operations');
   
   suite.addTest('testCollectionDeleteOneById', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'deleteOneByIdTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteOneByIdTestCollection');
     
     // Insert test documents
     const doc1 = collection.insertOne({ name: 'Delete Doc 1', value: 100 });
@@ -43,16 +35,8 @@ function createCollectionDeleteOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionDeleteOneUnsupportedFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Collection API now supports field-based queries with QueryEngine
-    const collection = new Collection(
-      'deleteOneUnsupportedFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteOneUnsupportedFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Test', value: 100 });
@@ -71,14 +55,8 @@ function createCollectionDeleteOperationsTestSuite() {
   
   // RED PHASE: Collection API Enhancement Tests - Field-based delete filters
   suite.addTest('testCollectionDeleteOneByFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'deleteFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteFieldFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
@@ -101,14 +79,8 @@ function createCollectionDeleteOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionDeleteOneByMultipleFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'deleteMultiFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteMultiFieldFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active', level: 'Senior' });
@@ -135,14 +107,8 @@ function createCollectionDeleteOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionDeleteOneByNestedFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'deleteNestedFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteNestedFieldFilterTestCollection');
     
     // Insert documents with nested fields
     collection.insertOne({ 
@@ -176,14 +142,8 @@ function createCollectionDeleteOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionDeleteOneByComparisonFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'deleteComparisonFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteComparisonFilterTestCollection');
     
     // Insert test documents with numeric values
     collection.insertOne({ name: 'Alice', score: 85, lastActive: new Date('2023-01-15') });
@@ -205,14 +165,8 @@ function createCollectionDeleteOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionDeleteOneNoMatch', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'deleteNoMatchTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('deleteNoMatchTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering' });

@@ -1,5 +1,14 @@
 /**
- * Creates a test suite for Collection update operations.
+ * Creates a test suite for Collec  suite.addTest('testCollection  suite.addTest('testCollectionUpdateOneUnsupportedOperators', function() {
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateOneUnsupportedOperatorsTestCollection');
+    
+    // Insert test document
+    const insertResult = collection.insertOne({ name: 'Original Doc', value: 100, status: 'active' });pportedFilter', function() {
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateOneUnsupportedFilterTestCollection');
+    
+    // Insert test documentperations.
  *
  * This suite covers:
  * - Updating a document by its ID.
@@ -19,16 +28,8 @@ function createCollectionUpdateOperationsTestSuite() {
   const suite = new TestSuite('Collection Update Operations');
   
   suite.addTest('testCollectionUpdateOneById', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'updateOneByIdTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateOneByIdTestCollection');
     
     // Insert test document
     const insertResult = collection.insertOne({ name: 'Original Doc', value: 100, status: 'active' });
@@ -102,14 +103,8 @@ function createCollectionUpdateOperationsTestSuite() {
   
   // RED PHASE: Collection API Enhancement Tests - Field-based update filters
   suite.addTest('testCollectionUpdateOneByFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateFieldFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', salary: 75000 });
@@ -137,14 +132,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateOneByMultipleFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateMultiFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateMultiFieldFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', level: 'Senior', active: true });
@@ -167,14 +156,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateOneByNestedFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateNestedFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateNestedFieldFilterTestCollection');
     
     // Insert documents with nested fields
     collection.insertOne({ 
@@ -208,14 +191,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateOneByComparisonFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateComparisonFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateComparisonFilterTestCollection');
     
     // Insert test documents with numeric values
     collection.insertOne({ name: 'Alice', score: 85, bonus: 1000 });
@@ -238,14 +215,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateOneNoMatch', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateNoMatchTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateNoMatchTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering' });
@@ -265,14 +236,8 @@ function createCollectionUpdateOperationsTestSuite() {
   // RED PHASE: Collection API Enhancement Tests - New Methods and Advanced Operations
   
   suite.addTest('testCollectionUpdateManyReturnsModifiedCount', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateManyTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateManyTestCollection');
     
     // Insert test documents
     collection.insertOne({ department: 'Engineering', level: 'Junior', salary: 70000 });
@@ -293,14 +258,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionReplaceOneById', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'replaceOneByIdTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('replaceOneByIdTestCollection');
     
     // Insert test document
     const insertResult = collection.insertOne({ 
@@ -335,14 +294,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionReplaceOneByFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'replaceOneByFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('replaceOneByFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', role: 'Developer' });
@@ -372,14 +325,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionReplaceCorrectDocument', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'replaceCorrectDocTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('replaceCorrectDocTestCollection');
     
     // Insert test documents with similar properties
     collection.insertOne({ name: 'Alice', age: 30, department: 'Engineering' });
@@ -412,14 +359,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateWithMultipleOperators', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateMultipleOperatorsTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateMultipleOperatorsTestCollection');
     
     // Insert test document
     const insertResult = collection.insertOne({ 
@@ -452,14 +393,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionErrorPropagation', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'errorPropagationTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('errorPropagationTestCollection');
     
     // Test invalid filter parameter
     TestFramework.assertThrows(() => {
@@ -478,14 +413,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionLockingDuringUpdate', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'lockingDuringUpdateTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('lockingDuringUpdateTestCollection');
     
     // Insert test document
     const insertResult = collection.insertOne({ name: 'Lock Test', value: 100 });
@@ -503,14 +432,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateLogging', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'updateLoggingTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateLoggingTestCollection');
     
     // Insert test document
     const insertResult = collection.insertOne({ name: 'Log Test', value: 100 });

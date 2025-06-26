@@ -3,7 +3,7 @@
  *
  * Unit tests for verifying that Collection delegates CRUD operations to the injected coordinator.
  *
- * RED PHASE: All tests should fail until delegation is implemented.
+ *
  */
 
 const collectionCoordinatorDelegationSuite = new TestSuite('CollectionCoordinatorDelegation');
@@ -13,9 +13,22 @@ collectionCoordinatorDelegationSuite.setBeforeEach(function() {
   const databaseConfig = new DatabaseConfig({ name: 'test_delegation_collection' });
   const logger = new JDbLogger('test_delegation_collection');
   masterIndex = new MasterIndex(databaseConfig, logger);
-  collectionCoordinator = new CollectionCoordinator(null, masterIndex, databaseConfig, logger);
+  
+  // Create a minimal collection mock that satisfies the coordinator's validation
+  const mockCollection = {
+    getName: () => 'test_delegation_collection',
+    _metadata: {
+      documentCount: 0,
+      getModificationToken: () => 'test-token'
+    }
+  };
+  
+  collectionCoordinator = new CollectionCoordinator(mockCollection, masterIndex, databaseConfig, logger);
   collection = new Collection(databaseConfig, logger, collectionCoordinator);
+  
+  // Update the coordinator's collection reference to the real collection
   collectionCoordinator._collection = collection;
+  
   try { collection.deleteMany({}); } catch (error) {}
 });
 

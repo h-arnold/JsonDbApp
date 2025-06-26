@@ -3,6 +3,8 @@
  *
  * Encapsulates locking, conflict detection, retries, metadata updates and error handling
  * for all CRUD operations on a collection.
+ *
+ * @class
  */
 class CollectionCoordinator {
   /**

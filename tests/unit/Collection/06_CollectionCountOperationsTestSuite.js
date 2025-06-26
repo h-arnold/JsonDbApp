@@ -17,16 +17,8 @@ function createCollectionCountOperationsTestSuite() {
   const suite = new TestSuite('Collection Count Operations');
   
   suite.addTest('testCollectionCountDocumentsAll', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'countDocumentsAllTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countDocumentsAllTestCollection');
     
     // Test count on empty collection
     let count = collection.countDocuments({});
@@ -43,16 +35,8 @@ function createCollectionCountOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionCountDocumentsUnsupportedFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Collection API now supports field-based queries with QueryEngine
-    const collection = new Collection(
-      'countDocumentsUnsupportedFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countDocumentsUnsupportedFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Test', value: 100 });
@@ -70,14 +54,8 @@ function createCollectionCountOperationsTestSuite() {
   
   // RED PHASE: Collection API Enhancement Tests - Field-based count filters
   suite.addTest('testCollectionCountDocumentsByFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'countFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countFieldFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
@@ -100,14 +78,8 @@ function createCollectionCountOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionCountDocumentsByMultipleFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'countMultiFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countMultiFieldFilterTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active', level: 'Senior' });
@@ -137,14 +109,8 @@ function createCollectionCountOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionCountDocumentsByNestedFieldFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'countNestedFieldFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countNestedFieldFilterTestCollection');
     
     // Insert documents with nested fields
     collection.insertOne({ 
@@ -180,14 +146,8 @@ function createCollectionCountOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionCountDocumentsByComparisonFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'countComparisonFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countComparisonFilterTestCollection');
     
     // Insert test documents with numeric values
     collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
@@ -210,14 +170,8 @@ function createCollectionCountOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionCountDocumentsNoMatch', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'countNoMatchTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('countNoMatchTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering' });

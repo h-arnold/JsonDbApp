@@ -20,16 +20,8 @@ function createCollectionFindOperationsTestSuite() {
   const suite = new TestSuite('Collection Find Operations');
   
   suite.addTest('testCollectionFindOneEmpty', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'findOneEmptyTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findOneEmptyTestCollection');
     
     // Test findOne on empty collection
     const result = collection.findOne({});
@@ -93,16 +85,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindUnsupportedQuery', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Collection API now supports field-based queries with QueryEngine
-    const collection = new Collection(
-      'findUnsupportedTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findUnsupportedTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Test', value: 100 });
@@ -120,14 +104,8 @@ function createCollectionFindOperationsTestSuite() {
   
   // RED PHASE: Collection API Enhancement Tests - Field-based queries
   suite.addTest('testCollectionFindByFieldMatching', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'findByFieldTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findByFieldTestCollection');
     
     // Insert test documents with various field types
     collection.insertOne({ name: 'Alice', age: 30, active: true, department: 'Engineering' });
@@ -150,14 +128,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindByMultipleFields', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'findMultiFieldTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findMultiFieldTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', age: 30, active: true, department: 'Engineering' });
@@ -171,14 +143,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindByNestedField', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'findNestedFieldTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findNestedFieldTestCollection');
     
     // Insert documents with nested fields
     collection.insertOne({ 
@@ -204,14 +170,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindByComparisonOperators', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'findComparisonTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findComparisonTestCollection');
     
     // Insert test documents with numeric values
     collection.insertOne({ name: 'Alice', score: 85, joinDate: new Date('2020-01-15') });
@@ -250,14 +210,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindOneByFieldMatching', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    const collection = new Collection(
-      'findOneFieldTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findOneFieldTestCollection');
     
     // Insert test documents
     collection.insertOne({ name: 'Alice', department: 'Engineering', priority: 1 });
