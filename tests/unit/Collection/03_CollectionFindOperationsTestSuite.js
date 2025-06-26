@@ -37,16 +37,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindOneById', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'findOneByIdTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findOneByIdTestCollection');
     
     // Insert test documents
     const doc1 = collection.insertOne({ name: 'First Doc', value: 100 });
@@ -59,16 +51,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindOneUnsupportedQuery', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Collection API now supports field-based queries with QueryEngine
-    const collection = new Collection(
-      'findOneUnsupportedTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findOneUnsupportedTestCollection');
     
     // Insert test document
     collection.insertOne({ name: 'Test', value: 100 });
@@ -84,16 +68,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindEmpty', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'findEmptyTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findEmptyTestCollection');
     
     // Test find on empty collection
     const results = collection.find({});
@@ -102,16 +78,8 @@ function createCollectionFindOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionFindAll', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Act & Assert - Should fail in Red phase
-    const collection = new Collection(
-      'findAllTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('findAllTestCollection');
     
     // Insert multiple test documents
     collection.insertOne({ name: 'Doc A', value: 100, category: 'test' });

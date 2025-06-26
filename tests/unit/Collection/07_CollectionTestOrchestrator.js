@@ -196,6 +196,47 @@ function createTestCollectionFile(collectionName) {
 
   return fileId;
 }
+
+/**
+ * Helper function to ensure a collection is registered in MasterIndex
+ * @param {string} collectionName - Collection name to register
+ * @param {string} fileId - File ID for the collection
+ */
+function ensureCollectionRegistered(collectionName, fileId) {
+  if (COLLECTION_TEST_DATA.testMasterIndex) {
+    try {
+      // Check if collection already exists
+      COLLECTION_TEST_DATA.testMasterIndex.getCollection(collectionName);
+      // Already exists, nothing to do
+    } catch (e) {
+      // Collection doesn't exist, register it
+      const metadataData = ObjectUtils.deepClone(COLLECTION_TEST_DATA.collectionMetadataData);
+      metadataData.fileId = fileId;
+      metadataData.name = collectionName;
+      
+      const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
+      COLLECTION_TEST_DATA.testMasterIndex.addCollection(collectionName, collectionMetadata);
+    }
+  }
+}
+
+/**
+ * Helper function to create a properly registered test collection instance
+ * @param {string} collectionName - Collection name
+ * @returns {Collection} Properly registered Collection instance
+ */
+function createTestCollection(collectionName) {
+  // Create the file and register in MasterIndex with the same name
+  const fileId = createTestCollectionFile(collectionName);
+  
+  // Create Collection instance with the same name
+  return new Collection(
+    collectionName,
+    fileId,
+    COLLECTION_TEST_DATA.testDatabase,
+    COLLECTION_TEST_DATA.testFileService
+  );
+}
 /**
  * Run all Collection tests
  * This function orchestrates all test suites for Collection

@@ -120,6 +120,7 @@ class CollectionCoordinator {
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
     const { retryAttempts, retryDelayMs, lockTimeout } = this._config;
+    
     let acquired = false;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
