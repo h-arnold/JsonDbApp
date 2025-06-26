@@ -454,7 +454,7 @@ function createIndexFileStructureTestSuite() {
       TestFramework.assertEquals(collectionData.name, collectionName, 'Collection name should match');
       TestFramework.assertNotNull(collectionData.fileId, 'Collection should have file ID');
       TestFramework.assertDefined(collectionData.created, 'Collection should have created timestamp');
-      TestFramework.assertDefined(collectionData.lastModified, 'Collection should have lastModified timestamp');
+      TestFramework.assertDefined(collectionData.lastUpdated, 'Collection should have lastUpdated timestamp');
       
       // Track created file for clean-up
       if (collection && collection.driveFileId) {
