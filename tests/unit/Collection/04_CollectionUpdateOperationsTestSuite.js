@@ -46,16 +46,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateOneUnsupportedFilter', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    // Collection API now supports field-based queries with QueryEngine
-    const collection = new Collection(
-      'updateOneUnsupportedFilterTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateOneUnsupportedFilterTestCollection');
     
     // Insert test document
     collection.insertOne({ name: 'Test', value: 100 });
@@ -73,15 +65,8 @@ function createCollectionUpdateOperationsTestSuite() {
   });
   
   suite.addTest('testCollectionUpdateOneUnsupportedOperators', function() {
-    // Arrange
-    const fileId = createTestCollectionFile();
-    
-    const collection = new Collection(
-      'updateOneUnsupportedOperatorsTestCollection',
-      fileId,
-      COLLECTION_TEST_DATA.testDatabase,
-      COLLECTION_TEST_DATA.testFileService
-    );
+    // Arrange & Act - Use proper helper to create registered collection
+    const collection = createTestCollection('updateOneUnsupportedOperatorsTestCollection');
     
     // Insert test document
     const insertResult = collection.insertOne({ name: 'Test Doc', value: 100 });
