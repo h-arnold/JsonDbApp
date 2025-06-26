@@ -1,4 +1,4 @@
-# GAS-DB
+# JsonDbApp
 
 A document database implemented in Google Apps Script using the Google Drive API. Supports MongoDB-like syntax for CRUD operations on named collections, with data consistency managed through a ScriptProperties-based master index.
 
