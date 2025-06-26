@@ -35,9 +35,7 @@ class FileOperations {
    * @throws {InvalidFileFormatError} When file contains invalid JSON
    */
   readFile(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    Validate.nonEmptyString(fileId, 'fileId');
     
     this._logger.debug('Reading file from Drive', { fileId });
     
@@ -97,12 +95,8 @@ class FileOperations {
    * @throws {PermissionDeniedError} When write access is denied
    */
   writeFile(fileId, data) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
-    if (data === null || data === undefined) {
-      throw new InvalidArgumentError('data is required');
-    }
+    Validate.nonEmptyString(fileId, 'fileId');
+    Validate.required(data, 'data');
     
     this._logger.debug('Writing file to Drive', { fileId });
     
@@ -133,12 +127,8 @@ class FileOperations {
    * @throws {PermissionDeniedError} When folder access is denied
    */
   createFile(fileName, data, folderId = null) {
-    if (!fileName) {
-      throw new InvalidArgumentError('fileName is required');
-    }
-    if (data === null || data === undefined) {
-      throw new InvalidArgumentError('data is required');
-    }
+    Validate.nonEmptyString(fileName, 'fileName');
+    Validate.required(data, 'data');
     
     this._logger.debug('Creating file in Drive', { fileName, folderId });
     
@@ -178,9 +168,7 @@ class FileOperations {
    * @throws {PermissionDeniedError} When delete access is denied
    */
   deleteFile(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    Validate.nonEmptyString(fileId, 'fileId');
     
     this._logger.debug('Deleting file from Drive', { fileId });
     
@@ -204,9 +192,7 @@ class FileOperations {
    * @returns {boolean} True if file exists and is accessible
    */
   fileExists(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    Validate.nonEmptyString(fileId, 'fileId');
     
     this._logger.debug('Checking file existence', { fileId });
     
@@ -238,9 +224,7 @@ class FileOperations {
    * @throws {PermissionDeniedError} When access is denied
    */
   getFileMetadata(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    Validate.nonEmptyString(fileId, 'fileId');
     
     this._logger.debug('Getting file metadata', { fileId });
     
