@@ -220,8 +220,8 @@ function createGreaterThanOperatorTestSuite() {
   suite.addTest('should handle null values in comparison', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     const results = collection.find({ lastLogin: { $gt: null } });
-    // All non-null dates should be greater than null
-    TestFramework.assertTrue(results.length >= 5, 'Should find all non-null dates');
+    // MongoDB: $gt with null should return no results
+    TestFramework.assertEquals(0, results.length, 'Should not match any documents when comparing with null');
   });
 
   suite.addTest('should handle missing fields in comparison', function() {
