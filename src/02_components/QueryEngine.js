@@ -212,6 +212,11 @@ class QueryEngine {
       return true;
     }
 
+    // Handle plain object deep equality via helper
+    if (this._isDeepObject(docValue, queryValue)) {
+      return this._deepObjectEqual(docValue, queryValue);
+    }
+
     // Handle array contains operation (MongoDB style)
     // If document value is an array and query value is not, check if array contains the query value
     if (Array.isArray(docValue) && !Array.isArray(queryValue)) {
@@ -228,6 +233,38 @@ class QueryEngine {
 
     // Standard equality
     return docValue === queryValue;
+  }
+
+  /**
+   * Determine if two values are non-null plain objects (not Date or Array)
+   * @param {*} val1 - First value
+   * @param {*} val2 - Second value
+   * @returns {boolean} True if both are plain objects for deep-equal
+   * @private
+   */
+  _isDeepObject(val1, val2) {
+    return val1 != null && val2 != null &&
+      typeof val1 === 'object' && typeof val2 === 'object' &&
+      !(val1 instanceof Date) && !(val2 instanceof Date) &&
+      !Array.isArray(val1) && !Array.isArray(val2);
+  }
+
+  /**
+   * Recursively check deep equality on plain objects
+   * @param {Object} obj1 - First object
+   * @param {Object} obj2 - Second object
+   * @returns {boolean} True if all keys and nested values are equal
+   * @private
+   */
+  _deepObjectEqual(obj1, obj2) {
+    const keys1 = Object.keys(obj1);
+    const keys2 = Object.keys(obj2);
+    if (keys1.length !== keys2.length) {
+      return false;
+    }
+    return keys1.every(key =>
+      this._equalityComparison(obj1[key], obj2[key])
+    );
   }
 
   /**
@@ -352,7 +389,7 @@ class QueryEngine {
           this._validateQueryDepth(value, depth + 1);
         });
       }
-    } catch (e) {
+    } catch {
       // Not a plain object, do nothing
     }
   }
@@ -437,7 +474,7 @@ class QueryEngine {
           }
         });
       }
-    } catch (e) {
+    } catch {
       // Only ignore validation errors for non-objects, re-throw query errors
       if (e instanceof InvalidQueryError) {
         throw e;
