@@ -143,8 +143,8 @@ function createLogicalOrOperatorTestSuite() {
         { age: { $gt: 60 } }
       ]
     });
-    TestFramework.assertEquals(2, results.length, 'Should find persons under 30 or over 60');
-    const expectedIds = ['person1', 'person6']; // Anna (29) and Frank (65)
+    TestFramework.assertEquals(3, results.length, 'Should find 3 persons under 30 or over 60');
+    const expectedIds = ['person1', 'person2', 'person6']; // Anna (29), Ben (0) and Frank (65)
     results.forEach(doc => {
       TestFramework.assertTrue(expectedIds.includes(doc._id), `Document ${doc._id} should be in expected results`);
       TestFramework.assertTrue(doc.age < 30 || doc.age > 60, `Document ${doc._id} should have age < 30 or > 60`);
