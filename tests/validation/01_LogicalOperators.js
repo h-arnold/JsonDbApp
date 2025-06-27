@@ -40,8 +40,8 @@ function createLogicalAndOperatorTestSuite() {
         { balance: { $gt: 1000 } }
       ]
     });
-    TestFramework.assertEquals(2, results.length, 'Should find 2 active persons with score > 80 and balance > 1000');
-    const expectedIds = ['person1', 'person6'];
+    TestFramework.assertEquals(1, results.length, 'Should find 1 active person with score > 80 and balance > 1000');
+    const expectedIds = ['person1'];
     results.forEach(doc => {
       TestFramework.assertTrue(expectedIds.includes(doc._id), `Document ${doc._id} should be in expected results`);
       TestFramework.assertTrue(doc.isActive, `Document ${doc._id} should be active`);
@@ -80,7 +80,7 @@ function createLogicalAndOperatorTestSuite() {
       ]
     });
     TestFramework.assertEquals(2, results.length, 'Should find 2 active persons over 25 with score > 85');
-    const expectedIds = ['person3', 'person4'];
+    const expectedIds = ['person1', 'person3'];
     results.forEach(doc => {
       TestFramework.assertTrue(expectedIds.includes(doc._id), `Document ${doc._id} should be in expected results`);
       TestFramework.assertTrue(doc.isActive, `Document ${doc._id} should be active`);

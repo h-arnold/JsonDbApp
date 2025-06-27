@@ -121,28 +121,6 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
     - Handles empty arrays as per MongoDB (empty $and matches all, empty $or matches none).  
     - Throws errors for invalid logical operator structures (non-array $and/$or).
 
-### Field Existence and Type Operators (If supported)
-- [ ] **$exists** (check if implemented)
-  - Field exists (any value including null)
-  - Field does not exist
-  - Nested field existence
-- [ ] **$type** (check if implemented)
-  - Type matching for primitives
-  - Array vs object distinction
-  - Date vs object distinction
-
-### Array Operators (If supported)
-- [ ] **$in** (check if implemented)
-  - Value in array of possibilities
-  - Array field containing any of specified values
-  - Nested field arrays
-- [ ] **$nin** (check if implemented)
-  - Value not in array of possibilities
-- [ ] **$all** (check if implemented)
-  - Array field contains all specified values
-- [ ] **$size** (check if implemented)
-  - Array length matching
-
 ---
 
 ## Update Operator Validation Tests
