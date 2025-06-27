@@ -72,40 +72,54 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
 ### Logical Operators
 
 #### $and
-- [ ] **Basic conjunction**
+- [x] **Basic conjunction** ✅ *Implemented in 01_LogicalOperators.js*
   - Two field conditions
   - Multiple field conditions (3+)
   - Mix of comparison operators
-- [ ] **Nested $and operations**
+- [x] **Nested $and operations** ✅ *Implemented in 01_LogicalOperators.js*
   - $and within $and
   - Combined with other logical operators
-- [ ] **Edge cases**
+- [x] **Edge cases** ✅ *Implemented in 01_LogicalOperators.js*
   - Empty $and array
   - Single condition in $and
   - $and with contradictory conditions
 
 #### $or
-- [ ] **Basic disjunction**
+- [x] **Basic disjunction** ✅ *Implemented in 01_LogicalOperators.js*
   - Two field conditions
   - Multiple field conditions (3+)
   - Mix of comparison operators
-- [ ] **Nested $or operations**
+- [x] **Nested $or operations** ✅ *Implemented in 01_LogicalOperators.js*
   - $or within $or
   - Combined with other logical operators
-- [ ] **Edge cases**
+- [x] **Edge cases** ✅ *Implemented in 01_LogicalOperators.js*
   - Empty $or array
   - Single condition in $or
   - $or with duplicate conditions
 
 #### Combined Logical Operations
-- [ ] **$and + $or combinations**
+- [x] **$and + $or combinations** ✅ *Implemented in 01_LogicalOperators.js*
   - $and containing $or clauses
   - $or containing $and clauses
   - Complex nested logical trees
-- [ ] **Implicit AND with explicit operators**
+- [x] **Implicit AND with explicit operators** ✅ *Implemented in 01_LogicalOperators.js*
   - Field conditions + $and
   - Field conditions + $or
   - Multiple fields + multiple logical operators
+
++ **Findings:** All logical operator test suites ($and, $or, combined) are fully implemented in `01_LogicalOperators.js` and pass successfully under the full validation environment.
++ **Hypotheses for any failing tests:**  
+  - If a logical operator test fails, likely causes include:  
+    - Incorrect short-circuit evaluation or improper flattening of nested $and/$or arrays.  
+    - Query engine not handling implicit AND between root-level fields and explicit logical operators.  
+    - Dot notation field access not resolving correctly in nested logical conditions.  
+    - Type coercion or strictness differing from MongoDB (e.g., boolean vs number).  
+    - Edge case: empty $and/$or arrays not matching MongoDB's documented behaviour.  
+  - For each failing test, check if the query engine:  
+    - Correctly recurses into nested logical operators.  
+    - Applies field-level conditions in conjunction with logical operators.  
+    - Handles empty arrays as per MongoDB (empty $and matches all, empty $or matches none).  
+    - Throws errors for invalid logical operator structures (non-array $and/$or).
 
 ### Field Existence and Type Operators (If supported)
 - [ ] **$exists** (check if implemented)

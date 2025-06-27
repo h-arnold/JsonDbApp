@@ -32,8 +32,10 @@ function initialiseValidationTests() {
     // Register comparison operator test suites
     registerComparisonOperatorTestSuites();
 
+    // Register logical operator test suites
+    registerLogicalOperatorTestSuites();
+
     // TODO: Register additional test suites as they are created
-    // registerLogicalOperatorTestSuites();
     // registerFieldExistenceTestSuites();
     // registerArrayOperatorTestSuites();
     // registerUpdateOperatorTestSuites();
@@ -77,6 +79,41 @@ function registerComparisonOperatorTestSuites() {
 
   } catch (error) {
     logger.error('Failed to register comparison operator test suites', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Register logical operator test suites ($and, $or)
+ */
+function registerLogicalOperatorTestSuites() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-LogicalOps');
+
+  try {
+    // Register $and operator tests
+    const andSuite = createLogicalAndOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(andSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$and Logical AND Operator Tests', andSuite);
+
+    // Register $or operator tests
+    const orSuite = createLogicalOrOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(orSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$or Logical OR Operator Tests', orSuite);
+
+    // Register combined logical operations tests
+    const combinedSuite = createCombinedLogicalOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(combinedSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('Combined Logical Operations Tests', combinedSuite);
+
+    // Register logical operator error handling tests
+    const errorSuite = createLogicalOperatorErrorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(errorSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('Logical Operator Error Handling Tests', errorSuite);
+
+    logger.info('Logical operator test suites registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register logical operator test suites', { error: error.message });
     throw error;
   }
 }
@@ -434,6 +471,71 @@ function runComparisonOperatorTests() {
   }
 }
 
+/**
+ * Quick runner for logical operator tests
+ * @returns {TestResults} Results from logical operator tests
+ */
+function runLogicalOperatorTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-LogicalQuick');
+  logger.info('Running all logical operator tests...');
+
+  let combinedResults = new TestResults();
+
+  try {
+    setupValidationTestEnvironmentForTests();
+    const framework = initialiseValidationTests();
+
+    // Run each logical operator test suite
+    const suiteNames = [
+      '$and Logical AND Operator Tests', 
+      '$or Logical OR Operator Tests', 
+      'Combined Logical Operations Tests',
+      'Logical Operator Error Handling Tests'
+    ];
+
+    for (const suiteName of suiteNames) {
+      try {
+        const suiteResult = framework.runTestSuite(suiteName);
+        
+        // Manually combine results
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
+        logger.info(`Completed ${suiteName}`, {
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length
+        });
+      } catch (error) {
+        logger.error(`Failed to run ${suiteName}`, { error: error.message });
+        throw error;
+      }
+    }
+
+    combinedResults.finish();
+
+    logger.info('All logical operator tests completed', {
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
+    });
+
+    return combinedResults;
+
+  } catch (error) {
+    logger.error('Logical operator tests failed', { error: error.message });
+    throw error;
+
+  } finally {
+    try {
+      cleanupValidationTestEnvironment();
+    } catch (cleanupError) {
+      logger.error('Cleanup failed', { error: cleanupError.message });
+    }
+  }
+}
+
 /* exported 
    runAllValidationTests, 
    runValidationTestSuite, 
@@ -441,6 +543,7 @@ function runComparisonOperatorTests() {
    listValidationTests, 
    getValidationTestStatus,
    runComparisonOperatorTests,
+   runLogicalOperatorTests,
    initialiseValidationTests,
    setupValidationTestEnvironmentForTests,
    cleanupValidationTestEnvironment 

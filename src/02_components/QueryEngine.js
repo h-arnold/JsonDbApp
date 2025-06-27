@@ -474,7 +474,7 @@ class QueryEngine {
           }
         });
       }
-    } catch {
+    } catch (e) {
       // Only ignore validation errors for non-objects, re-throw query errors
       if (e instanceof InvalidQueryError) {
         throw e;
