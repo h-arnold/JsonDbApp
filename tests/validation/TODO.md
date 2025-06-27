@@ -64,11 +64,6 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
   - Floating point precision
   - Date range limits
 
-#### $gte and $lte (If supported - check implementation)
-- [ ] **Equal boundary cases**
-  - Value equals threshold
-  - Combined with $gt/$lt for ranges
-
 ### Logical Operators
 
 #### $and
