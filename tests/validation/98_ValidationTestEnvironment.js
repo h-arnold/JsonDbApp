@@ -55,7 +55,7 @@ function setupValidationTestEnvironment() {
       documents: {}
     };
     dataArray.forEach(doc => {
-      collectionObj.documents[doc._id] = ObjectUtils.serialise(doc);
+      collectionObj.documents[doc._id] = doc;
     });
     const file = folder.createFile(key + '.json', JSON.stringify(collectionObj));
     VALIDATION_TEST_ENV.collectionFileIds = VALIDATION_TEST_ENV.collectionFileIds || {};
@@ -73,7 +73,7 @@ function setupValidationTestEnvironment() {
 /**
  * Clean up test environment: delete created Drive folder and clear properties
  */
-function cleanupValidationTestEnvironment() {
+function cleanupValidationTestEnvironmentEnv() {
   const logger = JDbLogger.createComponentLogger('Validation-Cleanup');
   try {
     if (VALIDATION_TEST_ENV.testFolderId) {
@@ -93,4 +93,4 @@ function getValidationTestState() {
   return JSON.parse(JSON.stringify(VALIDATION_TEST_ENV));
 }
 
-/* exported setupValidationTestEnvironment, cleanupValidationTestEnvironment, getValidationTestState */
+/* exported setupValidationTestEnvironment, cleanupValidationTestEnvironmentEnv, getValidationTestState */

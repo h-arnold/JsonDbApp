@@ -175,7 +175,7 @@ function cleanupValidationTestEnvironment() {
     }
 
     // Clean up test environment (from ValidationTestEnvironment.js)
-    cleanupValidationTestEnvironment();
+    cleanupValidationTestEnvironmentEnv();
     
     // Reset test registry
     VALIDATION_TEST_REGISTRY.testSuites.clear();
