@@ -215,23 +215,22 @@ function runAllValidationTests() {
     
     // Log summary results
     const summary = {
-      totalSuites: results.getTestSuiteCount(),
-      totalTests: results.getTotalTestCount(),
-      passed: results.getPassedTestCount(),
-      failed: results.getFailedTestCount(),
+      totalTests: results.results.length,
+      passed: results.getPassed().length,
+      failed: results.getFailed().length,
       executionTime: results.getTotalExecutionTime()
     };
     
     logger.info('Validation test execution completed', summary);
     
     // Log detailed results if there are failures
-    if (results.hasFailures()) {
+    if (results.getFailed().length > 0) {
       logger.warn('Some validation tests failed:', {
-        failedTests: results.getFailedTests().length,
-        failures: results.getFailedTests().map(result => ({
+        failedTests: results.getFailed().length,
+        failures: results.getFailed().map(result => ({
           suite: result.suiteName,
           test: result.testName,
-          error: result.error
+          error: result.error ? result.error.message : 'Unknown error'
         }))
       });
     }
@@ -279,9 +278,9 @@ function runValidationTestSuite(suiteName) {
     results = framework.runTestSuite(suiteName);
     
     logger.info(`Test suite '${suiteName}' completed`, {
-      totalTests: results.getTotalTestCount(),
-      passed: results.getPassedTestCount(),
-      failed: results.getFailedTestCount(),
+      totalTests: results.results.length,
+      passed: results.getPassed().length,
+      failed: results.getFailed().length,
       executionTime: results.getTotalExecutionTime()
     });
 
@@ -324,8 +323,8 @@ function runValidationTest(suiteName, testName) {
     results = framework.runSingleTest(suiteName, testName);
     
     logger.info(`Test '${testName}' completed`, {
-      passed: results.getPassedTestCount(),
-      failed: results.getFailedTestCount(),
+      passed: results.getPassed().length,
+      failed: results.getFailed().length,
       executionTime: results.getTotalExecutionTime()
     });
 
@@ -383,7 +382,7 @@ function runComparisonOperatorTests() {
   const logger = JDbLogger.createComponentLogger('ValidationTests-ComparisonQuick');
   logger.info('Running all comparison operator tests...');
 
-  let allResults = null;
+  let combinedResults = new TestResults();
 
   try {
     setupValidationTestEnvironmentForTests();
@@ -391,15 +390,19 @@ function runComparisonOperatorTests() {
 
     // Run each comparison operator test suite
     const suiteNames = ['$eq Equality Operator Tests', '$gt Greater Than Operator Tests', '$lt Less Than Operator Tests'];
-    const results = [];
 
     for (const suiteName of suiteNames) {
       try {
         const suiteResult = framework.runTestSuite(suiteName);
-        results.push(suiteResult);
+        
+        // Manually combine results
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
         logger.info(`Completed ${suiteName}`, {
-          passed: suiteResult.getPassedTestCount(),
-          failed: suiteResult.getFailedTestCount()
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length
         });
       } catch (error) {
         logger.error(`Failed to run ${suiteName}`, { error: error.message });
@@ -407,20 +410,16 @@ function runComparisonOperatorTests() {
       }
     }
 
-    // Combine results
-    allResults = results.reduce((combined, current) => {
-      combined.mergeResults(current);
-      return combined;
-    });
+    combinedResults.finish();
 
     logger.info('All comparison operator tests completed', {
-      totalSuites: results.length,
-      totalTests: allResults.getTotalTestCount(),
-      passed: allResults.getPassedTestCount(),
-      failed: allResults.getFailedTestCount()
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
     });
 
-    return allResults;
+    return combinedResults;
 
   } catch (error) {
     logger.error('Comparison operator tests failed', { error: error.message });

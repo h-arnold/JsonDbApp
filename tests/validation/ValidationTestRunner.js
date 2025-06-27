@@ -21,32 +21,28 @@ function runAllValidationTestsNow() {
     const endTime = new Date();
     const duration = endTime - startTime;
     
-    // Print comprehensive results
+    // Print comprehensive results using the correct API
     console.log('\n=== VALIDATION TEST RESULTS ===');
-    console.log(`Total Test Suites: ${results.getTestSuiteCount()}`);
-    console.log(`Total Tests: ${results.getTotalTestCount()}`);
-    console.log(`Passed: ${results.getPassedTestCount()}`);
-    console.log(`Failed: ${results.getFailedTestCount()}`);
+    console.log(`Total Tests: ${results.results.length}`);
+    console.log(`Passed: ${results.getPassed().length}`);
+    console.log(`Failed: ${results.getFailed().length}`);
     console.log(`Execution Time: ${duration}ms`);
-    console.log(`Success Rate: ${((results.getPassedTestCount() / results.getTotalTestCount()) * 100).toFixed(1)}%`);
+    console.log(`Success Rate: ${results.getPassRate().toFixed(1)}%`);
     
-    if (results.hasFailures()) {
+    if (results.getFailed().length > 0) {
       console.log('\n=== FAILED TESTS ===');
-      results.getFailedTests().forEach((result, index) => {
+      results.getFailed().forEach((result, index) => {
         console.log(`${index + 1}. ${result.suiteName} > ${result.testName}`);
-        console.log(`   Error: ${result.error}`);
-        if (result.details) {
-          console.log(`   Details: ${result.details}`);
-        }
+        console.log(`   Error: ${result.error ? result.error.message : 'Unknown error'}`);
       });
     } else {
       console.log('\n🎉 All validation tests passed!');
     }
     
     logger.info('Validation test execution completed', {
-      totalTests: results.getTotalTestCount(),
-      passed: results.getPassedTestCount(),
-      failed: results.getFailedTestCount(),
+      totalTests: results.results.length,
+      passed: results.getPassed().length,
+      failed: results.getFailed().length,
       duration: duration
     });
     
@@ -77,16 +73,16 @@ function runComparisonTests() {
     const duration = endTime - startTime;
     
     console.log('\n=== COMPARISON OPERATOR TEST RESULTS ===');
-    console.log(`Total Tests: ${results.getTotalTestCount()}`);
-    console.log(`Passed: ${results.getPassedTestCount()}`);
-    console.log(`Failed: ${results.getFailedTestCount()}`);
+    console.log(`Total Tests: ${results.results.length}`);
+    console.log(`Passed: ${results.getPassed().length}`);
+    console.log(`Failed: ${results.getFailed().length}`);
     console.log(`Execution Time: ${duration}ms`);
     
-    if (results.hasFailures()) {
+    if (results.getFailed().length > 0) {
       console.log('\n=== FAILED TESTS ===');
-      results.getFailedTests().forEach((result, index) => {
+      results.getFailed().forEach((result, index) => {
         console.log(`${index + 1}. ${result.suiteName} > ${result.testName}`);
-        console.log(`   Error: ${result.error}`);
+        console.log(`   Error: ${result.error ? result.error.message : 'Unknown error'}`);
       });
     } else {
       console.log('\n🎉 All comparison operator tests passed!');
@@ -127,16 +123,16 @@ function runSpecificTestSuite(suiteName) {
     const duration = endTime - startTime;
     
     console.log(`\n=== ${suiteName.toUpperCase()} RESULTS ===`);
-    console.log(`Total Tests: ${results.getTotalTestCount()}`);
-    console.log(`Passed: ${results.getPassedTestCount()}`);
-    console.log(`Failed: ${results.getFailedTestCount()}`);
+    console.log(`Total Tests: ${results.results.length}`);
+    console.log(`Passed: ${results.getPassed().length}`);
+    console.log(`Failed: ${results.getFailed().length}`);
     console.log(`Execution Time: ${duration}ms`);
     
-    if (results.hasFailures()) {
+    if (results.getFailed().length > 0) {
       console.log('\n=== FAILED TESTS ===');
-      results.getFailedTests().forEach((result, index) => {
+      results.getFailed().forEach((result, index) => {
         console.log(`${index + 1}. ${result.testName}`);
-        console.log(`   Error: ${result.error}`);
+        console.log(`   Error: ${result.error ? result.error.message : 'Unknown error'}`);
       });
     }
     
@@ -174,36 +170,8 @@ function listAvailableValidationTests() {
 }
 
 /**
- * Check validation test environment status
- */
-function checkValidationTestStatus() {
-  try {
-    const status = getValidationTestStatus();
-    
-    console.log('\n=== VALIDATION TEST STATUS ===');
-    console.log(`Framework Initialised: ${status.isInitialised ? '✅' : '❌'}`);
-    console.log(`Framework Exists: ${status.frameworkExists ? '✅' : '❌'}`);
-    console.log(`Registered Suites: ${status.suiteCount}`);
-    
-    if (status.registeredSuites.length > 0) {
-      console.log('\nRegistered Test Suites:');
-      status.registeredSuites.forEach(suite => {
-        console.log(`  - ${suite}`);
-      });
-    }
-    
-    return status;
-    
-  } catch (error) {
-    console.error('❌ Failed to check validation test status:', error.message);
-    throw error;
-  }
-}
-
-/**
  * Quick test functions for debugging individual operators
  */
-
 function testEqualityOperator() {
   return runSpecificTestSuite('$eq Equality Operator Tests');
 }
@@ -224,7 +192,6 @@ function showValidationTestHelp() {
   console.log('🔹 runAllValidationTestsNow() - Run all validation tests');
   console.log('🔹 runComparisonTests() - Run comparison operator tests only');
   console.log('🔹 listAvailableValidationTests() - Show all available tests');
-  console.log('🔹 checkValidationTestStatus() - Check test environment status');
   console.log('');
   console.log('🔸 testEqualityOperator() - Test $eq operator only');
   console.log('🔸 testGreaterThanOperator() - Test $gt operator only');
@@ -242,7 +209,6 @@ function showValidationTestHelp() {
    runComparisonTests,
    runSpecificTestSuite,
    listAvailableValidationTests,
-   checkValidationTestStatus,
    testEqualityOperator,
    testGreaterThanOperator,
    testLessThanOperator,
