@@ -38,6 +38,9 @@ function initialiseValidationTests() {
     // Register field update operator test suites
     registerFieldUpdateOperatorTestSuites();
 
+    // Register numeric update operator test suites
+    registerNumericUpdateOperatorTestSuites();
+
     VALIDATION_TEST_REGISTRY.isInitialised = true;
     logger.info('Validation test framework initialised successfully', {
       registeredSuites: VALIDATION_TEST_REGISTRY.testSuites.size
@@ -162,6 +165,91 @@ function registerFieldUpdateOperatorTestSuites() {
 
   } catch (error) {
     logger.error('Failed to register field update operator test suites', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Register numeric update operator test suites ($inc, $mul, $min, $max)
+ */
+function registerNumericUpdateOperatorTestSuites() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-NumericUpdateOps');
+
+  try {
+    // Register $inc basic incrementation tests
+    const incBasicSuite = createIncBasicIncrementationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incBasicSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Basic Incrementation Tests', incBasicSuite);
+
+    // Register $inc field creation tests
+    const incFieldSuite = createIncFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Field Creation Tests', incFieldSuite);
+
+    // Register $inc type validation tests
+    const incTypeSuite = createIncTypeValidationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incTypeSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Type Validation Tests', incTypeSuite);
+
+    // Register $inc boundary testing tests
+    const incBoundarySuite = createIncBoundaryTestingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incBoundarySuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Boundary Testing Tests', incBoundarySuite);
+
+    // Register $mul basic multiplication tests
+    const mulBasicSuite = createMulBasicMultiplicationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(mulBasicSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$mul Basic Multiplication Tests', mulBasicSuite);
+
+    // Register $mul field creation tests
+    const mulFieldSuite = createMulFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(mulFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$mul Field Creation Tests', mulFieldSuite);
+
+    // Register $mul type validation tests
+    const mulTypeSuite = createMulTypeValidationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(mulTypeSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$mul Type Validation Tests', mulTypeSuite);
+
+    // Register $min value comparison tests
+    const minValueSuite = createMinValueComparisonTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minValueSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Value Comparison Tests', minValueSuite);
+
+    // Register $min field creation tests
+    const minFieldSuite = createMinFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Field Creation Tests', minFieldSuite);
+
+    // Register $min type handling tests
+    const minTypeSuite = createMinTypeHandlingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minTypeSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Type Handling Tests', minTypeSuite);
+
+    // Register $min edge cases tests
+    const minEdgesSuite = createMinEdgeCasesTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minEdgesSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Edge Cases Tests', minEdgesSuite);
+
+    // Register $max value comparison tests
+    const maxValueSuite = createMaxValueComparisonTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(maxValueSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$max Value Comparison Tests', maxValueSuite);
+
+    // Register $max field creation tests
+    const maxFieldSuite = createMaxFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(maxFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$max Field Creation Tests', maxFieldSuite);
+
+    // Register $max boundary testing tests
+    const maxBoundarySuite = createMaxBoundaryTestingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(maxBoundarySuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$max Boundary Testing Tests', maxBoundarySuite);
+
+    logger.info('Numeric update operator test suites registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register numeric update operator test suites', { error: error.message });
     throw error;
   }
 }
@@ -663,6 +751,89 @@ function runFieldUpdateOperatorTests() {
   }
 }
 
+/**
+ * Quick runner for numeric update operator tests
+ * @returns {TestResults} Results from numeric update operator tests
+ */
+function runNumericUpdateOperatorTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-NumericUpdateQuick');
+  logger.info('Running all numeric update operator tests...');
+
+  let combinedResults = new TestResults();
+
+  try {
+    // Setup test environment
+    setupValidationTestEnvironmentForTests();
+    
+    // Initialise test framework
+    const framework = initialiseValidationTests();
+    
+    // Validate environment before running tests
+    framework.validateEnvironment();
+
+    // Run numeric update operator test suites
+    const suiteNames = [
+      '$inc Basic Incrementation Tests',
+      '$inc Field Creation Tests',
+      '$inc Type Validation Tests',
+      '$inc Boundary Testing Tests',
+      '$mul Basic Multiplication Tests',
+      '$mul Field Creation Tests',
+      '$mul Type Validation Tests',
+      '$min Value Comparison Tests',
+      '$min Field Creation Tests',
+      '$min Type Handling Tests',
+      '$min Edge Cases Tests',
+      '$max Value Comparison Tests',
+      '$max Field Creation Tests',
+      '$max Boundary Testing Tests'
+    ];
+
+    for (const suiteName of suiteNames) {
+      try {
+        logger.info(`Running suite: ${suiteName}`);
+        const suiteResult = framework.runTestSuite(suiteName);
+        
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
+        logger.info(`Completed ${suiteName}`, {
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length,
+          total: suiteResult.results.length
+        });
+
+      } catch (error) {
+        logger.error(`Failed to run ${suiteName}`, { error: error.message });
+        combinedResults.addResult(new TestResult(suiteName, 'Suite Execution', false, error.message, 0));
+      }
+    }
+
+    combinedResults.finish();
+
+    logger.info('All numeric update operator tests completed', {
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
+    });
+
+    return combinedResults;
+
+  } catch (error) {
+    logger.error('Numeric update operator tests failed', { error: error.message });
+    throw error;
+
+  } finally {
+    try {
+      cleanupValidationTestEnvironment();
+    } catch (cleanupError) {
+      logger.error('Cleanup failed', { error: cleanupError.message });
+    }
+  }
+}
+
 /* exported 
    runAllValidationTests, 
    runValidationTestSuite, 
@@ -672,6 +843,7 @@ function runFieldUpdateOperatorTests() {
    runComparisonOperatorTests,
    runLogicalOperatorTests,
    runFieldUpdateOperatorTests,
+   runNumericUpdateOperatorTests,
    initialiseValidationTests,
    setupValidationTestEnvironmentForTests,
    cleanupValidationTestEnvironment 
