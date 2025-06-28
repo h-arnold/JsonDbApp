@@ -74,6 +74,10 @@ class TestFramework {
     return AssertionUtilities.assertArrayEquals(expected, actual, message);
   }
   
+  static assertDeepEquals(expected, actual, message = '') {
+    return AssertionUtilities.assertDeepEquals(expected, actual, message);
+  }
+  
   static assertNoThrow(fn, message = '') {
     return AssertionUtilities.assertNoThrow(fn, message);
   }

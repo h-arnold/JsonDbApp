@@ -35,10 +35,8 @@ function initialiseValidationTests() {
     // Register logical operator test suites
     registerLogicalOperatorTestSuites();
 
-    // TODO: Register additional test suites as they are created
-    // registerFieldExistenceTestSuites();
-    // registerArrayOperatorTestSuites();
-    // registerUpdateOperatorTestSuites();
+    // Register field update operator test suites
+    registerFieldUpdateOperatorTestSuites();
 
     VALIDATION_TEST_REGISTRY.isInitialised = true;
     logger.info('Validation test framework initialised successfully', {
@@ -119,6 +117,56 @@ function registerLogicalOperatorTestSuites() {
 }
 
 /**
+ * Register field update operator test suites ($set, $unset)
+ */
+function registerFieldUpdateOperatorTestSuites() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-FieldUpdateOps');
+
+  try {
+    // Register $set basic field setting tests
+    const setBasicSuite = createSetBasicFieldSettingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(setBasicSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$set Basic Field Setting Tests', setBasicSuite);
+
+    // Register $set type changes tests
+    const setTypesSuite = createSetTypeChangesTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(setTypesSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$set Type Changes Tests', setTypesSuite);
+
+    // Register $set object creation tests
+    const setObjectSuite = createSetObjectCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(setObjectSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$set Object Creation Tests', setObjectSuite);
+
+    // Register $set edge cases tests
+    const setEdgesSuite = createSetEdgeCasesTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(setEdgesSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$set Edge Cases Tests', setEdgesSuite);
+
+    // Register $unset basic field removal tests
+    const unsetBasicSuite = createUnsetBasicFieldRemovalTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(unsetBasicSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$unset Basic Field Removal Tests', unsetBasicSuite);
+
+    // Register $unset object structure tests
+    const unsetStructureSuite = createUnsetObjectStructureTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(unsetStructureSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$unset Object Structure Preservation Tests', unsetStructureSuite);
+
+    // Register $unset edge cases tests
+    const unsetEdgesSuite = createUnsetEdgeCasesTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(unsetEdgesSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$unset Edge Cases Tests', unsetEdgesSuite);
+
+    logger.info('Field update operator test suites registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register field update operator test suites', { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Set up validation test environment with proper database and collections
  */
 function setupValidationTestEnvironmentForTests() {
@@ -133,51 +181,51 @@ function setupValidationTestEnvironmentForTests() {
     const databaseConfig = new DatabaseConfig({
       name: 'ValidationTestDatabase',
       folderId: VALIDATION_TEST_ENV.testFolderId,
-      masterIndexId: VALIDATION_TEST_ENV.masterIndexId
+      autoCreateCollections: true
     });
 
-    // Create FileService instance
-    const fileOps = new FileOperations(logger);
-    const fileService = new FileService(fileOps, logger);
-
-    // Create MasterIndex instance
-    const masterIndex = new MasterIndex();
+    // Create Database instance (it creates its own FileService and MasterIndex)
+    const database = new Database(databaseConfig);
     
-    // Create Database instance
-    const database = new Database(databaseConfig, fileService, masterIndex);
+    // Initialize the database 
+    database.initialise();
 
-    // Create Collection instances for each test dataset
+    // Now we need to populate the MasterIndex with our validation collections
+    // Since the collections were created in Drive files, we need to register them
+    const masterIndex = database._masterIndex;
+    
+    // Add collection metadata to MasterIndex for each validation collection
+    Object.keys(VALIDATION_TEST_ENV.collectionFileIds).forEach(collectionName => {
+      const fileId = VALIDATION_TEST_ENV.collectionFileIds[collectionName];
+      const metadata = {
+        fileId: fileId,
+        created: new Date(),
+        lastModified: new Date(),
+        documentCount: VALIDATION_TEST_ENV.initialDataMap[collectionName].length,
+        modificationToken: 'validation-token-' + Date.now() + '-' + collectionName
+      };
+      
+      // Add to MasterIndex
+      masterIndex.addCollection(collectionName, metadata);
+      logger.debug(`Added collection ${collectionName} to MasterIndex`, { fileId, documentCount: metadata.documentCount });
+    });
+
+    // Store database reference and access collections through database
+    VALIDATION_TEST_ENV.database = database;
     VALIDATION_TEST_ENV.collections = {};
     
-    // Create persons collection
-    if (VALIDATION_TEST_ENV.collectionFileIds && VALIDATION_TEST_ENV.collectionFileIds.persons) {
-      VALIDATION_TEST_ENV.collections.persons = new Collection(
-        'persons',
-        VALIDATION_TEST_ENV.collectionFileIds.persons,
-        database,
-        fileService
-      );
-    }
-
-    // Create orders collection
-    if (VALIDATION_TEST_ENV.collectionFileIds && VALIDATION_TEST_ENV.collectionFileIds.orders) {
-      VALIDATION_TEST_ENV.collections.orders = new Collection(
-        'orders',
-        VALIDATION_TEST_ENV.collectionFileIds.orders,
-        database,
-        fileService
-      );
-    }
-
-    // Create inventory collection
-    if (VALIDATION_TEST_ENV.collectionFileIds && VALIDATION_TEST_ENV.collectionFileIds.inventory) {
-      VALIDATION_TEST_ENV.collections.inventory = new Collection(
-        'inventory',
-        VALIDATION_TEST_ENV.collectionFileIds.inventory,
-        database,
-        fileService
-      );
-    }
+    // Access collections through the database.collection() method
+    // This ensures proper loading and registration
+    const collectionNames = ['persons', 'orders', 'inventory'];
+    collectionNames.forEach(name => {
+      try {
+        VALIDATION_TEST_ENV.collections[name] = database.collection(name);
+        logger.debug(`Collection ${name} loaded successfully`);
+      } catch (error) {
+        logger.error(`Failed to load collection ${name}: ${error.message}`);
+        throw error;
+      }
+    });
 
     logger.info('Validation test environment setup completed successfully', {
       collectionsCreated: Object.keys(VALIDATION_TEST_ENV.collections).length,
@@ -209,6 +257,11 @@ function cleanupValidationTestEnvironment() {
         }
       });
       delete VALIDATION_TEST_ENV.collections;
+    }
+
+    // Clean up database reference
+    if (VALIDATION_TEST_ENV.database) {
+      delete VALIDATION_TEST_ENV.database;
     }
 
     // Clean up test environment (from ValidationTestEnvironment.js)
@@ -536,6 +589,80 @@ function runLogicalOperatorTests() {
   }
 }
 
+/**
+ * Quick runner for field update operator tests
+ * @returns {TestResults} Results from field update operator tests
+ */
+function runFieldUpdateOperatorTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-FieldUpdateQuick');
+  logger.info('Running all field update operator tests...');
+
+  let combinedResults = new TestResults();
+
+  try {
+    // Setup test environment
+    setupValidationTestEnvironmentForTests();
+    
+    // Initialise test framework
+    const framework = initialiseValidationTests();
+    
+    // Validate environment before running tests
+    framework.validateEnvironment();
+
+    // Run field update operator test suites
+    const suiteNames = [
+      '$set Basic Field Setting Tests',
+      '$set Type Changes Tests', 
+      '$set Object Creation Tests',
+      '$set Edge Cases Tests',
+      '$unset Basic Field Removal Tests',
+      '$unset Object Structure Preservation Tests',
+      '$unset Edge Cases Tests'
+    ];
+
+    for (const suiteName of suiteNames) {
+      try {
+        logger.info(`Running suite: ${suiteName}`);
+        const suiteResult = framework.runTestSuite(suiteName);
+        
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
+        logger.info(`Completed ${suiteName}`, {
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length
+        });
+      } catch (error) {
+        logger.error(`Failed to run ${suiteName}`, { error: error.message });
+        throw error;
+      }
+    }
+
+    combinedResults.finish();
+
+    logger.info('All field update operator tests completed', {
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
+    });
+
+    return combinedResults;
+
+  } catch (error) {
+    logger.error('Field update operator tests failed', { error: error.message });
+    throw error;
+
+  } finally {
+    try {
+      cleanupValidationTestEnvironment();
+    } catch (cleanupError) {
+      logger.error('Cleanup failed', { error: cleanupError.message });
+    }
+  }
+}
+
 /* exported 
    runAllValidationTests, 
    runValidationTestSuite, 
@@ -544,6 +671,7 @@ function runLogicalOperatorTests() {
    getValidationTestStatus,
    runComparisonOperatorTests,
    runLogicalOperatorTests,
+   runFieldUpdateOperatorTests,
    initialiseValidationTests,
    setupValidationTestEnvironmentForTests,
    cleanupValidationTestEnvironment 

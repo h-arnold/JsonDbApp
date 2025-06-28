@@ -215,4 +215,54 @@ class AssertionUtilities {
       }
     }
   }
+  
+  /**
+   * Assert that two values are deeply equal (for objects and arrays)
+   * @param {*} expected - The expected value
+   * @param {*} actual - The actual value
+   * @param {string} message - Optional error message
+   */
+  static assertDeepEquals(expected, actual, message = '') {
+    const deepEqual = (a, b) => {
+      // Handle null and undefined
+      if (a === null && b === null) return true;
+      if (a === undefined && b === undefined) return true;
+      if (a === null || b === null || a === undefined || b === undefined) return false;
+      
+      // Handle primitives
+      if (typeof a !== 'object' || typeof b !== 'object') {
+        return a === b;
+      }
+      
+      // Handle arrays
+      if (Array.isArray(a) && Array.isArray(b)) {
+        if (a.length !== b.length) return false;
+        for (let i = 0; i < a.length; i++) {
+          if (!deepEqual(a[i], b[i])) return false;
+        }
+        return true;
+      }
+      
+      // One is array, other is not
+      if (Array.isArray(a) || Array.isArray(b)) return false;
+      
+      // Handle objects
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+      
+      if (keysA.length !== keysB.length) return false;
+      
+      for (let key of keysA) {
+        if (!keysB.includes(key)) return false;
+        if (!deepEqual(a[key], b[key])) return false;
+      }
+      
+      return true;
+    };
+    
+    if (!deepEqual(expected, actual)) {
+      const error = message || `Expected: ${JSON.stringify(expected)}, but got: ${JSON.stringify(actual)}`;
+      throw new Error(error);
+    }
+  }
 }

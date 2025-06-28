@@ -107,19 +107,14 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
   - Field conditions + $or
   - Multiple fields + multiple logical operators
 
-+ **Findings:** All logical operator test suites ($and, $or, combined) are fully implemented in `01_LogicalOperators.js` and pass successfully under the full validation environment.
-+ **Hypotheses for any failing tests:**  
-  - If a logical operator test fails, likely causes include:  
-    - Incorrect short-circuit evaluation or improper flattening of nested $and/$or arrays.  
-    - Query engine not handling implicit AND between root-level fields and explicit logical operators.  
-    - Dot notation field access not resolving correctly in nested logical conditions.  
-    - Type coercion or strictness differing from MongoDB (e.g., boolean vs number).  
-    - Edge case: empty $and/$or arrays not matching MongoDB's documented behaviour.  
-  - For each failing test, check if the query engine:  
-    - Correctly recurses into nested logical operators.  
-    - Applies field-level conditions in conjunction with logical operators.  
-    - Handles empty arrays as per MongoDB (empty $and matches all, empty $or matches none).  
-    - Throws errors for invalid logical operator structures (non-array $and/$or).
+#### Error Handling
+- [x] **Invalid logical operator structures** ✅ *Implemented in 01_LogicalOperators.js*
+  - Invalid $and structure (non-array)
+  - Invalid $or structure (non-array)
+  - Proper error throwing for malformed queries
+
++ **Findings:** All logical operator test suites ($and, $or, combined, error handling) are fully implemented in `01_LogicalOperators.js` and **pass successfully** under the full validation environment.
++ **Resolution:** Fixed parameter ordering issue in error handling tests where message strings were incorrectly passed as errorType parameter to assertThrows method.
 
 ---
 
@@ -128,38 +123,41 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
 ### Field Update Operators
 
 #### $set
-- [ ] **Basic field setting**
+- [x] **Basic field setting** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - Overwrite existing values (all types)
   - Create new fields
   - Set nested fields (dot notation)
   - Set deeply nested fields
-- [ ] **Type changes**
+- [x] **Type changes** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - String to number
   - Number to array
   - Object to primitive
   - Null to non-null
-- [ ] **Object creation**
+- [x] **Object creation** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - Create nested object structure via dot notation
   - Partial object updates
   - Mixed existing/new nested fields
-- [ ] **Edge cases**
+- [x] **Edge cases** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - Setting _id field
   - Setting to undefined vs null
   - Empty string vs null assignment
 
 #### $unset
-- [ ] **Basic field removal**
+- [x] **Basic field removal** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - Remove top-level fields
   - Remove nested fields (dot notation)
   - Remove array elements (if supported)
-- [ ] **Object structure preservation**
+- [x] **Object structure preservation** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - Remove field leaves parent object
   - Remove all fields leaves empty object
   - Remove nested field maintains object hierarchy
-- [ ] **Edge cases**
+- [x] **Edge cases** ✅ *Implemented in 02_FieldUpdateOperators.js*
   - Unset non-existent field
   - Unset _id field
   - Unset field in non-existent parent object
+
+- **Findings:** All field update operator test suites ($set basic, type changes, object creation, edge cases; $unset basic, structure preservation, edge cases) are fully implemented in `02_FieldUpdateOperators.js` and **pass successfully** under the full validation environment.
+- **Resolution:** Added `assertDeepEquals` method to AssertionUtilities and TestFramework classes to properly handle deep comparison of arrays and objects. Enhanced convenience function with detailed passed test summaries organized by suite.
 
 ### Numeric Update Operators
 
