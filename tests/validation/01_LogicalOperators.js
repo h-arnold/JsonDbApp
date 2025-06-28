@@ -401,7 +401,7 @@ function createLogicalOperatorErrorTestSuite() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     TestFramework.assertThrows(function() {
       collection.find({ $and: "not an array" });
-    }, 'Should throw error for non-array $and');
+    }, null, 'Should throw error for non-array $and');
   });
 
   // Invalid $or structure
@@ -409,7 +409,7 @@ function createLogicalOperatorErrorTestSuite() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     TestFramework.assertThrows(function() {
       collection.find({ $or: { invalid: "structure" } });
-    }, 'Should throw error for non-array $or');
+    }, null, 'Should throw error for non-array $or');
   });
 
   return suite;
