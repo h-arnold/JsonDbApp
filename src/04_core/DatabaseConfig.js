@@ -62,7 +62,8 @@ class DatabaseConfig {
     if (typeof this.lockTimeout !== 'number' || this.lockTimeout < 0) {
       throw new Error('Lock timeout must be a non-negative number');
     }
-    // Enforce minimum lock timeout of 500ms
+    // Enforce minimum lock timeout of 500ms - this is to avoid an issue where the lock times out before we get to 
+    // the point in a routine where we can retry, especially if the GAS servers are under heavy load.
     if (this.lockTimeout < 500) {
       throw new Error('Lock timeout must be at least 500ms');
     }
