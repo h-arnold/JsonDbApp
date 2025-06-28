@@ -66,33 +66,65 @@ class QueryEngine {
     return results;
   }
 
-  /**
-   * Check if a single document matches the query
+/**
+   * Determine if a document matches the given query
    * @param {Object} document - Document to test
-   * @param {Object} query - Query object
-   * @returns {boolean} True if document matches query
+   * @param {Object} query - MongoDB-compatible query object
+   * @returns {boolean} True if document matches
    * @private
    */
   _matchDocument(document, query) {
-    const queryFields = Object.keys(query);
+    const keys = Object.keys(query);
 
-    // Handle logical operators first
-    for (const field of queryFields) {
-      if (field === '$and') {
-        return this._matchLogicalAnd(document, query[field]);
-      }
-      if (field === '$or') {
-        return this._matchLogicalOr(document, query[field]);
+    // 1) Implicit field matching: every non-logical field key is treated as an AND clause
+    //    e.g. { a:1, b:2 } means a==1 AND b==2
+    for (const key of keys) {
+      if (key !== '$and' && key !== '$or') {
+        // If any simple field fails, the document is not a match
+        if (!this._matchField(document, key, query[key])) {
+          return false;
+        }
       }
     }
 
-    // Handle field-based queries (implicit AND for multiple fields)
-    for (const field of queryFields) {
-      if (!this._matchField(document, field, query[field])) {
+    // 2) Explicit $and operator: must match *all* provided conditions
+    //    Follows MongoDB semantics: empty array matches all documents
+    if (query.$and !== undefined) {
+      if (!Array.isArray(query.$and)) {
+        throw new InvalidQueryError('$and operator requires an array of conditions');
+      }
+      if (query.$and.length === 0) {
+        return true;
+      }
+      for (const cond of query.$and) {
+        // Recursively apply matching for each $and condition
+        if (!this._matchDocument(document, cond)) {
+          return false;
+        }
+      }
+    }
+
+    // 3) Explicit $or operator: must match *at least one* of the provided conditions
+    //    Follows MongoDB semantics: empty array matches no documents
+    if (query.$or !== undefined) {
+      if (!Array.isArray(query.$or)) {
+        throw new InvalidQueryError('$or operator requires an array of conditions');
+      }
+      if (query.$or.length === 0) {
         return false;
       }
+      for (const cond of query.$or) {
+        // If any $or condition matches, return true immediately
+        if (this._matchDocument(document, cond)) {
+          return true;
+        }
+      }
+      // None of the $or conditions matched
+      return false;
     }
 
+    // 4) No logical operators or all have passed
+    //    At this point, implicit fields and any $and constraints have succeeded
     return true;
   }
 
@@ -483,57 +515,5 @@ class QueryEngine {
     }
   }
 
-  /**
-   * Handle $and logical operator
-   * @param {Object} document - Document to test
-   * @param {Array} conditions - Array of conditions that must all match
-   * @returns {boolean} True if all conditions match
-   * @private
-   */
-  _matchLogicalAnd(document, conditions) {
-    if (!Array.isArray(conditions)) {
-      throw new InvalidQueryError('$and operator requires an array of conditions');
-    }
 
-    // Empty $and array should match all documents (MongoDB behaviour)
-    if (conditions.length === 0) {
-      return true;
-    }
-
-    // All conditions must match
-    for (const condition of conditions) {
-      if (!this._matchDocument(document, condition)) {
-        return false;
-      }
-    }
-
-    return true;
-  }
-
-  /**
-   * Handle $or logical operator
-   * @param {Object} document - Document to test
-   * @param {Array} conditions - Array of conditions where at least one must match
-   * @returns {boolean} True if any condition matches
-   * @private
-   */
-  _matchLogicalOr(document, conditions) {
-    if (!Array.isArray(conditions)) {
-      throw new InvalidQueryError('$or operator requires an array of conditions');
-    }
-
-    // Empty $or array should match no documents (MongoDB behaviour)
-    if (conditions.length === 0) {
-      return false;
-    }
-
-    // At least one condition must match
-    for (const condition of conditions) {
-      if (this._matchDocument(document, condition)) {
-        return true;
-      }
-    }
-
-    return false;
-  }
 }

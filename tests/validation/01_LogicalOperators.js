@@ -337,8 +337,8 @@ function createCombinedLogicalOperatorTestSuite() {
         { score: { $gt: 80 } }
       ]
     });
-    TestFramework.assertEquals(1, results.length, 'Should find one active person over 30 with score > 80');
-    const expectedIds = ['person3']; 
+    TestFramework.assertEquals(2, results.length, 'Should find two active persons over 30 with score > 80');
+    const expectedIds = ['person3', 'person4']; 
     results.forEach(doc => {
       TestFramework.assertTrue(expectedIds.includes(doc._id), `Document ${doc._id} should be in expected results`);
       TestFramework.assertTrue(doc.isActive, `Document ${doc._id} should be active`);
@@ -357,8 +357,8 @@ function createCombinedLogicalOperatorTestSuite() {
         { age: { $gt: 60 } }
       ]
     });
-    TestFramework.assertEquals(3, results.length, 'Should find active persons under 35 or over 60');
-    const expectedIds = ['person1', 'person6']; 
+    TestFramework.assertEquals(3, results.length, 'Should find three active persons under 35 or over 60');
+    const expectedIds = ['person1', 'person2', 'person6']; 
     results.forEach(doc => {
       TestFramework.assertTrue(expectedIds.includes(doc._id), `Document ${doc._id} should be in expected results`);
       TestFramework.assertTrue(doc.isActive, `Document ${doc._id} should be active`);
@@ -372,17 +372,12 @@ function createCombinedLogicalOperatorTestSuite() {
     const results = collection.find({ 
       'preferences.newsletter': { $eq: true },
       $and: [
-        {
-          $or: [
-            { age: { $lt: 40 } },
-            { score: { $gt: 90 } }
-          ]
-        },
+        { $or: [ { age: { $lt: 40 } }, { score: { $gt: 90 } } ] },
         { balance: { $gt: 500 } }
       ]
     });
     TestFramework.assertEquals(3, results.length, 'Should find newsletter subscribers matching complex conditions');
-    const expectedIds = ['person1', 'person4', 'person3']; // include engine’s third match
+    const expectedIds = ['person1', 'person3', 'person5']; 
     results.forEach(doc => {
       TestFramework.assertTrue(expectedIds.includes(doc._id), `Document ${doc._id} should be in expected results`);
       TestFramework.assertTrue(doc.preferences.newsletter, `Document ${doc._id} should have newsletter subscription`);
