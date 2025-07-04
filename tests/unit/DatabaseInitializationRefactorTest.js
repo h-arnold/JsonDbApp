@@ -93,38 +93,45 @@ function cleanupDatabaseRefactorTestEnvironment() {
  */
 function createDatabaseCreateMethodTestSuite() {
   const suite = new TestSuite('Database createDatabase() Method');
-  
+
+  suite.setBeforeEach(function() {
+    setupDatabaseRefactorTestEnvironment();
+  });
+  suite.setAfterEach(function() {
+    cleanupDatabaseRefactorTestEnvironment();
+  });
+
   suite.addTest('should create database with fresh MasterIndex', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_CREATE_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     const database = new Database(config);
-    
+
     // Act - This should fail initially (RED phase)
     try {
       database.createDatabase();
-      
+
       // Assert
       // Should create a MasterIndex with empty collections
       const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
       TestFramework.assertTrue(masterIndex.isInitialised(), 'MasterIndex should be initialised');
-      
+
       const collections = masterIndex.getCollections();
       TestFramework.assertEquals(Object.keys(collections).length, 0, 'Should start with empty collections');
-      
+
     } catch (error) {
       throw new Error('Database.createDatabase() not implemented: ' + error.message);
     }
   });
-  
+
   suite.addTest('should throw error if MasterIndex already exists', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_CREATE_EXISTS_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     // Pre-populate MasterIndex
     const existingMasterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
     existingMasterIndex.addCollection('existingCollection', {
@@ -132,15 +139,15 @@ function createDatabaseCreateMethodTestSuite() {
       fileId: 'existing-file-id',
       documentCount: 1
     });
-    
+
     const database = new Database(config);
-    
+
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
       database.createDatabase();
     }, Error, 'Should throw error when MasterIndex already exists');
   });
-  
+
   return suite;
 }
 
@@ -149,13 +156,20 @@ function createDatabaseCreateMethodTestSuite() {
  */
 function createDatabaseinitialiseRefactorTestSuite() {
   const suite = new TestSuite('Database initialise() Refactor');
-  
+
+  suite.setBeforeEach(function() {
+    setupDatabaseRefactorTestEnvironment();
+  });
+  suite.setAfterEach(function() {
+    cleanupDatabaseRefactorTestEnvironment();
+  });
+
   suite.addTest('should initialise from MasterIndex only', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_INIT_ONLY_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     // Pre-populate MasterIndex with collections
     const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
     masterIndex.addCollection('collection1', {
@@ -168,58 +182,58 @@ function createDatabaseinitialiseRefactorTestSuite() {
       fileId: 'file-id-2',
       documentCount: 3
     });
-    
+
     const database = new Database(config);
-    
+
     // Act - This should fail initially (RED phase)
     try {
       database.initialise();
-      
+
       // Assert
       const collections = database.listCollections();
       TestFramework.assertEquals(collections.length, 2, 'Should load collections from MasterIndex');
       TestFramework.assertTrue(collections.includes('collection1'), 'Should include collection1');
       TestFramework.assertTrue(collections.includes('collection2'), 'Should include collection2');
-      
+
     } catch (error) {
       throw new Error('Database.initialise() refactor not implemented: ' + error.message);
     }
   });
-  
+
   suite.addTest('should throw error if MasterIndex is missing', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_INIT_MISSING_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     // Ensure MasterIndex does not exist
     PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
-    
+
     const database = new Database(config);
-    
+
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
       database.initialise();
     }, Error, 'Should throw error when MasterIndex is missing');
   });
-  
+
   suite.addTest('should throw error if MasterIndex is corrupted', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_INIT_CORRUPT_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     // Set corrupted MasterIndex data
     PropertiesService.getScriptProperties().setProperty(config.masterIndexKey, 'invalid-json-data');
-    
+
     const database = new Database(config);
-    
+
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
       database.initialise();
     }, Error, 'Should throw error when MasterIndex is corrupted');
   });
-  
+
   return suite;
 }
 
@@ -228,13 +242,20 @@ function createDatabaseinitialiseRefactorTestSuite() {
  */
 function createDatabaseRecoverMethodTestSuite() {
   const suite = new TestSuite('Database recoverDatabase() Method');
-  
+
+  suite.setBeforeEach(function() {
+    setupDatabaseRefactorTestEnvironment();
+  });
+  suite.setAfterEach(function() {
+    cleanupDatabaseRefactorTestEnvironment();
+  });
+
   suite.addTest('should recover database from backup index file', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_RECOVER_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     // Create backup index file with collections
     const backupIndexData = {
       collections: {
@@ -252,49 +273,49 @@ function createDatabaseRecoverMethodTestSuite() {
       lastUpdated: new Date(),
       version: 1
     };
-    
+
     const fileService = new FileService(new FileOperations(), JDbLogger.createComponentLogger('Test'));
     const backupFileId = fileService.createFile('backup_index.json', backupIndexData, config.rootFolderId);
     DB_REFACTOR_TEST_DATA.createdFileIds.push(backupFileId);
-    
+
     const database = new Database(config);
-    
+
     // Act - This should fail initially (RED phase)
     try {
       database.recoverDatabase(backupFileId);
-      
+
       // Assert
       const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
       const collections = masterIndex.getCollections();
-      
+
       TestFramework.assertEquals(Object.keys(collections).length, 2, 'Should recover collections to MasterIndex');
       TestFramework.assertTrue(collections.hasOwnProperty('recoveredCollection1'), 'Should recover collection1');
       TestFramework.assertTrue(collections.hasOwnProperty('recoveredCollection2'), 'Should recover collection2');
-      
+
     } catch (error) {
       throw new Error('Database.recoverDatabase() not implemented: ' + error.message);
     }
   });
-  
+
   suite.addTest('should throw error if backup file is invalid', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_RECOVER_INVALID_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     // Create invalid backup file
     const fileService = new FileService(new FileOperations(), JDbLogger.createComponentLogger('Test'));
     const invalidBackupFileId = fileService.createFile('invalid_backup.json', { invalid: 'data' }, config.rootFolderId);
     DB_REFACTOR_TEST_DATA.createdFileIds.push(invalidBackupFileId);
-    
+
     const database = new Database(config);
-    
+
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
       database.recoverDatabase(invalidBackupFileId);
     }, Error, 'Should throw error for invalid backup file');
   });
-  
+
   return suite;
 }
 
@@ -303,16 +324,23 @@ function createDatabaseRecoverMethodTestSuite() {
  */
 function createCollectionMethodsNoFallbackTestSuite() {
   const suite = new TestSuite('Collection Methods No Fallback');
-  
+
+  suite.setBeforeEach(function() {
+    setupDatabaseRefactorTestEnvironment();
+  });
+  suite.setAfterEach(function() {
+    cleanupDatabaseRefactorTestEnvironment();
+  });
+
   suite.addTest('should access collection from MasterIndex only', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_COLLECTION_ONLY_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     const database = new Database(config);
     database.createDatabase();
-    
+
     // Add collection to MasterIndex
     const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
     masterIndex.addCollection('testCollection', {
@@ -320,39 +348,39 @@ function createCollectionMethodsNoFallbackTestSuite() {
       fileId: 'test-file-id',
       documentCount: 2
     });
-    
+
     database.initialise();
-    
+
     // Act - This should fail initially (RED phase)
     try {
       const collection = database.collection('testCollection');
-      
+
       // Assert
       TestFramework.assertNotNull(collection, 'Should access collection from MasterIndex');
       TestFramework.assertEquals(collection.name, 'testCollection', 'Collection name should match');
-      
+
     } catch (error) {
       throw new Error('Database.collection() fallback removal not implemented: ' + error.message);
     }
   });
-  
+
   suite.addTest('should throw error if collection not in MasterIndex', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_COLLECTION_NOT_FOUND_TEST_' + new Date().getTime();
     config.autoCreateCollections = false; // Disable auto-create
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
-    
+
     const database = new Database(config);
     database.createDatabase();
     database.initialise();
-    
+
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
       database.collection('nonExistentCollection');
     }, Error, 'Should throw error when collection not in MasterIndex and no fallback');
   });
-  
+
   return suite;
 }
 
