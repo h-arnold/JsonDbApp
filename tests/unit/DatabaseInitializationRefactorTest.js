@@ -207,7 +207,7 @@ function createDatabaseinitialiseRefactorTestSuite() {
 
     const database = new Database(config);
 
-    // Act - This should fail initially (RED phase)
+    // Act
     try {
       database.initialise();
 
