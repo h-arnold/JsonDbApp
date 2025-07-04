@@ -92,7 +92,7 @@ function generateCollectionCoordinatorTestData() {
       fileService
     );
     
-    // Load and initialize the collection
+    // Load and initialise the collection
     collection._ensureLoaded();
     
     // Register with master index

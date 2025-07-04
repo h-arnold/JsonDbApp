@@ -102,14 +102,14 @@ Database (Orchestrator)
 ```javascript
 const db = new Database(config);
 db.createDatabase();  // Creates fresh MasterIndex
-db.initialize();      // Loads from MasterIndex
+db.initialise();      // Loads from MasterIndex
 ```
 
 ### Normal Initialization
 
 ```javascript
 const db = new Database(config);
-db.initialize();      // Loads from MasterIndex (fails if missing)
+db.initialise();      // Loads from MasterIndex (fails if missing)
 ```
 
 ### Disaster Recovery
@@ -117,7 +117,7 @@ db.initialize();      // Loads from MasterIndex (fails if missing)
 ```javascript
 const db = new Database(config);
 db.recoverDatabase(backupFileId);  // Restores from backup to MasterIndex
-db.initialize();                   // Loads from restored MasterIndex
+db.initialise();                   // Loads from restored MasterIndex
 ```
 
 ### Benefits of New Workflow
@@ -140,9 +140,9 @@ constructor(config = {})
 **Behaviour:**
 
 - Validates and normalizes configuration via DatabaseConfig
-- Initializes logging, file services, and MasterIndex
+- initialises logging, file services, and MasterIndex
 - Creates in-memory collections map
-- Does NOT automatically initialize - call `initialise()` explicitly
+- Does NOT automatically initialise - call `initialise()` explicitly
 
 **Example:**
 
@@ -177,7 +177,7 @@ const db = new Database({
 
 #### `initialise()`
 
-**REFACTORED:** Initializes the database from MasterIndex only (single source of truth).
+**REFACTORED:** initialises the database from MasterIndex only (single source of truth).
 
 - **Returns:** `void`
 - **Throws:** `Error` when MasterIndex is missing, corrupted, or initialization fails
@@ -284,7 +284,7 @@ Explicitly creates a new collection.
 Loads and validates Drive-based index file data.
 
 - **Returns:** `Object` - Index file data with structure validation
-- **Throws:** `Error` for corrupted files or when database not initialized
+- **Throws:** `Error` for corrupted files or when database not initialised
 
 **Validation & Repair:**
 
@@ -465,7 +465,7 @@ setInterval(() => {
 
 ## Best Practices
 
-1. **Always initialize explicitly:** Call `initialise()` after constructor
+1. **Always initialise explicitly:** Call `initialise()` after constructor
 2. **Handle collection name validation:** Use try-catch for collection operations
 3. **Implement periodic backups:** Use `backupIndexToDrive()` regularly
 4. **Monitor index file health:** Check for corruption and implement recovery

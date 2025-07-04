@@ -2,7 +2,7 @@
  * DatabaseInitializationRefactorTest.js - Tests for refactored Database initialization
  * 
  * Tests the new Database initialization workflow where MasterIndex is the single source of truth.
- * This file contains tests for the new createDatabase(), refactored initialize(), and recoverDatabase() methods.
+ * This file contains tests for the new createDatabase(), refactored initialise(), and recoverDatabase() methods.
  */
 
 // Test data for the refactored Database tests
@@ -145,12 +145,12 @@ function createDatabaseCreateMethodTestSuite() {
 }
 
 /**
- * Test suite for refactored initialize() method
+ * Test suite for refactored initialise() method
  */
-function createDatabaseInitializeRefactorTestSuite() {
-  const suite = new TestSuite('Database initialize() Refactor');
+function createDatabaseinitialiseRefactorTestSuite() {
+  const suite = new TestSuite('Database initialise() Refactor');
   
-  suite.addTest('should initialize from MasterIndex only', function() {
+  suite.addTest('should initialise from MasterIndex only', function() {
     // Arrange
     const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
     config.masterIndexKey = 'GASDB_INIT_ONLY_TEST_' + new Date().getTime();
@@ -173,7 +173,7 @@ function createDatabaseInitializeRefactorTestSuite() {
     
     // Act - This should fail initially (RED phase)
     try {
-      database.initialize();
+      database.initialise();
       
       // Assert
       const collections = database.listCollections();
@@ -182,7 +182,7 @@ function createDatabaseInitializeRefactorTestSuite() {
       TestFramework.assertTrue(collections.includes('collection2'), 'Should include collection2');
       
     } catch (error) {
-      throw new Error('Database.initialize() refactor not implemented: ' + error.message);
+      throw new Error('Database.initialise() refactor not implemented: ' + error.message);
     }
   });
   
@@ -199,7 +199,7 @@ function createDatabaseInitializeRefactorTestSuite() {
     
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
-      database.initialize();
+      database.initialise();
     }, Error, 'Should throw error when MasterIndex is missing');
   });
   
@@ -216,7 +216,7 @@ function createDatabaseInitializeRefactorTestSuite() {
     
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
-      database.initialize();
+      database.initialise();
     }, Error, 'Should throw error when MasterIndex is corrupted');
   });
   
@@ -321,7 +321,7 @@ function createCollectionMethodsNoFallbackTestSuite() {
       documentCount: 2
     });
     
-    database.initialize();
+    database.initialise();
     
     // Act - This should fail initially (RED phase)
     try {
@@ -345,7 +345,7 @@ function createCollectionMethodsNoFallbackTestSuite() {
     
     const database = new Database(config);
     database.createDatabase();
-    database.initialize();
+    database.initialise();
     
     // Act & Assert - This should fail initially (RED phase)
     TestFramework.assertThrows(() => {
@@ -368,7 +368,7 @@ function runDatabaseRefactorTests() {
     try {
       // Register all test suites
       registerTestSuite(createDatabaseCreateMethodTestSuite());
-      registerTestSuite(createDatabaseInitializeRefactorTestSuite());
+      registerTestSuite(createDatabaseinitialiseRefactorTestSuite());
       registerTestSuite(createDatabaseRecoverMethodTestSuite());
       registerTestSuite(createCollectionMethodsNoFallbackTestSuite());
       

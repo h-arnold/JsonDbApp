@@ -63,7 +63,7 @@ class Database {
         throw new Error('Database already exists. Use recoverDatabase() if you need to restore from backup.');
       }
       
-      // Create fresh MasterIndex - constructor will initialize with empty collections
+      // Create fresh MasterIndex - constructor will initialise with empty collections
       this._masterIndex = new MasterIndex({ 
         masterIndexKey: this.config.masterIndexKey 
       });
