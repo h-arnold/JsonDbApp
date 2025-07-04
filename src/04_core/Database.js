@@ -57,21 +57,26 @@ class Database {
     this._logger.info('Creating new database');
     
     try {
-      // Check if MasterIndex already exists
+      // Check if a MasterIndex already exists in ScriptProperties (raw check)
       const existingData = PropertiesService.getScriptProperties().getProperty(this.config.masterIndexKey);
       if (existingData) {
         throw new Error('Database already exists. Use recoverDatabase() if you need to restore from backup.');
       }
-      
+
+      // If not, check if the in-memory MasterIndex is already initialised (should not be, but for safety)
+      if (this._masterIndex && this._masterIndex.isInitialised()) {
+        throw new Error('Database already exists (in-memory). Use recoverDatabase() if you need to restore from backup.');
+      }
+
       // Create fresh MasterIndex - constructor will initialise with empty collections
-      this._masterIndex = new MasterIndex({ 
-        masterIndexKey: this.config.masterIndexKey 
+      this._masterIndex = new MasterIndex({
+        masterIndexKey: this.config.masterIndexKey
       });
-      
+
       this._logger.info('Database created successfully', {
         masterIndexKey: this.config.masterIndexKey
       });
-      
+
     } catch (error) {
       this._logger.error('Failed to create database', { error: error.message });
       throw new Error('Database creation failed: ' + error.message);

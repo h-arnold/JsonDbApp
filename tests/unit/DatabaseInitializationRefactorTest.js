@@ -91,14 +91,19 @@ function cleanupDatabaseRefactorTestEnvironment() {
 /**
  * Test suite for createDatabase() method
  */
-function createDatabaseCreateMethodTestSuite() {
-  const suite = new TestSuite('Database createDatabase() Method');
 
-  suite.setBeforeEach(function() {
-    setupDatabaseRefactorTestEnvironment();
-  });
+// Test suite for createDatabase() method, with NO setup routine (ensures no MasterIndex exists before test)
+function createDatabaseCreateNoSetupTestSuite() {
+  const suite = new TestSuite('Database createDatabase() Method (No Setup)');
+
   suite.setAfterEach(function() {
-    cleanupDatabaseRefactorTestEnvironment();
+    // Clean up MasterIndex key after each test
+    DB_REFACTOR_TEST_DATA.masterIndexKeys.forEach(key => {
+      try {
+        PropertiesService.getScriptProperties().deleteProperty(key);
+      } catch (error) {}
+    });
+    DB_REFACTOR_TEST_DATA.masterIndexKeys = [];
   });
 
   suite.addTest('should create database with fresh MasterIndex', function() {
@@ -107,23 +112,39 @@ function createDatabaseCreateMethodTestSuite() {
     config.masterIndexKey = 'GASDB_CREATE_TEST_' + new Date().getTime();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
+    // Ensure MasterIndex does not exist
+    PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+
     const database = new Database(config);
 
-    // Act - This should fail initially (RED phase)
+    // Act
     try {
       database.createDatabase();
 
       // Assert
-      // Should create a MasterIndex with empty collections
       const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
       TestFramework.assertTrue(masterIndex.isInitialised(), 'MasterIndex should be initialised');
-
       const collections = masterIndex.getCollections();
       TestFramework.assertEquals(Object.keys(collections).length, 0, 'Should start with empty collections');
-
     } catch (error) {
       throw new Error('Database.createDatabase() not implemented: ' + error.message);
     }
+  });
+
+  return suite;
+}
+
+// Test suite for createDatabase() error case (MasterIndex exists)
+function createDatabaseCreateExistsTestSuite() {
+  const suite = new TestSuite('Database createDatabase() Method (Exists)');
+
+  suite.setAfterEach(function() {
+    DB_REFACTOR_TEST_DATA.masterIndexKeys.forEach(key => {
+      try {
+        PropertiesService.getScriptProperties().deleteProperty(key);
+      } catch (error) {}
+    });
+    DB_REFACTOR_TEST_DATA.masterIndexKeys = [];
   });
 
   suite.addTest('should throw error if MasterIndex already exists', function() {
@@ -133,6 +154,7 @@ function createDatabaseCreateMethodTestSuite() {
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Pre-populate MasterIndex
+    PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
     const existingMasterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
     existingMasterIndex.addCollection('existingCollection', {
       name: 'existingCollection',
@@ -142,7 +164,7 @@ function createDatabaseCreateMethodTestSuite() {
 
     const database = new Database(config);
 
-    // Act & Assert - This should fail initially (RED phase)
+    // Act & Assert
     TestFramework.assertThrows(() => {
       database.createDatabase();
     }, Error, 'Should throw error when MasterIndex already exists');
@@ -387,28 +409,25 @@ function createCollectionMethodsNoFallbackTestSuite() {
 /**
  * Run all Database refactoring tests
  */
+
 function runDatabaseRefactorTests() {
   try {
     JDbLogger.info('Starting Database Refactoring Test Execution');
-    
-    setupDatabaseRefactorTestEnvironment();
-    
-    try {
-      // Register all test suites
-      registerTestSuite(createDatabaseCreateMethodTestSuite());
-      registerTestSuite(createDatabaseinitialiseRefactorTestSuite());
-      registerTestSuite(createDatabaseRecoverMethodTestSuite());
-      registerTestSuite(createCollectionMethodsNoFallbackTestSuite());
-      
-      // Run all tests
-      const results = runAllTests();
-      
-      return results;
-      
-    } finally {
-      cleanupDatabaseRefactorTestEnvironment();
-    }
-    
+
+    // Only run setup/teardown for suites that require Drive/Folder setup
+    // Suites that test MasterIndex creation/absence do not use setupDatabaseRefactorTestEnvironment
+
+    // Register all test suites
+    registerTestSuite(createDatabaseCreateNoSetupTestSuite());
+    registerTestSuite(createDatabaseCreateExistsTestSuite());
+    registerTestSuite(createDatabaseinitialiseRefactorTestSuite());
+    registerTestSuite(createDatabaseRecoverMethodTestSuite());
+    registerTestSuite(createCollectionMethodsNoFallbackTestSuite());
+
+    // Run all tests
+    const results = runAllTests();
+    return results;
+
   } catch (error) {
     JDbLogger.error('Failed to execute Database refactoring tests', { error: error.message });
     throw error;
