@@ -34,9 +34,7 @@ class Database {
     // initialise services
     this._fileOps = new FileOperations(this._logger);
     this._fileService = new FileService(this._fileOps, this._logger);
-    this._masterIndex = new MasterIndex({ 
-      masterIndexKey: this.config.masterIndexKey 
-    });
+    this._masterIndex = null;
     
     this._logger.debug('Database instance created', {
       rootFolderId: this.config.rootFolderId,
@@ -63,15 +61,8 @@ class Database {
         throw new Error('Database already exists. Use recoverDatabase() if you need to restore from backup.');
       }
 
-      // If not, check if the in-memory MasterIndex is already initialised (should not be, but for safety)
-      if (this._masterIndex && this._masterIndex.isInitialised()) {
-        throw new Error('Database already exists (in-memory). Use recoverDatabase() if you need to restore from backup.');
-      }
-
-      // Create fresh MasterIndex - constructor will initialise with empty collections
-      this._masterIndex = new MasterIndex({
-        masterIndexKey: this.config.masterIndexKey
-      });
+      // Instantiate and initialise fresh MasterIndex - constructor will save empty index
+      this._masterIndex = new MasterIndex({ masterIndexKey: this.config.masterIndexKey });
 
       this._logger.info('Database created successfully', {
         masterIndexKey: this.config.masterIndexKey
@@ -96,11 +87,19 @@ class Database {
     this._logger.info('Initialising database');
     
     try {
-      // Verify MasterIndex exists and is valid
-      if (!this._masterIndex.isInitialised()) {
-        throw new Error('MasterIndex not found or corrupted. Use createDatabase() for first-time setup or recoverDatabase() for recovery.');
+      // Ensure MasterIndex exists before loading
+      const rawData = PropertiesService.getScriptProperties().getProperty(this.config.masterIndexKey);
+      if (!rawData) {
+        throw new Error('MasterIndex not found. Use createDatabase() for first-time setup or recoverDatabase() for recovery.');
       }
-      
+      // Instantiate MasterIndex for loading
+      this._masterIndex = new MasterIndex({ masterIndexKey: this.config.masterIndexKey });
+
+      // Verify MasterIndex loaded correctly
+      if (!this._masterIndex.isInitialised()) {
+        throw new Error('MasterIndex not initialised correctly.');
+      }
+
       // Load collections from MasterIndex (single source of truth)
       const masterIndexCollections = this._masterIndex.getCollections();
       if (masterIndexCollections && Object.keys(masterIndexCollections).length > 0) {
