@@ -6,8 +6,6 @@
  * - Conflict detection and resolution
  * - Component integration
  * 
- * Note: Virtual locking mechanism tests moved to LockService test suite
- * Migrated from Section2Tests.js - All functions
  */
 
 /**
