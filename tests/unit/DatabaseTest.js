@@ -172,8 +172,9 @@ function createDatabaseInitializationTestSuite() {
     // Arrange
     const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
     
-    // Act - This should fail initially (TDD Red phase)
+    // Act - First-time setup: create MasterIndex then initialise database
     try {
+      database.createDatabase();
       database.initialise();
       
       // Assert
@@ -196,9 +197,14 @@ function createDatabaseInitializationTestSuite() {
     // Arrange - create a unique test collection for this specific test
     const testCollectionName = 'existingCollection_' + new Date().getTime();
     
+    // Use a fresh masterIndexKey for this test to avoid collisions
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_EXIST_' + new Date().getTime();
+
     // First, create a database and add a collection to ensure it exists in MasterIndex
-    const setupConfig = Object.assign({}, DATABASE_TEST_DATA.testConfig);
+    const setupConfig = Object.assign({}, DATABASE_TEST_DATA.testConfig, { masterIndexKey: uniqueKey });
     const setupDatabase = new Database(setupConfig);
+    // First-time setup: create MasterIndex then initialise
+    setupDatabase.createDatabase();
     setupDatabase.initialise();
     setupDatabase.createCollection(testCollectionName);
     
@@ -214,7 +220,7 @@ function createDatabaseInitializationTestSuite() {
     }
     
     // Act - create a new database instance that should load the existing collection
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig);
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { masterIndexKey: uniqueKey });
     const database = new Database(config);
     database.initialise();
     const collections = database.listCollections();
@@ -508,17 +514,19 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
   suite.addTest('should integrate with master index on initialisation', function() {
     // Arrange - use a unique master index key for this test to avoid conflicts
     const uniqueMasterIndexKey = 'GASDB_MASTER_INDEX_TEST_INIT_' + new Date().getTime();
-    const existingData = {
-      collections: {
-        existingCollection: { name: 'existingCollection', fileId: 'mock-file-id', documentCount: 2 }
-      }
-    };
-    PropertiesService.getScriptProperties().setProperty(uniqueMasterIndexKey, JSON.stringify(existingData));
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig);
-    config.masterIndexKey = uniqueMasterIndexKey;
-
-    // Act
+    
+    // Arrange - configure and create fresh database
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { masterIndexKey: uniqueMasterIndexKey });
     const database = new Database(config);
+    database.createDatabase();
+    // Pre-populate MasterIndex
+    const masterIndex = new MasterIndex({ masterIndexKey: uniqueMasterIndexKey });
+    masterIndex.addCollection('existingCollection', {
+      name: 'existingCollection',
+      fileId: 'mock-file-id',
+      documentCount: 2
+    });
+    // Act - initialise from MasterIndex
     database.initialise();
     const collections = database.listCollections();
 
@@ -542,6 +550,8 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
     uniqueConfig.masterIndexKey = 'GASDB_MASTER_INDEX_TEST_COORDINATION_' + new Date().getTime();
     
     const database = new Database(uniqueConfig);
+    // First-time setup: create MasterIndex before initialising
+    database.createDatabase();
     database.initialise();
     const collectionName = 'coordinationTest';
 

@@ -40,42 +40,44 @@ The `Database` class is the main entry point for GAS DB operations, providing hi
 
 **Key Responsibilities:**
 
-- Database initialization and setup
-- Collection creation, access, and deletion
-- Coordination between MasterIndex and Drive-based index files
+- Database creation, initialization, and recovery
+- Collection creation, access, and deletion  
+- MasterIndex as single source of truth for metadata
+- Drive index file backup operations
 - High-level database operations and error handling
 
 **Dependencies:**
 
-- `MasterIndex`: Primary source of truth for collection metadata
+- `MasterIndex`: Single source of truth for collection metadata
 - `FileService`: Drive API operations and caching
 - `DatabaseConfig`: Configuration management
 - `GASDBLogger`: Logging and monitoring
 
 ## Architecture & MasterIndex Integration
 
-### Post-Refactoring Design
+### Refactored Design (Single Source of Truth)
 
-Following Section 4's completion and refactoring, the Database class now follows a clear separation of concerns:
+Following the initialization refactoring, the Database class now enforces MasterIndex as the single source of truth:
 
 ```text
 Database (Orchestrator)
-├── MasterIndex (Primary metadata source - ScriptProperties)
-├── Drive Index File (Secondary backup source)
+├── MasterIndex (Single source of truth - ScriptProperties)
+├── Drive Index File (Backup only)
 ├── FileService (Drive operations)
 └── Collections Map (In-memory cache)
 ```
 
-### Primary vs Secondary Data Sources
+### Data Sources
 
-**Primary Source - MasterIndex:**
+**Single Source of Truth - MasterIndex:**
 
 - Fast access via ScriptProperties
-- Authoritative for collection metadata
+- Authoritative for all collection metadata
 - Virtual locking and conflict detection
 - Cross-instance coordination
+- Used for all normal operations
 
-**Secondary Source - Drive Index File:**
+**Backup Only - Drive Index File:**
 
 - Backup and durability
 - Migration and recovery scenarios
@@ -83,10 +85,47 @@ Database (Orchestrator)
 
 ### Collection Access Protocol
 
+**UPDATED:** Simplified to use MasterIndex as single source of truth:
+
 1. Check in-memory collections cache
-2. Query MasterIndex (primary source)
-3. Fall back to Drive index file if necessary
-4. Auto-create if enabled and collection doesn't exist
+2. Query MasterIndex (single source of truth)
+3. Auto-create if enabled and collection doesn't exist
+
+**Important:** No longer falls back to Drive index file.
+
+## Database Initialization and Recovery Workflow
+
+**NEW:** The Database class now enforces a clear separation between creation, initialization, and recovery:
+
+### First-Time Setup
+
+```javascript
+const db = new Database(config);
+db.createDatabase();  // Creates fresh MasterIndex
+db.initialise();      // Loads from MasterIndex
+```
+
+### Normal Initialization
+
+```javascript
+const db = new Database(config);
+db.initialise();      // Loads from MasterIndex (fails if missing)
+```
+
+### Disaster Recovery
+
+```javascript
+const db = new Database(config);
+db.recoverDatabase(backupFileId);  // Restores from backup to MasterIndex
+db.initialise();                   // Loads from restored MasterIndex
+```
+
+### Benefits of New Workflow
+
+- **Single Source of Truth:** MasterIndex is the authoritative source, eliminating race conditions
+- **Clear Separation:** Distinct operations for creation, initialization, and recovery
+- **Fail-Fast:** Explicit errors when MasterIndex is missing or corrupted
+- **Simplified Operations:** No dual-source complexity in collection methods
 
 ## Constructor
 
@@ -101,9 +140,9 @@ constructor(config = {})
 **Behaviour:**
 
 - Validates and normalizes configuration via DatabaseConfig
-- Initializes logging, file services, and MasterIndex
+- initialises logging, file services, and MasterIndex
 - Creates in-memory collections map
-- Does NOT automatically initialize - call `initialise()` explicitly
+- Does NOT automatically initialise - call `initialise()` explicitly
 
 **Example:**
 
@@ -119,27 +158,67 @@ const db = new Database({
 
 ### Core Methods
 
-#### `initialise()`
+#### `createDatabase()`
 
-Initializes the database, loading existing collections and creating/finding index files.
+**NEW:** Creates a new database for first-time setup.
 
 - **Returns:** `void`
-- **Throws:** `Error` when initialization fails
-- **Side Effects:**
-  - Loads collections from MasterIndex into memory
-  - Creates or finds Drive-based index file
-  - Synchronizes data between MasterIndex and index file
+- **Throws:** `Error` when MasterIndex already exists or creation fails
+- **Use Cases:**
+  - First-time database setup
+  - Clean database creation for new projects
 
 **Process:**
 
-1. Load existing collections from MasterIndex (primary source)
-2. Find or create Drive-based index file
-3. Synchronize any collections found only in index file to MasterIndex
-4. Populate in-memory collections cache
+1. Check if MasterIndex already exists in ScriptProperties
+2. If exists, throw error directing user to recovery process
+3. Create fresh MasterIndex with empty collections
+4. Persist to ScriptProperties
+
+#### `initialise()`
+
+**REFACTORED:** initialises the database from MasterIndex only (single source of truth).
+
+- **Returns:** `void`
+- **Throws:** `Error` when MasterIndex is missing, corrupted, or initialization fails
+- **Side Effects:**
+  - Loads collections from MasterIndex into memory
+  - Creates or finds Drive-based index file for backup purposes
+  - Backs up MasterIndex to Drive index file
+
+**Process:**
+
+1. Verify MasterIndex exists and is valid
+2. Load existing collections from MasterIndex (single source of truth)
+3. Create or find Drive-based index file for backup
+4. Backup MasterIndex to Drive index file if collections exist
+5. Populate in-memory collections cache
+
+**Important:** No longer falls back to Drive index file. If MasterIndex is missing or corrupted, use `createDatabase()` for fresh setup or `recoverDatabase()` for recovery.
+
+#### `recoverDatabase(backupFileId)`
+
+**NEW:** Recovers database from a backup index file.
+
+- **Parameters:**
+  - `backupFileId` (String): Drive file ID of backup index file
+- **Returns:** `Array<String>` - Names of recovered collections
+- **Throws:** `Error` when recovery fails or backup file is invalid
+- **Use Cases:**
+  - Disaster recovery when MasterIndex is lost or corrupted
+  - Migration from old backup files
+  - Data restoration scenarios
+
+**Process:**
+
+1. Load and validate backup index file structure
+2. Create fresh MasterIndex for recovery
+3. Restore collections from backup to MasterIndex
+4. Persist restored MasterIndex to ScriptProperties
 
 #### `collection(name)`
 
-Gets or creates a collection (if auto-create is enabled).
+**UPDATED:** Gets or creates a collection (MasterIndex only).
 
 - **Parameters:**
   - `name` (String): Collection name
@@ -149,9 +228,10 @@ Gets or creates a collection (if auto-create is enabled).
 **Access Priority:**
 
 1. In-memory cache
-2. MasterIndex (primary)
-3. Drive index file (fallback)
-4. Auto-create (if enabled)
+2. MasterIndex (single source of truth)
+3. Auto-create (if enabled)
+
+**Important:** No longer falls back to Drive index file.
 
 #### `createCollection(name)`
 
@@ -173,16 +253,16 @@ Explicitly creates a new collection.
 
 #### `listCollections()`
 
-Lists all collection names.
+**UPDATED:** Lists all collection names from MasterIndex only.
 
 - **Returns:** `Array<String>` - Collection names
-- **Data Source Priority:**
-  1. MasterIndex (primary)
-  2. Drive index file (with sync to MasterIndex)
+- **Data Source:** MasterIndex (single source of truth)
+
+**Important:** No longer falls back to Drive index file.
 
 #### `dropCollection(name)`
 
-Deletes a collection and its data.
+**UPDATED:** Deletes a collection and its data (MasterIndex only).
 
 - **Parameters:**
   - `name` (String): Collection name to delete
@@ -191,18 +271,20 @@ Deletes a collection and its data.
 
 **Process:**
 
-1. Find collection in MasterIndex or Drive index
+1. Find collection in MasterIndex (single source of truth)
 2. Delete collection Drive file
 3. Remove from in-memory cache
 4. Remove from MasterIndex
-5. Remove from Drive index file
+5. Remove from Drive index file (backup)
+
+**Important:** No longer falls back to Drive index file.
 
 #### `loadIndex()`
 
 Loads and validates Drive-based index file data.
 
 - **Returns:** `Object` - Index file data with structure validation
-- **Throws:** `Error` for corrupted files or when database not initialized
+- **Throws:** `Error` for corrupted files or when database not initialised
 
 **Validation & Repair:**
 
@@ -383,7 +465,7 @@ setInterval(() => {
 
 ## Best Practices
 
-1. **Always initialize explicitly:** Call `initialise()` after constructor
+1. **Always initialise explicitly:** Call `initialise()` after constructor
 2. **Handle collection name validation:** Use try-catch for collection operations
 3. **Implement periodic backups:** Use `backupIndexToDrive()` regularly
 4. **Monitor index file health:** Check for corruption and implement recovery

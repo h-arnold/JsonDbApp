@@ -187,7 +187,7 @@ function setupValidationTestEnvironmentForTests() {
     // Create Database instance (it creates its own FileService and MasterIndex)
     const database = new Database(databaseConfig);
     
-    // Initialize the database 
+    // initialise the database 
     database.initialise();
 
     // Now we need to populate the MasterIndex with our validation collections
