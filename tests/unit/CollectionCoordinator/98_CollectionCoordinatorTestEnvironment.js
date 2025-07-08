@@ -138,7 +138,7 @@ function setupCollectionCoordinatorTestEnvironment() {
     // Create real MasterIndex instance with initial data
     COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex = new MasterIndex();
     
-    // Initialize master index with the proper data structure
+    // initialise master index with the proper data structure
     const masterIndexData = ObjectUtils.deepClone(COLLECTION_COORDINATOR_TEST_DATA.masterIndexData);
     COLLECTION_COORDINATOR_TEST_DATA.testMasterIndex._data = masterIndexData;
     

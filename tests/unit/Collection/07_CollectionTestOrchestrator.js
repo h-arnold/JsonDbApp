@@ -52,8 +52,8 @@ const COLLECTION_TEST_DATA = {
  * 
  * This function performs the following:
  * - Creates a test folder in Google Drive and stores its ID in COLLECTION_TEST_DATA.
- * - Initializes FileOperations and FileService instances for file handling.
- * - Creates and initializes a MasterIndex instance with deep-cloned test data.
+ * - initialises FileOperations and FileService instances for file handling.
+ * - Creates and initialises a MasterIndex instance with deep-cloned test data.
  * - Configures a DatabaseConfig object for the test database.
  * - Constructs a mock database object with the necessary properties and methods.
  * - Logs the creation of the test folder.
@@ -77,7 +77,7 @@ function setupCollectionTestEnvironment() {
     // Create real MasterIndex instance with initial data (following CollectionCoordinator pattern)
     COLLECTION_TEST_DATA.testMasterIndex = new MasterIndex();
     
-    // Initialize master index with the proper data structure
+    // initialise master index with the proper data structure
     const masterIndexData = ObjectUtils.deepClone(COLLECTION_TEST_DATA.masterIndexData);
     COLLECTION_TEST_DATA.testMasterIndex._data = masterIndexData;
 

@@ -5,7 +5,7 @@
  * Creates a test suite for verifying the initialisation and lazy loading behavior of the Collection class.
  *
  * The suite includes:
- * - A test to ensure a Collection instance is properly created and initialized with the correct properties.
+ * - A test to ensure a Collection instance is properly created and initialised with the correct properties.
  * - A test to verify that data in the Collection is loaded lazily, i.e., not loaded until the first operation is performed.
  *
  * @returns {TestSuite} The configured test suite for Collection initialisation.
