@@ -605,7 +605,7 @@ try {
   // createUpdateEngineTestSuite is called once here when the file loads.
   new TestFramework().registerTestSuite(createUpdateEngineTestSuite());
 } catch (e) {
-  // Fallback for environments where 'testFramework' global might not be initialized,
+  // Fallback for environments where 'testFramework' global might not be initialised,
   // or if the above fails for another reason.
   updateEngineTestFileLogger.warn(
     'Direct registration via testFramework failed, attempting global registerTestSuite function.', 

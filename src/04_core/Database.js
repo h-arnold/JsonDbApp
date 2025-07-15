@@ -34,9 +34,7 @@ class Database {
     // initialise services
     this._fileOps = new FileOperations(this._logger);
     this._fileService = new FileService(this._fileOps, this._logger);
-    this._masterIndex = new MasterIndex({ 
-      masterIndexKey: this.config.masterIndexKey 
-    });
+    this._masterIndex = null;
     
     this._logger.debug('Database instance created', {
       rootFolderId: this.config.rootFolderId,
@@ -45,23 +43,70 @@ class Database {
   }
   
   /**
-   * Initialise the database and create/load index file
+   * Create a new database by initialising the MasterIndex
    * 
-   * @throws {Error} When initialisation fails
+   * This method is responsible for first-time database creation. It will create
+   * a fresh MasterIndex in ScriptProperties. If a MasterIndex already exists,
+   * it will throw an error and instruct the user to use recovery if needed.
+   * 
+   * @throws {Error} When MasterIndex already exists or creation fails
+   */
+  createDatabase() {
+    this._logger.info('Creating new database');
+    
+    try {
+      // Check if a MasterIndex already exists in ScriptProperties (raw check)
+      const existingData = PropertiesService.getScriptProperties().getProperty(this.config.masterIndexKey);
+      if (existingData) {
+        throw new Error('Database already exists. Use recoverDatabase() if you need to restore from backup.');
+      }
+
+      // Instantiate and initialise fresh MasterIndex - constructor will save empty index
+      this._masterIndex = new MasterIndex({ masterIndexKey: this.config.masterIndexKey });
+
+      this._logger.info('Database created successfully', {
+        masterIndexKey: this.config.masterIndexKey
+      });
+
+    } catch (error) {
+      this._logger.error('Failed to create database', { error: error.message });
+      throw new Error('Database creation failed: ' + error.message);
+    }
+  }
+  
+  /**
+   * Initialise the database by loading from MasterIndex
+   * 
+   * This method loads collections from the MasterIndex (single source of truth).
+   * If the MasterIndex is missing or corrupted, it will throw an error requiring
+   * explicit recovery using recoverDatabase().
+   * 
+   * @throws {Error} When MasterIndex is missing, corrupted, or initialisation fails
    */
   initialise() {
     this._logger.info('Initialising database');
     
     try {
-      // First, load any collections that already exist in MasterIndex
-      // (primary source of truth)
+      // Ensure MasterIndex exists before loading
+      const rawData = PropertiesService.getScriptProperties().getProperty(this.config.masterIndexKey);
+      if (!rawData) {
+        throw new Error('MasterIndex not found. Use createDatabase() for first-time setup or recoverDatabase() for recovery.');
+      }
+      // Instantiate MasterIndex for loading
+      this._masterIndex = new MasterIndex({ masterIndexKey: this.config.masterIndexKey });
+
+      // Verify MasterIndex loaded correctly
+      if (!this._masterIndex.isInitialised()) {
+        throw new Error('MasterIndex not initialised correctly.');
+      }
+
+      // Load collections from MasterIndex (single source of truth)
       const masterIndexCollections = this._masterIndex.getCollections();
       if (masterIndexCollections && Object.keys(masterIndexCollections).length > 0) {
         this._logger.info('Loading existing collections from MasterIndex', {
           count: Object.keys(masterIndexCollections).length
         });
         
-
         // Loop through the collections and load the metadata into memory
         for (const [name, collectionData] of Object.entries(masterIndexCollections)) {
           if (collectionData.fileId) {
@@ -71,23 +116,19 @@ class Database {
         }
       }
       
-      // Then try to find existing index file as a backup/reference
+      // Create or find index file for backup purposes only
       const existingIndexFileId = this._findExistingIndexFile();
-      
       if (existingIndexFileId) {
         this.indexFileId = existingIndexFileId;
-        this._logger.debug('Found existing index file', { indexFileId: this.indexFileId });
-        
-        // Load any additional collections from index file and synchronise to MasterIndex
-        this._loadIndexFile();
-      } else if (!this.indexFileId) {
-        // Create new index file if none exists
+        this._logger.debug('Found existing index file for backup', { indexFileId: this.indexFileId });
+      } else {
+        // Create new index file for backup
         this._createIndexFile();
-        
-        // If MasterIndex already had collections, back them up to the new index file
-        if (Object.keys(masterIndexCollections).length > 0) {
-          this.backupIndexToDrive();
-        }
+      }
+      
+      // Backup MasterIndex to Drive if we have collections
+      if (Object.keys(masterIndexCollections).length > 0) {
+        this.backupIndexToDrive();
       }
       
       this._logger.info('Database initialisation complete', {
@@ -98,6 +139,63 @@ class Database {
     } catch (error) {
       this._logger.error('Database initialisation failed', { error: error.message });
       throw new Error('Database initialisation failed: ' + error.message);
+    }
+  }
+  
+  /**
+   * Recover database from a backup index file
+   * 
+   * This method allows recovery from a Drive-based backup index file by restoring
+   * the collections to the MasterIndex. This is a deliberate recovery action and
+   * should only be used when the MasterIndex is missing or corrupted.
+   * 
+   * @param {string} backupFileId - Drive file ID of the backup index file
+   * @throws {Error} When recovery fails or backup file is invalid
+   */
+  recoverDatabase(backupFileId) {
+    Validate.nonEmptyString(backupFileId, 'backupFileId');
+    
+    this._logger.info('Recovering database from backup', { backupFileId });
+    
+    try {
+      // Load backup index file
+      const backupData = this._fileService.readFile(backupFileId);
+      
+      // Validate backup file structure
+      if (!backupData || typeof backupData !== 'object' || !backupData.collections) {
+        throw new Error('Invalid backup file structure');
+      }
+      
+      // Create fresh MasterIndex for recovery
+      this._masterIndex = new MasterIndex({ 
+        masterIndexKey: this.config.masterIndexKey 
+      });
+      
+      // Restore collections from backup to MasterIndex
+      const recoveredCollections = [];
+      for (const [name, collectionData] of Object.entries(backupData.collections)) {
+        if (collectionData.fileId) {
+          this._masterIndex.addCollection(name, {
+            name: name,
+            fileId: collectionData.fileId,
+            created: collectionData.created || new Date(),
+            lastUpdated: collectionData.lastUpdated || new Date(),
+            documentCount: collectionData.documentCount || 0
+          });
+          recoveredCollections.push(name);
+        }
+      }
+      
+      this._logger.info('Database recovery successful', {
+        recoveredCollections: recoveredCollections.length,
+        collections: recoveredCollections
+      });
+      
+      return recoveredCollections;
+      
+    } catch (error) {
+      this._logger.error('Database recovery failed', { error: error.message });
+      throw new Error('Database recovery failed: ' + error.message);
     }
   }
   
@@ -117,23 +215,10 @@ class Database {
       return this.collections.get(name);
     }
     
-    // Check if collection exists in MasterIndex (primary source of truth)
+    // Check if collection exists in MasterIndex (single source of truth)
     const miCollection = this._masterIndex.getCollection(name);
     if (miCollection && miCollection.fileId) {
       const collection = this._createCollectionObject(name, miCollection.fileId);
-      this.collections.set(name, collection);
-      return collection;
-    }
-    
-    // If not in MasterIndex, check index file as fallback
-    const indexData = this.loadIndex();
-    if (indexData.collections && indexData.collections[name]) {
-      const collectionData = indexData.collections[name];
-      
-      // Add it to MasterIndex since it was missing there
-      this._addCollectionToMasterIndex(name, collectionData.fileId);
-      
-      const collection = this._createCollectionObject(name, collectionData.fileId);
       this.collections.set(name, collection);
       return collection;
     }
@@ -221,37 +306,17 @@ class Database {
    */
   listCollections() {
     try {
-      // First check MasterIndex for collection names (primary source of truth)
+      // Get collection names from MasterIndex (single source of truth)
       const masterIndexCollections = this._masterIndex.getCollections();
-      if (masterIndexCollections && Object.keys(masterIndexCollections).length > 0) {
-        const collectionNames = Object.keys(masterIndexCollections);
-        this._logger.debug('Listed collections from MasterIndex', {
-          count: collectionNames.length,
-          names: collectionNames
-        });
-        return collectionNames;
-      }
-      // Fall back to Drive-based index file if MasterIndex is empty
-      const indexData = this.loadIndex();
-      const collectionNames = Object.keys(indexData.collections || {});
-      // If we found collections in the index file but not in MasterIndex, 
-      // synchronise them to MasterIndex
-      if (collectionNames.length > 0) {
-        this._logger.info('Synchronising collections from index file to MasterIndex', {
-          count: collectionNames.length
-        });
-        for (const name of collectionNames) {
-          const collectionData = indexData.collections[name];
-          if (collectionData && collectionData.fileId) {
-            this._addCollectionToMasterIndex(name, collectionData.fileId);
-          }
-        }
-      }
-      this._logger.debug('Listed collections from index file', {
+      const collectionNames = Object.keys(masterIndexCollections);
+      
+      this._logger.debug('Listed collections from MasterIndex', {
         count: collectionNames.length,
         names: collectionNames
       });
+      
       return collectionNames;
+      
     } catch (error) {
       this._logger.warn('Failed to list collections', { error: error.message });
       return [];
@@ -272,7 +337,7 @@ class Database {
     this._logger.debug('Dropping collection', { name });
     
     try {
-      // First check MasterIndex for the collection (primary source of truth)
+      // Check MasterIndex for the collection (single source of truth)
       const miCollection = this._masterIndex.getCollection(name);
       
       if (miCollection && miCollection.fileId) {
@@ -293,30 +358,6 @@ class Database {
         return true;
       }
       
-      // Fall back to Drive-based index as a secondary check
-      const indexData = this.loadIndex();
-      if (indexData.collections && indexData.collections[name]) {
-        const collectionData = indexData.collections[name];
-        
-        // Delete collection file
-        if (collectionData.fileId) {
-          this._fileService.deleteFile(collectionData.fileId);
-        }
-        
-        // Remove from memory
-        this.collections.delete(name);
-        
-        // Remove from index file
-        this._removeCollectionFromIndex(name);
-        
-        // Make sure it's also removed from master index
-        this._removeCollectionFromMasterIndex(name);
-        
-        this._logger.info('Collection dropped successfully (from index file)', { name });
-        
-        return true;
-      }
-      
       this._logger.warn('Collection not found for drop operation', { name });
       return false;
       
@@ -327,6 +368,42 @@ class Database {
       });
       throw new Error(`Failed to drop collection '${name}': ` + error.message);
     }
+  }
+
+  /**
+   * Get or auto-create a collection by name
+   * @param {string} name - Collection name
+   * @returns {Object} Collection object
+   * @throws {Error} When collection missing and auto-create disabled
+   */
+  getCollection(name) {
+    Validate.nonEmptyString(name, 'name');
+    this._validateCollectionName(name);
+    // Return if already in memory
+    if (this.collections.has(name)) {
+      return this.collections.get(name);
+    }
+    // Load from MasterIndex if exists
+    const mi = this._masterIndex.getCollection(name);
+    if (mi && mi.fileId) {
+      const coll = this._createCollectionObject(name, mi.fileId);
+      this.collections.set(name, coll);
+      return coll;
+    }
+    // Auto-create if configured
+    if (this.config.autoCreateCollections) {
+      return this.createCollection(name);
+    }
+    throw new Error(`Collection '${name}' does not exist and auto-create is disabled`);
+  }
+
+  /**
+   * Alias for dropCollection to match API
+   * @param {string} name - Collection name to delete
+   * @returns {boolean}
+   */
+  deleteCollection(name) {
+    return this.dropCollection(name);
   }
   
   /**
@@ -458,48 +535,6 @@ class Database {
       fileName: indexFileName,
       indexFileId: this.indexFileId
     });
-  }
-  
-  /**
-   * Load index file and populate collections
-   * 
-   * @private
-   */
-  _loadIndexFile() {
-    try {
-      const indexData = this.loadIndex();
-      const masterIndexCollections = this._masterIndex.getCollections();
-      
-      // Load collection references from index and synchronise to MasterIndex
-      for (const [name, collectionData] of Object.entries(indexData.collections || {})) {
-        if (collectionData.fileId) {
-          // Add to memory
-          const collection = this._createCollectionObject(name, collectionData.fileId);
-          this.collections.set(name, collection);
-          
-          // Synchronise to MasterIndex if not already there
-          if (!masterIndexCollections[name]) {
-            this._logger.debug('Adding collection from index file to MasterIndex', { name });
-            this._addCollectionToMasterIndex(name, collectionData.fileId);
-          }
-        }
-      }
-      
-      // Also load collections from MasterIndex that might not be in the index file
-      for (const [name, miCollection] of Object.entries(masterIndexCollections)) {
-        if (!this.collections.has(name) && miCollection.fileId) {
-          const collection = this._createCollectionObject(name, miCollection.fileId);
-          this.collections.set(name, collection);
-        }
-      }
-      
-      this._logger.debug('Loaded collections from index and MasterIndex', {
-        collectionCount: this.collections.size
-      });
-      
-    } catch (error) {
-      this._logger.warn('Failed to load collections from index', { error: error.message });
-    }
   }
   
   /**

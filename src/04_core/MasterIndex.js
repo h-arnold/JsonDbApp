@@ -27,8 +27,11 @@ class MasterIndex {
     // Load data first
     this._loadFromScriptProperties();
 
-    // If no data, initialise
+    // If no data, initialise and log
     if (!this._data) {
+      this._logger.warn('No MasterIndex found in ScriptProperties; initialising new MasterIndex.', {
+        masterIndexKey: this._config.masterIndexKey
+      });
       this._data = {
         version: this._config.version,
         lastUpdated: new Date(),
@@ -187,12 +190,34 @@ class MasterIndex {
       }
 
       // Apply updates to the collection metadata
-      Object.assign(collection, updates);
-
-      // Remove implicit modification-token generation; token should be provided by caller
-//      if (!updates.modificationToken) {
-//        collection.updateModificationToken();
-//      }
+      // Handle each update using appropriate setters or conversions
+      Object.keys(updates).forEach(key => {
+        const value = updates[key];
+        switch (key) {
+          case 'documentCount':
+            collection.setDocumentCount(value);
+            break;
+          case 'modificationToken':
+            collection.setModificationToken(value);
+            break;
+          case 'lockStatus':
+            collection.setLockStatus(value);
+            break;
+          case 'lastUpdated':
+            // Convert string or date to Date instance
+            const date = value instanceof Date ? value : new Date(value);
+            if (isNaN(date.getTime())) {
+              throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lastUpdated', value, 'lastUpdated must be a valid date');
+            }
+            collection.lastUpdated = date;
+            break;
+          default:
+            collection[key] = value;
+            break;
+        }
+      });
+      // Record metadata update in modification history
+      this._addToModificationHistory(name, 'UPDATE_METADATA', updates);
 
       this._data.collections[name] = collection;
       this.save();
@@ -297,7 +322,8 @@ class MasterIndex {
       const lockStatus = collection.getLockStatus();
 
       if (!lockStatus || !lockStatus.isLocked) {
-        return true; // Not locked, so release is successful.
+        // Not locked, consider uninitialised lock as released
+        return true;
       }
 
       if (lockStatus.lockedBy !== operationId) {
@@ -305,10 +331,10 @@ class MasterIndex {
         return false; // Lock held by someone else.
       }
 
-      // Release lock
-      collection.setLockStatus(null);
+      // Release lock as unlocked state rather than null
+      collection.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
       this.updateCollectionMetadata(collectionName, { 
-        lockStatus: null,
+        lockStatus: collection.getLockStatus(),
       });
       
       this._logger.info('Collection lock released.', { collectionName, operationId });

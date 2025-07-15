@@ -5,3 +5,4 @@ test-execution.log
 *.log
 *.pid
 node_modules
+.env

@@ -1,6 +1,7 @@
 # Testing Framework Developer Documentation
 
 - [Testing Framework Developer Documentation](#testing-framework-developer-documentation)
+  - [Test Suite Structure and Best Practices](#test-suite-structure-and-best-practices)
   - [Overview](#overview)
   - [Key Features](#key-features)
   - [Framework Architecture](#framework-architecture)
@@ -93,6 +94,41 @@
   - [Troubleshooting](#troubleshooting)
     - [Common Issues](#common-issues)
     - [Debugging Tips](#debugging-tips)
+
+
+## Test Suite Structure and Best Practices
+
+The GAS DB project enforces a clear, modular structure for all tests, especially for complex components such as `CollectionCoordinator`. Follow these guidelines for all new and existing test suites:
+
+- **One suite per file:** Each file defines a single logical test suite for a specific method or feature, named with a numeric prefix for order and clarity (e.g. `01_CollectionCoordinatorCoordinateTestSuite.js`).
+- **Suite function:** Each file exports a function named `create<Class>TestSuite`, returning a `TestSuite` instance with multiple related tests.
+- **Orchestration:** Use an orchestrator file (e.g. `99_CollectionCoordinatorOrchestratorTestSuite.js`) to register and run all suites, handling environment setup and teardown.
+- **Environment management:** Centralise setup, teardown, and state-reset logic in dedicated environment files (e.g. `98_CollectionCoordinatorTestEnvironment.js`). Use real Google Apps Script APIs and Drive files for integration realism.
+- **Test data:** Store all test data and configuration in global objects and static JSON files for repeatability and isolation.
+- **Arrange-Act-Assert:** Each test should clearly separate setup, execution, and assertions, using the provided assertion utilities.
+- **Lifecycle hooks:** Use `beforeAll`, `afterAll`, `beforeEach`, and `afterEach` for resource management and isolation.
+- **Descriptive assertions:** All assertions must include clear, informative messages.
+- **No side effects:** Always clean up files, folders, and ScriptProperties, even on failure.
+- **Red-Green-Refactor:** Write failing tests first, then minimal passing code, then refactor.
+- **Coverage:** Include tests for constructor validation, configuration, happy paths, error cases, edge cases, and resource cleanup.
+
+**Example skeleton:**
+```javascript
+function createComponentTestSuite() {
+  const suite = new TestSuite('Component Feature');
+  suite.setBeforeAll(setupComponentTestEnvironment);
+  suite.setAfterAll(cleanupComponentTestEnvironment);
+
+  suite.addTest('testFeatureHappyPath', function() {
+    // Arrange
+    // Act
+    // Assert
+    TestFramework.assertNoThrow(() => { /* ... */ }, 'Should not throw');
+  });
+
+  return suite;
+}
+```
 
 ## Overview
 

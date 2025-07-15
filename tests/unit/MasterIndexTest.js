@@ -6,8 +6,6 @@
  * - Conflict detection and resolution
  * - Component integration
  * 
- * Note: Virtual locking mechanism tests moved to LockService test suite
- * Migrated from Section2Tests.js - All functions
  */
 
 /**
@@ -117,7 +115,8 @@ function createMasterIndexFunctionalityTestSuite() {
     masterIndex.save(); // Save the addition
 
     // Act
-    const result = masterIndex.removeCollection(collectionName); // This method needs to be implemented in MasterIndex.js
+    const result = masterIndex.removeCollection(collectionName); 
+    // This should return true if the collection existed and was removed
     masterIndex.save(); // Save the removal
 
     // Assert
@@ -133,7 +132,6 @@ function createMasterIndexFunctionalityTestSuite() {
     PropertiesService.getScriptProperties().deleteProperty(S2_MI_FUNCTIONALITY_TEST_KEY);
   });
   
-  // RED PHASE TESTS: Phase 3 - MasterIndex CollectionMetadata Integration
   // These tests expect MasterIndex to use CollectionMetadata instances instead of plain objects
 
   suite.addTest('should return CollectionMetadata instance from getCollection', function() {
@@ -152,7 +150,7 @@ function createMasterIndexFunctionalityTestSuite() {
     masterIndex.addCollection(collectionName, collectionData);
     const retrievedCollection = masterIndex.getCollection(collectionName);
     
-    // Assert - RED PHASE: This will fail until MasterIndex is updated
+
     TestFramework.assertTrue(retrievedCollection instanceof CollectionMetadata, 'getCollection should return CollectionMetadata instance');
     TestFramework.assertEquals(retrievedCollection.name, collectionName, 'CollectionMetadata should preserve name');
     TestFramework.assertEquals(retrievedCollection.fileId, 'test-file-id', 'CollectionMetadata should preserve fileId');
@@ -263,6 +261,19 @@ function createMasterIndexFunctionalityTestSuite() {
     TestFramework.assertEquals(updatedCollection.modificationToken, 'updated-token', 'Should update modificationToken');
     TestFramework.assertEquals(updatedCollection.name, collectionName, 'Should preserve name during update');
     TestFramework.assertEquals(updatedCollection.fileId, 'update-file-id', 'Should preserve fileId during update');
+  });
+
+  suite.addTest('should throw error if MasterIndex is corrupted', function() {
+    // Arrange
+    const testKey = 'GASDB_MI_CORRUPT_' + new Date().getTime();
+    PropertiesService.getScriptProperties().setProperty(testKey, '{corruptJson');
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      const masterIndex = new MasterIndex({ masterIndexKey: testKey });
+      masterIndex.getCollections();
+    }, Error, 'Should throw error if MasterIndex is corrupted');
+    // Cleanup
+    PropertiesService.getScriptProperties().deleteProperty(testKey);
   });
 
   return suite;
@@ -456,7 +467,7 @@ function createMasterIndexIntegrationTestSuite() {
     
     const resolvedCollection = masterIndex.getCollection(collectionName);
     
-    // Assert - RED PHASE: This will fail until conflict resolution preserves CollectionMetadata
+    // Assert
     TestFramework.assertTrue(resolution.success, 'Conflict should be resolved');
     TestFramework.assertTrue(resolvedCollection instanceof CollectionMetadata, 'Resolved collection should remain CollectionMetadata instance');
     TestFramework.assertEquals(resolvedCollection.documentCount, 8, 'Should apply conflict resolution updates');
@@ -490,7 +501,7 @@ function createMasterIndexIntegrationTestSuite() {
     const newMasterIndex = new MasterIndex();
     const persistedCollection = newMasterIndex.getCollection(collectionName);
     
-    // Assert - RED PHASE: This will fail until complete CollectionMetadata lifecycle is supported
+    // Assert
     TestFramework.assertTrue(lockAcquired, 'Lock should be acquired');
     TestFramework.assertTrue(lockReleased, 'Lock should be released');
     TestFramework.assertTrue(persistedCollection instanceof CollectionMetadata, 'Persisted collection should be CollectionMetadata instance');
