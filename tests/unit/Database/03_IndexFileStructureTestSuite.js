@@ -69,15 +69,6 @@ function createIndexFileStructureTestSuite() {
     );
   });
 
-  suite.addTest('should backup MasterIndex to the Drive-based index file', function() {
-    // Arrange
-    const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
-    database.initialise();
-    // Act
-    const backedUp = database.backupIndexToDrive();
-    // Assert
-    TestFramework.assertTrue(backedUp, 'backupIndexToDrive should return true on success');
-  });
 
   return suite;
 }

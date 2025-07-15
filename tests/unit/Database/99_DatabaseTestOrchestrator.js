@@ -18,7 +18,16 @@ function runDatabaseTests() {
       registerTestSuite(createDatabaseInitializationTestSuite());
       registerTestSuite(createCollectionManagementTestSuite());
       registerTestSuite(createIndexFileStructureTestSuite());
+      // Register integration suite
       registerTestSuite(createDatabaseMasterIndexIntegrationTestSuite());
+      // Register merged recovery tests
+      if (typeof createDatabaseRecoverMethodTestSuite === 'function') {
+        registerTestSuite(createDatabaseRecoverMethodTestSuite());
+      }
+      // Register merged strict MasterIndex-only access tests
+      if (typeof createCollectionMethodsNoFallbackTestSuite === 'function') {
+        registerTestSuite(createCollectionMethodsNoFallbackTestSuite());
+      }
       // Run all tests
       const results = runAllTests();
       return results;

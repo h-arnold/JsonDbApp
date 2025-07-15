@@ -263,6 +263,19 @@ function createMasterIndexFunctionalityTestSuite() {
     TestFramework.assertEquals(updatedCollection.fileId, 'update-file-id', 'Should preserve fileId during update');
   });
 
+  suite.addTest('should throw error if MasterIndex is corrupted', function() {
+    // Arrange
+    const testKey = 'GASDB_MI_CORRUPT_' + new Date().getTime();
+    PropertiesService.getScriptProperties().setProperty(testKey, '{corruptJson');
+    // Act & Assert
+    TestFramework.assertThrows(() => {
+      const masterIndex = new MasterIndex({ masterIndexKey: testKey });
+      masterIndex.getCollections();
+    }, Error, 'Should throw error if MasterIndex is corrupted');
+    // Cleanup
+    PropertiesService.getScriptProperties().deleteProperty(testKey);
+  });
+
   return suite;
 }
 

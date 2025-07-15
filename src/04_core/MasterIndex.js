@@ -27,8 +27,11 @@ class MasterIndex {
     // Load data first
     this._loadFromScriptProperties();
 
-    // If no data, initialise
+    // If no data, initialise and log
     if (!this._data) {
+      this._logger.warn('No MasterIndex found in ScriptProperties; initialising new MasterIndex.', {
+        masterIndexKey: this._config.masterIndexKey
+      });
       this._data = {
         version: this._config.version,
         lastUpdated: new Date(),
