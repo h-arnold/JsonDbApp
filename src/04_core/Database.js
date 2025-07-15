@@ -369,6 +369,42 @@ class Database {
       throw new Error(`Failed to drop collection '${name}': ` + error.message);
     }
   }
+
+  /**
+   * Get or auto-create a collection by name
+   * @param {string} name - Collection name
+   * @returns {Object} Collection object
+   * @throws {Error} When collection missing and auto-create disabled
+   */
+  getCollection(name) {
+    Validate.nonEmptyString(name, 'name');
+    this._validateCollectionName(name);
+    // Return if already in memory
+    if (this.collections.has(name)) {
+      return this.collections.get(name);
+    }
+    // Load from MasterIndex if exists
+    const mi = this._masterIndex.getCollection(name);
+    if (mi && mi.fileId) {
+      const coll = this._createCollectionObject(name, mi.fileId);
+      this.collections.set(name, coll);
+      return coll;
+    }
+    // Auto-create if configured
+    if (this.config.autoCreateCollections) {
+      return this.createCollection(name);
+    }
+    throw new Error(`Collection '${name}' does not exist and auto-create is disabled`);
+  }
+
+  /**
+   * Alias for dropCollection to match API
+   * @param {string} name - Collection name to delete
+   * @returns {boolean}
+   */
+  deleteCollection(name) {
+    return this.dropCollection(name);
+  }
   
   /**
    * Load index file data
