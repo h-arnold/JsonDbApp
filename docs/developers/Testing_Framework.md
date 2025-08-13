@@ -107,6 +107,7 @@ The GAS DB project enforces a clear, modular structure for all tests, especially
 - **Test data:** Store all test data and configuration in global objects and static JSON files for repeatability and isolation.
 - **Arrange-Act-Assert:** Each test should clearly separate setup, execution, and assertions, using the provided assertion utilities.
 - **Lifecycle hooks:** Use `beforeAll`, `afterAll`, `beforeEach`, and `afterEach` for resource management and isolation.
+
 - **Descriptive assertions:** All assertions must include clear, informative messages.
 - **No side effects:** Always clean up files, folders, and ScriptProperties, even on failure.
 - **Red-Green-Refactor:** Write failing tests first, then minimal passing code, then refactor.
@@ -646,6 +647,15 @@ Static assertion methods for test validation.
   - `message` (string, optional) - Custom error message
 - **Throws**: Error if arrays are not equal (different lengths or elements)
 - **Description**: Asserts that two arrays are equal by comparing length and element-wise equality using strict equality (===)
+
+##### assertDeepEquals(expected, actual, message)
+
+- **Parameters**:
+  - `expected` (any) - The expected value (object or array)
+  - `actual` (any) - The actual value
+  - `message` (string, optional) - Custom error message
+- **Throws**: Error if objects or arrays are not deeply equal
+- **Description**: Asserts that two objects or arrays are deeply equal by recursively comparing their properties and values.
 
 ##### assertNoThrow(fn, message)
 
