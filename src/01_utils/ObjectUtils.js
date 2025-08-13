@@ -163,4 +163,52 @@ class ObjectUtils {
       throw new InvalidArgumentError('jsonString', jsonString, 'Invalid JSON: ' + error.message);
     }
   }
+
+  /**
+   * Recursively compare two values (arrays or objects) for deep equality.
+   * @param {*} a - First value for comparison.
+   * @param {*} b - Second value for comparison.
+   * @returns {boolean} True if values are deeply equal, false otherwise.
+   */
+  static deepEqual(a, b) {
+      // Strict equality check for primitives and same-instance objects
+      if (a === b) return true;
+
+      // If one is null/undefined, they must both be so
+      if (a == null || b == null) return a === b;
+
+      // Types must be the same
+      if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+      // Handle arrays
+      if (Array.isArray(a) && Array.isArray(b)) {
+        // Arrays with different lengths are not equal
+        if (a.length !== b.length) return false;
+        // Recursively compare each element
+        for (let i = 0; i < a.length; i++) {
+          if (!ObjectUtils.deepEqual(a[i], b[i])) return false;
+        }
+        return true;
+      }
+
+      // If one is an array and the other is not, they are not equal
+      if (Array.isArray(a) || Array.isArray(b)) return false;
+
+      // Handle objects
+      const keysA = Object.keys(a);
+      const keysB = Object.keys(b);
+
+      // Objects with different number of keys are not equal
+      if (keysA.length !== keysB.length) return false;
+
+      for (let key of keysA) {
+        // If a key from A is not in B, they are not equal
+        if (!keysB.includes(key)) return false;
+        // Recursively compare the values of each key
+        if (!ObjectUtils.deepEqual(a[key], b[key])) return false;
+      }
+
+      // If all keys and values match, the objects are equal
+      return true;
+  }
 }

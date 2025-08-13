@@ -258,11 +258,17 @@ class UpdateEngine {
     
     for (const fieldPath in ops) {
       const current = this._getFieldValue(document, fieldPath);
-      if (current === undefined) continue;
-      this._validateArrayValue(current, fieldPath, '$pull');
+      if (current === undefined || !Array.isArray(current)) {
+        continue;
+      }
+
       const toRemove = ops[fieldPath];
+      const originalLength = current.length;
       const filtered = current.filter(item => !this._valuesEqual(item, toRemove));
-      this._setFieldValue(document, fieldPath, filtered);
+      
+      if (filtered.length < originalLength) {
+        this._setFieldValue(document, fieldPath, filtered);
+      }
     }
     return document;
   }
@@ -427,7 +433,7 @@ class UpdateEngine {
     
     // For objects and arrays, do a deep comparison
     if (typeof a === 'object') {
-      return JSON.stringify(a) === JSON.stringify(b);
+      return ObjectUtils.deepEqual(a, b);
     }
     
     return false;

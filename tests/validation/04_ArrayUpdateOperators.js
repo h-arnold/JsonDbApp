@@ -150,7 +150,7 @@ function createPullOperatorTestSuite() {
   suite.addTest('should handle pulling from a non-array field gracefully', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     // This should not throw an error, but simply not modify the document
-    TestFramework.assertDoesNotThrow(function() {
+    TestFramework.assertNoThrow(function() {
         const result = collection.updateOne(
             { _id: 'person1' },
             { $pull: { 'name.first': 'Anna' } }
