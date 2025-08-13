@@ -235,14 +235,14 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
   - $slice for limiting array size
 
 #### $pull
-- [ ] **Basic value removal**
+- [x] **Basic value removal** ✅ *Implemented in 04_ArrayUpdateOperators.js*
   - Remove specific values from array
   - Remove objects matching criteria
   - Remove all occurrences of value
 - [ ] **Query-based removal**
   - Remove objects matching nested conditions
   - Complex query criteria for removal
-- [ ] **Edge cases**
+- [x] **Edge cases** ✅ *Implemented in 04_ArrayUpdateOperators.js*
   - Pull from non-array field
   - Pull non-existent value
   - Pull from empty array

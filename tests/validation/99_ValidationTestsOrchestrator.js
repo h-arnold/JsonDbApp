@@ -41,6 +41,9 @@ function initialiseValidationTests() {
     // Register numeric update operator test suites
     registerNumericUpdateOperatorTestSuites();
 
+    // Register array update operator test suites
+    registerArrayUpdateOperatorTestSuites();
+
     VALIDATION_TEST_REGISTRY.isInitialised = true;
     logger.info('Validation test framework initialised successfully', {
       registeredSuites: VALIDATION_TEST_REGISTRY.testSuites.size
@@ -250,6 +253,31 @@ function registerNumericUpdateOperatorTestSuites() {
 
   } catch (error) {
     logger.error('Failed to register numeric update operator test suites', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Register array update operator test suites ($push, $pull)
+ */
+function registerArrayUpdateOperatorTestSuites() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-ArrayUpdateOps');
+
+  try {
+    // Register $push operator tests
+    const pushSuite = createPushOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(pushSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$push Operator Tests', pushSuite);
+
+    // Register $pull operator tests
+    const pullSuite = createPullOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(pullSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$pull Operator Tests', pullSuite);
+
+    logger.info('Array update operator test suites registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register array update operator test suites', { error: error.message });
     throw error;
   }
 }
@@ -834,6 +862,75 @@ function runNumericUpdateOperatorTests() {
   }
 }
 
+/**
+ * Quick runner for array update operator tests
+ * @returns {TestResults} Results from array update operator tests
+ */
+function runArrayUpdateOperatorTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-ArrayUpdateQuick');
+  logger.info('Running all array update operator tests...');
+
+  let combinedResults = new TestResults();
+
+  try {
+    // Setup test environment
+    setupValidationTestEnvironmentForTests();
+    
+    // Initialise test framework
+    const framework = initialiseValidationTests();
+    
+    // Validate environment before running tests
+    framework.validateEnvironment();
+
+    // Run array update operator test suites
+    const suiteNames = [
+      '$push Operator Tests',
+      '$pull Operator Tests'
+    ];
+
+    for (const suiteName of suiteNames) {
+      try {
+        logger.info(`Running suite: ${suiteName}`);
+        const suiteResult = framework.runTestSuite(suiteName);
+        
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
+        logger.info(`Completed ${suiteName}`, {
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length
+        });
+      } catch (error) {
+        logger.error(`Failed to run ${suiteName}`, { error: error.message });
+        throw error;
+      }
+    }
+
+    combinedResults.finish();
+
+    logger.info('All array update operator tests completed', {
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
+    });
+
+    return combinedResults;
+
+  } catch (error) {
+    logger.error('Array update operator tests failed', { error: error.message });
+    throw error;
+
+  } finally {
+    try {
+      cleanupValidationTestEnvironment();
+    } catch (cleanupError) {
+      logger.error('Cleanup failed', { error: cleanupError.message });
+    }
+  }
+}
+
 /* exported 
    runAllValidationTests, 
    runValidationTestSuite, 
@@ -844,6 +941,7 @@ function runNumericUpdateOperatorTests() {
    runLogicalOperatorTests,
    runFieldUpdateOperatorTests,
    runNumericUpdateOperatorTests,
+   runArrayUpdateOperatorTests,
    initialiseValidationTests,
    setupValidationTestEnvironmentForTests,
    cleanupValidationTestEnvironment 
