@@ -177,6 +177,11 @@ class ObjectUtils {
       // If one is null/undefined, they must both be so
       if (a == null || b == null) return a === b;
 
+      // Handle Dates
+      if (a instanceof Date && b instanceof Date) {
+        return a.getTime() === b.getTime();
+      }
+
       // Types must be the same
       if (typeof a !== 'object' || typeof b !== 'object') return false;
 

@@ -14,7 +14,9 @@
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
-    "logs": "clasp logs"
+  "logs": "clasp logs",
+  "lint": "eslint 'src/**/*.js' --ext .js",
+  "lint:fix": "eslint 'src/**/*.js' --ext .js --fix"
   },
   "keywords": [
     "google-apps-script",

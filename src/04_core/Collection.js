@@ -318,6 +318,12 @@ class Collection {
 
     if (filterKeys.length === 1 && filterKeys[0] === "_id") {
       // ID-based update with operators
+      const docExists = this._documentOperations.findDocumentById(filter._id) !== null;
+
+      if (!docExists) {
+        return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
+      }
+
       const result = this._documentOperations.updateDocumentWithOperators(
         filter._id,
         update
@@ -329,7 +335,7 @@ class Collection {
       }
 
       return {
-        matchedCount: result.modifiedCount > 0 ? 1 : 0,
+        matchedCount: 1,
         modifiedCount: result.modifiedCount,
         acknowledged: true,
       };

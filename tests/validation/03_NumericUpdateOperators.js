@@ -631,7 +631,7 @@ function createMinEdgeCasesTestSuite() {
     );
     JDbLogger.debug(`'should handle null vs number comparisons' result: 
 ${JSON.stringify(result, null, 2)}`);
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should not modify document with null value');
     const updated = collection.findOne({ _id: 'person2' });
     JDbLogger.debug(`'should handle null vs number comparisons' updated: 
 ${JSON.stringify(updated, null, 2)}`);
