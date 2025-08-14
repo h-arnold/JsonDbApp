@@ -19,8 +19,12 @@ function createPushOperatorTestSuite() {
       { _id: 'person1' },
       { $push: { 'preferences.tags': 'new-tag' } }
     );
+    JDbLogger.debug(`'should append a single value to an existing array' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should append a single value to an existing array' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(['sports', 'music', 'new-tag'], updated.preferences.tags, 'Should append new tag to array');
   });
 
@@ -31,8 +35,12 @@ function createPushOperatorTestSuite() {
       { _id: 'inv1' },
       { $push: { alerts: newAlert } }
     );
+    JDbLogger.debug(`'should append an object value to an array' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'inv1' });
+    JDbLogger.debug(`'should append an object value to an array' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(3, updated.alerts.length, 'Should have 3 alerts');
     TestFramework.assertDeepEquals(newAlert, updated.alerts[2], 'Should append new alert object');
   });
@@ -44,8 +52,12 @@ function createPushOperatorTestSuite() {
       { _id: 'person2' },
       { $push: { newArrayField: 'first-element' } }
     );
+    JDbLogger.debug(`'should create array when pushing to a non-existent field' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person2' });
+    JDbLogger.debug(`'should create array when pushing to a non-existent field' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(['first-element'], updated.newArrayField, 'Should create new array with one element');
   });
 
@@ -55,8 +67,12 @@ function createPushOperatorTestSuite() {
       { _id: 'person2' },
       { $push: { 'newly.nested.array': 'deep-value' } }
     );
+    JDbLogger.debug(`'should create array when pushing to a nested non-existent field' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person2' });
+    JDbLogger.debug(`'should create array when pushing to a nested non-existent field' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(['deep-value'], updated.newly.nested.array, 'Should create deeply nested array');
   });
 
@@ -78,8 +94,12 @@ function createPushOperatorTestSuite() {
       { _id: 'person4' },
       { $push: { 'preferences.tags': { $each: ['new1', 'new2', 'new3'] } } }
     );
+    JDbLogger.debug(`'should push multiple values with $each modifier' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person4' });
+    JDbLogger.debug(`'should push multiple values with $each modifier' updated: 
+${JSON.stringify(updated, null, 2)}`);
     const expected = ['travel', 'photography', 'music', 'new1', 'new2', 'new3'];
     TestFramework.assertDeepEquals(expected, updated.preferences.tags, 'Should append multiple new tags');
   });
@@ -87,14 +107,20 @@ function createPushOperatorTestSuite() {
   suite.addTest('should handle empty array with $each modifier', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     const original = collection.findOne({ _id: 'person5' });
+    JDbLogger.debug(`'should handle empty array with $each modifier' original: 
+${JSON.stringify(original, null, 2)}`);
     const originalTags = original.preferences.tags;
 
     const result = collection.updateOne(
       { _id: 'person5' },
       { $push: { 'preferences.tags': { $each: [] } } }
     );
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should report 1 modified document');
+    JDbLogger.debug(`'should handle empty array with $each modifier' result: 
+${JSON.stringify(result, null, 2)}`);
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should report 0 modified documents for a no-op push');
     const updated = collection.findOne({ _id: 'person5' });
+    JDbLogger.debug(`'should handle empty array with $each modifier' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(originalTags, updated.preferences.tags, 'Tags array should be unchanged');
   });
 
@@ -105,8 +131,12 @@ function createPushOperatorTestSuite() {
       { _id: 'inv2' },
       { $push: { alerts: { $each: newAlerts } } }
     );
+    JDbLogger.debug(`'should push array of objects with $each' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'inv2' });
+    JDbLogger.debug(`'should push array of objects with $each' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(2, updated.alerts.length, 'Should have 2 alerts');
     TestFramework.assertDeepEquals(newAlerts, updated.alerts, 'Should append new alert object');
   });
@@ -128,8 +158,12 @@ function createPullOperatorTestSuite() {
       { _id: 'person3' },
       { $pull: { 'preferences.tags': 'alerts' } }
     );
+    JDbLogger.debug(`'should remove a specific value from an array' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person3' });
+    JDbLogger.debug(`'should remove a specific value from an array' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(['news', 'sports'], updated.preferences.tags, 'Should remove "alerts" tag');
   });
 
@@ -139,10 +173,16 @@ function createPullOperatorTestSuite() {
       { _id: 'order3' },
       { $pull: { 'items': { sku: 'prod1', quantity: 1, price: 9.99, category: 'electronics' } } }
     );
+    JDbLogger.debug(`'should remove all occurrences of a value' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'order3' });
+    JDbLogger.debug(`'should remove all occurrences of a value' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(2, updated.items.length, 'Should have 2 items left');
     const remainingSkus = updated.items.map(item => item.sku);
+    JDbLogger.debug(`'should remove all occurrences of a value' remainingSkus: 
+${JSON.stringify(remainingSkus, null, 2)}`);
     TestFramework.assertFalse(remainingSkus.includes('prod1'), 'Should remove all items matching prod1 exactly');
   });
 
@@ -155,6 +195,8 @@ function createPullOperatorTestSuite() {
             { _id: 'person1' },
             { $pull: { 'name.first': 'Anna' } }
         );
+        JDbLogger.debug(`'should handle pulling from a non-array field gracefully' result: 
+${JSON.stringify(result, null, 2)}`);
         TestFramework.assertEquals(0, result.modifiedCount, 'Should not modify document');
     }, 'Pulling from non-array should not throw');
   });
@@ -162,14 +204,20 @@ function createPullOperatorTestSuite() {
   suite.addTest('should handle pulling a non-existent value', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     const original = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should handle pulling a non-existent value' original: 
+${JSON.stringify(original, null, 2)}`);
     const originalTags = original.preferences.tags;
 
     const result = collection.updateOne(
       { _id: 'person1' },
       { $pull: { 'preferences.tags': 'non-existent-tag' } }
     );
+    JDbLogger.debug(`'should handle pulling a non-existent value' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(0, result.modifiedCount, 'Should not modify document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should handle pulling a non-existent value' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(originalTags, updated.preferences.tags, 'Tags array should be unchanged');
   });
 
@@ -179,8 +227,12 @@ function createPullOperatorTestSuite() {
       { _id: 'person2' },
       { $pull: { 'preferences.tags': 'any-tag' } }
     );
+    JDbLogger.debug(`'should handle pulling from an empty array' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(0, result.modifiedCount, 'Should not modify document');
     const updated = collection.findOne({ _id: 'person2' });
+    JDbLogger.debug(`'should handle pulling from an empty array' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals([], updated.preferences.tags, 'Tags array should remain empty');
   });
 

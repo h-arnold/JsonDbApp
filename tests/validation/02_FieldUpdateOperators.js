@@ -19,8 +19,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { 'name.first': 'Alexandra' } }
     );
+    JDbLogger.debug(`'should overwrite existing string values' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should overwrite existing string values' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('Alexandra', updated.name.first, 'Should update first name');
     TestFramework.assertEquals('Brown', updated.name.last, 'Should preserve last name');
   });
@@ -31,8 +35,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { age: 35, score: 92.7 } }
     );
+    JDbLogger.debug(`'should overwrite existing numeric values' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should overwrite existing numeric values' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(35, updated.age, 'Should update age');
     TestFramework.assertEquals(92.7, updated.score, 'Should update score');
   });
@@ -43,8 +51,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { isActive: false, 'preferences.newsletter': false } }
     );
+    JDbLogger.debug(`'should overwrite existing boolean values' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should overwrite existing boolean values' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertFalse(updated.isActive, 'Should update isActive to false');
     TestFramework.assertFalse(updated.preferences.newsletter, 'Should update newsletter to false');
   });
@@ -56,8 +68,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { 'preferences.tags': newTags } }
     );
+    JDbLogger.debug(`'should overwrite existing array values' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should overwrite existing array values' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(newTags, updated.preferences.tags, 'Should update tags array');
   });
 
@@ -68,8 +84,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { contact: newContact } }
     );
+    JDbLogger.debug(`'should overwrite existing object values' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should overwrite existing object values' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(newContact, updated.contact, 'Should update entire contact object');
   });
 
@@ -80,8 +100,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { newField: 'new value', anotherField: 42 } }
     );
+    JDbLogger.debug(`'should create new top-level fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should create new top-level fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('new value', updated.newField, 'Should create newField');
     TestFramework.assertEquals(42, updated.anotherField, 'Should create anotherField');
   });
@@ -93,8 +117,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { 'preferences.settings.theme': 'auto' } }
     );
+    JDbLogger.debug(`'should set nested fields using dot notation' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should set nested fields using dot notation' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('auto', updated.preferences.settings.theme, 'Should update nested theme');
     TestFramework.assertTrue(updated.preferences.settings.notifications !== undefined, 'Should preserve other nested fields');
   });
@@ -106,8 +134,12 @@ function createSetBasicFieldSettingTestSuite() {
       { _id: 'person1' },
       { $set: { 'preferences.settings.notifications.email.frequency': 'daily' } }
     );
+    JDbLogger.debug(`'should set deeply nested fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should set deeply nested fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('daily', updated.preferences.settings.notifications.email.frequency, 'Should update deeply nested frequency');
     TestFramework.assertTrue(updated.preferences.settings.notifications.email.enabled, 'Should preserve other deeply nested fields');
   });
@@ -132,8 +164,12 @@ function createSetTypeChangesTestSuite() {
       { _id: 'order1' },
       { $set: { stringField: 456 } }
     );
+    JDbLogger.debug(`'should change string field to number' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'order1' });
+    JDbLogger.debug(`'should change string field to number' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(456, updated.stringField, 'Should change string to number');
     TestFramework.assertEquals('number', typeof updated.stringField, 'Should be number type');
   });
@@ -146,8 +182,12 @@ function createSetTypeChangesTestSuite() {
       { _id: 'order1' },
       { $set: { priority: newArray } }
     );
+    JDbLogger.debug(`'should change number field to array' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'order1' });
+    JDbLogger.debug(`'should change number field to array' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals(newArray, updated.priority, 'Should change number to array');
     TestFramework.assertTrue(Array.isArray(updated.priority), 'Should be array type');
   });
@@ -159,8 +199,12 @@ function createSetTypeChangesTestSuite() {
       { _id: 'order1' },
       { $set: { metrics: 'simplified' } }
     );
+    JDbLogger.debug(`'should change object field to primitive' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'order1' });
+    JDbLogger.debug(`'should change object field to primitive' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('simplified', updated.metrics, 'Should change object to string');
     TestFramework.assertEquals('string', typeof updated.metrics, 'Should be string type');
   });
@@ -172,8 +216,12 @@ function createSetTypeChangesTestSuite() {
       { _id: 'person2' },
       { $set: { lastLogin: new Date('2025-06-28T12:00:00Z') } }
     );
+    JDbLogger.debug(`'should change null field to non-null value' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person2' });
+    JDbLogger.debug(`'should change null field to non-null value' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertTrue(updated.lastLogin !== null, 'Should change null to non-null');
     TestFramework.assertTrue(updated.lastLogin instanceof Date, 'Should be Date object');
   });
@@ -195,8 +243,12 @@ function createSetObjectCreationTestSuite() {
       { _id: 'person1' },
       { $set: { 'profile.bio.summary': 'Software developer', 'profile.bio.skills': ['JavaScript', 'MongoDB'] } }
     );
+    JDbLogger.debug(`'should create nested object structure via dot notation' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should create nested object structure via dot notation' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('Software developer', updated.profile.bio.summary, 'Should create nested summary');
     TestFramework.assertDeepEquals(['JavaScript', 'MongoDB'], updated.profile.bio.skills, 'Should create nested skills array');
   });
@@ -208,8 +260,12 @@ function createSetObjectCreationTestSuite() {
       { _id: 'person1' },
       { $set: { 'preferences.settings.language': 'en-GB' } }
     );
+    JDbLogger.debug(`'should perform partial object updates' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should perform partial object updates' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('en-GB', updated.preferences.settings.language, 'Should add language setting');
     TestFramework.assertTrue(updated.preferences.settings.theme !== undefined, 'Should preserve existing theme');
     TestFramework.assertTrue(updated.preferences.settings.notifications !== undefined, 'Should preserve existing notifications');
@@ -228,8 +284,12 @@ function createSetObjectCreationTestSuite() {
         } 
       }
     );
+    JDbLogger.debug(`'should handle mixed existing and new nested fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should handle mixed existing and new nested fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('system', updated.preferences.settings.theme, 'Should update existing theme');
     TestFramework.assertEquals('GMT', updated.preferences.settings.timezone, 'Should add new timezone');
     TestFramework.assertTrue(updated.preferences.newCategory.option1, 'Should create new category branch');
@@ -255,9 +315,13 @@ function createSetEdgeCasesTestSuite() {
         { _id: 'person1' },
         { $set: { _id: 'newId' } }
       );
+      JDbLogger.debug(`'should handle _id field setting appropriately' result: 
+${JSON.stringify(result, null, 2)}`);
       // If it succeeds, verify the behaviour
       TestFramework.assertTrue(result.modifiedCount >= 0, 'Should return valid result');
       const updated = collection.findOne({ _id: 'person1' });
+      JDbLogger.debug(`'should handle _id field setting appropriately' updated: 
+${JSON.stringify(updated, null, 2)}`);
       TestFramework.assertTrue(updated !== null, 'Original document should still exist or be findable');
     } catch (error) {
       // If it throws an error, that's also acceptable MongoDB-like behaviour
@@ -273,8 +337,12 @@ function createSetEdgeCasesTestSuite() {
       { _id: 'person1' },
       { $set: { nullField: null, undefinedField: undefined } }
     );
+    JDbLogger.debug(`'should handle undefined vs null assignment' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should handle undefined vs null assignment' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(null, updated.nullField, 'Should set field to null');
     // Note: JavaScript/JSON typically converts undefined to null or omits the field
     TestFramework.assertTrue(updated.undefinedField === undefined || updated.undefinedField === null, 
@@ -288,8 +356,12 @@ function createSetEdgeCasesTestSuite() {
       { _id: 'person1' },
       { $set: { emptyStringField: '', nullField: null } }
     );
+    JDbLogger.debug(`'should distinguish empty string from null assignment' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should distinguish empty string from null assignment' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals('', updated.emptyStringField, 'Should set field to empty string');
     TestFramework.assertEquals(null, updated.nullField, 'Should set field to null');
     TestFramework.assertNotEquals(updated.emptyStringField, updated.nullField, 'Empty string and null should be different');
@@ -311,6 +383,8 @@ function createUnsetBasicFieldRemovalTestSuite() {
     // First ensure field exists
     collection.updateOne({ _id: 'person1' }, { $set: { tempField: 'temporary' } });
     let doc = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should remove top-level fields' doc: 
+${JSON.stringify(doc, null, 2)}`);
     TestFramework.assertEquals('temporary', doc.tempField, 'Temp field should exist before removal');
     
     // Now remove it
@@ -318,8 +392,12 @@ function createUnsetBasicFieldRemovalTestSuite() {
       { _id: 'person1' },
       { $unset: { tempField: '' } }
     );
+    JDbLogger.debug(`'should remove top-level fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should remove top-level fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.tempField, 'Should remove tempField');
     TestFramework.assertTrue(updated.name !== undefined, 'Should preserve other fields');
   });
@@ -333,8 +411,12 @@ function createUnsetBasicFieldRemovalTestSuite() {
       { _id: 'person1' },
       { $unset: { temp1: '', temp3: '' } }
     );
+    JDbLogger.debug(`'should remove multiple top-level fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should remove multiple top-level fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.temp1, 'Should remove temp1');
     TestFramework.assertEquals('value2', updated.temp2, 'Should preserve temp2');
     TestFramework.assertEquals(undefined, updated.temp3, 'Should remove temp3');
@@ -347,8 +429,12 @@ function createUnsetBasicFieldRemovalTestSuite() {
       { _id: 'person1' },
       { $unset: { 'preferences.newsletter': '' } }
     );
+    JDbLogger.debug(`'should remove nested fields using dot notation' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should remove nested fields using dot notation' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.preferences.newsletter, 'Should remove newsletter field');
     TestFramework.assertTrue(updated.preferences.tags !== undefined, 'Should preserve other preference fields');
   });
@@ -359,8 +445,12 @@ function createUnsetBasicFieldRemovalTestSuite() {
       { _id: 'person1' },
       { $unset: { 'preferences.settings.notifications.email.frequency': '' } }
     );
+    JDbLogger.debug(`'should remove deeply nested fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should remove deeply nested fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.preferences.settings.notifications.email.frequency, 'Should remove deeply nested frequency');
     TestFramework.assertTrue(updated.preferences.settings.notifications.email.enabled !== undefined, 'Should preserve other deeply nested fields');
   });
@@ -382,8 +472,12 @@ function createUnsetObjectStructureTestSuite() {
       { _id: 'person1' },
       { $unset: { 'name.first': '' } }
     );
+    JDbLogger.debug(`'should leave parent object when removing field' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should leave parent object when removing field' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.name.first, 'Should remove first name');
     TestFramework.assertEquals('Brown', updated.name.last, 'Should preserve last name');
     TestFramework.assertTrue(typeof updated.name === 'object', 'Name object should still exist');
@@ -396,8 +490,12 @@ function createUnsetObjectStructureTestSuite() {
       { _id: 'person1' },
       { $unset: { 'name.first': '', 'name.last': '' } }
     );
+    JDbLogger.debug(`'should leave empty object when removing all fields' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should leave empty object when removing all fields' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.name.first, 'Should remove first name');
     TestFramework.assertEquals(undefined, updated.name.last, 'Should remove last name');
     TestFramework.assertTrue(typeof updated.name === 'object', 'Name object should still exist as empty object');
@@ -411,8 +509,12 @@ function createUnsetObjectStructureTestSuite() {
       { _id: 'person1' },
       { $unset: { 'preferences.settings.theme': '' } }
     );
+    JDbLogger.debug(`'should maintain object hierarchy when removing nested field' result: 
+${JSON.stringify(result, null, 2)}`);
     TestFramework.assertEquals(1, result.modifiedCount, 'Should modify 1 document');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should maintain object hierarchy when removing nested field' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.preferences.settings.theme, 'Should remove theme');
     TestFramework.assertTrue(typeof updated.preferences === 'object', 'Preferences object should exist');
     TestFramework.assertTrue(typeof updated.preferences.settings === 'object', 'Settings object should exist');
@@ -436,10 +538,14 @@ function createUnsetEdgeCasesTestSuite() {
       { _id: 'person1' },
       { $unset: { nonExistentField: '' } }
     );
+    JDbLogger.debug(`'should handle unsetting non-existent field gracefully' result: 
+${JSON.stringify(result, null, 2)}`);
     // MongoDB typically returns modifiedCount: 0 for non-existent fields
     // but our implementation might differ - test for consistent behaviour
     TestFramework.assertTrue(result.modifiedCount >= 0, 'Should return valid result');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should handle unsetting non-existent field gracefully' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.nonExistentField, 'Non-existent field should remain undefined');
     TestFramework.assertTrue(updated.name !== undefined, 'Should preserve existing fields');
   });
@@ -453,9 +559,13 @@ function createUnsetEdgeCasesTestSuite() {
         { _id: 'person1' },
         { $unset: { _id: '' } }
       );
+      JDbLogger.debug(`'should handle _id field unset appropriately' result: 
+${JSON.stringify(result, null, 2)}`);
       // If it succeeds, verify the document is still findable
       TestFramework.assertTrue(result.modifiedCount >= 0, 'Should return valid result');
       const updated = collection.findOne({ _id: 'person1' });
+      JDbLogger.debug(`'should handle _id field unset appropriately' updated: 
+${JSON.stringify(updated, null, 2)}`);
       TestFramework.assertTrue(updated !== null, 'Document should still be findable');
       TestFramework.assertTrue(updated._id !== undefined, '_id should be preserved or regenerated');
     } catch (error) {
@@ -472,9 +582,13 @@ function createUnsetEdgeCasesTestSuite() {
       { _id: 'person1' },
       { $unset: { 'nonExistentParent.childField': '' } }
     );
+    JDbLogger.debug(`'should handle unsetting field in non-existent parent object' result: 
+${JSON.stringify(result, null, 2)}`);
     // Should handle gracefully without creating the parent object
     TestFramework.assertTrue(result.modifiedCount >= 0, 'Should return valid result');
     const updated = collection.findOne({ _id: 'person1' });
+    JDbLogger.debug(`'should handle unsetting field in non-existent parent object' updated: 
+${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertEquals(undefined, updated.nonExistentParent, 'Non-existent parent should remain undefined');
   });
 

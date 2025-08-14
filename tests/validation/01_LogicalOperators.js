@@ -21,6 +21,8 @@ function createLogicalAndOperatorTestSuite() {
         { age: { $gt: 30 } }
       ]
     });
+    JDbLogger.debug(`'should match documents satisfying both field conditions' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(3, results.length, 'Should find 3 active persons over 30');
     const expectedIds = ['person3', 'person4', 'person6'];
     results.forEach(doc => {
@@ -40,6 +42,8 @@ function createLogicalAndOperatorTestSuite() {
         { balance: { $gt: 1000 } }
       ]
     });
+    JDbLogger.debug(`'should match documents satisfying multiple field conditions' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(1, results.length, 'Should find 1 active person with score > 80 and balance > 1000');
     const expectedIds = ['person1'];
     results.forEach(doc => {
@@ -60,6 +64,8 @@ function createLogicalAndOperatorTestSuite() {
         { score: { $gt: 80 } }
       ]
     });
+    JDbLogger.debug(`'should work with mixed comparison operators' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(1, results.length, 'Should find Anna with age < 35 and score > 80');
     TestFramework.assertEquals('person1', results[0]._id, 'Should match person1');
     TestFramework.assertEquals('Anna', results[0].name.first, 'Should match Anna');
@@ -79,6 +85,8 @@ function createLogicalAndOperatorTestSuite() {
         { score: { $gt: 85 } }
       ]
     });
+    JDbLogger.debug(`'should handle nested $and operations' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(2, results.length, 'Should find 2 active persons over 25 with score > 85');
     const expectedIds = ['person1', 'person3'];
     results.forEach(doc => {
@@ -93,6 +101,8 @@ function createLogicalAndOperatorTestSuite() {
   suite.addTest('should match all documents with empty $and array', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     const results = collection.find({ $and: [] });
+    JDbLogger.debug(`'should match all documents with empty $and array' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(6, results.length, 'Empty $and should match all 6 persons');
   });
 
@@ -104,6 +114,8 @@ function createLogicalAndOperatorTestSuite() {
         { isActive: { $eq: false } }
       ]
     });
+    JDbLogger.debug(`'should handle single condition in $and' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(2, results.length, 'Should find 2 inactive persons');
     const expectedIds = ['person2', 'person5'];
     results.forEach(doc => {
@@ -121,6 +133,8 @@ function createLogicalAndOperatorTestSuite() {
         { isActive: { $eq: false } }
       ]
     });
+    JDbLogger.debug(`'should return no results for contradictory conditions' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(0, results.length, 'Contradictory conditions should match no documents');
   });
 
@@ -143,6 +157,8 @@ function createLogicalOrOperatorTestSuite() {
         { age: { $gt: 60 } }
       ]
     });
+    JDbLogger.debug(`'should match documents satisfying either field condition' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(3, results.length, 'Should find 3 persons under 30 or over 60');
     const expectedIds = ['person1', 'person2', 'person6']; // Anna (29), Ben (0) and Frank (65)
     results.forEach(doc => {
@@ -161,6 +177,8 @@ function createLogicalOrOperatorTestSuite() {
         { 'name.first': { $eq: 'Frank' } }
       ]
     });
+    JDbLogger.debug(`'should match documents satisfying any of multiple conditions' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(3, results.length, 'Should find Anna, Clara, or Frank');
     const expectedIds = ['person1', 'person3', 'person6'];
     results.forEach(doc => {
@@ -180,6 +198,8 @@ function createLogicalOrOperatorTestSuite() {
         { age: { $eq: 0 } }
       ]
     });
+    JDbLogger.debug(`'should work with mixed comparison operators' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(3, results.length, 'Should find persons with high score, negative balance, or zero age');
     const expectedIds = ['person2', 'person3', 'person5']; // Ben (age 0), Clara (negative balance), Ethan (score 95.8)
     results.forEach(doc => {
@@ -203,6 +223,8 @@ function createLogicalOrOperatorTestSuite() {
         { age: { $gt: 60 } }
       ]
     });
+    JDbLogger.debug(`'should handle nested $or operations' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(3, results.length, 'Should find Anna, Ben, or persons over 60');
     const expectedIds = ['person1', 'person2', 'person6']; // Anna, Ben, Frank
     results.forEach(doc => {
@@ -214,6 +236,8 @@ function createLogicalOrOperatorTestSuite() {
   suite.addTest('should match no documents with empty $or array', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
     const results = collection.find({ $or: [] });
+    JDbLogger.debug(`'should match no documents with empty $or array' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(0, results.length, 'Empty $or should match no documents');
   });
 
@@ -225,6 +249,8 @@ function createLogicalOrOperatorTestSuite() {
         { isActive: { $eq: true } }
       ]
     });
+    JDbLogger.debug(`'should handle single condition in $or' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(4, results.length, 'Should find 4 active persons');
     results.forEach(doc => {
       TestFramework.assertTrue(doc.isActive, `Document ${doc._id} should be active`);
@@ -240,6 +266,8 @@ function createLogicalOrOperatorTestSuite() {
         { 'name.first': { $eq: 'Anna' } }
       ]
     });
+    JDbLogger.debug(`'should handle duplicate conditions in $or' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(1, results.length, 'Duplicate conditions should still only match Anna once');
     TestFramework.assertEquals('person1', results[0]._id, 'Should match person1');
     TestFramework.assertEquals('Anna', results[0].name.first, 'Should match Anna');
@@ -269,6 +297,8 @@ function createCombinedLogicalOperatorTestSuite() {
         { isActive: { $eq: true } }
       ]
     });
+    JDbLogger.debug(`'should handle $and containing $or clauses' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(2, results.length, 'Should find active Anna or Diana');
     const expectedIds = ['person1', 'person4'];
     results.forEach(doc => {
@@ -292,8 +322,12 @@ function createCombinedLogicalOperatorTestSuite() {
         { score: { $gt: 95 } }
       ]
     });
+    JDbLogger.debug(`'should handle $or containing $and clauses' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(1, results.length, 'Should find person5 (inactive over 40 with high score)');
     const actualIds = results.map(doc => doc._id);
+    JDbLogger.debug(`'should handle $or containing $and clauses' actualIds: 
+${JSON.stringify(actualIds, null, 2)}`);
     TestFramework.assertTrue(actualIds.includes('person5'), 'Should include person5 (inactive, age 50, score 95.8)');
   });
 
@@ -316,6 +350,8 @@ function createCombinedLogicalOperatorTestSuite() {
         }
       ]
     });
+    JDbLogger.debug(`'should handle complex nested logical operations' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(2, results.length, 'Should find persons matching complex nested conditions');
     const expectedIds = ['person1', 'person6']; // Anna (29, active) and Frank (65, active)
     results.forEach(doc => {
@@ -337,6 +373,8 @@ function createCombinedLogicalOperatorTestSuite() {
         { score: { $gt: 80 } }
       ]
     });
+    JDbLogger.debug(`'should handle implicit AND with explicit $and' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(1, results.length, 'Should find one active person over 30 with score > 80');
     const expectedIds = ['person3']; 
     results.forEach(doc => {
@@ -357,6 +395,8 @@ function createCombinedLogicalOperatorTestSuite() {
         { age: { $gt: 60 } }
       ]
     });
+    JDbLogger.debug(`'should handle implicit AND with explicit $or' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(2, results.length, 'Should find two active persons under 35 or over 60');
     const expectedIds = ['person1', 'person6']; 
     results.forEach(doc => {
@@ -376,6 +416,8 @@ function createCombinedLogicalOperatorTestSuite() {
         { balance: { $gt: 500 } }
       ]
     });
+    JDbLogger.debug(`'should handle multiple fields with multiple logical operators' results: 
+${JSON.stringify(results, null, 2)}`);
     TestFramework.assertEquals(2, results.length, 'Should find two newsletter subscribers matching complex conditions');
     const expectedIds = ['person1', 'person4']; 
     results.forEach(doc => {
