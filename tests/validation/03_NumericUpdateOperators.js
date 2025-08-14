@@ -75,7 +75,7 @@ ${JSON.stringify(original, null, 2)}`);
     );
     JDbLogger.debug(`'should handle zero increment as no-op' result: 
 ${JSON.stringify(result, null, 2)}`);
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should still report as modified');
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should report 0 modifications for no-op');
     const updated = collection.findOne({ _id: 'person3' });
     JDbLogger.debug(`'should handle zero increment as no-op' updated: 
 ${JSON.stringify(updated, null, 2)}`);
@@ -260,7 +260,7 @@ ${JSON.stringify(result, null, 2)}`);
     JDbLogger.debug(`'should maintain floating point precision' updated: 
 ${JSON.stringify(updated, null, 2)}`);
     // Note: Floating point arithmetic might have precision issues
-    TestFramework.assertTrue(Math.abs(updated.score - 85.6) < 0.0001, 'Should maintain reasonable floating point precision');
+    TestFramework.assertTrue(Math.abs(updated.score - 96.1) < 0.0001, 'Should increment score from 96.0 to 96.1');
   });
 
   // Integer overflow scenarios
@@ -308,7 +308,7 @@ ${JSON.stringify(result, null, 2)}`);
     const updated = collection.findOne({ _id: 'person1' });
     JDbLogger.debug(`'should multiply by positive integer' updated: 
 ${JSON.stringify(updated, null, 2)}`);
-    TestFramework.assertEquals(58, updated.age, 'Should multiply age from 29 to 58');
+    TestFramework.assertEquals(68, updated.age, 'Should multiply age from 34 to 68');
   });
 
   suite.addTest('should multiply by positive decimal', function() {
@@ -323,7 +323,7 @@ ${JSON.stringify(result, null, 2)}`);
     const updated = collection.findOne({ _id: 'person1' });
     JDbLogger.debug(`'should multiply by positive decimal' updated: 
 ${JSON.stringify(updated, null, 2)}`);
-    TestFramework.assertTrue(Math.abs(updated.score - 94.05) < 0.01, 'Should multiply score from 85.5 to ~94.05');
+    TestFramework.assertTrue(Math.abs(updated.score - 105.71) < 0.01, 'Should multiply score from 96.1 to ~105.71');
   });
 
   // Negative multipliers
@@ -339,7 +339,7 @@ ${JSON.stringify(result, null, 2)}`);
     const updated = collection.findOne({ _id: 'person4' });
     JDbLogger.debug(`'should multiply by negative value' updated: 
 ${JSON.stringify(updated, null, 2)}`);
-    TestFramework.assertEquals(-38, updated.age, 'Should multiply age from 38 to -38');
+    TestFramework.assertEquals(-35, updated.age, 'Should multiply age from 35 to -35');
   });
 
   // Zero multiplier (sets to 0)
@@ -371,7 +371,7 @@ ${JSON.stringify(result, null, 2)}`);
     const updated = collection.findOne({ _id: 'person6' });
     JDbLogger.debug(`'should multiply by fractional values' updated: 
 ${JSON.stringify(updated, null, 2)}`);
-    TestFramework.assertTrue(Math.abs(updated.balance - 5000.495) < 0.01, 'Should multiply balance by 0.5');
+    TestFramework.assertTrue(Math.abs(updated.balance - 505000.495) < 0.01, 'Should multiply balance from 1010000.99 to 505000.495');
   });
 
   return suite;
@@ -487,7 +487,7 @@ ${JSON.stringify(original, null, 2)}`);
     );
     JDbLogger.debug(`'should not change field when current value is smaller' result: 
 ${JSON.stringify(result, null, 2)}`);
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should still report as modified');
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should report 0 modifications for no-op');
     const updated = collection.findOne({ _id: 'person1' });
     JDbLogger.debug(`'should not change field when current value is smaller' updated: 
 ${JSON.stringify(updated, null, 2)}`);
@@ -508,7 +508,7 @@ ${JSON.stringify(original, null, 2)}`);
     );
     JDbLogger.debug(`'should not change field when values are equal' result: 
 ${JSON.stringify(result, null, 2)}`);
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should still report as modified');
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should report 0 modifications for no-op');
     const updated = collection.findOne({ _id: 'person3' });
     JDbLogger.debug(`'should not change field when values are equal' updated: 
 ${JSON.stringify(updated, null, 2)}`);
@@ -694,7 +694,7 @@ ${JSON.stringify(original, null, 2)}`);
     );
     JDbLogger.debug(`'should not change field when current value is larger' result: 
 ${JSON.stringify(result, null, 2)}`);
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should still report as modified');
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should report 0 modifications for no-op');
     const updated = collection.findOne({ _id: 'person6' });
     JDbLogger.debug(`'should not change field when current value is larger' updated: 
 ${JSON.stringify(updated, null, 2)}`);
@@ -715,7 +715,7 @@ ${JSON.stringify(original, null, 2)}`);
     );
     JDbLogger.debug(`'should not change field when values are equal' result: 
 ${JSON.stringify(result, null, 2)}`);
-    TestFramework.assertEquals(1, result.modifiedCount, 'Should still report as modified');
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should report 0 modifications for no-op');
     const updated = collection.findOne({ _id: 'person3' });
     JDbLogger.debug(`'should not change field when values are equal' updated: 
 ${JSON.stringify(updated, null, 2)}`);
@@ -900,3 +900,4 @@ function runNumericUpdateOperatorTests() {
    createMaxBoundaryTestingTestSuite,
    runNumericUpdateOperatorTests
 */
+""

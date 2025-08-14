@@ -31,9 +31,4 @@ export default [
   {
     ignores: [
       'node_modules/',
-      'tests/data/',
-      '*.log',
-      '*.pid'
-    ]
-  }
-];
+      // DELETED: duplicate ESLint config. Keep only eslint.config.js in project root.

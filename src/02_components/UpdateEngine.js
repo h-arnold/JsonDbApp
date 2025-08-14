@@ -537,8 +537,8 @@ class UpdateEngine {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, { currentValue, newValue }, `${operation} operation requires comparable values of the same type`);
     }
     
-    // Objects and arrays cannot be compared with < or >
-    if (currentType === 'object') {
+    // Objects and arrays (but not Dates) cannot be compared with < or >
+    if (currentType === 'object' && currentValue !== null && !(currentValue instanceof Date)) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, currentValue, `${operation} operation cannot compare objects or arrays`);
     }
   }

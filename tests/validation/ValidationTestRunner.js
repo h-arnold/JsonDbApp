@@ -184,6 +184,129 @@ function testLessThanOperator() {
   return runSpecificTestSuite('$lt Less Than Operator Tests');
 }
 
+/**
+ * Run only logical operator tests
+ * Call this function to test just the $and, $or operators
+ */
+function runLogicalTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationRunner-Logical');
+  
+  try {
+    logger.info('=== Starting Logical Operator Test Execution ===');
+    const startTime = new Date();
+    
+    const results = runLogicalOperatorTests();
+    
+    const endTime = new Date();
+    const duration = endTime - startTime;
+    
+    console.log('\n=== LOGICAL OPERATOR TEST RESULTS ===');
+    console.log(`Total Tests: ${results.results.length}`);
+    console.log(`Passed: ${results.getPassed().length}`);
+    console.log(`Failed: ${results.getFailed().length}`);
+    console.log(`Execution Time: ${duration}ms`);
+    
+    if (results.getFailed().length > 0) {
+      console.log('\n=== FAILED TESTS ===');
+      results.getFailed().forEach((result, index) => {
+        console.log(`${index + 1}. ${result.suiteName} > ${result.testName}`);
+        console.log(`   Error: ${result.error ? result.error.message : 'Unknown error'}`);
+      });
+    } else {
+      console.log('\n🎉 All logical operator tests passed!');
+    }
+    
+    return results;
+    
+  } catch (error) {
+    logger.error('Logical operator test execution failed', { error: error.message });
+    console.error('❌ Logical operator test execution failed:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Run only field update operator tests
+ * Call this function to test just the $set, $unset operators
+ */
+function runFieldUpdateTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationRunner-FieldUpdate');
+  
+  try {
+    logger.info('=== Starting Field Update Operator Test Execution ===');
+    const startTime = new Date();
+    
+    const results = runFieldUpdateOperatorTests();
+    
+    const endTime = new Date();
+    const duration = endTime - startTime;
+    
+    console.log('\n=== FIELD UPDATE OPERATOR TEST RESULTS ===');
+    console.log(`Total Tests: ${results.results.length}`);
+    console.log(`Passed: ${results.getPassed().length}`);
+    console.log(`Failed: ${results.getFailed().length}`);
+    console.log(`Execution Time: ${duration}ms`);
+    
+    if (results.getFailed().length > 0) {
+      console.log('\n=== FAILED TESTS ===');
+      results.getFailed().forEach((result, index) => {
+        console.log(`${index + 1}. ${result.suiteName} > ${result.testName}`);
+        console.log(`   Error: ${result.error ? result.error.message : 'Unknown error'}`);
+      });
+    } else {
+      console.log('\n🎉 All field update operator tests passed!');
+    }
+    
+    return results;
+    
+  } catch (error) {
+    logger.error('Field update operator test execution failed', { error: error.message });
+    console.error('❌ Field update operator test execution failed:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Run only numeric update operator tests
+ * Call this function to test just the $inc, $mul, $min, $max operators
+ */
+function runNumericUpdateTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationRunner-NumericUpdate');
+  
+  try {
+    logger.info('=== Starting Numeric Update Operator Test Execution ===');
+    const startTime = new Date();
+    
+    const results = runNumericUpdateOperatorTests();
+    
+    const endTime = new Date();
+    const duration = endTime - startTime;
+    
+    console.log('\n=== NUMERIC UPDATE OPERATOR TEST RESULTS ===');
+    console.log(`Total Tests: ${results.results.length}`);
+    console.log(`Passed: ${results.getPassed().length}`);
+    console.log(`Failed: ${results.getFailed().length}`);
+    console.log(`Execution Time: ${duration}ms`);
+    
+    if (results.getFailed().length > 0) {
+      console.log('\n=== FAILED TESTS ===');
+      results.getFailed().forEach((result, index) => {
+        console.log(`${index + 1}. ${result.suiteName} > ${result.testName}`);
+        console.log(`   Error: ${result.error ? result.error.message : 'Unknown error'}`);
+      });
+    } else {
+      console.log('\n🎉 All numeric update operator tests passed!');
+    }
+    
+    return results;
+    
+  } catch (error) {
+    logger.error('Numeric update operator test execution failed', { error: error.message });
+    console.error('❌ Numeric update operator test execution failed:', error.message);
+    throw error;
+  }
+}
+
 function runArrayUpdateTests() {
   const logger = JDbLogger.createComponentLogger('ValidationRunner-ArrayUpdate');
   
@@ -228,6 +351,10 @@ function showValidationTestHelp() {
   console.log('');
   console.log('🔹 runAllValidationTestsNow() - Run all validation tests');
   console.log('🔹 runComparisonTests() - Run comparison operator tests only');
+  console.log('🔹 runLogicalTests() - Run logical operator tests only');
+  console.log('🔹 runFieldUpdateTests() - Run field update operator tests only');
+  console.log('🔹 runNumericUpdateTests() - Run numeric update operator tests only');
+  console.log('🔹 runArrayUpdateTests() - Run array update operator tests only');
   console.log('🔹 listAvailableValidationTests() - Show all available tests');
   console.log('');
   console.log('🔸 testEqualityOperator() - Test $eq operator only');
@@ -244,6 +371,10 @@ function showValidationTestHelp() {
 /* exported 
    runAllValidationTestsNow,
    runComparisonTests,
+   runLogicalTests,
+   runFieldUpdateTests,
+   runNumericUpdateTests,
+   runArrayUpdateTests,
    runSpecificTestSuite,
    listAvailableValidationTests,
    testEqualityOperator,
