@@ -43,13 +43,13 @@ Current `$pull` implementation in `UpdateEngine._applyPull` uses strict deep equ
 - [x] Add test: operator object against object element does not remove (documented behaviour) OR decide to implement extended semantics (defer – see Section 7).
 
 ### 5. No-Op & Count Behaviour Tests
-- [ ] Confirm `$pull` with non-existent value leaves array unchanged and `modifiedCount` = 0.
-- [ ] Confirm `$pull` on non-array field leaves document unchanged and `modifiedCount` = 0.
+- [x] Confirm `$pull` with non-existent value leaves array unchanged and `modifiedCount` = 0.
+- [x] Confirm `$pull` on non-array field leaves document unchanged and `modifiedCount` = 0.
 
 ### 6. Documentation
-- [ ] Update `docs/developers/UpdateEngine.md` (create if missing) describing `$pull` semantics, predicate rules, operator support and limitations.
-- [ ] Note current supported operators: `$eq`, `$gt`, `$lt` (others deferred).
-- [ ] Clarify behaviour for operator object applied directly vs field-level usage.
+- [x] Update `docs/developers/UpdateEngine.md` (create if missing) describing `$pull` semantics, predicate rules, operator support and limitations.
+- [x] Note current supported operators: `$eq`, `$gt`, `$lt` (others deferred).
+- [x] Clarify behaviour for operator object applied directly vs field-level usage.
 
 ### 7. (Optional / Deferred) Shared Comparator Refactor
 - [ ] Evaluate extracting comparison logic from `QueryEngine` into a shared utility to remove duplication (`ComparisonUtils`).

@@ -563,7 +563,7 @@ These methods throw `ErrorHandler.ErrorTypes.INVALID_ARGUMENT` or `INVALID_QUERY
 - **Validate inputs**: Ensure the `updateOps` object is well-formed before passing it to `applyOperators`.
 - **Understand operator behaviour**: Be familiar with how each MongoDB operator functions, especially with edge cases like non-existent fields or type mismatches. The `UpdateEngine` aims to mimic MongoDB behaviour.
 - **Nested paths**: Use dot notation carefully for nested fields. The `_setFieldValue` utility will create intermediate objects if they don't exist when using `$set`. Other operators might behave differently if parent paths are missing.
-- **Array operations**: Be mindful of how array operators like `$pull` match elements (e.g., exact match for objects in an array).
+- **Array operations**: Be mindful of how array operators like `$pull` match elements (subset field predicate for objects; supports basic comparison operators at field level).
 - **Performance**: For very large documents or frequent updates, consider the performance implications, as each operation involves traversing and potentially restructuring parts of the document.
 
 ### Dot Notation and Nested Paths
@@ -578,3 +578,68 @@ The `UpdateEngine` supports dot notation for targeting nested fields in document
 - Edge cases: If an intermediate object in the path is not an object (e.g., a string or number), an error will be thrown.
 
 Careful use of dot notation is recommended to avoid unexpected behaviour, especially with deeply nested or missing paths.
+
+## Enhanced `$pull` Semantics (Mongo Fidelity Subset Matching)
+
+The `$pull` operator implementation has been extended beyond strict deep equality to align more closely with MongoDB behaviour:
+
+### Matching Rules
+- **Primitive / Array Criterion**: If the criterion is a primitive (string/number/boolean/null/Date) or an array, all array elements strictly equal (deep equality for arrays) to the criterion are removed.
+- **Object Criterion (Field Predicate)**: If the criterion is a plain object whose keys do not all start with `$`, it is treated as a *subset predicate*. An array element that is an object matches if it contains all specified fields with matching values (deep equality per field). Extra fields on the element do not prevent a match.
+- **Field-Level Operator Objects**: Within an object criterion, a field value may itself be an operator object (all keys start with `$`). Supported operators: `$eq`, `$gt`, `$lt`. All operators inside that object must succeed. Example: `{ items: { price: { $lt: 10 }, sku: 'A1' } }` removes all objects whose `price < 10` AND `sku === 'A1'`.
+- **Top-Level Operator Object**: A criterion whose keys all start with `$` (e.g. `{ $gt: 5 }`) applies only to primitive (or Date) elements. If the array elements are objects, this criterion does not match (intentional simplification documented here).
+
+### Non-Matching / No-Op Cases
+- Target field missing or not an array: Silent no-op (no error, `modifiedCount` = 0).
+- Object criterion referencing fields absent on the element: Non-match (element retained).
+- Operator predicates on incomparable types (e.g. `$gt` between string and number) return false (element retained).
+
+### Date Handling
+Dates are compared using their millisecond timestamps. `$gt` / `$lt` comparisons on Dates work when both sides are Dates. Field-level equality uses deep time equality.
+
+### Null Handling
+`null` criterion matches only `null` elements (or object field values equal to `null` in subset predicates). Undefined values do not match `null`.
+
+### Examples
+
+Remove subset by key:
+```javascript
+// items: [{ sku:'A', qty:1, price:5 }, { sku:'A', qty:2, price:5 }, { sku:'B', qty:1, price:9 }]
+updateEngine._applyPull(doc, { items: { sku: 'A' } });
+// Removes both objects with sku A.
+```
+
+Mixed field + operator:
+```javascript
+updateEngine._applyPull(doc, { items: { sku: 'A', price: { $lt: 6 } } });
+```
+
+Primitive operator on numeric array:
+```javascript
+updateEngine._applyPull(doc, { scores: { $gt: 90 } });
+```
+
+Top-level operator against object elements (no removal):
+```javascript
+updateEngine._applyPull(doc, { items: { $gt: 5 } }); // items are objects -> no match
+```
+
+### Limitations / Deferred Features
+- Unsupported operators within `$pull` field-level predicates: `$in`, `$nin`, `$ne`, logical operators (`$and`, `$or`). These are candidates for future enhancement.
+- No nested logical composition inside a single field predicate (e.g. `{ price: { $gt: 5, $lt: 10 } }` works, but `{ $or: [...] }` at field level inside object predicate is not yet supported).
+- Top-level logical operators inside `$pull` criterion not yet supported.
+
+### Rationale
+The subset + operator approach balances fidelity with simplicity, deferring more complex logical parsing until query/operator evaluation logic is centralised (see planned shared comparator utility).
+
+### Testing Strategy Summary
+Validation tests cover:
+- Subset removal
+- Mixed field + operator
+- Exact object removal regression
+- Non-match cases (missing field, top-level operator vs object element)
+- Null removal
+- Date operator removal
+- No-op modifiedCount scenarios
+
+Refer to `tests/validation/04_ArrayUpdateOperators.js` for concrete examples.

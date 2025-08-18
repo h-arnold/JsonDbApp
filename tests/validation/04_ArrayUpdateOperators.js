@@ -365,6 +365,35 @@ ${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertTrue(after.alerts.some(a => a.type === 'capacity'), 'Capacity alert still present');
   });
 
+  // Section 5: No-Op & Count Behaviour
+  suite.addTest('should report no modification when pulling from non-existent array field', function() {
+    const collection = VALIDATION_TEST_ENV.collections.orders;
+    const before = collection.findOne({ _id: 'order1' });
+    const result = collection.updateOne(
+      { _id: 'order1' },
+      { $pull: { nonExistentArrayField: 'value' } }
+    );
+    TestFramework.assertEquals(0, result.modifiedCount, 'modifiedCount should be 0 for non-existent field');
+    const after = collection.findOne({ _id: 'order1' });
+    TestFramework.assertDeepEquals(before.items, after.items, 'Existing arrays unchanged');
+  });
+
+  suite.addTest('should report no modification when operator predicate matches nothing', function() {
+    const collection = VALIDATION_TEST_ENV.collections.persons;
+    // numbers array already created for person4 earlier; ensure it exists, otherwise create
+    collection.updateOne(
+      { _id: 'person4' },
+      { $set: { numbers: [10, 20, 30] } }
+    );
+    const result = collection.updateOne(
+      { _id: 'person4' },
+      { $pull: { numbers: { $gt: 500 } } } // no element > 500
+    );
+    TestFramework.assertEquals(0, result.modifiedCount, 'modifiedCount should be 0 when no elements match');
+    const after = collection.findOne({ _id: 'person4' });
+    TestFramework.assertDeepEquals([10, 20, 30], after.numbers, 'numbers array unchanged');
+  });
+
   return suite;
 }
 
