@@ -373,6 +373,24 @@ class TestFramework {
       suite._appliedResetHooks.add(resetFn);
     });
   }
+
+  /**
+   * Apply a global beforeAll reset hook to every suite (per-suite isolation).
+   * @param {Function} resetFn
+   */
+  applySuiteBeforeAllResetHook(resetFn) {
+    if (typeof resetFn !== 'function') return;
+    this.testSuites.forEach(suite => {
+      if (!suite._appliedBeforeAllResetHooks) suite._appliedBeforeAllResetHooks = new Set();
+      if (suite._appliedBeforeAllResetHooks.has(resetFn)) return;
+      const existingBeforeAll = suite.beforeAll ? suite.beforeAll.bind(suite) : null;
+      suite.setBeforeAll(function() {
+        resetFn();
+        if (existingBeforeAll) existingBeforeAll();
+      });
+      suite._appliedBeforeAllResetHooks.add(resetFn);
+    });
+  }
   
   // ============= COMPATIBILITY METHODS =============
   

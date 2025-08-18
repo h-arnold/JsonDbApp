@@ -17,11 +17,9 @@ function resetValidationTestData() {
       const collection = VALIDATION_TEST_ENV.collections[collectionName];
       const dataArray = VALIDATION_TEST_ENV.initialDataMap[collectionName];
       if (!collection || !Array.isArray(dataArray)) return;
-
-      // Directly replace the underlying _documents map; rely on Collection internals
+      // Deep clone preserving Date instances
       const newDocs = {};
-      dataArray.forEach(doc => { newDocs[doc._id] = JSON.parse(JSON.stringify(doc)); });
-      // Safely assign: collection has _documents private-ish property
+      dataArray.forEach(doc => { newDocs[doc._id] = clonePreserveDates(doc); });
       collection._documents = newDocs;
       // Update metadata counts and save
       if (typeof collection._updateMetadata === 'function') {
@@ -30,14 +28,26 @@ function resetValidationTestData() {
       if (typeof collection._markDirty === 'function') {
         collection._markDirty();
       }
-      if (typeof collection._saveData === 'function') {
-        collection._saveData();
-      }
+      if (typeof collection._saveData === 'function') collection._saveData();
     });
   } catch (e) {
     logger.error('Reset failed', { error: e.message });
     throw e;
   }
+}
+
+/**
+ * Deep clone helper preserving Date objects.
+ * @param {any} value
+ * @returns {any}
+ */
+function clonePreserveDates(value) {
+  if (value === null || typeof value !== 'object') return value;
+  if (value instanceof Date) return new Date(value.getTime());
+  if (Array.isArray(value)) return value.map(v => clonePreserveDates(v));
+  const out = {};
+  Object.keys(value).forEach(k => { out[k] = clonePreserveDates(value[k]); });
+  return out;
 }
 
 /* exported resetValidationTestData */
