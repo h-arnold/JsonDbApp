@@ -311,14 +311,7 @@ class UpdateEngine {
   _isPlainObject(val) {
     return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
   }
-
-  /**
-   * Determine whether an object is an operator object (all keys start with '$').
-   * @param {Object} obj - candidate object
-   * @returns {boolean}
-   * @private
-   */
-  _isOperatorObject(obj) { return ComparisonUtils.isOperatorObject(obj); }
+}
 
   /**
    * Add unique elements to arrays, supporting $each modifier.

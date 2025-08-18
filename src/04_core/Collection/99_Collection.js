@@ -209,7 +209,91 @@ class Collection {
 
     // --- Delegated Index Operations ---
     createIndex(fields, options) { return this._indexOps.createIndex(fields, options); }
+    // --- Delegated Write Operations ---
+    /**
+     * Inserts a single document into the collection.
+     * @param {Object} doc - The document to insert.
+     * @returns {Object} Result of the insert operation.
+     */
+    insertOne(doc) { return this._writeOps.insertOne(doc); }
+    /**
+     * Updates a single document matching the filter or _id.
+     * @param {Object|string} filterOrId - Filter object or document _id.
+     * @param {Object} update - Update operations to apply.
+     * @returns {Object} Result of the update operation.
+     */
+    updateOne(filterOrId, update) { return this._writeOps.updateOne(filterOrId, update); }
+    /**
+     * Updates multiple documents matching the filter.
+     * @param {Object} filter - Filter object to match documents.
+     * @param {Object} update - Update operations to apply.
+     * @returns {Object} Result of the update operation.
+     */
+    updateMany(filter, update) { return this._writeOps.updateMany(filter, update); }
+    /**
+     * Replaces a single document matching the filter or _id.
+     * @param {Object|string} filterOrId - Filter object or document _id.
+     * @param {Object} doc - The replacement document.
+     * @returns {Object} Result of the replace operation.
+     */
+    replaceOne(filterOrId, doc) { return this._writeOps.replaceOne(filterOrId, doc); }
+    /**
+     * Deletes a single document matching the filter.
+     * @param {Object} filter - Filter object to match documents.
+     * @returns {Object} Result of the delete operation.
+     */
+    deleteOne(filter) { return this._writeOps.deleteOne(filter); }
+    /**
+     * Deletes multiple documents matching the filter.
+     * @param {Object} filter - Filter object to match documents.
+     * @returns {Object} Result of the delete operation.
+     */
+    deleteMany(filter) { return this._writeOps.deleteMany(filter); }
+
+    // --- Delegated Read Operations ---
+    /**
+     * Finds a single document matching the filter.
+     * @param {Object} filter - Filter object to match documents.
+     * @returns {Object|null} The found document or null if not found.
+     */
+    findOne(filter) { return this._readOps.findOne(filter); }
+    /**
+     * Finds all documents matching the filter.
+     * @param {Object} filter - Filter object to match documents.
+     * @returns {Array<Object>} Array of matching documents.
+     */
+    find(filter) { return this._readOps.find(filter); }
+    /**
+     * Counts the number of documents matching the filter.
+     * @param {Object} filter - Filter object to match documents.
+     * @returns {number} Number of matching documents.
+     */
+    countDocuments(filter) { return this._readOps.countDocuments(filter); }
+    /**
+     * Runs an aggregation pipeline on the collection.
+     * @param {Array<Object>} pipeline - Aggregation pipeline stages.
+     * @returns {Array<Object>} Aggregation result.
+     */
+    aggregate(pipeline) { return this._readOps.aggregate(pipeline); }
+
+    // --- Delegated Index Operations ---
+    /**
+     * Creates an index on specified fields.
+     * @param {Object} fields - Fields to index.
+     * @param {Object} [options] - Index options.
+     * @returns {Object} Result of the create index operation.
+     */
+    createIndex(fields, options) { return this._indexOps.createIndex(fields, options); }
+    /**
+     * Drops an index on the specified field.
+     * @param {string} field - Field name of the index to drop.
+     * @returns {Object} Result of the drop index operation.
+     */
     dropIndex(field) { return this._indexOps.dropIndex(field); }
+    /**
+     * Retrieves all indexes for the collection.
+     * @returns {Array<Object>} Array of index definitions.
+     */
     getIndexes() { return this._indexOps.getIndexes(); }
 
     // --- Core Collection Operations ---
