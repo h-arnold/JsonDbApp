@@ -259,6 +259,7 @@ class UpdateEngine {
     for (const fieldPath in ops) {
       const current = this._getFieldValue(document, fieldPath);
       if (current === undefined || !Array.isArray(current)) {
+        // Silent no-op for non-array (decision documented in TODO)
         continue;
       }
 
@@ -292,39 +293,13 @@ class UpdateEngine {
    * @private
    */
   _pullMatches(element, criterion) {
-    // Simple / primitive / array criterion: deep equality (legacy behaviour)
+    // Primitive / Date / array direct criterion -> strict equality (no membership semantics)
     if (criterion === null || typeof criterion !== 'object' || Array.isArray(criterion) || (criterion instanceof Date)) {
-      return this._valuesEqual(element, criterion);
+      return ComparisonUtils.equals(element, criterion, { arrayContainsScalar: false });
     }
 
-    // At this point criterion is a plain object (not null, not array, not Date)
-    if (this._isOperatorObject(criterion)) {
-      // Operator object applies to primitive / Date element values
-      return this._matchOperatorObject(element, criterion);
-    }
-
-    // Subset field predicate: element must be an object to compare fields
-    if (!this._isPlainObject(element)) {
-      return false; // primitives cannot satisfy object field predicates
-    }
-
-    // All specified fields must match (AND semantics)
-    for (const key of Object.keys(criterion)) {
-      const expected = criterion[key];
-      const actual = element[key];
-
-      if (expected !== null && typeof expected === 'object' && !Array.isArray(expected) && !(expected instanceof Date) && this._isOperatorObject(expected)) {
-        // Field-level operator object (will be fully supported in later TODO section – for now treat as simple equality fallback)
-        if (!this._matchOperatorObject(actual, expected)) {
-          return false;
-        }
-      } else {
-        if (!this._valuesEqual(actual, expected)) {
-          return false;
-        }
-      }
-    }
-    return true;
+    // Plain object predicate: use subsetMatch semantics (operator objects handled there)
+    return ComparisonUtils.subsetMatch(element, criterion, { operatorSupport: true });
   }
 
   /**
@@ -343,63 +318,7 @@ class UpdateEngine {
    * @returns {boolean}
    * @private
    */
-  _isOperatorObject(obj) {
-    if (!this._isPlainObject(obj)) return false;
-    const keys = Object.keys(obj);
-    if (keys.length === 0) return false;
-    return keys.every(k => k.startsWith('$'));
-  }
-
-  /**
-   * Evaluate an operator object against a primitive / Date element value.
-   * Supports $eq, $gt, $lt for Section 1 scope.
-   * @param {*} elementValue - value from array element
-   * @param {Object} operatorObject - e.g. { $gt: 5 }
-   * @returns {boolean} true if ALL operators match
-   * @private
-   */
-  _matchOperatorObject(elementValue, operatorObject) {
-    if (!this._isOperatorObject(operatorObject)) return false;
-    return Object.keys(operatorObject).every(op => this._evaluateOperator(elementValue, op, operatorObject[op]));
-  }
-
-  /**
-   * Evaluate single comparison operator.
-   * @param {*} actual - actual value
-   * @param {string} op - operator ($eq|$gt|$lt)
-   * @param {*} expected - expected value
-   * @returns {boolean}
-   * @private
-   */
-  _evaluateOperator(actual, op, expected) {
-    switch (op) {
-      case '$eq':
-        return this._valuesEqual(actual, expected);
-      case '$gt':
-        return this._compareForOrdering(actual, expected) > 0;
-      case '$lt':
-        return this._compareForOrdering(actual, expected) < 0;
-      default:
-        // Unsupported operator in Section 1 scope – treat as non-match
-        return false;
-    }
-  }
-
-  /**
-   * Basic ordering comparison for numbers, strings, Dates.
-   * @param {*} a - first value
-   * @param {*} b - second value
-   * @returns {number} positive if a>b, negative if a<b, 0 if equal or not comparable
-   * @private
-   */
-  _compareForOrdering(a, b) {
-    if (a instanceof Date && b instanceof Date) {
-      return a.getTime() - b.getTime();
-    }
-    if (typeof a === 'number' && typeof b === 'number') return a - b;
-    if (typeof a === 'string' && typeof b === 'string') return a === b ? 0 : (a > b ? 1 : -1);
-    return 0; // not comparable -> treat as equal (so operator will fail unless equality expected)
-  }
+  _isOperatorObject(obj) { return ComparisonUtils.isOperatorObject(obj); }
 
   /**
    * Add unique elements to arrays, supporting $each modifier.
@@ -662,7 +581,11 @@ class UpdateEngine {
     
     // Both must be the same type for safe comparison
     if (currentType !== newType) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, { currentValue, newValue }, `${operation} operation requires comparable values of the same type`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        { currentValue, newValue },
+        `${operation} operation requires comparable values of the same type`
+      );
     }
     
     // Objects and arrays (but not Dates) cannot be compared with < or >

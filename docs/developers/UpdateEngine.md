@@ -15,9 +15,9 @@
       - [`_applyUnset(document, ops)`](#_applyunsetdocument-ops)
       - [`_applyPush(document, ops)`](#_applypushdocument-ops)
       - [`_applyPull(document, ops)`](#_applypulldocument-ops)
-      - [`_applyAddToSet(document, ops)`](#_applyaddtosetdocument-ops)
-      - [`$each` Modifier in Array Operators](#each-modifier-in-array-operators)
-      - [`_valuesEqual(a, b)`](#_valuesequala-b)
+  - [`_applyAddToSet(document, ops)`](#_applyaddtosetdocument-ops)
+  - [`$each` Modifier in Array Operators`](#each-modifier-in-array-operators)
+  - [Shared Comparison Utilities](#shared-comparison-utilities)
     - [Utility Methods](#utility-methods)
       - [`_getFieldValue(document, fieldPath)`](#_getfieldvaluedocument-fieldpath)
       - [`_setFieldValue(document, fieldPath, value)`](#_setfieldvaluedocument-fieldpath-value)
@@ -333,23 +333,16 @@ updateEngine._applyAddToSet(doc, { categories: { $each: ["sports", "tech"] } });
 
 For array operators like `$push` and `$addToSet`, the `$each` modifier allows multiple values to be added at once. The `UpdateEngine` enforces that the value of `$each` must be an array. If `$each` is not an array, an `ErrorHandler.ErrorTypes.INVALID_QUERY` error is thrown. This ensures consistent and predictable behaviour when using array modifiers.
 
-#### `_valuesEqual(a, b)`
+#### Shared Comparison Utilities
 
-Performs a deep comparison between two values (primitives, arrays, or objects) to determine equality. Used internally for array and object matching, especially in operators like `$pull` and `$addToSet`.
+Equality and operator evaluation logic is centralised in `ComparisonUtils`:
 
-**Parameters:**
-- `a` (*): First value for comparison.
-- `b` (*): Second value for comparison.
+- `ComparisonUtils.equals(a,b, { arrayContainsScalar })` – Deep equality with optional array membership semantics (membership disabled in update context for set uniqueness; strict structural equality is used).
+- `ComparisonUtils.compareOrdering(a,b)` – Ordering for numbers, strings, Dates.
+- `ComparisonUtils.applyOperators(actual, { $gt:5, $lt:10 })` – AND evaluation of supported operators (`$eq`, `$gt`, `$lt`).
+- `ComparisonUtils.subsetMatch(candidate, predicate)` – Shallow subset + field-level operator predicates used by `$pull` for object criteria.
 
-**Returns:**
-- `boolean`: `true` if values are deeply equal, `false` otherwise.
-
-**Example:**
-```javascript
-updateEngine._valuesEqual([1, 2], [1, 2]); // true
-updateEngine._valuesEqual({x: 1}, {x: 1}); // true
-updateEngine._valuesEqual({x: 1}, {x: 2}); // false
-```
+`UpdateEngine` deliberately disables array membership semantics when enforcing uniqueness for `$addToSet` and when comparing primitives for `$pull` (strict equality only). This preserves prior behaviour while enabling richer predicate logic via subset match.
 
 ### Utility Methods
 
