@@ -262,15 +262,143 @@ class UpdateEngine {
         continue;
       }
 
-      const toRemove = ops[fieldPath];
+      const criterion = ops[fieldPath];
       const originalLength = current.length;
-      const filtered = current.filter(item => !this._valuesEqual(item, toRemove));
-      
+
+      // Build filtered array using Mongo-like predicate semantics
+      const filtered = current.filter(item => {
+        try {
+          return !this._pullMatches(item, criterion);
+        } catch (e) {
+          // Defensive: if matcher throws, do not remove the element
+          this._logger.debug('Pull match evaluation error – element retained', { error: e.message });
+          return true;
+        }
+      });
+
       if (filtered.length < originalLength) {
         this._setFieldValue(document, fieldPath, filtered);
       }
     }
     return document;
+  }
+
+  /**
+   * Determine whether an array element matches a $pull criterion.
+   * Mongo semantics (subset predicate for object criteria; operator objects supported at top level).
+   * @param {*} element - The array element under test
+   * @param {*} criterion - The $pull criterion provided by the update expression
+   * @returns {boolean} true if element should be removed
+   * @private
+   */
+  _pullMatches(element, criterion) {
+    // Simple / primitive / array criterion: deep equality (legacy behaviour)
+    if (criterion === null || typeof criterion !== 'object' || Array.isArray(criterion) || (criterion instanceof Date)) {
+      return this._valuesEqual(element, criterion);
+    }
+
+    // At this point criterion is a plain object (not null, not array, not Date)
+    if (this._isOperatorObject(criterion)) {
+      // Operator object applies to primitive / Date element values
+      return this._matchOperatorObject(element, criterion);
+    }
+
+    // Subset field predicate: element must be an object to compare fields
+    if (!this._isPlainObject(element)) {
+      return false; // primitives cannot satisfy object field predicates
+    }
+
+    // All specified fields must match (AND semantics)
+    for (const key of Object.keys(criterion)) {
+      const expected = criterion[key];
+      const actual = element[key];
+
+      if (expected !== null && typeof expected === 'object' && !Array.isArray(expected) && !(expected instanceof Date) && this._isOperatorObject(expected)) {
+        // Field-level operator object (will be fully supported in later TODO section – for now treat as simple equality fallback)
+        if (!this._matchOperatorObject(actual, expected)) {
+          return false;
+        }
+      } else {
+        if (!this._valuesEqual(actual, expected)) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  /**
+   * Check if a value is a plain object (not Date / Array / null)
+   * @param {*} val - value to test
+   * @returns {boolean}
+   * @private
+   */
+  _isPlainObject(val) {
+    return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
+  }
+
+  /**
+   * Determine whether an object is an operator object (all keys start with '$').
+   * @param {Object} obj - candidate object
+   * @returns {boolean}
+   * @private
+   */
+  _isOperatorObject(obj) {
+    if (!this._isPlainObject(obj)) return false;
+    const keys = Object.keys(obj);
+    if (keys.length === 0) return false;
+    return keys.every(k => k.startsWith('$'));
+  }
+
+  /**
+   * Evaluate an operator object against a primitive / Date element value.
+   * Supports $eq, $gt, $lt for Section 1 scope.
+   * @param {*} elementValue - value from array element
+   * @param {Object} operatorObject - e.g. { $gt: 5 }
+   * @returns {boolean} true if ALL operators match
+   * @private
+   */
+  _matchOperatorObject(elementValue, operatorObject) {
+    if (!this._isOperatorObject(operatorObject)) return false;
+    return Object.keys(operatorObject).every(op => this._evaluateOperator(elementValue, op, operatorObject[op]));
+  }
+
+  /**
+   * Evaluate single comparison operator.
+   * @param {*} actual - actual value
+   * @param {string} op - operator ($eq|$gt|$lt)
+   * @param {*} expected - expected value
+   * @returns {boolean}
+   * @private
+   */
+  _evaluateOperator(actual, op, expected) {
+    switch (op) {
+      case '$eq':
+        return this._valuesEqual(actual, expected);
+      case '$gt':
+        return this._compareForOrdering(actual, expected) > 0;
+      case '$lt':
+        return this._compareForOrdering(actual, expected) < 0;
+      default:
+        // Unsupported operator in Section 1 scope – treat as non-match
+        return false;
+    }
+  }
+
+  /**
+   * Basic ordering comparison for numbers, strings, Dates.
+   * @param {*} a - first value
+   * @param {*} b - second value
+   * @returns {number} positive if a>b, negative if a<b, 0 if equal or not comparable
+   * @private
+   */
+  _compareForOrdering(a, b) {
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() - b.getTime();
+    }
+    if (typeof a === 'number' && typeof b === 'number') return a - b;
+    if (typeof a === 'string' && typeof b === 'string') return a === b ? 0 : (a > b ? 1 : -1);
+    return 0; // not comparable -> treat as equal (so operator will fail unless equality expected)
   }
 
   /**

@@ -171,7 +171,8 @@ ${JSON.stringify(updated, null, 2)}`);
     const collection = VALIDATION_TEST_ENV.collections.orders;
     const result = collection.updateOne(
       { _id: 'order3' },
-      { $pull: { 'items': { sku: 'prod1', quantity: 1, price: 9.99, category: 'electronics' } } }
+      // Mongo fidelity: use subset predicate so all items with sku 'prod1' are removed
+      { $pull: { 'items': { sku: 'prod1' } } }
     );
     JDbLogger.debug(`'should remove all occurrences of a value' result: 
 ${JSON.stringify(result, null, 2)}`);
@@ -179,7 +180,8 @@ ${JSON.stringify(result, null, 2)}`);
     const updated = collection.findOne({ _id: 'order3' });
     JDbLogger.debug(`'should remove all occurrences of a value' updated: 
 ${JSON.stringify(updated, null, 2)}`);
-    TestFramework.assertEquals(2, updated.items.length, 'Should have 2 items left');
+    // Original dataset had two items with sku 'prod1' plus one other; after removal only non-prod1 items remain
+    TestFramework.assertEquals(1, updated.items.length, 'Should have 1 item left after removing all prod1 items');
     const remainingSkus = updated.items.map(item => item.sku);
     JDbLogger.debug(`'should remove all occurrences of a value' remainingSkus: 
 ${JSON.stringify(remainingSkus, null, 2)}`);
