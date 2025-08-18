@@ -291,6 +291,80 @@ ${JSON.stringify(updated, null, 2)}`);
   TestFramework.assertTrue(updated.alerts.some(a => a.type === 'maintenance'), 'Other alerts should remain');
   });
 
+  // Edge cases (Section 3)
+  suite.addTest('should not match operator object against object element directly', function() {
+    const collection = VALIDATION_TEST_ENV.collections.inventory;
+    const before = collection.findOne({ _id: 'inv3' });
+    const beforeAlerts = before.alerts.slice();
+    const result = collection.updateOne(
+      { _id: 'inv3' },
+      { $pull: { alerts: { $gt: 0 } } } // operator object applied to object elements -> should not match
+    );
+    TestFramework.assertEquals(0, result.modifiedCount, 'Should not remove any object elements with top-level operator object');
+    const after = collection.findOne({ _id: 'inv3' });
+    TestFramework.assertDeepEquals(beforeAlerts, after.alerts, 'Alerts unchanged');
+  });
+
+  suite.addTest('should not match when predicate references missing field', function() {
+    const collection = VALIDATION_TEST_ENV.collections.inventory;
+    const before = collection.findOne({ _id: 'inv1' });
+    const result = collection.updateOne(
+      { _id: 'inv1' },
+      { $pull: { alerts: { nonExistentField: 'whatever' } } }
+    );
+    TestFramework.assertEquals(0, result.modifiedCount, 'No alerts removed if field absent');
+    const after = collection.findOne({ _id: 'inv1' });
+    TestFramework.assertEquals(before.alerts.length, after.alerts.length, 'Alert count unchanged');
+  });
+
+  suite.addTest('should match null equality correctly', function() {
+    const collection = VALIDATION_TEST_ENV.collections.orders;
+    // Add a null tag to order2 tags array
+    collection.updateOne(
+      { _id: 'order2' },
+      { $push: { tags: null } }
+    );
+    const result = collection.updateOne(
+      { _id: 'order2' },
+      { $pull: { tags: null } }
+    );
+    TestFramework.assertEquals(1, result.modifiedCount, 'Should modify document by removing null tag');
+    const after = collection.findOne({ _id: 'order2' });
+    TestFramework.assertFalse(after.tags.includes(null), 'Null tag removed');
+  });
+
+  suite.addTest('should compare dates by timestamp for operator removal', function() {
+    const collection = VALIDATION_TEST_ENV.collections.inventory;
+    // Add a dates array for testing
+    collection.updateOne(
+      { _id: 'inv2' },
+      { $set: { dates: [new Date('2025-06-10T00:00:00Z'), new Date('2025-06-20T00:00:00Z')] } }
+    );
+    const result = collection.updateOne(
+      { _id: 'inv2' },
+      { $pull: { dates: { $lt: new Date('2025-06-15T00:00:00Z') } } }
+    );
+    TestFramework.assertEquals(1, result.modifiedCount, 'Should remove earlier date');
+    const after = collection.findOne({ _id: 'inv2' });
+    TestFramework.assertEquals(1, after.dates.length, 'One date remains');
+    TestFramework.assertTrue(after.dates[0] instanceof Date || typeof after.dates[0] === 'string', 'Remaining date is stored');
+  });
+
+  suite.addTest('should remove object using partial predicate', function() {
+    const collection = VALIDATION_TEST_ENV.collections.inventory;
+    const before = collection.findOne({ _id: 'inv3' });
+    const originalLen = before.alerts.length;
+    const result = collection.updateOne(
+      { _id: 'inv3' },
+      { $pull: { alerts: { type: 'oversupply' } } }
+    );
+    TestFramework.assertEquals(1, result.modifiedCount, 'Should report document modified');
+    const after = collection.findOne({ _id: 'inv3' });
+    TestFramework.assertEquals(originalLen - 1, after.alerts.length, 'Alert count decreased by one');
+    TestFramework.assertFalse(after.alerts.some(a => a.type === 'oversupply'), 'Oversupply alert removed');
+    TestFramework.assertTrue(after.alerts.some(a => a.type === 'capacity'), 'Capacity alert still present');
+  });
+
   return suite;
 }
 

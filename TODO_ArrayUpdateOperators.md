@@ -27,20 +27,20 @@ Current `$pull` implementation in `UpdateEngine._applyPull` uses strict deep equ
 - [x] Handle mixed field predicates + operator predicates (AND semantics across all supplied keys).
 
 ### 3. Edge Case Handling
-- [ ] If criterion is an operator object and array element is an object (not primitive), do NOT match (consistent simplification; document this).
-- [ ] If criterion is an object referencing fields not present on element, treat as non-match (standard subset semantics).
-- [ ] Null / undefined elements: only match if equality criterion is null (avoid exceptions on property access).
-- [ ] Ensure Date comparisons use time value when `$eq`, `$gt`, `$lt` (consistent with `QueryEngine`).
+- [x] If criterion is an operator object and array element is an object (not primitive), do NOT match (consistent simplification; document this).
+- [x] If criterion is an object referencing fields not present on element, treat as non-match (standard subset semantics).
+- [x] Null / undefined elements: only match if equality criterion is null (avoid exceptions on property access).
+- [x] Ensure Date comparisons use time value when `$eq`, `$gt`, `$lt` (consistent with `QueryEngine`).
 
 ### 4. Testing Adjustments & Additions
-- [ ] Modify failing test in `tests/validation/04_ArrayUpdateOperators.js`:
+- [x] Modify failing test in `tests/validation/04_ArrayUpdateOperators.js`:
   - Change `$pull` criterion from full object to subset `{ sku: 'prod1' }` if intent is “remove all sku prod1”.
   - Update expectation: no remaining `prod1` items.
-- [ ] Add new test: remove by mixed field + operator `{ $pull: { items: { sku: 'prod2', price: { $lt: 25 } } } }`.
-- [ ] Add new test: numeric primitive array removal via operator `{ $pull: { scores: { $gt: 90 } } }` (add suitable mock data or extend existing). 
-- [ ] Add new test: partial object predicate matches element that has extra fields.
-- [ ] Add regression test: exact object removal still works when full object provided.
-- [ ] Add test: operator object against object element does not remove (documented behaviour) OR decide to implement extended semantics (defer – see Section 7).
+- [x] Add new test: remove by mixed field + operator `{ $pull: { items: { sku: 'prod2', price: { $lt: 25 } } } }`.
+- [x] Add new test: numeric primitive array removal via operator `{ $pull: { scores: { $gt: 90 } } }` (add suitable mock data or extend existing). 
+- [x] Add new test: partial object predicate matches element that has extra fields.
+- [x] Add regression test: exact object removal still works when full object provided.
+- [x] Add test: operator object against object element does not remove (documented behaviour) OR decide to implement extended semantics (defer – see Section 7).
 
 ### 5. No-Op & Count Behaviour Tests
 - [ ] Confirm `$pull` with non-existent value leaves array unchanged and `modifiedCount` = 0.
