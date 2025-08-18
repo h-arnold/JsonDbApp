@@ -51,9 +51,63 @@ Current `$pull` implementation in `UpdateEngine._applyPull` uses strict deep equ
 - [x] Note current supported operators: `$eq`, `$gt`, `$lt` (others deferred).
 - [x] Clarify behaviour for operator object applied directly vs field-level usage.
 
-### 7. (Optional / Deferred) Shared Comparator Refactor
-- [ ] Evaluate extracting comparison logic from `QueryEngine` into a shared utility to remove duplication (`ComparisonUtils`).
-- [ ] If deferred, create follow-up TODO entry with scope & rationale.
+### 7. Shared Comparator Refactor (Evaluation Complete)
+- [x] Evaluate extracting comparison logic from `QueryEngine` into a shared utility to remove duplication (`ComparisonUtils`).
+- [x] Decision: proceed now (NOT deferred). Centralise in `src/01_utils/ComparisonUtils.js` to reduce duplication between `QueryEngine` and `UpdateEngine`.
+- [ ] Implement refactor (see 7a detailed tasks).
+
+Summary of Evaluation:
+- Duplicated logic: equality (deep vs array-contains), ordering ($gt/$lt) incl. Date handling, operator evaluation, subset/object deep comparison.
+- Divergences: `QueryEngine` supports array-contains semantics for scalar `$eq`; `UpdateEngine` `_valuesEqual` does not (strict). `$pull` predicate subset logic is bespoke. Ordering comparison duplicated (`_greaterThanComparison` / `_lessThanComparison` vs `_compareForOrdering`).
+- Decision: introduce `ComparisonUtils` with configurable equality to preserve legacy semantics where required.
+- Maintain behaviour: queries keep array-contains for scalar equality; `$addToSet` & `$pull` retain strict deep equality unless explicitly changed later.
+- Future extensibility: easy addition of `$ne`, `$in`, `$nin`, logical composition for update predicates.
+
+Planned API (initial scope):
+- `equals(a, b, { arrayContainsScalar = false } = {})` – deep equality + optional membership semantics.
+- `compareOrdering(a, b)` – numbers, strings, Dates; returns positive/0/negative; 0 for non-comparable types.
+- `applyOperators(actual, operatorObject, options)` – supports `$eq`, `$gt`, `$lt` (AND across keys), throws on unsupported.
+- `isOperatorObject(obj)` – all keys start with `$` (non-empty plain object).
+- `subsetMatch(candidate, predicate, { operatorSupport = true })` – shallow subset (field presence + equality or operator objects), uses `applyOperators` for operator fields.
+- Reuse `Validate.isPlainObject` & `ObjectUtils.deepEqual` (no reimplementation).
+
+Behaviour Decisions:
+- No type coercion (strict Mongo-style for provided operators) – both sides must be same primitive type for ordering or both Dates.
+- Non-comparable ordering returns 0 causing `$gt`/`$lt` to fail (matches existing behaviour).
+- Operator objects applied directly to object values during `$pull` remain unsupported (current simplification kept; documented).
+- subsetMatch is shallow; nested object predicates require explicit nested criteria object (future enhancement could add dot-path handling if needed).
+
+Risk Mitigation:
+- Provide unit tests for `ComparisonUtils` covering each branch to lock semantics.
+- Retain guarded options so regressions due to equality semantics are unlikely.
+- Incremental refactor: introduce utils + tests, then migrate `QueryEngine`, then `UpdateEngine`.
+
+### 7a. ComparisonUtils Refactor Implementation Tasks
+- [ x ] Create `src/01_utils/ComparisonUtils.js` with API outlined above + JSDoc + exported constant `SUPPORTED_OPERATORS = ['$eq','$gt','$lt']`.
+- [ x ] Add unit test file `tests/unit/UtilityTests/ComparisonUtilsTest.js`:
+  - [ x ] equals: primitives, Dates, deep objects, arrays, array-contains true vs false.
+  - [ x ] compareOrdering: numbers, strings, Dates, non-comparable objects.
+  - [ x ] applyOperators: single & multiple operators; unsupported operator rejection.
+  - [ x ] subsetMatch: plain field match, operator field, mixed fields, non-match cases.
+- [ ] Refactor `QueryEngine`:
+  - [ ] Replace `_equalityComparison`, `_greaterThanComparison`, `_lessThanComparison`, `_deepObjectEqual`, `_isDeepObject` with `ComparisonUtils` calls.
+  - [ ] Simplify `_compareValues` to delegate to utils; remove redundant private methods.
+  - [ ] Ensure array-contains semantics by calling `equals(..., { arrayContainsScalar: true })` for `$eq`.
+- [ ] Refactor `UpdateEngine`:
+  - [ ] Replace `_valuesEqual`, `_compareForOrdering`, `_evaluateOperator`, `_matchOperatorObject`, `_isOperatorObject` with `ComparisonUtils` equivalents.
+  - [ ] Rewrite `_pullMatches` to use `ComparisonUtils.subsetMatch` and `applyOperators`.
+  - [ ] Ensure `$addToSet` uses `equals` with `arrayContainsScalar:false`.
+- [ ] Remove dead code (deleted private methods) and adjust any references.
+- [ ] Update docs (`docs/developers/UpdateEngine.md`, add/extend `QueryEngine` docs if present) to reference shared comparator, list supported operators.
+- [ ] Update this TODO: tick implementation tasks as completed during work.
+- [ ] Run full unit + validation suites; confirm zero unintended test regressions.
+- [ ] Lint and ensure style consistency.
+- [ ] Add follow-up TODO for extended operators & logical composition once stable.
+
+Follow-Up (post-refactor):
+- Add `$ne`, `$in`, `$nin`, and logical operators support inside subset predicates as needed.
+- Extend `subsetMatch` to support nested dot-path evaluation (optional).
+- Consider moving query validation of operators to `ComparisonUtils.validateOperatorKeys` to ensure single source of truth.
 
 ### 8. Quality Gates & Verification
 - [ ] Run full unit + validation suites; ensure no new failures outside adjusted expectations.
