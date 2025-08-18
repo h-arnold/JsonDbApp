@@ -12,8 +12,4 @@
         "javascript"
     ],
     "eslint.nodePath": "node_modules/.bin",
-    "sonarlint.connectedMode.project": {
-        "connectionId": "h-arnold",
-        "projectKey": "h-arnold_JsonDbApp"
-    }
 }
