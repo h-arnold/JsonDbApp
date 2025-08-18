@@ -238,6 +238,59 @@ ${JSON.stringify(updated, null, 2)}`);
     TestFramework.assertDeepEquals([], updated.preferences.tags, 'Tags array should remain empty');
   });
 
+  // Operator object: remove numeric values > threshold from a numeric array
+  suite.addTest('should remove numeric values matching operator object', function() {
+    const collection = VALIDATION_TEST_ENV.collections.persons;
+    // Create numeric array field
+    collection.updateOne(
+      { _id: 'person4' },
+      { $set: { numbers: [10, 60, 95] } }
+    );
+    const pullResult = collection.updateOne(
+      { _id: 'person4' },
+      { $pull: { numbers: { $gt: 50 } } }
+    );
+    JDbLogger.debug(`'should remove numeric values matching operator object' result: \n${JSON.stringify(pullResult, null, 2)}`);
+    const updated = collection.findOne({ _id: 'person4' });
+    JDbLogger.debug(`'should remove numeric values matching operator object' updated: \n${JSON.stringify(updated, null, 2)}`);
+    TestFramework.assertDeepEquals([10], updated.numbers, 'Should retain only values <= 50');
+  });
+
+  // Mixed field + operator inside object predicate
+  suite.addTest('should remove objects matching mixed field and operator predicates', function() {
+    const collection = VALIDATION_TEST_ENV.collections.orders;
+    const original = collection.findOne({ _id: 'order1' });
+    JDbLogger.debug(`'should remove objects matching mixed field and operator predicates' original: \n${JSON.stringify(original, null, 2)}`);
+    const result = collection.updateOne(
+      { _id: 'order1' },
+      { $pull: { items: { sku: 'prod2', price: { $lt: 25 } } } }
+    );
+    JDbLogger.debug(`'should remove objects matching mixed field and operator predicates' result: \n${JSON.stringify(result, null, 2)}`);
+    const updated = collection.findOne({ _id: 'order1' });
+    JDbLogger.debug(`'should remove objects matching mixed field and operator predicates' updated: \n${JSON.stringify(updated, null, 2)}`);
+    const remainingSkus = updated.items.map(i => i.sku);
+    TestFramework.assertFalse(remainingSkus.includes('prod2'), 'prod2 item should be removed');
+    TestFramework.assertEquals(1, updated.items.length, 'Only prod1 item(s) remain');
+  });
+
+  // Exact object removal still works alongside predicate removals
+  suite.addTest('should remove exact matching object in array', function() {
+    const collection = VALIDATION_TEST_ENV.collections.inventory;
+    const before = collection.findOne({ _id: 'inv1' });
+    JDbLogger.debug(`'should remove exact matching object in array' before: \n${JSON.stringify(before, null, 2)}`);
+    const toRemove = { type: 'low-stock', product: 'prod3', threshold: 10 };
+    const result = collection.updateOne(
+      { _id: 'inv1' },
+      { $pull: { alerts: toRemove } }
+    );
+    JDbLogger.debug(`'should remove exact matching object in array' result: \n${JSON.stringify(result, null, 2)}`);
+    const updated = collection.findOne({ _id: 'inv1' });
+    JDbLogger.debug(`'should remove exact matching object in array' updated: \n${JSON.stringify(updated, null, 2)}`);
+  TestFramework.assertEquals(before.alerts.length - 1, updated.alerts.length, 'Should remove exactly one alert');
+  TestFramework.assertFalse(updated.alerts.some(a => a.type === 'low-stock'), 'low-stock alert removed');
+  TestFramework.assertTrue(updated.alerts.some(a => a.type === 'maintenance'), 'Other alerts should remain');
+  });
+
   return suite;
 }
 

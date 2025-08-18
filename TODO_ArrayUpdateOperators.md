@@ -21,10 +21,10 @@ Current `$pull` implementation in `UpdateEngine._applyPull` uses strict deep equ
 - [ x ] Preserve modifiedCount logic by only setting array when at least one removal occurred.
 
 ### 2. Operator Support Within Object Elements
-- [ ] Support field-level operator objects inside object criterion: `{ items: { price: { $lt: 10 }, sku: 'A1' } }`.
-- [ ] Add helper `_isOperatorObject(obj)` (all keys start with `$`).
-- [ ] Add helper `_evaluateOperator(value, op, expected)` implementing `$eq`, `$gt`, `$lt` (mirror `QueryEngine` semantics; reuse or duplicate minimally for now).
-- [ ] Handle mixed field predicates + operator predicates (AND semantics across all supplied keys).
+- [x] Support field-level operator objects inside object criterion: `{ items: { price: { $lt: 10 }, sku: 'A1' } }`.
+- [x] Add helper `_isOperatorObject(obj)` (all keys start with `$`).
+- [x] Add helper `_evaluateOperator(value, op, expected)` implementing `$eq`, `$gt`, `$lt` (mirror `QueryEngine` semantics; reuse or duplicate minimally for now).
+- [x] Handle mixed field predicates + operator predicates (AND semantics across all supplied keys).
 
 ### 3. Edge Case Handling
 - [ ] If criterion is an operator object and array element is an object (not primitive), do NOT match (consistent simplification; document this).
