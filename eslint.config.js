@@ -1,7 +1,8 @@
 // ESLint configuration for Google Apps Script (GAS) projects
 import googleappsscript from 'eslint-plugin-googleappsscript';
+import { defineConfig } from 'eslint/config';
 
-export default [
+export default defineConfig([
   {
     files: ['eslint.config.js'],
     languageOptions: {
@@ -37,4 +38,4 @@ export default [
       '*.pid'
     ]
   }
-];
+]);

@@ -144,8 +144,8 @@ class QueryEngine {
       return this._matchOperators(documentValue, queryValue);
     }
 
-    // Direct value comparison (implicit $eq)
-    return this._compareValues(documentValue, queryValue, '$eq');
+    // Direct value comparison (implicit $eq) using shared utility (with array membership semantics)
+    return ComparisonUtils.equals(documentValue, queryValue, { arrayContainsScalar: true });
   }
 
   /**
@@ -191,15 +191,25 @@ class QueryEngine {
    * @private
    */
   _matchOperators(documentValue, operators) {
-    const operatorKeys = Object.keys(operators);
-    
-    for (const operator of operatorKeys) {
-      if (!this._compareValues(documentValue, operators[operator], operator)) {
-        return false;
+    // Delegate operator evaluation to shared utility; will throw for unsupported operator
+    return Object.keys(operators).every(op => {
+      if (!this._config.supportedOperators.includes(op)) {
+        throw new InvalidQueryError(`Unsupported operator: ${op}`);
       }
-    }
-
-    return true;
+      switch (op) {
+        case '$and': // should not appear here (logical done higher) safeguard
+        case '$or':
+          return true;
+        case '$eq':
+          return ComparisonUtils.equals(documentValue, operators[op], { arrayContainsScalar: true });
+        case '$gt':
+          return ComparisonUtils.compareOrdering(documentValue, operators[op]) > 0;
+        case '$lt':
+          return ComparisonUtils.compareOrdering(documentValue, operators[op]) < 0;
+        default:
+          throw new InvalidQueryError(`Unsupported operator: ${op}`);
+      }
+    });
   }
 
   /**
@@ -211,144 +221,17 @@ class QueryEngine {
    * @private
    */
   _compareValues(documentValue, queryValue, operator) {
+    // Legacy method retained if still referenced elsewhere; delegate to shared utils
     switch (operator) {
       case '$eq':
-        return this._equalityComparison(documentValue, queryValue);
-
+        return ComparisonUtils.equals(documentValue, queryValue, { arrayContainsScalar: true });
       case '$gt':
-        return this._greaterThanComparison(documentValue, queryValue);
-
+        return ComparisonUtils.compareOrdering(documentValue, queryValue) > 0;
       case '$lt':
-        return this._lessThanComparison(documentValue, queryValue);
-
+        return ComparisonUtils.compareOrdering(documentValue, queryValue) < 0;
       default:
         throw new InvalidQueryError(`Unsupported operator: ${operator}`);
     }
-  }
-
-  /**
-   * Perform equality comparison
-   * @param {*} docValue - Document value
-   * @param {*} queryValue - Query value
-   * @returns {boolean} True if values are equal
-   * @private
-   */
-  _equalityComparison(docValue, queryValue) {
-    // Handle Date objects
-    if (docValue instanceof Date && queryValue instanceof Date) {
-      return docValue.getTime() === queryValue.getTime();
-    }
-
-    // Handle null/undefined
-    if (docValue == null && queryValue == null) {
-      return true;
-    }
-
-    // Handle plain object deep equality via helper
-    if (this._isDeepObject(docValue, queryValue)) {
-      return this._deepObjectEqual(docValue, queryValue);
-    }
-
-    // Handle array contains operation (MongoDB style)
-    // If document value is an array and query value is not, check if array contains the query value
-    if (Array.isArray(docValue) && !Array.isArray(queryValue)) {
-      return docValue.includes(queryValue);
-    }
-
-    // Handle array equality
-    if (Array.isArray(docValue) && Array.isArray(queryValue)) {
-      if (docValue.length !== queryValue.length) {
-        return false;
-      }
-      return docValue.every((item, index) => this._equalityComparison(item, queryValue[index]));
-    }
-
-    // Standard equality
-    return docValue === queryValue;
-  }
-
-  /**
-   * Determine if two values are non-null plain objects (not Date or Array)
-   * @param {*} val1 - First value
-   * @param {*} val2 - Second value
-   * @returns {boolean} True if both are plain objects for deep-equal
-   * @private
-   */
-  _isDeepObject(val1, val2) {
-    return val1 != null && val2 != null &&
-      typeof val1 === 'object' && typeof val2 === 'object' &&
-      !(val1 instanceof Date) && !(val2 instanceof Date) &&
-      !Array.isArray(val1) && !Array.isArray(val2);
-  }
-
-  /**
-   * Recursively check deep equality on plain objects
-   * @param {Object} obj1 - First object
-   * @param {Object} obj2 - Second object
-   * @returns {boolean} True if all keys and nested values are equal
-   * @private
-   */
-  _deepObjectEqual(obj1, obj2) {
-    const keys1 = Object.keys(obj1);
-    const keys2 = Object.keys(obj2);
-    if (keys1.length !== keys2.length) {
-      return false;
-    }
-    return keys1.every(key =>
-      this._equalityComparison(obj1[key], obj2[key])
-    );
-  }
-
-  /**
-   * Perform greater than comparison
-   * @param {*} docValue - Document value
-   * @param {*} queryValue - Query value
-   * @returns {boolean} True if docValue > queryValue
-   * @private
-   */
-  _greaterThanComparison(docValue, queryValue) {
-    // Handle null/undefined
-    if (docValue == null || queryValue == null) {
-      return false;
-    }
-
-    // Handle Date objects
-    if (docValue instanceof Date && queryValue instanceof Date) {
-      return docValue.getTime() > queryValue.getTime();
-    }
-
-    // Handle numbers and strings
-    if (typeof docValue === typeof queryValue) {
-      return docValue > queryValue;
-    }
-
-    return false;
-  }
-
-  /**
-   * Perform less than comparison
-   * @param {*} docValue - Document value
-   * @param {*} queryValue - Query value
-   * @returns {boolean} True if docValue < queryValue
-   * @private
-   */
-  _lessThanComparison(docValue, queryValue) {
-    // Handle null/undefined
-    if (docValue == null || queryValue == null) {
-      return false;
-    }
-
-    // Handle Date objects
-    if (docValue instanceof Date && queryValue instanceof Date) {
-      return docValue.getTime() < queryValue.getTime();
-    }
-
-    // Handle numbers and strings
-    if (typeof docValue === typeof queryValue) {
-      return docValue < queryValue;
-    }
-
-    return false;
   }
 
   /**

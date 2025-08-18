@@ -402,59 +402,70 @@ function cleanupValidationTestEnvironment() {
  */
 function runAllValidationTests() {
   const logger = JDbLogger.createComponentLogger('ValidationTests-Runner');
-  logger.info('Starting comprehensive validation test execution...');
+  logger.info('Starting comprehensive validation test execution with per-suite isolation...');
 
-  let results = null;
+  // We will aggregate results from individually isolated suite runs
+  const aggregatedResults = new TestResults();
+  let suiteNames = [];
 
+  // Phase 1: Discover suite names (single init, then cleanup before real execution)
   try {
-    // Setup test environment
     setupValidationTestEnvironmentForTests();
-    
-    // Initialise test framework
-    const framework = initialiseValidationTests();
-    
-    // Validate environment before running tests
-    framework.validateEnvironment();
-    
-    // Run all registered test suites
-    results = framework.runAllTests();
-    
-    // Log summary results
-    const summary = {
-      totalTests: results.results.length,
-      passed: results.getPassed().length,
-      failed: results.getFailed().length,
-      executionTime: results.getTotalExecutionTime()
-    };
-    
-    logger.info('Validation test execution completed', summary);
-    
-    // Log detailed results if there are failures
-    if (results.getFailed().length > 0) {
-      logger.warn('Some validation tests failed:', {
-        failedTests: results.getFailed().length,
-        failures: results.getFailed().map(result => ({
-          suite: result.suiteName,
-          test: result.testName,
-          error: result.error ? result.error.message : 'Unknown error'
-        }))
-      });
-    }
-
-    return results;
-
+    initialiseValidationTests();
+    suiteNames = Array.from(VALIDATION_TEST_REGISTRY.testSuites.keys());
   } catch (error) {
-    logger.error('Validation test execution failed', { error: error.message });
+    logger.error('Failed during suite discovery', { error: error.message });
+    // Attempt cleanup before aborting
+    try { cleanupValidationTestEnvironment(); } catch (e) { logger.error('Cleanup after discovery failed', { error: e.message }); }
     throw error;
-
-  } finally {
-    // Always cleanup, even if tests failed
-    try {
-      cleanupValidationTestEnvironment();
-    } catch (cleanupError) {
-      logger.error('Cleanup failed after test execution', { error: cleanupError.message });
-    }
   }
+  // Clean up the discovery environment
+  try { cleanupValidationTestEnvironment(); } catch (e) { logger.warn('Cleanup after discovery encountered an error', { error: e.message }); }
+
+  logger.info('Discovered validation test suites', { suiteCount: suiteNames.length });
+
+  // Phase 2: Execute each suite in complete isolation
+  suiteNames.forEach(suiteName => {
+    logger.info(`Executing suite in isolation: ${suiteName}`);
+    try {
+      // runValidationTestSuite performs its own setup + teardown
+      const suiteResults = runValidationTestSuite(suiteName);
+      // Merge results
+      suiteResults.results.forEach(r => aggregatedResults.addResult(r));
+    } catch (suiteError) {
+      logger.error('Suite execution failed catastrophically', { suite: suiteName, error: suiteError.message });
+      // Record a synthetic failure result to ensure visibility
+      aggregatedResults.addResult(new TestResult(suiteName, '__suite_initialisation__', false, suiteError, 0));
+      // Continue with remaining suites for maximal feedback
+    }
+  });
+
+  // Finalise aggregated timing
+  aggregatedResults.finish();
+
+  const summary = {
+    totalTests: aggregatedResults.results.length,
+    passed: aggregatedResults.getPassed().length,
+    failed: aggregatedResults.getFailed().length,
+    passRate: aggregatedResults.getPassRate().toFixed(1) + '%',
+    // Note: aggregated total time is wall-clock across isolated runs; using aggregatedResults.getTotalExecutionTime()
+    executionTime: aggregatedResults.getTotalExecutionTime()
+  };
+
+  logger.info('Validation test execution (isolated suites) completed', summary);
+
+  if (aggregatedResults.getFailed().length > 0) {
+    logger.warn('Some validation tests failed (isolated run):', {
+      failedTests: aggregatedResults.getFailed().length,
+      failures: aggregatedResults.getFailed().map(result => ({
+        suite: result.suiteName,
+        test: result.testName,
+        error: result.error ? result.error.message : 'Unknown error'
+      }))
+    });
+  }
+
+  return aggregatedResults;
 }
 
 /**

@@ -12,9 +12,7 @@
     - [`_getFieldValue(document, fieldPath)`](#_getfieldvaluedocument-fieldpath)
     - [`_isOperatorObject(value)`](#_isoperatorobjectvalue)
     - [`_matchOperators(documentValue, operators)`](#_matchoperatorsdocumentvalue-operators)
-    - [`_equalityComparison(docValue, queryValue)`](#_equalitycomparisondocvalue-queryvalue)
-    - [`_greaterThanComparison(docValue, queryValue)`](#_greaterthancomparisondocvalue-queryvalue)
-    - [`_lessThanComparison(docValue, queryValue)`](#_lessthancomparisondocvalue-queryvalue)
+    - [Shared Comparison Utilities](#shared-comparison-utilities)
     - [`_validateQuery(documents, query)`](#_validatequerydocuments-query)
     - [`_validateQueryInputs(documents, query)`](#_validatequeryinputsdocuments-query)
     - [`_validateQueryDepth(obj, depth)`](#_validatequerydepthobj-depth)
@@ -196,44 +194,15 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 - `Boolean`: `true` if all operators match, `false` otherwise.
 
-### `_equalityComparison(docValue, queryValue)`
+### Shared Comparison Utilities
 
-(Private) Performs equality comparison with special handling for Date objects, arrays, and null/undefined values.
+`QueryEngine` delegates all equality and ordering logic to `ComparisonUtils`:
 
-**Parameters:**
+- Equality (`$eq` implicit or explicit) uses `ComparisonUtils.equals` with `arrayContainsScalar:true` enabling Mongo-like "array contains" semantics, so `{ tags: 'alpha' }` matches `{ tags:['alpha','beta'] }`.
+- `$gt` / `$lt` use `ComparisonUtils.compareOrdering` (supports numbers, strings, Dates; non-comparable -> non-match).
+- Operator object evaluation loops operators and dispatches to these shared helpers; unsupported operators raise `InvalidQueryError` during validation.
 
-- `docValue` (*): Document value.
-- `queryValue` (*): Query value.
-
-**Returns:**
-
-- `Boolean`: `true` if values are equal, `false` otherwise.
-
-### `_greaterThanComparison(docValue, queryValue)`
-
-(Private) Performs greater than comparison with type checking and Date object support.
-
-**Parameters:**
-
-- `docValue` (*): Document value.
-- `queryValue` (*): Query value.
-
-**Returns:**
-
-- `Boolean`: `true` if docValue > queryValue, `false` otherwise.
-
-### `_lessThanComparison(docValue, queryValue)`
-
-(Private) Performs less than comparison with type checking and Date object support.
-
-**Parameters:**
-
-- `docValue` (*): Document value.
-- `queryValue` (*): Query value.
-
-**Returns:**
-
-- `Boolean`: `true` if docValue < queryValue, `false` otherwise.
+Benefits: single source of truth for comparison rules, consistent Date handling, simplified maintenance when new operators are added.
 
 ### `_validateQuery(documents, query)`
 

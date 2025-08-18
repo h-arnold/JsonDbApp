@@ -258,14 +258,60 @@ class UpdateEngine {
     
     for (const fieldPath in ops) {
       const current = this._getFieldValue(document, fieldPath);
-      if (current === undefined) continue;
-      this._validateArrayValue(current, fieldPath, '$pull');
-      const toRemove = ops[fieldPath];
-      const filtered = current.filter(item => !this._valuesEqual(item, toRemove));
-      this._setFieldValue(document, fieldPath, filtered);
+      if (current === undefined || !Array.isArray(current)) {
+        // Silent no-op for non-array (decision documented in TODO)
+        continue;
+      }
+
+      const criterion = ops[fieldPath];
+      const originalLength = current.length;
+
+      // Build filtered array using Mongo-like predicate semantics
+      const filtered = current.filter(item => {
+        try {
+          return !this._pullMatches(item, criterion);
+        } catch (e) {
+          // Defensive: if matcher throws, do not remove the element
+          this._logger.debug('Pull match evaluation error – element retained', { error: e.message });
+          return true;
+        }
+      });
+
+      if (filtered.length < originalLength) {
+        this._setFieldValue(document, fieldPath, filtered);
+      }
     }
     return document;
   }
+
+  /**
+   * Determine whether an array element matches a $pull criterion.
+   * Mongo semantics (subset predicate for object criteria; operator objects supported at top level).
+   * @param {*} element - The array element under test
+   * @param {*} criterion - The $pull criterion provided by the update expression
+   * @returns {boolean} true if element should be removed
+   * @private
+   */
+  _pullMatches(element, criterion) {
+    // Primitive / Date / array direct criterion -> strict equality (no membership semantics)
+    if (criterion === null || typeof criterion !== 'object' || Array.isArray(criterion) || (criterion instanceof Date)) {
+      return ComparisonUtils.equals(element, criterion, { arrayContainsScalar: false });
+    }
+
+    // Plain object predicate: use subsetMatch semantics (operator objects handled there)
+    return ComparisonUtils.subsetMatch(element, criterion, { operatorSupport: true });
+  }
+
+  /**
+   * Check if a value is a plain object (not Date / Array / null)
+   * @param {*} val - value to test
+   * @returns {boolean}
+   * @private
+   */
+  _isPlainObject(val) {
+    return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
+  }
+}
 
   /**
    * Add unique elements to arrays, supporting $each modifier.
@@ -427,7 +473,7 @@ class UpdateEngine {
     
     // For objects and arrays, do a deep comparison
     if (typeof a === 'object') {
-      return JSON.stringify(a) === JSON.stringify(b);
+      return ObjectUtils.deepEqual(a, b);
     }
     
     return false;
@@ -528,11 +574,15 @@ class UpdateEngine {
     
     // Both must be the same type for safe comparison
     if (currentType !== newType) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, { currentValue, newValue }, `${operation} operation requires comparable values of the same type`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        { currentValue, newValue },
+        `${operation} operation requires comparable values of the same type`
+      );
     }
     
-    // Objects and arrays cannot be compared with < or >
-    if (currentType === 'object') {
+    // Objects and arrays (but not Dates) cannot be compared with < or >
+    if (currentType === 'object' && currentValue !== null && !(currentValue instanceof Date)) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, currentValue, `${operation} operation cannot compare objects or arrays`);
     }
   }

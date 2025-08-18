@@ -347,6 +347,50 @@ class TestFramework {
     results.logComprehensiveResults(console.log);
     console.log('='.repeat(50) + '\n');
   }
+
+  /**
+   * Apply a global reset hook to all currently registered suites.
+   * The resetFn runs before every test (prepended to any existing beforeEach).
+   * Safe to call multiple times; resetFn will only be wrapped once per suite per identity.
+   * @param {Function} resetFn - Function performing state reset (no args, throws on failure)
+   */
+  applySuiteResetHook(resetFn) {
+    if (typeof resetFn !== 'function') return;
+    this.testSuites.forEach(suite => {
+      // Avoid double wrapping: tag suite object with a Set of applied hooks
+      if (!suite._appliedResetHooks) suite._appliedResetHooks = new Set();
+      if (suite._appliedResetHooks.has(resetFn)) return;
+      const existingBeforeEach = suite.beforeEach ? suite.beforeEach.bind(suite) : null;
+      suite.setBeforeEach(function() {
+        try {
+          resetFn();
+        } catch (e) {
+          // Propagate so the test records a failure early
+          throw e;
+        }
+        if (existingBeforeEach) existingBeforeEach();
+      });
+      suite._appliedResetHooks.add(resetFn);
+    });
+  }
+
+  /**
+   * Apply a global beforeAll reset hook to every suite (per-suite isolation).
+   * @param {Function} resetFn
+   */
+  applySuiteBeforeAllResetHook(resetFn) {
+    if (typeof resetFn !== 'function') return;
+    this.testSuites.forEach(suite => {
+      if (!suite._appliedBeforeAllResetHooks) suite._appliedBeforeAllResetHooks = new Set();
+      if (suite._appliedBeforeAllResetHooks.has(resetFn)) return;
+      const existingBeforeAll = suite.beforeAll ? suite.beforeAll.bind(suite) : null;
+      suite.setBeforeAll(function() {
+        resetFn();
+        if (existingBeforeAll) existingBeforeAll();
+      });
+      suite._appliedBeforeAllResetHooks.add(resetFn);
+    });
+  }
   
   // ============= COMPATIBILITY METHODS =============
   
