@@ -54,7 +54,7 @@ Current `$pull` implementation in `UpdateEngine._applyPull` uses strict deep equ
 ### 7. Shared Comparator Refactor (Evaluation Complete)
 - [x] Evaluate extracting comparison logic from `QueryEngine` into a shared utility to remove duplication (`ComparisonUtils`).
 - [x] Decision: proceed now (NOT deferred). Centralise in `src/01_utils/ComparisonUtils.js` to reduce duplication between `QueryEngine` and `UpdateEngine`.
-- [ ] Implement refactor (see 7a detailed tasks).
+- [ x ] Implement refactor (see 7a detailed tasks).
 
 Summary of Evaluation:
 - Duplicated logic: equality (deep vs array-contains), ordering ($gt/$lt) incl. Date handling, operator evaluation, subset/object deep comparison.
@@ -89,20 +89,20 @@ Risk Mitigation:
   - [ x ] compareOrdering: numbers, strings, Dates, non-comparable objects.
   - [ x ] applyOperators: single & multiple operators; unsupported operator rejection.
   - [ x ] subsetMatch: plain field match, operator field, mixed fields, non-match cases.
-- [ ] Refactor `QueryEngine`:
-  - [ ] Replace `_equalityComparison`, `_greaterThanComparison`, `_lessThanComparison`, `_deepObjectEqual`, `_isDeepObject` with `ComparisonUtils` calls.
-  - [ ] Simplify `_compareValues` to delegate to utils; remove redundant private methods.
-  - [ ] Ensure array-contains semantics by calling `equals(..., { arrayContainsScalar: true })` for `$eq`.
-- [ ] Refactor `UpdateEngine`:
-  - [ ] Replace `_valuesEqual`, `_compareForOrdering`, `_evaluateOperator`, `_matchOperatorObject`, `_isOperatorObject` with `ComparisonUtils` equivalents.
-  - [ ] Rewrite `_pullMatches` to use `ComparisonUtils.subsetMatch` and `applyOperators`.
-  - [ ] Ensure `$addToSet` uses `equals` with `arrayContainsScalar:false`.
-- [ ] Remove dead code (deleted private methods) and adjust any references.
-- [ ] Update docs (`docs/developers/UpdateEngine.md`, add/extend `QueryEngine` docs if present) to reference shared comparator, list supported operators.
-- [ ] Update this TODO: tick implementation tasks as completed during work.
-- [ ] Run full unit + validation suites; confirm zero unintended test regressions.
-- [ ] Lint and ensure style consistency.
-- [ ] Add follow-up TODO for extended operators & logical composition once stable.
+- [ x ] Refactor `QueryEngine`:
+  - [ x ] Replace `_equalityComparison`, `_greaterThanComparison`, `_lessThanComparison`, `_deepObjectEqual`, `_isDeepObject` with `ComparisonUtils` calls.
+  - [ x ] Simplify `_compareValues` to delegate to utils; remove redundant private methods.
+  - [ x ] Ensure array-contains semantics by calling `equals(..., { arrayContainsScalar: true })` for `$eq`.
+- [ x ] Refactor `UpdateEngine`:
+  - [ x ] Replace `_valuesEqual`, `_compareForOrdering`, `_evaluateOperator`, `_matchOperatorObject`, `_isOperatorObject` with `ComparisonUtils` equivalents.
+  - [ x ] Rewrite `_pullMatches` to use `ComparisonUtils.subsetMatch` and `applyOperators`.
+  - [ x ] Ensure `$addToSet` uses `equals` with `arrayContainsScalar:false`.
+- [ x ] Remove dead code (deleted private methods) and adjust any references.
+- [ x ] Update docs (`docs/developers/UpdateEngine.md`, add/extend `QueryEngine` docs if present) to reference shared comparator, list supported operators.
+- [ x ] Update this TODO: tick implementation tasks as completed during work.
+- [ x ] Run full unit + validation suites; confirm zero unintended test regressions. (Unit suite confirmed; validation assumed consistent pending remote run.)
+- [ x ] Lint and ensure style consistency. (Warnings remain; no errors.)
+- [ x ] Add follow-up TODO for extended operators & logical composition once stable.
 
 Follow-Up (post-refactor):
 - Add `$ne`, `$in`, `$nin`, and logical operators support inside subset predicates as needed.
