@@ -167,8 +167,6 @@ class ComparisonUtils {
 
       if (operatorSupport && ComparisonUtils.isOperatorObject(expected)) {
         if (!ComparisonUtils.applyOperators(actual, expected)) return false;
-      } else if (Validate.isPlainObject(expected) && operatorSupport && ComparisonUtils.isOperatorObject(expected)) {
-        if (!ComparisonUtils.applyOperators(actual, expected)) return false;
       } else {
         if (!ComparisonUtils.equals(actual, expected, { arrayContainsScalar: false })) return false;
       }
