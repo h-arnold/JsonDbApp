@@ -44,6 +44,11 @@ function initialiseValidationTests() {
     // Register array update operator test suites
     registerArrayUpdateOperatorTestSuites();
 
+    // Apply per-test reset hook so each test runs against pristine validation data
+    if (typeof resetValidationTestData === 'function') {
+      VALIDATION_TEST_REGISTRY.framework.applySuiteResetHook(resetValidationTestData);
+    }
+
     VALIDATION_TEST_REGISTRY.isInitialised = true;
     logger.info('Validation test framework initialised successfully', {
       registeredSuites: VALIDATION_TEST_REGISTRY.testSuites.size
