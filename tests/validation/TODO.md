@@ -248,14 +248,14 @@ This document outlines comprehensive end-to-end validation tests needed to ensur
   - Pull from empty array
 
 #### $addToSet
-- [ ] **Unique value addition**
+- [x] **Unique value addition** ✅ *Implemented in 05_ArrayAddToSetValidation.js*
   - Add value not in array
   - Attempt to add existing value (no change)
   - Add objects (uniqueness by full object comparison)
-- [ ] **$each modifier**
+- [x] **$each modifier** ✅ *Implemented in 05_ArrayAddToSetValidation.js*
   - Add multiple unique values
   - Mix of new and existing values
-- [ ] **Type validation**
+- [x] **Type validation** ✅ *Implemented in 05_ArrayAddToSetValidation.js*
   - AddToSet on non-array field (should error)
   - Array creation when field doesn't exist
 

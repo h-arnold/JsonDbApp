@@ -258,7 +258,7 @@ function registerNumericUpdateOperatorTestSuites() {
 }
 
 /**
- * Register array update operator test suites ($push, $pull)
+ * Register array update operator test suites ($push, $pull, $addToSet)
  */
 function registerArrayUpdateOperatorTestSuites() {
   const logger = JDbLogger.createComponentLogger('ValidationTests-ArrayUpdateOps');
@@ -273,6 +273,11 @@ function registerArrayUpdateOperatorTestSuites() {
     const pullSuite = createPullOperatorTestSuite();
     VALIDATION_TEST_REGISTRY.framework.registerTestSuite(pullSuite);
     VALIDATION_TEST_REGISTRY.testSuites.set('$pull Operator Tests', pullSuite);
+
+    // Register $addToSet operator tests
+    const addToSetSuite = createAddToSetOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(addToSetSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$addToSet Operator Tests', addToSetSuite);
 
     logger.info('Array update operator test suites registered successfully');
 
@@ -896,7 +901,8 @@ function runArrayUpdateOperatorTests() {
     // Run array update operator test suites
     const suiteNames = [
       '$push Operator Tests',
-      '$pull Operator Tests'
+      '$pull Operator Tests',
+      '$addToSet Operator Tests'
     ];
 
     for (const suiteName of suiteNames) {

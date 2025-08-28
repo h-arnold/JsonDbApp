@@ -302,24 +302,23 @@ class UpdateEngine {
     return ComparisonUtils.subsetMatch(element, criterion, { operatorSupport: true });
   }
 
-  /**
-   * Check if a value is a plain object (not Date / Array / null)
-   * @param {*} val - value to test
-   * @returns {boolean}
-   * @private
-   */
-  _isPlainObject(val) {
-    return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
-  }
+/**
+ * Check if a value is a plain object (not Date / Array / null)
+ * @param {*} val - value to test
+ * @returns {boolean}
+ * @private
+ */
+_isPlainObject(val) {
+  return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
 }
 
-  /**
-   * Add unique elements to arrays, supporting $each modifier.
-   * @param {Object} document - The document being modified.
-   * @param {Object} ops - An object mapping field paths to single values or $each modifiers.
-   * @returns {Object} The updated document instance with values added when unique.
-   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If target field or modifier values are not arrays.
-   */
+/**
+ * Add unique elements to arrays, supporting $each modifier.
+ * @param {Object} document - The document being modified.
+ * @param {Object} ops - An object mapping field paths to single values or $each modifiers.
+ * @returns {Object} The updated document instance with values added when unique.
+ * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If target field or modifier values are not arrays.
+ */
   _applyAddToSet(document, ops) {
     this._validateOperationsNotEmpty(ops, '$addToSet');
     
