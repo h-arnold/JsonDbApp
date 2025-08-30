@@ -23,24 +23,7 @@ This library implements a simple, synchronous document-style database system in 
 
 3. Storage Architecture
 
-3.1 Central Index File
-
-A single index file stores metadata and Drive file IDs for all collections:
-
-```json
-{
-  "collections": {
-    "students": {
-      "fileId": "1Abc123XyzDriveFileId",  // Actual Google Drive file ID
-      "created": "2024-01-01T12:00:00Z",
-      "lastUpdated": "2024-01-02T15:20:00Z",
-      "documentCount": 42
-    }
-  }
-}
-```
-
-3.2 Collection Files
+3.1 Collection Files
 
 Each collection is stored as a separate Drive file, identified by its Drive file ID:
 
@@ -57,7 +40,7 @@ Each collection is stored as a separate Drive file, identified by its Drive file
 }
 ```
 
-3.3 ScriptProperties Master Index
+3.2 ScriptProperties Master Index
 
 A master index stored in ScriptProperties provides cross-instance coordination:
 
@@ -178,7 +161,7 @@ When modifying a collection:
 6.1.1 Collection IDs
 
 - Use Google Drive file IDs for collection identification
-- Store these IDs in both the central index file and ScriptProperties master index
+- Store these IDs in the ScriptProperties master index
 
 6.1.2 Document IDs
 

@@ -1,6 +1,6 @@
 # Collection Components Developer Guide
 
-This document explains the role, API surface and usage patterns for the Collection, CollectionMetadata, and DocumentOperations classes in GAS-DB. These three classes work together to provide MongoDB-compatible collection operations with Google Drive persistence.
+This document explains the role, API surface and usage patterns for the Collection, CollectionMetadata, and DocumentOperations classes in JsonDbApp. These three classes work together to provide MongoDB-compatible collection operations with Google Drive persistence.
 
 - [Collection Components Developer Guide](#collection-components-developer-guide)
   - [Overview](#overview)
@@ -65,7 +65,7 @@ This document explains the role, API surface and usage patterns for the Collecti
 
 ## Overview
 
-The Collection Components form the core of GAS-DB's document storage system:
+The Collection Components form the core of JsonDbApp's document storage system:
 
 - **Collection**: The main interface providing MongoDB-compatible CRUD operations
 - **CollectionMetadata**: Manages collection metadata (timestamps, document counts)

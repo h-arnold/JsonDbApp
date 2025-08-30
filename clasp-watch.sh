@@ -1,5 +1,5 @@
 #!/bin/bash
-# filepath: /workspaces/GAS-DB/clasp-watch.sh
+# filepath: /workspaces/JsonDbApp/clasp-watch.sh
 
 # Clasp Watch Manager Script
 # Checks authentication, logs in if needed, and starts clasp watch

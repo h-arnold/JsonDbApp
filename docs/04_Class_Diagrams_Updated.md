@@ -90,46 +90,48 @@ Each class in the system has a clearly defined responsibility:
 +------------------------------------------+
 ```
 
-### Collection Class Diagram (Updated)
+### Collection Facade and Operations
+
+The `Collection` class acts as a facade, delegating operations to specialized handler classes.
 
 ```text
-+------------------------------------------+
-|               Collection                 |
-+------------------------------------------+
-| - _name: String                          |
-| - _driveFileId: String                   |
-| - _database: Database                    |
-| - _fileService: FileService              |
-| - _logger: GASDBLogger                   |
-| - _loaded: Boolean                       |
-| - _dirty: Boolean                        |
-| - _documents: Object                     |
-| - _collectionMetadata: CollectionMetadata|  // Instantiated in _loadData()
-| - _documentOperations: DocumentOperations|  // Instantiated in _loadData()
-|                                          |  // QueryEngine & UpdateEngine are used by DocumentOperations
-+------------------------------------------+
-| + constructor(name, driveFileId, database, fileService) | ← DIP: Dependencies injected
-| + insertOne(doc: Object): Object         | ← SRP: MongoDB-compatible API
-| + findOne(filter: Object): Object|null   | ← ISP: Focused methods
-| + find(filter: Object): Array<Object>    |
-| + updateOne(filterOrId: Object|String, update: Object): Object |
-| + updateMany(filter: Object, update: Object): Object |
-| + replaceOne(filterOrId: Object|String, doc: Object): Object |
-| + deleteOne(filter: Object): Object      |
-| + countDocuments(filter: Object): Number |
-| + getName(): String                      |
-| + getMetadata(): Object                  |
-| + isDirty(): Boolean                     |
-| + save(): void                           |
-| - _ensureLoaded(): void                  |
-| - _loadData(): void                      |
-| - _saveData(): void                      |
-| - _markDirty(): void                     |
-| - _updateMetadata(changes: Object): void |
-| - _validateFilter(filter: Object, operation: String): void |
-| - _updateOneWithOperators(filter: Object, update: Object): Object |
-| - _updateOneWithReplacement(filter: Object, update: Object): Object |
-+------------------------------------------+
++-------------------------------------------------         +----------------------------------+
+|                   Collection (Facade)           |<>------>|    CollectionReadOperations    |
++-------------------------------------------------         +----------------------------------+
+| - _name: String                                 |         | - _collection: Collection      |
+| - _driveFileId: String                          |         +----------------------------------+
+| - _database: Database                           |         | + findOne(filter): Object|null   |
+| - _fileService: FileService                     |         | + find(filter): Array<Object>    |
+| - _logger: GASDBLogger                          |         | + countDocuments(filter): Number |
+| - _loaded: Boolean                              |         | + aggregate(pipeline): Array     |
+| - _dirty: Boolean                               |         +----------------------------------+
+| - _documents: Object                            |
+| - _metadata: CollectionMetadata                 |         +----------------------------------+
+| - _documentOperations: DocumentOperations       |<>------>|   CollectionWriteOperations    |
+| - _coordinator: CollectionCoordinator           |         +----------------------------------+
+| - _readOps: CollectionReadOperations            |         | - _collection: Collection      |
+| - _writeOps: CollectionWriteOperations          |         +----------------------------------+
++-------------------------------------------------         | + insertOne(doc): Object         |
+| + constructor(name, driveFileId, db, fs)        |         | + updateOne(filter, u): Object   |
+|                                                 |         | + updateMany(filter, u): Object  |
+| // Read Operations (Delegated to _readOps)      |         | + replaceOne(filter, d): Object  |
+| + findOne(filter): Object|null                   |         | + deleteOne(filter): Object      |
+| + find(filter): Array<Object>                    |         | + deleteMany(filter): Object     |
+| + countDocuments(filter): Number                 |         +----------------------------------+
+| + aggregate(pipeline): Array                     |
+|                                                 |
+| // Write Operations (Delegated to _writeOps)     |
+| + insertOne(doc): Object                         |
+| + updateOne(filter, update): Object              |
+| + updateMany(filter, update): Object             |
+| + replaceOne(filter, doc): Object                |
+| + deleteOne(filter): Object                      |
+| + deleteMany(filter): Object                     |
+|                                                 |
+| // Core Operations                               |
+| + save(): void                                   |
+| + getMetadata(): Object                          |
++-------------------------------------------------
 ```
 
 ### DocumentOperations Class Diagram (New)
@@ -349,11 +351,6 @@ Each class in the system has a clearly defined responsibility:
 | + createError(errorType, ...args): Error |
 | + handleError(error, context, rethrow): void |
 | + wrapFunction(fn, context): Function    |
-| + validateRequired(value, name): void    |
-| + validateType(value, expectedType, name): void |
-| + validateNotEmpty(value, name): void    |
-| + validateNotEmptyArray(value, name): void |
-| + validateRange(value, min, max, name): void |
 | + isErrorType(error, errorType): Boolean |
 | + extractErrorInfo(error): Object        |
 +------------------------------------------+

@@ -1,7 +1,7 @@
 \
 # 1. GAS DB Infrastructure Components
 
-- [1. GAS DB Infrastructure Components](#1-gas-db-infrastructure-components)
+- [1. JsonDbApp Infrastructure Components](#1-jsondbapp-infrastructure-components)
   - [1.1. Overview](#11-overview)
   - [1.2. Logger (GASDBLogger)](#12-logger-gasdblogger)
     - [1.2.0.1. Key Features](#1201-key-features)
@@ -44,7 +44,7 @@
 
 ## 1.1. Overview
 
-The GAS DB infrastructure provides essential utilities for logging, error management, ID generation, and object manipulation. These components are designed specifically for Google Apps Script environments and support the core database functionality.
+The JsonDbApp infrastructure provides essential utilities for logging, error management, ID generation, and object manipulation. These components are designed specifically for Google Apps Script environments and support the core database functionality.
 
 ## 1.2. Logger (GASDBLogger)
 
@@ -125,7 +125,7 @@ const result = GASDBLogger.timeOperation('loadCollection', () => {
 
 **Location:** `src/01_utils/ErrorHandler.js`
 
-Provides standardized error handling with custom error types, validation utilities, and error context management.
+Provides standardized error handling with custom error types and error context management. For input validation, refer to the Validate utility.
 
 #### 1.2.1.1. Error Type Hierarchy
 
@@ -177,11 +177,6 @@ try {
   ErrorHandler.handleError(error, 'Database.performOperation', true);
 }
 
-// Validation utilities
-ErrorHandler.validateRequired(collectionName, 'collectionName');
-ErrorHandler.validateType(query, 'object', 'query');
-ErrorHandler.validateNotEmpty(documentId, 'documentId');
-
 // Wrap functions with error handling
 const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation');
 ```
@@ -198,13 +193,6 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
 
    ```javascript
    ErrorHandler.handleError(error, 'Collection.findOne', true);
-   ```
-
-3. **Validate inputs early:**
-
-   ```javascript
-   ErrorHandler.validateRequired(documentId, 'documentId');
-   ErrorHandler.validateType(query, 'object', 'query');
    ```
 
 ---

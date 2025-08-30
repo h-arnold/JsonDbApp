@@ -1,5 +1,5 @@
 {
-  "name": "gas-db",
+  "name": "jsondbapp",
   "version": "1.0.0",
   "description": "A document database implemented in Google App Script using the Google Drive API. Recommended for masochists.",
   "main": "index.js",
