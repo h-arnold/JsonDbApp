@@ -18,10 +18,11 @@
 
 - `docs/`: General and planning docs
 - `docs/developers/`: Feature and class docs
-- `src/01_utils/`: ErrorHandler.js, JDbLogger.js, IdGenerator.js, ObjectUtils.js, Validation.js
+- `src/01_utils/`: ComparisonUtils.js, ErrorHandler.js, JDbLogger.js, IdGenerator.js, ObjectUtils.js, Validation.js
 - `src/02_components/`: CollectionCoordinator.js, CollectionMetadata.js, DocumentOperations.js, FileOperations.js, QueryEngine.js, UpdateEngine.js
 - `src/03_services/`: DbLockService.js, FileService.js
-- `src/04_core/`: Collection.js, Database.js, DatabaseConfig.js, MasterIndex.js
+- `src/04_core/`: Database.js, DatabaseConfig.js, MasterIndex.js
+  - `src/04_core/Collection/`: 01_CollectionReadOperations.js, 02_CollectionWriteOperations.js, 99_Collection.js (composed into a single Collection class at runtime)
 - `tests/data/`: MockQueryData.js (and other mock data)
 - `tests/framework/`: 01_AssertionUtilities.js, 02_TestResult.js, 03_TestRunner.js, 04_TestSuite.js, 05_TestFramework.js
 - `tests/unit/`: Unit test suites by class/component:
@@ -31,7 +32,7 @@
     - DocumentOperations/
     - UtilityTests/
     - ...
-- `tests/integration/`: Integration test suites (e.g. Collection, MasterIndexCollectionMetadataIntegrationTest.js)
+- `tests/validation/`: Operator validation suites and orchestrator
 - `README.md`, `LICENSE`, `package.json`, `appsscript.json`: Project config and metadata
 
 ## Naming Conventions
@@ -42,6 +43,7 @@
 - **Constants**: UPPER_SNAKE_CASE
 - **Private properties**: `this._underscore`
 - **Files**: Match class name
+- **Multi-file classes**: For large classes (e.g. Collection), use numbered file prefixes (01_, 02_, 99_) to control load order; `99_*.js` composes/exports the class
 - **Tests**: `ClassNameTest.js`
 - **Test functions**: `testClassNameScenario`
 - **Errors**: End with `Error`
@@ -54,6 +56,7 @@
  * @param {Type} param - Description
  * @returns {Type} Description  
  * @throws {ErrorType} When thrown
+ * @remarks *optional*: Additional notes explaining nuances, reasoning behind design choices or explaining the logic flow of complex methods.
  */
 methodName(param) {
   if (!param) throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('param', param, 'param is required');
@@ -65,7 +68,8 @@ methodName(param) {
 ## Error Standards
 - **Base**: `GASDBError`
 - **Common**: `DocumentNotFoundError`, `DuplicateKeyError`, `InvalidQueryError`, `LockTimeoutError`, `FileIOError`, `ConflictError`, `InvalidArgumentError`
-- **Codes**: `'DOCUMENT_NOT_FOUND'`, `'DUPLICATE_KEY'`, etc.
+- **Additional in project**: `MasterIndexError`, `CollectionNotFoundError`, `ConfigurationError`, `FileNotFoundError`, `PermissionDeniedError`, `QuotaExceededError`, `InvalidFileFormatError`, `OperationError`, `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError`
+- **Codes**: `'DOCUMENT_NOT_FOUND'`, `'DUPLICATE_KEY'`, `'INVALID_QUERY'`, `'LOCK_TIMEOUT'`, `'FILE_IO_ERROR'`, `'CONFLICT_ERROR'`, `'INVALID_ARGUMENT'`, `'MASTER_INDEX_ERROR'`, `'COLLECTION_NOT_FOUND'`, `'CONFIGURATION_ERROR'`, `'FILE_NOT_FOUND'`, `'PERMISSION_DENIED'`, `'QUOTA_EXCEEDED'`, `'INVALID_FILE_FORMAT'`, `'OPERATION_ERROR'`, `'LOCK_ACQUISITION_FAILURE'`, `'MODIFICATION_CONFLICT'`, `'COORDINATION_TIMEOUT'`
 - **Message**: `"Operation failed: specific reason"`
 
 ## Implementation Requirements
