@@ -1,98 +1,44 @@
 # JsonDbApp
 
-A document database implemented in Google Apps Script using the Google Drive API. Supports MongoDB-like syntax for CRUD operations on named collections, with data consistency managed through a ScriptProperties-based master index.
+A document database implemented in Google Apps Script using the Google Drive API with no external dependencies. Capable of storing any serialisable data in a JSON file. Supports a limited subset of MongoDB syntax for CRUD operations on named collections, with data consistency managed through a ScriptProperties-based master index. It is designed to be as performant as possible within the constraints of Google Apps Script, minimising API calls and storing relatively large chunks of data in memory when querying or manipluating data.
 
-## 🚀 Current Status: Section 1 Complete
+Create it by simply making a copy of the [JsonDbApp AppScript Project](link goes here later), deploying it as a library, and then using it in your own Apps Script projects.
 
-**✅ Project Setup and Basic Infrastructure (COMPLETED)**
-
-The foundational infrastructure is complete and ready for database implementation:
-
-### Core Components Implemented
-- **GASDBLogger**: Multi-level logging system (ERROR/WARN/INFO/DEBUG) with component-specific loggers
-- **ErrorHandler**: Standardized error types and validation utilities  
-- **IdGenerator**: Multiple ID generation strategies (UUID, timestamp, ObjectId, etc.)
-- **Test Framework**: Complete TDD infrastructure with AssertionUtilities and TestRunner
-
-### Recent Updates
-- **Logger Rename**: Renamed custom `Logger` class to `GASDBLogger` to avoid conflicts with Google Apps Script's built-in Logger class
-- **Documentation**: Updated all documentation to reflect the naming changes
-- **Verification**: All tests pass, no compilation errors, full backward compatibility maintained
-
-## 🗂️ Project Structure
-
-```
-├── src/
-│   ├── components/testing/     # Test framework
-│   ├── core/                  # Future: Database, Collection, MasterIndex
-│   └── utils/                 # Utilities (GASDBLogger, ErrorHandler, IdGenerator)
-├── tests/
-│   ├── unit/                  # Unit tests
-│   └── TestExecution.js       # Test runner entry point
-├── docs/                      # Comprehensive documentation
-└── Configuration files (clasp.json, appsscript.json, package.json)
-```
-
-## 🧪 Testing
-
-### Automated Testing
-Use the included test automation script for streamlined development:
-
-```bash
-# Run all tests (recommended)
-./test-runner.sh
-
-# Run specific section tests
-./test-runner.sh 1
-
-# Run validation only
-./test-runner.sh --validate
-```
-
-### Manual Testing
-Run tests directly in Google Apps Script editor:
+Once connected, intialiase the databse with:
 
 ```javascript
-// initialise environment
-initialiseTestEnvironment();
-
-// Quick validation
-validateSection1Setup();
-
-// Run all tests
-testSection1();
-
-// Get help
-showTestHelp();
+JsonDbApp.initialise({
+  appName: 'MyApp',
+  lockTimeout: 5000, // Optional, defaults to 5000ms
+  masterIndexName: 'myMasterIndex' // Optional, defaults to 'masterIndex'
+});
 ```
 
-## 📚 Documentation
+Create a collection with:
 
-### For Developers
-- [**Developer Documentation**](./docs/developers/README.md) - Complete development guides
-- [**Testing Framework**](./docs/developers/Testing_Framework.md) - How to write and run tests
-- [**Infrastructure Components**](./docs/developers/Infrastructure_Components.md) - Logging, error handling, ID generation
-- [**test-runner.sh Guide**](./docs/developers/test-runner.sh.md) - Automated testing workflow
+```javascript
+JsonDbApp.createCollection('myCollection');
+```
 
-### Project Documentation
-- [**Project Requirements**](./docs/01_GAS_DB_PRD_Updated.md) - Detailed project specification
-- [**Class Diagrams**](./docs/04_Class_Diagrams_Updated.md) - System architecture diagrams
-- [**Implementation Plan**](./docs/GAS_DB_Implementation_Plan_Updated.md) - Development roadmap
+Add to that collection by storing any class with `toJSON()` and `fromJSON()` methods:
 
-## 📋 Next Steps: Section 2
+```javascript
+JsonDbApp.insert('myCollection', myObject);
+```
 
-Ready to implement **ScriptProperties Master Index**:
-- Virtual locking mechanism
-- Conflict detection and resolution  
-- Cross-instance coordination
+## Who is this for?
 
-## 🔧 Development Setup
+- You want a database with no external dependencies.
+- You want to develop a project in GAS which handles sensitive data without having to worry about external data security.
+- You don't want to be endlessly debugging issues with transforming data structures to fit into a spreadsheet.
+- Your datasets are relatively small (collections no larger than 2GB so as not to exceed the GAS memory limits)
+- Traffic for your app is relatively low.
 
-1. Install clasp: `npm install -g @google/clasp`
-2. Login to Google: `clasp login`
-3. Push to Google Apps Script: `clasp push`
-4. Run tests in GAS editor using the functions above
 
----
+## But whhhyyyy?
 
-*Recommended for masochists and those who enjoy the challenge of building databases on unconventional platforms.*
+Lots of reasons! Some of them good, some of them less so. The main ones are:
+
+- **Avoid transforming data structures to fit on a Google Sheet**: Implementing an entire DBMS felt less painful somehow.
+- **You can't just hoik your data into a proper database**: I am a teacher, which means that my students data needs to be subject to additional safeguards. I can't just throw it at whatever free database service I find and I don't have the budget to pay for a proper one. `JsonDbApp` keeps all data within my institution's Google Workspace instance and requires no external services.
+- **You've normalised your class structures already, dammit!**: And you'll be damned if you have to noramlise them to fit into a relational database, or worse, a spreadsheet.

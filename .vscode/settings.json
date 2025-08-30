@@ -11,5 +11,5 @@
     "eslint.validate": [
         "javascript"
     ],
-    "eslint.nodePath": "node_modules/.bin"
+    "eslint.nodePath": "node_modules/.bin",
 }

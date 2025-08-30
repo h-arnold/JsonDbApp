@@ -38,6 +38,12 @@ function initialiseValidationTests() {
     // Register field update operator test suites
     registerFieldUpdateOperatorTestSuites();
 
+    // Register numeric update operator test suites
+    registerNumericUpdateOperatorTestSuites();
+
+    // Register array update operator test suites
+    registerArrayUpdateOperatorTestSuites();
+
     VALIDATION_TEST_REGISTRY.isInitialised = true;
     logger.info('Validation test framework initialised successfully', {
       registeredSuites: VALIDATION_TEST_REGISTRY.testSuites.size
@@ -167,6 +173,121 @@ function registerFieldUpdateOperatorTestSuites() {
 }
 
 /**
+ * Register numeric update operator test suites ($inc, $mul, $min, $max)
+ */
+function registerNumericUpdateOperatorTestSuites() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-NumericUpdateOps');
+
+  try {
+    // Register $inc basic incrementation tests
+    const incBasicSuite = createIncBasicIncrementationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incBasicSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Basic Incrementation Tests', incBasicSuite);
+
+    // Register $inc field creation tests
+    const incFieldSuite = createIncFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Field Creation Tests', incFieldSuite);
+
+    // Register $inc type validation tests
+    const incTypeSuite = createIncTypeValidationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incTypeSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Type Validation Tests', incTypeSuite);
+
+    // Register $inc boundary testing tests
+    const incBoundarySuite = createIncBoundaryTestingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(incBoundarySuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$inc Boundary Testing Tests', incBoundarySuite);
+
+    // Register $mul basic multiplication tests
+    const mulBasicSuite = createMulBasicMultiplicationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(mulBasicSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$mul Basic Multiplication Tests', mulBasicSuite);
+
+    // Register $mul field creation tests
+    const mulFieldSuite = createMulFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(mulFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$mul Field Creation Tests', mulFieldSuite);
+
+    // Register $mul type validation tests
+    const mulTypeSuite = createMulTypeValidationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(mulTypeSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$mul Type Validation Tests', mulTypeSuite);
+
+    // Register $min value comparison tests
+    const minValueSuite = createMinValueComparisonTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minValueSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Value Comparison Tests', minValueSuite);
+
+    // Register $min field creation tests
+    const minFieldSuite = createMinFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Field Creation Tests', minFieldSuite);
+
+    // Register $min type handling tests
+    const minTypeSuite = createMinTypeHandlingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minTypeSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Type Handling Tests', minTypeSuite);
+
+    // Register $min edge cases tests
+    const minEdgesSuite = createMinEdgeCasesTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(minEdgesSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$min Edge Cases Tests', minEdgesSuite);
+
+    // Register $max value comparison tests
+    const maxValueSuite = createMaxValueComparisonTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(maxValueSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$max Value Comparison Tests', maxValueSuite);
+
+    // Register $max field creation tests
+    const maxFieldSuite = createMaxFieldCreationTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(maxFieldSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$max Field Creation Tests', maxFieldSuite);
+
+    // Register $max boundary testing tests
+    const maxBoundarySuite = createMaxBoundaryTestingTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(maxBoundarySuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$max Boundary Testing Tests', maxBoundarySuite);
+
+    logger.info('Numeric update operator test suites registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register numeric update operator test suites', { error: error.message });
+    throw error;
+  }
+}
+
+/**
+ * Register array update operator test suites ($push, $pull, $addToSet)
+ */
+function registerArrayUpdateOperatorTestSuites() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-ArrayUpdateOps');
+
+  try {
+    // Register $push operator tests
+    const pushSuite = createPushOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(pushSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$push Operator Tests', pushSuite);
+
+    // Register $pull operator tests
+    const pullSuite = createPullOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(pullSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$pull Operator Tests', pullSuite);
+
+    // Register $addToSet operator tests
+    const addToSetSuite = createAddToSetOperatorTestSuite();
+    VALIDATION_TEST_REGISTRY.framework.registerTestSuite(addToSetSuite);
+    VALIDATION_TEST_REGISTRY.testSuites.set('$addToSet Operator Tests', addToSetSuite);
+
+    logger.info('Array update operator test suites registered successfully');
+
+  } catch (error) {
+    logger.error('Failed to register array update operator test suites', { error: error.message });
+    throw error;
+  }
+}
+
+/**
  * Set up validation test environment with proper database and collections
  */
 function setupValidationTestEnvironmentForTests() {
@@ -286,59 +407,70 @@ function cleanupValidationTestEnvironment() {
  */
 function runAllValidationTests() {
   const logger = JDbLogger.createComponentLogger('ValidationTests-Runner');
-  logger.info('Starting comprehensive validation test execution...');
+  logger.info('Starting comprehensive validation test execution with per-suite isolation...');
 
-  let results = null;
+  // We will aggregate results from individually isolated suite runs
+  const aggregatedResults = new TestResults();
+  let suiteNames = [];
 
+  // Phase 1: Discover suite names (single init, then cleanup before real execution)
   try {
-    // Setup test environment
     setupValidationTestEnvironmentForTests();
-    
-    // Initialise test framework
-    const framework = initialiseValidationTests();
-    
-    // Validate environment before running tests
-    framework.validateEnvironment();
-    
-    // Run all registered test suites
-    results = framework.runAllTests();
-    
-    // Log summary results
-    const summary = {
-      totalTests: results.results.length,
-      passed: results.getPassed().length,
-      failed: results.getFailed().length,
-      executionTime: results.getTotalExecutionTime()
-    };
-    
-    logger.info('Validation test execution completed', summary);
-    
-    // Log detailed results if there are failures
-    if (results.getFailed().length > 0) {
-      logger.warn('Some validation tests failed:', {
-        failedTests: results.getFailed().length,
-        failures: results.getFailed().map(result => ({
-          suite: result.suiteName,
-          test: result.testName,
-          error: result.error ? result.error.message : 'Unknown error'
-        }))
-      });
-    }
-
-    return results;
-
+    initialiseValidationTests();
+    suiteNames = Array.from(VALIDATION_TEST_REGISTRY.testSuites.keys());
   } catch (error) {
-    logger.error('Validation test execution failed', { error: error.message });
+    logger.error('Failed during suite discovery', { error: error.message });
+    // Attempt cleanup before aborting
+    try { cleanupValidationTestEnvironment(); } catch (e) { logger.error('Cleanup after discovery failed', { error: e.message }); }
     throw error;
-
-  } finally {
-    // Always cleanup, even if tests failed
-    try {
-      cleanupValidationTestEnvironment();
-    } catch (cleanupError) {
-      logger.error('Cleanup failed after test execution', { error: cleanupError.message });
-    }
   }
+  // Clean up the discovery environment
+  try { cleanupValidationTestEnvironment(); } catch (e) { logger.warn('Cleanup after discovery encountered an error', { error: e.message }); }
+
+  logger.info('Discovered validation test suites', { suiteCount: suiteNames.length });
+
+  // Phase 2: Execute each suite in complete isolation
+  suiteNames.forEach(suiteName => {
+    logger.info(`Executing suite in isolation: ${suiteName}`);
+    try {
+      // runValidationTestSuite performs its own setup + teardown
+      const suiteResults = runValidationTestSuite(suiteName);
+      // Merge results
+      suiteResults.results.forEach(r => aggregatedResults.addResult(r));
+    } catch (suiteError) {
+      logger.error('Suite execution failed catastrophically', { suite: suiteName, error: suiteError.message });
+      // Record a synthetic failure result to ensure visibility
+      aggregatedResults.addResult(new TestResult(suiteName, '__suite_initialisation__', false, suiteError, 0));
+      // Continue with remaining suites for maximal feedback
+    }
+  });
+
+  // Finalise aggregated timing
+  aggregatedResults.finish();
+
+  const summary = {
+    totalTests: aggregatedResults.results.length,
+    passed: aggregatedResults.getPassed().length,
+    failed: aggregatedResults.getFailed().length,
+    passRate: aggregatedResults.getPassRate().toFixed(1) + '%',
+    // Note: aggregated total time is wall-clock across isolated runs; using aggregatedResults.getTotalExecutionTime()
+    executionTime: aggregatedResults.getTotalExecutionTime()
+  };
+
+  logger.info('Validation test execution (isolated suites) completed', summary);
+
+  if (aggregatedResults.getFailed().length > 0) {
+    logger.warn('Some validation tests failed (isolated run):', {
+      failedTests: aggregatedResults.getFailed().length,
+      failures: aggregatedResults.getFailed().map(result => ({
+        suite: result.suiteName,
+        test: result.testName,
+        error: result.error ? result.error.message : 'Unknown error'
+      }))
+    });
+  }
+
+  return aggregatedResults;
 }
 
 /**
@@ -663,6 +795,159 @@ function runFieldUpdateOperatorTests() {
   }
 }
 
+/**
+ * Quick runner for numeric update operator tests
+ * @returns {TestResults} Results from numeric update operator tests
+ */
+function runNumericUpdateOperatorTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-NumericUpdateQuick');
+  logger.info('Running all numeric update operator tests...');
+
+  let combinedResults = new TestResults();
+
+  try {
+    // Setup test environment
+    setupValidationTestEnvironmentForTests();
+    
+    // Initialise test framework
+    const framework = initialiseValidationTests();
+    
+    // Validate environment before running tests
+    framework.validateEnvironment();
+
+    // Run numeric update operator test suites
+    const suiteNames = [
+      '$inc Basic Incrementation Tests',
+      '$inc Field Creation Tests',
+      '$inc Type Validation Tests',
+      '$inc Boundary Testing Tests',
+      '$mul Basic Multiplication Tests',
+      '$mul Field Creation Tests',
+      '$mul Type Validation Tests',
+      '$min Value Comparison Tests',
+      '$min Field Creation Tests',
+      '$min Type Handling Tests',
+      '$min Edge Cases Tests',
+      '$max Value Comparison Tests',
+      '$max Field Creation Tests',
+      '$max Boundary Testing Tests'
+    ];
+
+    for (const suiteName of suiteNames) {
+      try {
+        logger.info(`Running suite: ${suiteName}`);
+        const suiteResult = framework.runTestSuite(suiteName);
+        
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
+        logger.info(`Completed ${suiteName}`, {
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length,
+          total: suiteResult.results.length
+        });
+
+      } catch (error) {
+        logger.error(`Failed to run ${suiteName}`, { error: error.message });
+        combinedResults.addResult(new TestResult(suiteName, 'Suite Execution', false, error.message, 0));
+      }
+    }
+
+    combinedResults.finish();
+
+    logger.info('All numeric update operator tests completed', {
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
+    });
+
+    return combinedResults;
+
+  } catch (error) {
+    logger.error('Numeric update operator tests failed', { error: error.message });
+    throw error;
+
+  } finally {
+    try {
+      cleanupValidationTestEnvironment();
+    } catch (cleanupError) {
+      logger.error('Cleanup failed', { error: cleanupError.message });
+    }
+  }
+}
+
+/**
+ * Quick runner for array update operator tests
+ * @returns {TestResults} Results from array update operator tests
+ */
+function runArrayUpdateOperatorTests() {
+  const logger = JDbLogger.createComponentLogger('ValidationTests-ArrayUpdateQuick');
+  logger.info('Running all array update operator tests...');
+
+  let combinedResults = new TestResults();
+
+  try {
+    // Setup test environment
+    setupValidationTestEnvironmentForTests();
+    
+    // Initialise test framework
+    const framework = initialiseValidationTests();
+    
+    // Validate environment before running tests
+    framework.validateEnvironment();
+
+    // Run array update operator test suites
+    const suiteNames = [
+      '$push Operator Tests',
+      '$pull Operator Tests',
+      '$addToSet Operator Tests'
+    ];
+
+    for (const suiteName of suiteNames) {
+      try {
+        logger.info(`Running suite: ${suiteName}`);
+        const suiteResult = framework.runTestSuite(suiteName);
+        
+        suiteResult.results.forEach(result => {
+          combinedResults.addResult(result);
+        });
+        
+        logger.info(`Completed ${suiteName}`, {
+          passed: suiteResult.getPassed().length,
+          failed: suiteResult.getFailed().length
+        });
+      } catch (error) {
+        logger.error(`Failed to run ${suiteName}`, { error: error.message });
+        throw error;
+      }
+    }
+
+    combinedResults.finish();
+
+    logger.info('All array update operator tests completed', {
+      totalSuites: suiteNames.length,
+      totalTests: combinedResults.results.length,
+      passed: combinedResults.getPassed().length,
+      failed: combinedResults.getFailed().length
+    });
+
+    return combinedResults;
+
+  } catch (error) {
+    logger.error('Array update operator tests failed', { error: error.message });
+    throw error;
+
+  } finally {
+    try {
+      cleanupValidationTestEnvironment();
+    } catch (cleanupError) {
+      logger.error('Cleanup failed', { error: cleanupError.message });
+    }
+  }
+}
+
 /* exported 
    runAllValidationTests, 
    runValidationTestSuite, 
@@ -672,6 +957,8 @@ function runFieldUpdateOperatorTests() {
    runComparisonOperatorTests,
    runLogicalOperatorTests,
    runFieldUpdateOperatorTests,
+   runNumericUpdateOperatorTests,
+   runArrayUpdateOperatorTests,
    initialiseValidationTests,
    setupValidationTestEnvironmentForTests,
    cleanupValidationTestEnvironment 

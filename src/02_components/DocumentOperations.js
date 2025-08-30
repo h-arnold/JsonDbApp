@@ -346,6 +346,12 @@ class DocumentOperations {
     const existing = this._collection._documents[id];
     // Apply operators
     const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
+
+    // Check if the document was actually modified
+    if (ObjectUtils.deepEqual(existing, updatedDoc)) {
+        return { acknowledged: true, modifiedCount: 0 };
+    }
+
     // Persist
     this._collection._documents[id] = updatedDoc;
     this._collection._updateMetadata();

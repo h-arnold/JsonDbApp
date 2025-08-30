@@ -258,22 +258,95 @@ class UpdateEngine {
     
     for (const fieldPath in ops) {
       const current = this._getFieldValue(document, fieldPath);
-      if (current === undefined) continue;
-      this._validateArrayValue(current, fieldPath, '$pull');
-      const toRemove = ops[fieldPath];
-      const filtered = current.filter(item => !this._valuesEqual(item, toRemove));
-      this._setFieldValue(document, fieldPath, filtered);
+      if (current === undefined || !Array.isArray(current)) {
+        // Silent no-op for non-array (decision documented in TODO)
+        continue;
+      }
+
+      const criterion = ops[fieldPath];
+      const originalLength = current.length;
+
+      // Build filtered array using Mongo-like predicate semantics
+      const filtered = current.filter(item => {
+        try {
+          return !this._pullMatches(item, criterion);
+        } catch (e) {
+          // Defensive: if matcher throws, do not remove the element
+          this._logger.debug('Pull match evaluation error – element retained', { error: e.message });
+          return true;
+        }
+      });
+
+      if (filtered.length < originalLength) {
+        this._setFieldValue(document, fieldPath, filtered);
+      }
     }
     return document;
   }
 
   /**
-   * Add unique elements to arrays, supporting $each modifier.
-   * @param {Object} document - The document being modified.
-   * @param {Object} ops - An object mapping field paths to single values or $each modifiers.
-   * @returns {Object} The updated document instance with values added when unique.
-   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If target field or modifier values are not arrays.
+   * Determine whether an array element matches a $pull criterion.
+   * Mongo semantics (subset predicate for object criteria; operator objects supported at top level).
+   * @param {*} element - The array element under test
+   * @param {*} criterion - The $pull criterion provided by the update expression
+   * @returns {boolean} true if element should be removed
+   * @private
    */
+  _pullMatches(element, criterion) {
+    // Primitive / Date / array direct criterion -> strict equality (no membership semantics)
+    if (criterion === null || typeof criterion !== 'object' || Array.isArray(criterion) || (criterion instanceof Date)) {
+      return ComparisonUtils.equals(element, criterion, { arrayContainsScalar: false });
+    }
+
+    // Plain object predicate: use subsetMatch semantics (operator objects handled there)
+    return ComparisonUtils.subsetMatch(element, criterion, { operatorSupport: true });
+  }
+
+/**
+ * Check if a value is a plain object (not Date / Array / null)
+ * @param {*} val - value to test
+ * @returns {boolean}
+ * @private
+ */
+_isPlainObject(val) {
+  return val !== null && typeof val === 'object' && !Array.isArray(val) && !(val instanceof Date);
+}
+
+/**
+ * Add unique elements to arrays, supporting the MongoDB-compatible $addToSet operator.
+ *
+ * Behaviour summary:
+ * - For each field path in `ops`, ensures the target field is an array (creating it when undefined).
+ * - Adds the provided value only if it is not already present (uniqueness check).
+ * - Supports the `$each` modifier to add multiple values; ensures uniqueness across
+ *   both the existing array and within the provided `$each` list.
+ * - No reordering is performed; new unique values are appended at the end.
+ *
+ * Equality semantics for uniqueness:
+ * - Primary comparator: `ComparisonUtils.equals(a, b, { arrayContainsScalar: false })`.
+ *   This performs strict, deep structural equality for plain objects/arrays and Date
+ *   millisecond equality, without array-membership semantics.
+ * - Fallback comparator: `ObjectUtils.deepEqual(a, b)` for non-Date object pairs, to
+ *   guard against any edge-case misclassification of plain objects.
+ * - Primitives are compared strictly (===) by the comparator implementation.
+ *
+ * Field initialisation and validation:
+ * - If the target field is `undefined`, a new array is created. For `$each`, the array is
+ *   initialised with the unique subset of the provided values (deduplicated in insertion order).
+ * - If the target field exists and is not an array, an `INVALID_QUERY` error is thrown.
+ * - The `$each` value must be an array; otherwise an `INVALID_QUERY` error is thrown.
+ *
+ * Logging:
+ * - Emits DEBUG logs that include per-item comparison details and whether a candidate was
+ *   appended or skipped. These are helpful when diagnosing equality/uniqueness issues.
+ *
+ * @param {Object} document - The document to modify.
+ * @param {Object} ops - Map of field paths to a single value or a modifier object:
+ *   `{ fieldPath: <value> }` or `{ fieldPath: { $each: [v1, v2, ...] } }`.
+ * @returns {Object} The same document reference, updated in place.
+ * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When a `$each` value is not an array, or when a
+ *   target field exists but is not an array.
+ */
   _applyAddToSet(document, ops) {
     this._validateOperationsNotEmpty(ops, '$addToSet');
     
@@ -281,10 +354,39 @@ class UpdateEngine {
      let current = this._getFieldValue(document, fieldPath);
      const valueOrModifier = ops[fieldPath];
 
-     // Helper: push only if not already present
+   // Robust equality comparator used for uniqueness checks:
+   // 1) Try the centralised comparator (handles Dates, arrays, and plain objects).
+   // 2) If that does not report equality, fall back to deepEqual for non-Date objects.
+     const eq = (a, b) => {
+       try {
+         if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
+       } catch {
+         // ignore and try fallback
+       }
+       if (a && b && typeof a === 'object' && typeof b === 'object' && !(a instanceof Date) && !(b instanceof Date)) {
+         try {
+           return ObjectUtils.deepEqual(a, b);
+         } catch {
+           return false;
+         }
+       }
+       return false;
+     };
+
+   // Helper: append a value only if not present in `current` using the comparator above.
      const addOne = val => {
-       if (!current.some(item => this._valuesEqual(item, val))) {
+       const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
+       const perItem = Array.isArray(current)
+         ? current.map((item, idx) => ({ idx, equals: eq(item, val), item }))
+         : [];
+       const exists = Array.isArray(current) && perItem.some(e => e.equals);
+  this._logger.debug('AddToSet duplicate check', { fieldPath, exists, currentLength: Array.isArray(current) ? current.length : 0 });
+  this._logger.debug('AddToSet compare details', { candidate: val, sample: snapshot, comparisons: perItem });
+       if (!exists) {
          current.push(val);
+         this._logger.debug('AddToSet appended value', { fieldPath, appended: val });
+       } else {
+         this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: val });
        }
      };
 
@@ -296,22 +398,28 @@ class UpdateEngine {
           // Initialise new array from provided values, ensuring uniqueness
           const uniqueValues = [];
           eachValues.forEach(val => {
-            if (!uniqueValues.some(item => this._valuesEqual(item, val))) {
+            const existsInBatch = uniqueValues.some(item => eq(item, val));
+            this._logger.debug('AddToSet $each batch check', { fieldPath, existsInBatch, candidate: val });
+            if (!existsInBatch) {
               uniqueValues.push(val);
             }
           });
           this._setFieldValue(document, fieldPath, uniqueValues);
         } else {
+          // Target exists: must be an array; otherwise error.
           this._validateArrayValue(current, fieldPath, '$addToSet');
-          // Add each unique element
+          // Append only those `$each` values that are not already present in `current`.
           eachValues.forEach(addOne);
         }
       } else {
         // Single‐value add
         if (current === undefined) {
+          // Field missing: create array with the single provided value.
           this._setFieldValue(document, fieldPath, [valueOrModifier]);
         } else {
+          // Target exists: must be an array; otherwise error.
           this._validateArrayValue(current, fieldPath, '$addToSet');
+          // Append candidate only if not already present per equality semantics.
           addOne(valueOrModifier);
         }
       }
@@ -427,7 +535,7 @@ class UpdateEngine {
     
     // For objects and arrays, do a deep comparison
     if (typeof a === 'object') {
-      return JSON.stringify(a) === JSON.stringify(b);
+      return ObjectUtils.deepEqual(a, b);
     }
     
     return false;
@@ -528,11 +636,15 @@ class UpdateEngine {
     
     // Both must be the same type for safe comparison
     if (currentType !== newType) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, { currentValue, newValue }, `${operation} operation requires comparable values of the same type`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        { currentValue, newValue },
+        `${operation} operation requires comparable values of the same type`
+      );
     }
     
-    // Objects and arrays cannot be compared with < or >
-    if (currentType === 'object') {
+    // Objects and arrays (but not Dates) cannot be compared with < or >
+    if (currentType === 'object' && currentValue !== null && !(currentValue instanceof Date)) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, currentValue, `${operation} operation cannot compare objects or arrays`);
     }
   }

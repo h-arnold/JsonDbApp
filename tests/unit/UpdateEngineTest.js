@@ -577,10 +577,11 @@ function createUpdateEngineTestSuite() {
     const engine = UPDATE_ENGINE_TEST_DATA.testEngine;
     const doc = { field: 42 };
     const update = { $pull: { field: 42 } };
-    
-    TestFramework.assertThrows(function() {
-      engine.applyOperators(doc, update);
-    }, ErrorHandler.ErrorTypes.INVALID_QUERY, 'Should throw when trying to $pull from non-array field');
+  // Behaviour updated: $pull on non-array field is a no-op (silent) to align with
+  // broader predicate semantics decision (see TODO Section 7 evaluation).
+  const result = engine.applyOperators(doc, update);
+  TestFramework.assertEquals(42, result.field, 'Non-array field should remain unchanged');
+  TestFramework.assertEquals(42, doc.field, 'Original document should remain unchanged');
   });
 
   suite.addTest('testAddToSetOnNonArrayThrows', function() {
