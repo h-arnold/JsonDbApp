@@ -56,7 +56,7 @@ class MasterIndex {
    * Internal logic for adding a single collection without repeated ScriptLock overhead
    * @param {string} name - Collection name
    * @param {Object|CollectionMetadata} metadata - Collection metadata or instance
-   * @returns {Object} Serialized collection metadata
+   * @returns {Object} Serialised collection metadata
    * @throws {InvalidArgumentError} If name is invalid
    */
   _addCollectionInternal(name, metadata) {
@@ -89,7 +89,7 @@ class MasterIndex {
    * Add a collection to the master index with locking
    * @param {string} name - Collection name
    * @param {Object|CollectionMetadata} metadata - Collection metadata or instance
-   * @returns {Object} Serialized collection metadata
+   * @returns {Object} Serialised collection metadata
    */
   addCollection(name, metadata) {
     return this._withScriptLock(() => this._addCollectionInternal(name, metadata));
@@ -129,7 +129,7 @@ class MasterIndex {
   
   /**
    * Load master index from ScriptProperties
-   * @returns {Object|null} Deserialized index data
+   * @returns {Object|null} Deserialised index data
    */
   load() {
     try {

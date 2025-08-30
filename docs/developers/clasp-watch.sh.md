@@ -51,7 +51,7 @@
   - [Maintenance](#maintenance)
     - [Regular Tasks](#regular-tasks)
     - [Script Updates](#script-updates)
-  - [Integration with GAS-DB Project](#integration-with-gas-db-project)
+  - [Integration with JsonDbApp Project](#integration-with-jsondbapp-project)
     - [Project Structure Compatibility](#project-structure-compatibility)
     - [Testing Integration](#testing-integration)
     - [Development Workflow](#development-workflow)
@@ -515,11 +515,11 @@ When updating the script:
 3. Make executable if needed
 4. Restart watch process
 
-## Integration with GAS-DB Project
+## Integration with JsonDbApp Project
 
 ### Project Structure Compatibility
 
-The script is designed to work with the GAS-DB project structure:
+The script is designed to work with the JsonDbApp project structure:
 
 - Monitors `src/` directory for core components
 - Watches `tests/` directory for test files
@@ -620,4 +620,4 @@ When modifying the script:
 
 ---
 
-*This documentation is part of the GAS-DB project developer resources. For project-specific information, see the main project documentation in `/docs/`.*
+*This documentation is part of the JsonDbApp project developer resources. For project-specific information, see the main project documentation in `/docs/`.*

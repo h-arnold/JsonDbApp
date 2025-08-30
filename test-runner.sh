@@ -1,7 +1,8 @@
 #!/bin/bash
-# filepath: /workspaces/GAS-DB/test-runner.sh
+# filepath: /workspaces/JsonDbApp/test-runner.sh
 
-# GAS DB Test Runner Script
+# JsonDbApp Test Runner Script
+# Pushes code to Google Apps Script and runs tests, then retrieves logs
 # Pushes code to Google Apps Script and runs tests, then retrieves logs
 
 set -e  # Exit on any error

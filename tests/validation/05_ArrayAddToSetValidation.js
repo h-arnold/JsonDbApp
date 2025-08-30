@@ -8,7 +8,7 @@
 
 /**
  * Creates a test suite for the $addToSet operator.
- * This suite validates the behavior of adding unique elements to arrays, including primitives and objects,
+ * This suite validates the behaviour of adding unique elements to arrays, including primitives and objects,
  * the use of the $each modifier, and handling of various edge cases and type validations.
  *
  * @returns {TestSuite} A new test suite for the $addToSet operator.
@@ -123,7 +123,7 @@ function createAddToSetOperatorTestSuite() {
 
 /**
  * Convenience function to run all $addToSet operator test suites.
- * This function sets up the test environment, initializes the test framework,
+ * This function sets up the test environment, initialises the test framework,
  * runs the tests, and then cleans up the environment.
  *
  * @returns {TestResults} The combined results from all $addToSet operator test suites.

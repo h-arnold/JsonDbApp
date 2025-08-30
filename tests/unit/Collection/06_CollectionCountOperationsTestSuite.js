@@ -5,7 +5,7 @@
  * - Counting all documents in an empty and populated collection.
  * - Counting documents using field-based filters, including multiple fields and nested fields.
  * - Counting documents using comparison operators ($gt, $lt, $eq).
- * - Ensuring correct behavior when filters match no documents.
+ * - Ensuring correct behaviour when filters match no documents.
  *
  * @function
  * @returns {TestSuite} The test suite containing all count operation tests for the Collection class.

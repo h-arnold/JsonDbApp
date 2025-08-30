@@ -2,7 +2,7 @@
 // Test suite for Collection initialisation
 
 /**
- * Creates a test suite for verifying the initialisation and lazy loading behavior of the Collection class.
+ * Creates a test suite for verifying the initialisation and lazy loading behaviour of the Collection class.
  *
  * The suite includes:
  * - A test to ensure a Collection instance is properly created and initialised with the correct properties.

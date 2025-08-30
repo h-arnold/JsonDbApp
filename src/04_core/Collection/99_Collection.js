@@ -10,7 +10,6 @@
  * Core Components:
  * - CollectionReadOperations: Handles find, findOne, count, etc.
  * - CollectionWriteOperations: Handles insert, update, delete, etc.
- * - CollectionIndexOperations: Handles index management.
  * - CollectionCoordinator: Manages cross-instance consistency.
  * - DocumentOperations: Performs low-level document manipulation.
  */
@@ -57,7 +56,6 @@ class Collection {
         // Instantiate operation handlers
         this._readOps = new CollectionReadOperations(this);
         this._writeOps = new CollectionWriteOperations(this);
-        this._indexOps = new CollectionIndexOperations(this);
     }
 
     /**
@@ -259,26 +257,6 @@ class Collection {
      * @returns {Array<Object>} Aggregation result.
      */
     aggregate(pipeline) { return this._readOps.aggregate(pipeline); }
-
-    // --- Delegated Index Operations ---
-    /**
-     * Creates an index on specified fields.
-     * @param {Object} fields - Fields to index.
-     * @param {Object} [options] - Index options.
-     * @returns {Object} Result of the create index operation.
-     */
-    createIndex(fields, options) { return this._indexOps.createIndex(fields, options); }
-    /**
-     * Drops an index on the specified field.
-     * @param {string} field - Field name of the index to drop.
-     * @returns {Object} Result of the drop index operation.
-     */
-    dropIndex(field) { return this._indexOps.dropIndex(field); }
-    /**
-     * Retrieves all indexes for the collection.
-     * @returns {Array<Object>} Array of index definitions.
-     */
-    getIndexes() { return this._indexOps.getIndexes(); }
 
     // --- Core Collection Operations ---
     save() {

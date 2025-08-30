@@ -30,7 +30,7 @@ function createCollectionCoordinatorLockReleaseAndTimeoutTestSuite() {
     
     const coordinator = createTestCollectionCoordinator('aggressive'); // Has 500ms timeout
     
-    // Act & Assert - Test timeout behavior with a long-running operation
+    // Act & Assert - Test timeout behaviour with a long-running operation
     TestFramework.assertThrows(
       function() {
         coordinator.coordinate('longOperation', function() { 

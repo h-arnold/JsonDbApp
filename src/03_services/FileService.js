@@ -118,11 +118,11 @@ class FileService {
     // Add to cache if enabled - cache the data as it would be returned by readFile()
     // This ensures cache consistency between write and read operations
     if (this._cacheEnabled) {
-      // Simulate the round-trip through serialization/deserialization to ensure
+      // Simulate the round-trip through serialisation/deserialisation to ensure
       // cached data matches what readFile() would return
-      const serialized = ObjectUtils.serialise(data);
-      const deserializedData = ObjectUtils.deserialise(serialized);
-      this._addToCache(newFileId, deserializedData);
+      const serialised = ObjectUtils.serialise(data);
+      const deserialisedData = ObjectUtils.deserialise(serialised);
+      this._addToCache(newFileId, deserialisedData);
     }
     
     return newFileId;

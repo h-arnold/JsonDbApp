@@ -252,7 +252,7 @@ const config = new DatabaseConfig({
 const configData = config.toObject();
 console.log('Config:', JSON.stringify(configData, null, 2));
 
-// Recreate from serialized data
+// Recreate from serialised data
 const restoredConfig = new DatabaseConfig(configData);
 ```
 
