@@ -8,6 +8,7 @@ A document database implemented in Google Apps Script using the Google Drive API
   - [Getting started](#getting-started)
   - [Supported MongoDB query operators](#supported-mongodb-query-operators)
   - [Supported update operators](#supported-update-operators)
+  - [Roadmap - priorities and next steps](#roadmap---priorities-and-next-steps)
   - [Docs](#docs)
 
 
@@ -94,6 +95,16 @@ See also:
 - $each modifier: [docs/developers/UpdateEngine.md#each-modifier-in-array-operators](docs/developers/UpdateEngine.md#each-modifier-in-array-operators)
 - Enhanced $pull semantics: [docs/developers/UpdateEngine.md#enhanced-pull-semantics-mongo-fidelity-subset-matching](docs/developers/UpdateEngine.md#enhanced-pull-semantics-mongo-fidelity-subset-matching)
 - Comparison utilities: [docs/developers/UpdateEngine.md#shared-comparison-utilities](docs/developers/UpdateEngine.md#shared-comparison-utilities)
+
+## Roadmap - priorities and next steps
+
+1. **Refactoring** - code isn't as tidy as I would like it to be, some classes are too large and the testing framework was made up as a I went along so could do with some work.
+2. **Implement file caching** using the GAS `CacheService` to speed up read and write operations. 
+3. **Implement collection indexing** to speed up query operations, especially across collections.
+4. **Implement schema creation** and validation. For now, you can store any object with a `fromJSON` and a `toJSON` method, but it would be good to be able to define and enforce a schema.
+5. **Expand query and update operator support** to cover a larger subset of MongoDB syntax.
+6. **Add user access levels** - at the moment, access is handled by Google Drive File permissions. It would be good to have more granular control over user access.
+7. A GAS WebApp query interface for testing and debugging queries.
 
 ## Docs
 
