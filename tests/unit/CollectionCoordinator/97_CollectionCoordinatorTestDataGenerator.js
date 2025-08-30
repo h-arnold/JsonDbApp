@@ -65,7 +65,7 @@ function generateCollectionCoordinatorTestData() {
     );
     logger.info('Created collection file', { fileId: collectionFile.getId() });
     
-    // Create real components to get proper serialization
+    // Create real components to get proper serialisation
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
     const masterIndex = new MasterIndex();
@@ -98,7 +98,7 @@ function generateCollectionCoordinatorTestData() {
     // Register with master index
     masterIndex.addCollection('coordinatorTest', collection._metadata);
     
-    // Get serialized states
+    // Get serialised states
     const masterIndexData = masterIndex.load() || masterIndex._data;
     const collectionMetadata = collection._metadata;
     const dbConfigData = dbConfig.toJSON();
@@ -122,17 +122,17 @@ function generateCollectionCoordinatorTestData() {
       'application/json'
     );
     
-    // Test serialization/deserialization
-    const serializedMetadata = ObjectUtils.serialise(collectionMetadata);
-    const deserializedMetadata = ObjectUtils.deserialise(serializedMetadata);
+    // Test serialisation/deserialisation
+    const serialisedMetadata = ObjectUtils.serialise(collectionMetadata);
+    const deserialisedMetadata = ObjectUtils.deserialise(serialisedMetadata);
     
     testFolder.createFile(
-      'serialized_metadata_test.json',
+      'serialised_metadata_test.json',
       JSON.stringify({
         original: collectionMetadata,
-        serialized: serializedMetadata,
-        deserialized: deserializedMetadata,
-        testPassed: deserializedMetadata instanceof CollectionMetadata
+        serialised: serialisedMetadata,
+        deserialised: deserialisedMetadata,
+        testPassed: deserialisedMetadata instanceof CollectionMetadata
       }, null, 2),
       'application/json'
     );
@@ -205,10 +205,10 @@ function generateCollectionCoordinatorTestData() {
           coordinationEnabled: coordinator._config.coordinationEnabled
         }
       },
-      serialization: {
+      serialisation: {
         objectUtilsAvailable: typeof ObjectUtils !== 'undefined',
-        collectionMetadataSerializable: !!serializedMetadata,
-        deserializationWorks: deserializedMetadata instanceof CollectionMetadata
+        collectionMetadataSerializable: !!serialisedMetadata,
+        deserialisationWorks: deserialisedMetadata instanceof CollectionMetadata
       }
     };
     
@@ -234,7 +234,7 @@ function generateCollectionCoordinatorTestData() {
     console.log('- master_index_data.json');
     console.log('- collection_metadata.json');
     console.log('- database_config.json');
-    console.log('- serialized_metadata_test.json');
+    console.log('- serialised_metadata_test.json');
     console.log('- coordination_configs.json');
     console.log('- coordinator_test_results.json');
     console.log('- generation_summary.json');

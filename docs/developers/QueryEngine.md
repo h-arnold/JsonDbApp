@@ -397,38 +397,38 @@ const affordable = queryEngine.executeQuery(documents, { price: { $lt: 25 } });
 ```javascript
 const queryEngine = new QueryEngine();
 const documents = [
-  { name: "Shirt", color: "blue", stock: 5 },
-  { name: "Pants", color: "blue", stock: 0 },
-  { name: "Shirt", color: "red", stock: 10 }
+  { name: "Shirt", colour: "blue", stock: 5 },
+  { name: "Pants", colour: "blue", stock: 0 },
+  { name: "Shirt", colour: "red", stock: 10 }
 ];
 
 // Blue items that are in stock
 const blueAndInStock = queryEngine.executeQuery(documents, {
   $and: [
-    { color: "blue" },
+    { colour: "blue" },
     { stock: { $gt: 0 } }
   ]
 });
-// blueAndInStock: [{ name: "Shirt", color: "blue", stock: 5 }]
+// blueAndInStock: [{ name: "Shirt", colour: "blue", stock: 5 }]
 
 // Implicit AND
 const blueAndInStockImplicit = queryEngine.executeQuery(documents, {
-  color: "blue",
+  colour: "blue",
   stock: { $gt: 0 }
 });
-// blueAndInStockImplicit: [{ name: "Shirt", color: "blue", stock: 5 }]
+// blueAndInStockImplicit: [{ name: "Shirt", colour: "blue", stock: 5 }]
 
 
 // Red items OR items with no stock
 const redOrNoStock = queryEngine.executeQuery(documents, {
   $or: [
-    { color: "red" },
+    { colour: "red" },
     { stock: 0 }
   ]
 });
 // redOrNoStock: [
-//   { name: "Pants", color: "blue", stock: 0 },
-//   { name: "Shirt", color: "red", stock: 10 }
+//   { name: "Pants", colour: "blue", stock: 0 },
+//   { name: "Shirt", colour: "red", stock: 10 }
 // ]
 ```
 
@@ -440,7 +440,7 @@ Use dot notation to query fields within embedded documents.
 const queryEngine = new QueryEngine();
 const documents = [
   { item: "journal", details: { supplier: "X", pages: 200 } },
-  { item: "pen", details: { supplier: "Y", color: "blue" } }
+  { item: "pen", details: { supplier: "Y", colour: "blue" } }
 ];
 
 const journalsFromX = queryEngine.executeQuery(documents, { "details.supplier": "X" });

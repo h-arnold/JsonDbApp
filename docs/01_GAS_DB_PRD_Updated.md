@@ -189,7 +189,7 @@ When modifying a collection:
 - Separate file operations from service coordination
 - FileOperations component handles direct Drive API interactions with retry logic
 - FileService class coordinates file operations while providing a unified interface
-- Optimizes Drive API calls through intelligent batching and error handling
+- Optimises Drive API calls through intelligent batching and error handling
 
 ---
 

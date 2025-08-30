@@ -724,7 +724,7 @@ ${JSON.stringify(updated, null, 2)}`);
   // Type mismatch handling
   suite.addTest('should handle type mismatches appropriately', function() {
     const collection = VALIDATION_TEST_ENV.collections.persons;
-    // This should either error or have consistent behavior with MongoDB
+    // This should either error or have consistent behaviour with MongoDB
     TestFramework.assertThrows(function() {
       collection.updateOne(
         { _id: 'person1' },

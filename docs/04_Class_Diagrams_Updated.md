@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document contains updated class diagrams for the Google Apps Script Database (GAS DB) library, optimized for minimal Drive API usage and adherence to SOLID principles. The diagrams reflect the separation of concerns for Collection and FileService components in the MVP.
+This document contains updated class diagrams for the Google Apps Script Database (GAS DB) library, optimised for minimal Drive API usage and adherence to SOLID principles. The diagrams reflect the separation of concerns for Collection and FileService components in the MVP.
 
 ## SOLID and DRY Principles Implementation
 

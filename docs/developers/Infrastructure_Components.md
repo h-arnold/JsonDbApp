@@ -662,7 +662,7 @@ class FileOperations {
 ## 1.5. Performance Considerations
 
 1. **Logging:** Use appropriate log levels to avoid performance impact in production
-2. **Error Handling:** Error context objects are JSON serialized, avoid large objects
+2. **Error Handling:** Error context objects are JSON serialised, avoid large objects
 3. **ID Generation:** UUID generation uses Google Apps Script utilities for optimal performance
 4. **Validation:** Input validation is performed early to fail fast
 5. **ObjectUtils:** Deep cloning and date conversion have performance implications for large objects

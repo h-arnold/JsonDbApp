@@ -16,7 +16,7 @@
  * - Handling unsupported update operators.
  * - Updating documents using comparison filters (e.g., $gt).
  * - Verifying update results and MongoDB-compatible return formats.
- * - Ensuring correct behavior when no documents match the update filter.
+ * - Ensuring correct behaviour when no documents match the update filter.
  *
  * @function
  * @returns {TestSuite} The configured test suite for Collection update operations.

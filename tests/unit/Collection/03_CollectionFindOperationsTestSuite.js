@@ -8,7 +8,7 @@
  * - Finding all documents in a collection.
  * - Matching documents by single and multiple fields, including nested fields (dot notation).
  * - Using comparison operators ($gt, $lt) in queries.
- * - Ensuring correct behavior when no documents match the query.
+ * - Ensuring correct behaviour when no documents match the query.
  *
  * @function
  * @returns {TestSuite} A test suite containing unit tests for Collection find operations.
