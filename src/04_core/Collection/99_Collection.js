@@ -192,23 +192,7 @@ class Collection {
             Validate.nonEmptyString(filter._id, "filter._id");
         }
     }
-
-    // --- Delegated Write Operations ---
-    insertOne(doc) { return this._writeOps.insertOne(doc); }
-    updateOne(filterOrId, update) { return this._writeOps.updateOne(filterOrId, update); }
-    updateMany(filter, update) { return this._writeOps.updateMany(filter, update); }
-    replaceOne(filterOrId, doc) { return this._writeOps.replaceOne(filterOrId, doc); }
-    deleteOne(filter) { return this._writeOps.deleteOne(filter); }
-    deleteMany(filter) { return this._writeOps.deleteMany(filter); }
-
-    // --- Delegated Read Operations ---
-    findOne(filter) { return this._readOps.findOne(filter); }
-    find(filter) { return this._readOps.find(filter); }
-    countDocuments(filter) { return this._readOps.countDocuments(filter); }
-    aggregate(pipeline) { return this._readOps.aggregate(pipeline); }
-
-    // --- Delegated Index Operations ---
-    createIndex(fields, options) { return this._indexOps.createIndex(fields, options); }
+    
     // --- Delegated Write Operations ---
     /**
      * Inserts a single document into the collection.

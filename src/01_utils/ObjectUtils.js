@@ -208,7 +208,7 @@ class ObjectUtils {
 
       for (let key of keysA) {
         // If a key from A is not in B, they are not equal
-        if (!keysB.includes(key)) return false;
+        if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
         // Recursively compare the values of each key
         if (!ObjectUtils.deepEqual(a[key], b[key])) return false;
       }
