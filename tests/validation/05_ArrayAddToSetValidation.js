@@ -56,13 +56,28 @@ function createAddToSetOperatorTestSuite() {
 
     // Test case to ensure that a duplicate object is not added to an array of objects.
     suite.addTest('should not add a duplicate object to an array of objects', function() {
-        const collection = VALIDATION_TEST_ENV.collections.inventory;
-        const existingAlert = { type: 'low-stock', product: 'prod3', threshold: 10 };
-        const result = collection.updateOne(
-            { _id: 'inv1' },
-            { $addToSet: { alerts: existingAlert } }
-        );
-        TestFramework.assertEquals(0, result.modifiedCount, 'Should not modify the document');
+            const collection = VALIDATION_TEST_ENV.collections.inventory;
+            const existingAlert = { type: 'low-stock', product: 'prod3', threshold: 10 };
+
+            // Precondition: ensure the existing alert is present (guards against prior test mutations)
+            const beforeDoc = collection.findOne({ _id: 'inv1' });
+            const hasExisting = beforeDoc && Array.isArray(beforeDoc.alerts)
+              && beforeDoc.alerts.some(a => a && a.type === 'low-stock' && a.product === 'prod3' && a.threshold === 10);
+            if (!hasExisting) {
+                const seedRes = collection.updateOne(
+                    { _id: 'inv1' },
+                    { $addToSet: { alerts: existingAlert } }
+                );
+                // Seeding either adds (1) or is a no-op (0) depending on state
+                TestFramework.assertTrue(seedRes.modifiedCount === 0 || seedRes.modifiedCount === 1, 'Seeding precondition should not fail');
+            }
+
+            // Now attempt to add the same object; should be a no-op
+            const result = collection.updateOne(
+                { _id: 'inv1' },
+                { $addToSet: { alerts: existingAlert } }
+            );
+            TestFramework.assertEquals(0, result.modifiedCount, 'Should not modify the document');
     });
 
     // Test case for using the $each modifier to add multiple unique values.

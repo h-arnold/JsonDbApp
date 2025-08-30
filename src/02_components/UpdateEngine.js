@@ -326,10 +326,37 @@ _isPlainObject(val) {
      let current = this._getFieldValue(document, fieldPath);
      const valueOrModifier = ops[fieldPath];
 
+     // Robust equality: try shared comparator first, then fall back to deepEqual for objects
+     const eq = (a, b) => {
+       try {
+         if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
+       } catch {
+         // ignore and try fallback
+       }
+       if (a && b && typeof a === 'object' && typeof b === 'object' && !(a instanceof Date) && !(b instanceof Date)) {
+         try {
+           return ObjectUtils.deepEqual(a, b);
+         } catch {
+           return false;
+         }
+       }
+       return false;
+     };
+
      // Helper: push only if not already present
      const addOne = val => {
-       if (!current.some(item => this._valuesEqual(item, val))) {
+       const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
+       const perItem = Array.isArray(current)
+         ? current.map((item, idx) => ({ idx, equals: eq(item, val), item }))
+         : [];
+       const exists = Array.isArray(current) && perItem.some(e => e.equals);
+  this._logger.debug('AddToSet duplicate check', { fieldPath, exists, currentLength: Array.isArray(current) ? current.length : 0 });
+  this._logger.debug('AddToSet compare details', { candidate: val, sample: snapshot, comparisons: perItem });
+       if (!exists) {
          current.push(val);
+         this._logger.debug('AddToSet appended value', { fieldPath, appended: val });
+       } else {
+         this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: val });
        }
      };
 
@@ -337,11 +364,13 @@ _isPlainObject(val) {
      if (valueOrModifier && typeof valueOrModifier === 'object' && '$each' in valueOrModifier) {
        const eachValues = valueOrModifier.$each;
         this._validateArrayValue(eachValues, fieldPath, '$addToSet');
-        if (current === undefined) {
+    if (current === undefined) {
           // Initialise new array from provided values, ensuring uniqueness
           const uniqueValues = [];
           eachValues.forEach(val => {
-            if (!uniqueValues.some(item => this._valuesEqual(item, val))) {
+            const existsInBatch = uniqueValues.some(item => eq(item, val));
+            this._logger.debug('AddToSet $each batch check', { fieldPath, existsInBatch, candidate: val });
+            if (!existsInBatch) {
               uniqueValues.push(val);
             }
           });
