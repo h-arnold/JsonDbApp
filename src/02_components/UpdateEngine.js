@@ -313,11 +313,39 @@ _isPlainObject(val) {
 }
 
 /**
- * Add unique elements to arrays, supporting $each modifier.
- * @param {Object} document - The document being modified.
- * @param {Object} ops - An object mapping field paths to single values or $each modifiers.
- * @returns {Object} The updated document instance with values added when unique.
- * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} If target field or modifier values are not arrays.
+ * Add unique elements to arrays, supporting the MongoDB-compatible $addToSet operator.
+ *
+ * Behaviour summary:
+ * - For each field path in `ops`, ensures the target field is an array (creating it when undefined).
+ * - Adds the provided value only if it is not already present (uniqueness check).
+ * - Supports the `$each` modifier to add multiple values; ensures uniqueness across
+ *   both the existing array and within the provided `$each` list.
+ * - No reordering is performed; new unique values are appended at the end.
+ *
+ * Equality semantics for uniqueness:
+ * - Primary comparator: `ComparisonUtils.equals(a, b, { arrayContainsScalar: false })`.
+ *   This performs strict, deep structural equality for plain objects/arrays and Date
+ *   millisecond equality, without array-membership semantics.
+ * - Fallback comparator: `ObjectUtils.deepEqual(a, b)` for non-Date object pairs, to
+ *   guard against any edge-case misclassification of plain objects.
+ * - Primitives are compared strictly (===) by the comparator implementation.
+ *
+ * Field initialisation and validation:
+ * - If the target field is `undefined`, a new array is created. For `$each`, the array is
+ *   initialised with the unique subset of the provided values (deduplicated in insertion order).
+ * - If the target field exists and is not an array, an `INVALID_QUERY` error is thrown.
+ * - The `$each` value must be an array; otherwise an `INVALID_QUERY` error is thrown.
+ *
+ * Logging:
+ * - Emits DEBUG logs that include per-item comparison details and whether a candidate was
+ *   appended or skipped. These are helpful when diagnosing equality/uniqueness issues.
+ *
+ * @param {Object} document - The document to modify.
+ * @param {Object} ops - Map of field paths to a single value or a modifier object:
+ *   `{ fieldPath: <value> }` or `{ fieldPath: { $each: [v1, v2, ...] } }`.
+ * @returns {Object} The same document reference, updated in place.
+ * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When a `$each` value is not an array, or when a
+ *   target field exists but is not an array.
  */
   _applyAddToSet(document, ops) {
     this._validateOperationsNotEmpty(ops, '$addToSet');
@@ -326,7 +354,9 @@ _isPlainObject(val) {
      let current = this._getFieldValue(document, fieldPath);
      const valueOrModifier = ops[fieldPath];
 
-     // Robust equality: try shared comparator first, then fall back to deepEqual for objects
+   // Robust equality comparator used for uniqueness checks:
+   // 1) Try the centralised comparator (handles Dates, arrays, and plain objects).
+   // 2) If that does not report equality, fall back to deepEqual for non-Date objects.
      const eq = (a, b) => {
        try {
          if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
@@ -343,7 +373,7 @@ _isPlainObject(val) {
        return false;
      };
 
-     // Helper: push only if not already present
+   // Helper: append a value only if not present in `current` using the comparator above.
      const addOne = val => {
        const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
        const perItem = Array.isArray(current)
@@ -364,7 +394,7 @@ _isPlainObject(val) {
      if (valueOrModifier && typeof valueOrModifier === 'object' && '$each' in valueOrModifier) {
        const eachValues = valueOrModifier.$each;
         this._validateArrayValue(eachValues, fieldPath, '$addToSet');
-    if (current === undefined) {
+        if (current === undefined) {
           // Initialise new array from provided values, ensuring uniqueness
           const uniqueValues = [];
           eachValues.forEach(val => {
@@ -376,16 +406,20 @@ _isPlainObject(val) {
           });
           this._setFieldValue(document, fieldPath, uniqueValues);
         } else {
+          // Target exists: must be an array; otherwise error.
           this._validateArrayValue(current, fieldPath, '$addToSet');
-          // Add each unique element
+          // Append only those `$each` values that are not already present in `current`.
           eachValues.forEach(addOne);
         }
       } else {
         // Single‐value add
         if (current === undefined) {
+          // Field missing: create array with the single provided value.
           this._setFieldValue(document, fieldPath, [valueOrModifier]);
         } else {
+          // Target exists: must be an array; otherwise error.
           this._validateArrayValue(current, fieldPath, '$addToSet');
+          // Append candidate only if not already present per equality semantics.
           addOne(valueOrModifier);
         }
       }
