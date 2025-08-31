@@ -34,7 +34,7 @@ Lots of reasons! Some of them good, some of them less so. The main ones are:
 
 First, connect to the library in your Apps Script project.
 
-Create it by simply making a copy of the [JsonDbApp AppScript Project](link goes here later), deploying it as a library, and then using it in your own Apps Script projects.
+Create it by simply making a copy of the [JsonDbApp AppScript Project](https://drive.google.com/drive/folders/1KJ11Ldw2kvhdjjCDWSlGuclMu97qrj9x?usp=sharing), deploying it as a library, and then using it in your own Apps Script projects.
 
 Once connected, intialiase the databse with:
 
