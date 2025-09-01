@@ -32,6 +32,8 @@ class DatabaseConfig {
     this.cacheEnabled = config.cacheEnabled !== undefined ? config.cacheEnabled : true;
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
+  // New: control whether to create/backup Drive index on initialise()
+  this.backupOnInitialise = config.backupOnInitialise !== undefined ? config.backupOnInitialise : false;
     // Validate configuration
     this._validateConfig();
   }
@@ -96,6 +98,11 @@ class DatabaseConfig {
       throw new Error('Cache enabled must be a boolean');
     }
     
+    // Validate backupOnInitialise
+    if (typeof this.backupOnInitialise !== 'boolean') {
+      throw new Error('backupOnInitialise must be a boolean');
+    }
+    
     // Validate master index key
     if (this.masterIndexKey && typeof this.masterIndexKey !== 'string') {
       throw new Error('Master index key must be a string');
@@ -116,7 +123,8 @@ class DatabaseConfig {
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
-      masterIndexKey: this.masterIndexKey
+  masterIndexKey: this.masterIndexKey,
+  backupOnInitialise: this.backupOnInitialise
     });
   }
   
@@ -134,7 +142,8 @@ class DatabaseConfig {
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
-      masterIndexKey: this.masterIndexKey
+  masterIndexKey: this.masterIndexKey,
+  backupOnInitialise: this.backupOnInitialise
     };
   }
 
@@ -156,7 +165,8 @@ class DatabaseConfig {
       retryDelayMs: obj.retryDelayMs,
       cacheEnabled: obj.cacheEnabled,
       logLevel: obj.logLevel,
-      masterIndexKey: obj.masterIndexKey
+  masterIndexKey: obj.masterIndexKey,
+  backupOnInitialise: obj.backupOnInitialise
     };
     return new DatabaseConfig(config);
   }

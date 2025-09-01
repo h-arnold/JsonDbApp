@@ -37,7 +37,8 @@ function setupDatabaseTestEnvironment() {
       lockTimeout: 30000,
       cacheEnabled: true,
       logLevel: 'INFO',
-      masterIndexKey: 'GASDB_MASTER_INDEX_TEST_DB'
+  masterIndexKey: 'GASDB_MASTER_INDEX_TEST_DB',
+  backupOnInitialise: false
     };
     
     logger.info('Created test folder for Database', { 

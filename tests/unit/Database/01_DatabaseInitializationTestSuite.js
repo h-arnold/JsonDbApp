@@ -40,7 +40,8 @@ function createDatabaseInitializationTestSuite() {
 
   suite.addTest('should initialise database and create index file', function() {
     // Arrange
-    const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
+  const configWithBackup = Object.assign({}, DATABASE_TEST_DATA.testConfig, { backupOnInitialise: true });
+  const database = new Database(configWithBackup);
     // Act - First-time setup: create MasterIndex then initialise database
     try {
       database.createDatabase();

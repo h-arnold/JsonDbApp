@@ -10,7 +10,8 @@ function createIndexFileStructureTestSuite() {
 
   suite.addTest('should create index file with correct structure', function() {
     // Arrange
-    const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
+  const configWithBackup = Object.assign({}, DATABASE_TEST_DATA.testConfig, { backupOnInitialise: true });
+  const database = new Database(configWithBackup);
     // Act - This should fail initially (TDD Red phase)
     try {
       database.initialise();
