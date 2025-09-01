@@ -308,17 +308,6 @@ function setupValidationTestEnvironmentForTests() {
     // Create Database instance (it creates its own FileService and MasterIndex)
     const database = createAndInitialiseDatabase(databaseConfig);
     
-    // Ensure MasterIndex exists for initialise() - create if missing
-    const rawMasterIndex = PropertiesService.getScriptProperties().getProperty(databaseConfig.masterIndexKey);
-    if (!rawMasterIndex) {
-      // createDatabase() will instantiate and persist an empty MasterIndex
-      database.createDatabase();
-      logger.debug('MasterIndex missing - created new MasterIndex for tests');
-    }
-
-    // initialise the database
-    database.initialise();
-
     // Now we need to populate the MasterIndex with our validation collections
     // Since the collections were created in Drive files, we need to register them
     const masterIndex = database._masterIndex;
