@@ -32,7 +32,9 @@ Lots of reasons! Some of them good, some of them less so. The main ones are:
 
 ## Getting started
 
-First, connect this project as a Library in your Apps Script project (Resources > Libraries...).
+Make a copy of [this project](https://script.google.com/d/1lK7UDb7f77qB-VgH_GZ-IM7C95hDGtxgjZYRZR94G76RoGYAlgHALhZG/edit?usp=drive_link) in your Google Drive. 
+
+Connect this project as a Library in your Apps Script project (Resources > Libraries...).
 
 Public API functions exposed by the library identifier (e.g. `JsonDbApp`):
 
