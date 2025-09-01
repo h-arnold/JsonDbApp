@@ -258,23 +258,23 @@ const restoredConfig = new DatabaseConfig(configData);
 
 ## Integration with Database
 
-The DatabaseConfig class integrates seamlessly with the Database class:
+The DatabaseConfig class integrates seamlessly with the Database class. For Apps Script consumers, prefer the public API factories:
 
 ```javascript
-// Direct instantiation
-const db = new Database(new DatabaseConfig({
-  rootFolderId: 'my-folder'
+// First-time setup
+const db1 = JsonDbApp.createAndInitialiseDatabase(new DatabaseConfig({
+  masterIndexKey: 'myMasterIndex'
 }));
 
-// Or pass object (automatically wrapped)
-const db = new Database({
-  autoCreateCollections: false,
+// Load existing database
+const db2 = JsonDbApp.loadDatabase({
+  masterIndexKey: 'myMasterIndex',
   logLevel: 'DEBUG'
 });
 
-// Configuration is validated during Database constructor
+// Configuration is validated when constructing DatabaseConfig/Database
 try {
-  const db = new Database({ lockTimeout: -1 }); // Will throw
+  JsonDbApp.loadDatabase({ lockTimeout: -1 }); // Will throw
 } catch (error) {
   console.error('Invalid configuration:', error.message);
 }

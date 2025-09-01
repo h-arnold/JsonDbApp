@@ -99,17 +99,33 @@ Database (Orchestrator)
 
 ### First-Time Setup
 
+Using the public API (recommended for Apps Script library consumers):
+
+```javascript
+const db = JsonDbApp.createAndInitialiseDatabase(config); // Creates MasterIndex + initialises
+```
+
+Or using the class directly (within this project):
+
 ```javascript
 const db = new Database(config);
-db.createDatabase();  // Creates fresh MasterIndex
-db.initialise();      // Loads from MasterIndex
+db.createDatabase();
+db.initialise();
 ```
 
 ### Normal Initialization
 
+Using the public API:
+
+```javascript
+const db = JsonDbApp.loadDatabase(config); // initialises from existing MasterIndex
+```
+
+Or directly:
+
 ```javascript
 const db = new Database(config);
-db.initialise();      // Loads from MasterIndex (fails if missing)
+db.initialise();
 ```
 
 ### Disaster Recovery
