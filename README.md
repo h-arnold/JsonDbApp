@@ -32,31 +32,52 @@ Lots of reasons! Some of them good, some of them less so. The main ones are:
 
 ## Getting started
 
-First, connect to the library in your Apps Script project.
+First, connect this project as a Library in your Apps Script project (Resources > Libraries...).
 
-Create it by simply making a copy of the [JsonDbApp AppScript Project](https://drive.google.com/drive/folders/1KJ11Ldw2kvhdjjCDWSlGuclMu97qrj9x?usp=sharing), deploying it as a library, and then using it in your own Apps Script projects.
+Public API functions exposed by the library identifier (e.g. `JsonDbApp`):
 
-Once connected, intialiase the databse with:
+- `createAndInitialiseDatabase(config)` – First-time setup; creates a new MasterIndex and initialises the DB
+- `loadDatabase(config)` – Load an existing database (MasterIndex must already exist)
 
-```javascript
-JsonDbApp.initialise({
-  appName: 'MyApp',
-  lockTimeout: 5000, // Optional, defaults to 5000ms
-  masterIndexName: 'myMasterIndex' // Optional, defaults to 'masterIndex'
-});
-```
-
-Create a collection with:
+Examples:
 
 ```javascript
-JsonDbApp.createCollection('myCollection');
+// First-time setup
+function setupDb() {
+  const db = JsonDbApp.createAndInitialiseDatabase({
+    masterIndexKey: 'myMasterIndex',
+    lockTimeout: 5000
+  });
+  // db is initialised and ready to use
+}
+
+// Load existing database
+function getDb() {
+  const config = {
+    masterIndexKey: 'myMasterIndex',
+    // rootFolderId: 'your-folder-id', // optional; where new files/backups are created
+    // lockTimeout: 5000,              // optional; override defaults as needed
+    // logLevel: 'INFO'                // optional
+  };
+  const db = JsonDbApp.loadDatabase(config);
+  return db;
+}
+
+// Work with a collection
+function demo() {
+  const db = JsonDbApp.loadDatabase({ masterIndexKey: 'myMasterIndex' });
+  const users = db.collection('users'); // auto-creates if enabled (default true)
+  users.insertOne({ _id: 'u1', name: 'Ada', role: 'admin' });
+  users.save(); // persist changes to Drive
+  const admins = users.find({ role: 'admin' });
+  console.log(JSON.stringify(admins));
+}
 ```
 
-Add to that collection by storing any class with `toJSON()` and `fromJSON()` methods:
-
-```javascript
-JsonDbApp.insert('myCollection', myObject);
-```
+Notes:
+- Use `masterIndexKey` (not `masterIndexName`).
+- Avoid `JSON.stringify(db)`; inspect specific values instead (e.g. `db.listCollections()`).
+- Write operations are in-memory until you call `collection.save()`. Batch multiple writes, then `save()` once to persist to Drive.
 
 ## Supported MongoDB query operators
 

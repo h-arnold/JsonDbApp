@@ -67,6 +67,7 @@ function createDatabaseConfigCreationTestSuite() {
       TestFramework.assertEquals(config.retryDelayMs, 1000, 'Default retryDelayMs should be 1000ms');
       TestFramework.assertTrue(config.cacheEnabled, 'Cache should be enabled by default');
       TestFramework.assertEquals(config.logLevel, 'INFO', 'Default log level should be INFO');
+  TestFramework.assertFalse(config.backupOnInitialise, 'backupOnInitialise should be false by default');
     } catch (error) {
       throw new Error('DatabaseConfig not implemented: ' + error.message);
     }
@@ -80,7 +81,8 @@ function createDatabaseConfigCreationTestSuite() {
       retryAttempts: 5,
       retryDelayMs: 2000,
       cacheEnabled: false,
-      logLevel: 'DEBUG'
+  logLevel: 'DEBUG',
+  backupOnInitialise: true
     };
     // Act - This should fail initially (TDD Red phase)
     try {
@@ -93,6 +95,7 @@ function createDatabaseConfigCreationTestSuite() {
       TestFramework.assertEquals(config.retryDelayMs, 2000, 'Custom retryDelayMs should be used');
       TestFramework.assertFalse(config.cacheEnabled, 'Cache should be disabled');
       TestFramework.assertEquals(config.logLevel, 'DEBUG', 'Log level should be DEBUG');
+  TestFramework.assertTrue(config.backupOnInitialise, 'backupOnInitialise should be true when set');
     } catch (error) {
       throw new Error('DatabaseConfig constructor not implemented: ' + error.message);
     }
@@ -115,6 +118,7 @@ function createDatabaseConfigCreationTestSuite() {
       TestFramework.assertTrue(config.autoCreateCollections, 'Default autoCreateCollections should be preserved');
       TestFramework.assertTrue(config.cacheEnabled, 'Default cacheEnabled should be preserved');
       TestFramework.assertDefined(config.rootFolderId, 'Default rootFolderId should be set');
+  TestFramework.assertFalse(config.backupOnInitialise, 'Default backupOnInitialise should be preserved (false)');
     } catch (error) {
       throw new Error('DatabaseConfig merging not implemented: ' + error.message);
     }
@@ -213,9 +217,15 @@ function createDatabaseConfigValidationTestSuite() {
       }, Error, 'Should throw error for non-boolean cacheEnabled');
       
       // Test valid boolean values should work
-      const validConfig1 = new DatabaseConfig({ autoCreateCollections: true, cacheEnabled: false });
+      const validConfig1 = new DatabaseConfig({ autoCreateCollections: true, cacheEnabled: false, backupOnInitialise: true });
       TestFramework.assertTrue(validConfig1.autoCreateCollections, 'Valid boolean true should be accepted');
       TestFramework.assertFalse(validConfig1.cacheEnabled, 'Valid boolean false should be accepted');
+      TestFramework.assertTrue(validConfig1.backupOnInitialise, 'Valid boolean true for backupOnInitialise should be accepted');
+
+      // Test invalid backupOnInitialise
+      TestFramework.assertThrows(() => {
+        new DatabaseConfig({ backupOnInitialise: 'invalid' });
+      }, Error, 'Should throw error for non-boolean backupOnInitialise');
       
     } catch (error) {
       throw new Error('DatabaseConfig boolean validation not implemented: ' + error.message);

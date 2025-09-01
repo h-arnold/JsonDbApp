@@ -9,7 +9,8 @@
   - [API Reference](#api-reference)
     - [Public Methods](#public-methods)
       - [`clone()`](#clone)
-      - [`toObject()`](#toobject)
+  - [`toJSON()`](#tojson)
+  - [`fromJSON(obj)`](#fromjsonobj)
     - [Private Methods](#private-methods)
       - [`_getDefaultRootFolder()`](#_getdefaultrootfolder)
       - [`_validateConfig()`](#_validateconfig)
@@ -61,6 +62,7 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | `lockTimeout` | Number | `30000` | Lock timeout in milliseconds |
 | `cacheEnabled` | Boolean | `true` | Enable file caching |
 | `logLevel` | String | 'INFO' | Log level (DEBUG, INFO, WARN, ERROR) |
+| `backupOnInitialise` | Boolean | `false` | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
 
 ## Constructor
 
@@ -103,15 +105,23 @@ Creates a deep copy of the configuration.
   - Immutable configuration management
   - Testing with variations
 
-#### `toObject()`
+#### `toJSON()`
 
-Converts configuration to plain JavaScript object.
+Converts configuration to a serialisable plain object with a `__type` tag.
 
-- **Returns:** `Object` - Plain object with all configuration properties
+- **Returns:** `Object` - Plain object suitable for JSON serialisation
 - **Use Cases:**
-  - Serialization
+  - Serialisation
   - Debugging and logging
   - Configuration comparison
+
+#### `fromJSON(obj)`
+
+Creates a `DatabaseConfig` from an object produced by `toJSON()`.
+
+- **Parameters:** `obj` (`Object`) - A deserialised config object containing `__type: 'DatabaseConfig'`
+- **Returns:** `DatabaseConfig`
+- **Throws:** `InvalidArgumentError` if the object is not a valid `DatabaseConfig` serialisation
 
 ### Private Methods
 
@@ -197,7 +207,9 @@ const config = new DatabaseConfig({
   rootFolderId: 'prod-folder-id',
   autoCreateCollections: false,
   lockTimeout: 10000,
-  logLevel: 'WARN'
+  logLevel: 'WARN',
+  // Avoid Drive file churn on start; backups occur lazily or explicitly
+  backupOnInitialise: false
 });
 ```
 
@@ -208,7 +220,9 @@ const config = new DatabaseConfig({
 const devConfig = new DatabaseConfig({
   autoCreateCollections: true,
   logLevel: 'DEBUG',
-  cacheEnabled: true
+  cacheEnabled: true,
+  // Enable eager backup if you want an index snapshot each initialise
+  backupOnInitialise: true
 });
 
 // Production configuration
@@ -217,7 +231,8 @@ const prodConfig = new DatabaseConfig({
   autoCreateCollections: false,
   lockTimeout: 5000,
   logLevel: 'ERROR',
-  cacheEnabled: true
+  cacheEnabled: true,
+  backupOnInitialise: false
 });
 ```
 
@@ -235,7 +250,7 @@ const testConfig = baseConfig.clone();
 // Clone and create new instance for modifications
 
 const modifiedConfig = new DatabaseConfig({
-  ...baseConfig.toObject(),
+  ...baseConfig.toJSON(),
   logLevel: 'DEBUG'
 });
 ```
@@ -249,32 +264,34 @@ const config = new DatabaseConfig({
 });
 
 // Serialize for storage or logging
-const configData = config.toObject();
+const configData = config.toJSON();
 console.log('Config:', JSON.stringify(configData, null, 2));
 
 // Recreate from serialised data
-const restoredConfig = new DatabaseConfig(configData);
+const restoredConfig = DatabaseConfig.fromJSON(configData);
 ```
 
 ## Integration with Database
 
-The DatabaseConfig class integrates seamlessly with the Database class:
+The DatabaseConfig class integrates seamlessly with the Database class. For Apps Script consumers, prefer the public API factories:
 
 ```javascript
-// Direct instantiation
-const db = new Database(new DatabaseConfig({
-  rootFolderId: 'my-folder'
+// First-time setup
+const db1 = JsonDbApp.createAndInitialiseDatabase(new DatabaseConfig({
+  masterIndexKey: 'myMasterIndex'
 }));
 
-// Or pass object (automatically wrapped)
-const db = new Database({
-  autoCreateCollections: false,
-  logLevel: 'DEBUG'
+// Load existing database
+const db2 = JsonDbApp.loadDatabase({
+  masterIndexKey: 'myMasterIndex',
+  logLevel: 'DEBUG',
+  // Only back up MasterIndex to Drive during initialise when explicitly enabled
+  backupOnInitialise: false
 });
 
-// Configuration is validated during Database constructor
+// Configuration is validated when constructing DatabaseConfig/Database
 try {
-  const db = new Database({ lockTimeout: -1 }); // Will throw
+  JsonDbApp.loadDatabase({ lockTimeout: -1 }); // Will throw
 } catch (error) {
   console.error('Invalid configuration:', error.message);
 }
@@ -309,6 +326,15 @@ const db = new Database(dbConfig);
 - `maxNestedDepth` (Number, default: 10): Maximum allowed query nesting depth for security
 
 **Security Note:** QueryEngine always validates all queries for structure and supported operators to prevent malicious queries, regardless of configuration.
+
+### Index Backup Strategy
+
+`backupOnInitialise` controls whether `Database.initialise()` performs Drive index creation and backup:
+
+- `false` (default): Initialise reads from MasterIndex only; no Drive writes are performed. The Drive-based index is created lazily on first write operation (e.g., `createCollection`, `dropCollection`) or when calling `database.loadIndex()`.
+- `true`: Initialise will create/find the index file in Drive and back up the current MasterIndex immediately. This is useful when you want a snapshot on every start at the cost of additional Drive operations.
+
+Independent of this flag, explicit calls to `database.backupIndexToDrive()` will always perform a backup if an index file exists.
 
 ## Best Practices
 

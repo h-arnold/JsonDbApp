@@ -13,6 +13,15 @@ Make sure you've enabled the DriveAPI in your Google Cloud project. This is cruc
 ## Core Documentation
 
 - [**Class Diagrams**](./Class_Diagrams.md) - Updated UML class and sequence diagrams for the JsonDbApp MVP
+
+## Public API (for Apps Script consumers)
+
+Use the top-level library functions instead of constructing classes directly:
+
+- `JsonDbApp.createAndInitialiseDatabase(config)` – first-time setup
+- `JsonDbApp.loadDatabase(config)` – load existing DB
+
+Within this repo (tests/dev), you can still use `new Database(config)` then call `createDatabase()`/`initialise()` explicitly.
 - [**clasp-watch.sh Documentation**](./clasp-watch.sh.md) - Continuous deployment script for automatic file watching and pushing to Google Apps Script
 - [**Collection Components**](./Collection_Components.md) - Detailed explanation of Collection, CollectionMetadata, and DocumentOperations classes for MongoDB-compatible document operations
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex

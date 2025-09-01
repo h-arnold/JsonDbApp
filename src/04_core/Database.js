@@ -116,19 +116,12 @@ class Database {
         }
       }
       
-      // Create or find index file for backup purposes only
-      const existingIndexFileId = this._findExistingIndexFile();
-      if (existingIndexFileId) {
-        this.indexFileId = existingIndexFileId;
-        this._logger.debug('Found existing index file for backup', { indexFileId: this.indexFileId });
-      } else {
-        // Create new index file for backup
-        this._createIndexFile();
-      }
-      
-      // Backup MasterIndex to Drive if we have collections
-      if (Object.keys(masterIndexCollections).length > 0) {
-        this.backupIndexToDrive();
+      // Optional: create/backup Drive index file on initialise
+      if (this.config.backupOnInitialise) {
+        this.ensureIndexFile();
+        if (Object.keys(masterIndexCollections).length > 0) {
+          this.backupIndexToDrive();
+        }
       }
       
       this._logger.info('Database initialisation complete', {
@@ -413,14 +406,8 @@ class Database {
    * @throws {Error} When index file cannot be loaded or is corrupted
    */
   loadIndex() {
-    // Auto-initialise database if not already initialised
-    if (!this.indexFileId) {
-      try {
-        this.initialise();
-      } catch (error) {
-        throw new Error(`Database auto-initialization failed while loading index: ${error.message}`);
-      }
-    }
+  // Lazily ensure index file exists before reading
+  this.ensureIndexFile();
     
     try {
       const indexData = this._fileService.readFile(this.indexFileId);
@@ -536,6 +523,21 @@ class Database {
       indexFileId: this.indexFileId
     });
   }
+
+  /**
+   * Ensure index file exists by finding or creating it lazily
+   * @private
+   */
+  ensureIndexFile() {
+    if (this.indexFileId) return;
+    const existingIndexFileId = this._findExistingIndexFile();
+    if (existingIndexFileId) {
+      this.indexFileId = existingIndexFileId;
+      this._logger.debug('Found existing index file for backup', { indexFileId: this.indexFileId });
+    } else {
+      this._createIndexFile();
+    }
+  }
   
   /**
    * Create a collection object (full Collection instance)
@@ -606,7 +608,7 @@ class Database {
    */
   _addCollectionToIndex(name, driveFileId) {
     try {
-      const indexData = this.loadIndex();
+  const indexData = this.loadIndex();
       
       indexData.collections[name] = {
         name: name,
@@ -640,7 +642,7 @@ class Database {
    */
   _removeCollectionFromIndex(name) {
     try {
-      const indexData = this.loadIndex();
+  const indexData = this.loadIndex();
       
       delete indexData.collections[name];
       indexData.lastUpdated = new Date();

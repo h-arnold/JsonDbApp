@@ -32,6 +32,7 @@ class DatabaseConfig {
     this.cacheEnabled = config.cacheEnabled !== undefined ? config.cacheEnabled : true;
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
+  this.backupOnInitialise = config.backupOnInitialise !== undefined ? config.backupOnInitialise : false;
     // Validate configuration
     this._validateConfig();
   }
@@ -58,48 +59,32 @@ class DatabaseConfig {
    * @private
    */
   _validateConfig() {
-    // Validate lockTimeout (non-negative)
-    if (typeof this.lockTimeout !== 'number' || this.lockTimeout < 0) {
-      throw new Error('Lock timeout must be a non-negative number');
-    }
-    // Enforce minimum lock timeout of 500ms - this is to avoid an issue where the lock times out before we get to 
-    // the point in a routine where we can retry, especially if the GAS servers are under heavy load.
-    if (this.lockTimeout < 500) {
-      throw new Error('Lock timeout must be at least 500ms');
-    }
-    // Validate retryAttempts
-    if (typeof this.retryAttempts !== 'number' || this.retryAttempts < 1) {
-      throw new Error('retryAttempts must be a positive integer');
-    }
-    // Validate retryDelayMs
-    if (typeof this.retryDelayMs !== 'number' || this.retryDelayMs < 0) {
-      throw new Error('retryDelayMs must be a non-negative number');
-    }
-    
-    // Validate log level
-    const validLogLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
-    if (!validLogLevels.includes(this.logLevel)) {
-      throw new Error('Log level must be one of: ' + validLogLevels.join(', '));
-    }
-    
-    // Validate root folder ID if provided
-    if (this.rootFolderId && typeof this.rootFolderId !== 'string') {
-      throw new Error('Root folder ID must be a string');
-    }
-    
-    // Validate boolean values
-    if (typeof this.autoCreateCollections !== 'boolean') {
-      throw new Error('Auto create collections must be a boolean');
-    }
-    
-    if (typeof this.cacheEnabled !== 'boolean') {
-      throw new Error('Cache enabled must be a boolean');
-    }
-    
-    // Validate master index key
-    if (this.masterIndexKey && typeof this.masterIndexKey !== 'string') {
-      throw new Error('Master index key must be a string');
-    }
+  // Use shared validation helpers for consistent error types
+  // lockTimeout must be a number and at least 500ms
+  Validate.number(this.lockTimeout, 'lockTimeout');
+  Validate.range(this.lockTimeout, 500, Number.MAX_SAFE_INTEGER, 'lockTimeout');
+
+  // retryAttempts must be a positive integer
+  Validate.integer(this.retryAttempts, 'retryAttempts');
+  Validate.positiveNumber(this.retryAttempts, 'retryAttempts');
+
+  // retryDelayMs must be a non-negative number
+  Validate.nonNegativeNumber(this.retryDelayMs, 'retryDelayMs');
+
+  // Validate log level against allowed values
+  const validLogLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
+  Validate.enum(this.logLevel, validLogLevels, 'logLevel');
+
+  // Optional string: rootFolderId
+  Validate.optional(this.rootFolderId, Validate.string, 'rootFolderId');
+
+  // Boolean flags
+  Validate.boolean(this.autoCreateCollections, 'autoCreateCollections');
+  Validate.boolean(this.cacheEnabled, 'cacheEnabled');
+  Validate.boolean(this.backupOnInitialise, 'backupOnInitialise');
+
+  // Optional string: masterIndexKey
+  Validate.optional(this.masterIndexKey, Validate.string, 'masterIndexKey');
   }
   
   /**
@@ -116,7 +101,8 @@ class DatabaseConfig {
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
-      masterIndexKey: this.masterIndexKey
+  masterIndexKey: this.masterIndexKey,
+  backupOnInitialise: this.backupOnInitialise
     });
   }
   
@@ -134,7 +120,8 @@ class DatabaseConfig {
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
-      masterIndexKey: this.masterIndexKey
+  masterIndexKey: this.masterIndexKey,
+  backupOnInitialise: this.backupOnInitialise
     };
   }
 
@@ -156,7 +143,8 @@ class DatabaseConfig {
       retryDelayMs: obj.retryDelayMs,
       cacheEnabled: obj.cacheEnabled,
       logLevel: obj.logLevel,
-      masterIndexKey: obj.masterIndexKey
+  masterIndexKey: obj.masterIndexKey,
+  backupOnInitialise: obj.backupOnInitialise
     };
     return new DatabaseConfig(config);
   }

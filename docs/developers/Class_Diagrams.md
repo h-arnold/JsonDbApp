@@ -14,7 +14,7 @@ This document contains updated class diagrams for the JsonDbApp library, optimis
     - [CollectionMetadata Class Diagram](#collectionmetadata-class-diagram)
     - [FileService Class Diagram](#fileservice-class-diagram)
     - [FileOperations Class Diagram](#fileoperations-class-diagram)
-    - [QueryEngine Class Diagram](#queryengine-class-diagram)
+    - [QueryEngine](#queryengine)
     - [UpdateEngine Class Diagram](#updateengine-class-diagram)
     - [IdGenerator Class Diagram](#idgenerator-class-diagram)
     - [DbLockService Class Diagram](#dblockservice-class-diagram)
@@ -49,8 +49,8 @@ classDiagram
         +listCollections(): String[]
         +deleteCollection(name): void
         +backupIndexToDrive(): void
-        +createDatabase(config): Database
-        +recoverDatabase(config): Database
+    +createAndInitialiseDatabase(config): Database
+    +loadDatabase(config): Database
         -_findOrCreateIndexFile(): String
         -_createIndexFile(): String
         -_findExistingIndexFile(): String
