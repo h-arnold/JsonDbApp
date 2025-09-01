@@ -306,9 +306,17 @@ function setupValidationTestEnvironmentForTests() {
     });
 
     // Create Database instance (it creates its own FileService and MasterIndex)
-    const database = new Database(databaseConfig);
+    const database = createAndInitialiseDatabase(databaseConfig);
     
-    // initialise the database 
+    // Ensure MasterIndex exists for initialise() - create if missing
+    const rawMasterIndex = PropertiesService.getScriptProperties().getProperty(databaseConfig.masterIndexKey);
+    if (!rawMasterIndex) {
+      // createDatabase() will instantiate and persist an empty MasterIndex
+      database.createDatabase();
+      logger.debug('MasterIndex missing - created new MasterIndex for tests');
+    }
+
+    // initialise the database
     database.initialise();
 
     // Now we need to populate the MasterIndex with our validation collections
@@ -382,6 +390,17 @@ function cleanupValidationTestEnvironment() {
 
     // Clean up database reference
     if (VALIDATION_TEST_ENV.database) {
+      try {
+        // Remove MasterIndex ScriptProperty so subsequent test runs start clean
+        if (VALIDATION_TEST_ENV.database.config && VALIDATION_TEST_ENV.database.config.masterIndexKey) {
+          const key = VALIDATION_TEST_ENV.database.config.masterIndexKey;
+          PropertiesService.getScriptProperties().deleteProperty(key);
+          logger.debug('Deleted MasterIndex ScriptProperty during cleanup', { masterIndexKey: key });
+        }
+      } catch (e) {
+        logger.warn('Failed to delete MasterIndex ScriptProperty during cleanup', { error: e.message });
+      }
+
       delete VALIDATION_TEST_ENV.database;
     }
 
