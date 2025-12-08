@@ -210,7 +210,7 @@ class Database {
     
     // Check if collection exists in MasterIndex (single source of truth)
     const miCollection = this._masterIndex.getCollection(name);
-    if (miCollection && miCollection.fileId) {
+    if (miCollection?.fileId) {
       const collection = this._createCollectionObject(name, miCollection.fileId);
       this.collections.set(name, collection);
       return collection;
@@ -274,7 +274,9 @@ class Database {
       this._addCollectionToMasterIndex(name, driveFileId);
       
       // Update index file (now secondary/backup source)
-      this._addCollectionToIndex(name, driveFileId);
+      if (this.config.backupOnInitialise) {
+        this._addCollectionToIndex(name, driveFileId);
+      }
       
       this._logger.info('Collection created successfully', {
         name,
@@ -333,7 +335,7 @@ class Database {
       // Check MasterIndex for the collection (single source of truth)
       const miCollection = this._masterIndex.getCollection(name);
       
-      if (miCollection && miCollection.fileId) {
+      if (miCollection?.fileId) {
         // Delete collection file
         this._fileService.deleteFile(miCollection.fileId);
         
@@ -344,7 +346,9 @@ class Database {
         this._removeCollectionFromMasterIndex(name);
         
         // Remove from index file (secondary/backup source)
-        this._removeCollectionFromIndex(name);
+        if (this.config.backupOnInitialise) {
+          this._removeCollectionFromIndex(name);
+        }
         
         this._logger.info('Collection dropped successfully', { name });
         
@@ -378,7 +382,7 @@ class Database {
     }
     // Load from MasterIndex if exists
     const mi = this._masterIndex.getCollection(name);
-    if (mi && mi.fileId) {
+    if (mi?.fileId) {
       const coll = this._createCollectionObject(name, mi.fileId);
       this.collections.set(name, coll);
       return coll;
