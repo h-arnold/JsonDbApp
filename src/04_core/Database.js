@@ -274,7 +274,9 @@ class Database {
       this._addCollectionToMasterIndex(name, driveFileId);
       
       // Update index file (now secondary/backup source)
-      this._addCollectionToIndex(name, driveFileId);
+      if (this.config.backupOnInitialise) {
+        this._addCollectionToIndex(name, driveFileId);
+      }
       
       this._logger.info('Collection created successfully', {
         name,
@@ -344,7 +346,9 @@ class Database {
         this._removeCollectionFromMasterIndex(name);
         
         // Remove from index file (secondary/backup source)
-        this._removeCollectionFromIndex(name);
+        if (this.config.backupOnInitialise) {
+          this._removeCollectionFromIndex(name);
+        }
         
         this._logger.info('Collection dropped successfully', { name });
         
