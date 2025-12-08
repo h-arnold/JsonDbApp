@@ -33,7 +33,5 @@
     "eslint-plugin-googleappsscript": "^1.0.5"
   },
   "type": "module",
-  "dependencies": {
-    "clasp": "^1.0.0"
-  }
+  "dependencies": {}
 }

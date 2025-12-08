@@ -210,7 +210,7 @@ class Database {
     
     // Check if collection exists in MasterIndex (single source of truth)
     const miCollection = this._masterIndex.getCollection(name);
-    if (miCollection && miCollection.fileId) {
+    if (miCollection?.fileId) {
       const collection = this._createCollectionObject(name, miCollection.fileId);
       this.collections.set(name, collection);
       return collection;
@@ -335,7 +335,7 @@ class Database {
       // Check MasterIndex for the collection (single source of truth)
       const miCollection = this._masterIndex.getCollection(name);
       
-      if (miCollection && miCollection.fileId) {
+      if (miCollection?.fileId) {
         // Delete collection file
         this._fileService.deleteFile(miCollection.fileId);
         
@@ -382,7 +382,7 @@ class Database {
     }
     // Load from MasterIndex if exists
     const mi = this._masterIndex.getCollection(name);
-    if (mi && mi.fileId) {
+    if (mi?.fileId) {
       const coll = this._createCollectionObject(name, mi.fileId);
       this.collections.set(name, coll);
       return coll;

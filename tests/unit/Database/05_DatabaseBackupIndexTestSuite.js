@@ -28,17 +28,37 @@ function createDatabaseBackupIndexTestSuite() {
     return count;
   }
 
+  /**
+   * Delete a script property using the correct GAS API and protect tests running in non-GAS environments.
+   * Falls back to global ScriptProperties (if present) or a noop when neither is available.
+   */
+  function deleteScriptProperty(key) {
+    if (typeof PropertiesService !== 'undefined' && PropertiesService.getScriptProperties) {
+      // Prefer optional chaining where safe: call getScriptProperties() then deleteProperty if present
+      PropertiesService.getScriptProperties?.()?.deleteProperty?.(key);
+    } else if (typeof ScriptProperties !== 'undefined' && ScriptProperties.deleteProperty) {
+      // Legacy or alternate global - safe fallback
+      ScriptProperties.deleteProperty?.(key);
+    } else {
+      // In test/CI environments where no GAS PropertiesService exists, ignore to avoid runtime errors.
+      if (typeof Logger !== 'undefined' && Logger.log) {
+        Logger.log?.('deleteScriptProperty: PropertiesService not available; key=' + key);
+      }
+    }
+  }
+
   suite.addTest('should NOT create index file when backupOnInitialise is false', function() {
     // Arrange
     const uniqueKey = 'GASDB_MASTER_INDEX_TEST_NO_BACKUP_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { 
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
       masterIndexKey: uniqueKey,
-      backupOnInitialise: false 
+      backupOnInitialise: false
     });
-    
-    // Act
+    // Ensure no pre-existing master index script property before starting
+    deleteScriptProperty(uniqueKey);
+    // Cleanup handled later via DATABASE_TEST_DATA.createdFileIds
     const database = new Database(config);
-    database.createDatabase(); // Creates MasterIndex in ScriptProperties
+    database.createDatabase(); // Creates MasterIndex in ScriptProperties (accessed via PropertiesService)
     database.initialise();     // Should NOT create index file
     
     // Create a collection - this triggered the bug previously
@@ -50,13 +70,15 @@ function createDatabaseBackupIndexTestSuite() {
     TestFramework.assertEquals(0, indexFileCount, 'No index file should be created when backupOnInitialise is false');
     
     // Cleanup
-    ScriptProperties.deleteProperty(uniqueKey);
+    deleteScriptProperty(uniqueKey);
     // Collection file cleanup is handled by global cleanup via DATABASE_TEST_DATA.createdFileIds if we track it
-    // But here we just check the index file count.
-    // We should track the collection file for cleanup though.
     const collection = database.getCollection(collectionName);
-    if (collection && collection.getDriveFileId()) {
-      DATABASE_TEST_DATA.createdFileIds.push(collection.getDriveFileId());
+    const collectionFileId = collection?.getDriveFileId?.();
+    if (collectionFileId) {
+      DATABASE_TEST_DATA.createdFileIds.push(collectionFileId);
+    }
+    if (database?.indexFileId) {
+      DATABASE_TEST_DATA.createdFileIds.push(database.indexFileId);
     }
   });
 
@@ -67,57 +89,64 @@ function createDatabaseBackupIndexTestSuite() {
       masterIndexKey: uniqueKey,
       backupOnInitialise: true 
     });
-    
+
+    // Ensure no pre-existing master index script property before starting
+    deleteScriptProperty(uniqueKey);
+
     // Act
     const database = new Database(config);
     database.createDatabase();
     database.initialise(); // Should create index file immediately due to backupOnInitialise: true
-    
+
     // Assert
     const indexFileCount = countIndexFiles(config.rootFolderId);
     TestFramework.assertTrue(indexFileCount >= 1, 'Index file should be created when backupOnInitialise is true');
-    
+
     // Cleanup
-    ScriptProperties.deleteProperty(uniqueKey);
+    deleteScriptProperty(uniqueKey);
     if (database.indexFileId) {
       DATABASE_TEST_DATA.createdFileIds.push(database.indexFileId);
     }
   });
 
-  suite.addTest('should NOT update index file on collection creation if backupOnInitialise is false', function() {
+  suite.addTest('createCollection should not create index file when backup disabled', function() {
     // Arrange
-    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_NO_UPDATE_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { 
+    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_CREATECOL_NO_BACKUP_' + new Date().getTime();
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
       masterIndexKey: uniqueKey,
-      backupOnInitialise: false 
+      backupOnInitialise: false
     });
-    
+
+    // Ensure no pre-existing master index script property before starting
+    deleteScriptProperty(uniqueKey);
+
+    // Act
     const database = new Database(config);
     database.createDatabase();
     database.initialise();
-    
-    // Manually create an index file to simulate a pre-existing one (e.g. from a manual backup)
-    // This ensures we are testing that it doesn't get UPDATED/RECREATED, not just that it doesn't exist.
-    // However, the bug was that it created a NEW file.
-    // If we start with 0 files, and end with 0 files, we are good.
-    // If we start with 1 file, and end with 1 file (and not 2), we are also good.
-    
-    // Let's stick to the 0 file case as it's cleaner and was the reported issue.
-    // The previous test covered this, but let's be explicit about createCollection.
-    
+
+    // Ensure we track any pre-existing collection file for cleanup
     const collectionName = 'test_col_creation_check';
+    const preExistingCollection = database.getCollection(collectionName);
+    const preExistingCollectionFileId = preExistingCollection?.getDriveFileId?.();
+    if (preExistingCollectionFileId) {
+      DATABASE_TEST_DATA.createdFileIds.push(preExistingCollectionFileId);
+    }
+
+    // Act - create a collection while backup is disabled
     database.createCollection(collectionName);
-    
+
+    // Assert
     const indexFileCount = countIndexFiles(config.rootFolderId);
     TestFramework.assertEquals(0, indexFileCount, 'createCollection should not create index file when backup disabled');
-    
+
     // Cleanup
-    ScriptProperties.deleteProperty(uniqueKey);
+    deleteScriptProperty(uniqueKey);
     const collection = database.getCollection(collectionName);
-    if (collection && collection.getDriveFileId()) {
-      DATABASE_TEST_DATA.createdFileIds.push(collection.getDriveFileId());
+    const collectionFileId = collection?.getDriveFileId?.();
+    if (collectionFileId) {
+      DATABASE_TEST_DATA.createdFileIds.push(collectionFileId);
     }
   });
-
   return suite;
 }
