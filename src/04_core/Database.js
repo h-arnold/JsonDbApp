@@ -433,7 +433,7 @@ class Database {
       
       // Validate collections structure
       if (typeof indexData.collections !== 'object') {
-        throw new Error('Index file collections property is corrupted');
+        throw new TypeError('Index file collections property is corrupted');
       }
       
       return indexData;
