@@ -17,7 +17,8 @@ function createDatabaseBackupIndexTestSuite() {
    */
   function countIndexFiles(folderId) {
     const folder = DriveApp.getFolderById(folderId);
-    const files = folder.getFilesByType(MimeType.PLAIN_TEXT);
+    // Search all files and match on name rather than relying on MimeType
+    const files = folder.getFiles();
     let count = 0;
     while (files.hasNext()) {
       const file = files.next();
@@ -26,6 +27,22 @@ function createDatabaseBackupIndexTestSuite() {
       }
     }
     return count;
+  }
+
+  /**
+   * Helper to list index files in the test folder and return their IDs
+   */
+  function listIndexFiles(folderId) {
+    const folder = DriveApp.getFolderById(folderId);
+    const files = folder.getFiles();
+    const ids = [];
+    while (files.hasNext()) {
+      const file = files.next();
+      if (file.getName().includes('database_index') && file.getName().endsWith('.json')) {
+        ids.push(file.getId());
+      }
+    }
+    return ids;
   }
 
   /**
@@ -58,6 +75,9 @@ function createDatabaseBackupIndexTestSuite() {
     deleteScriptProperty(uniqueKey);
     // Cleanup handled later via DATABASE_TEST_DATA.createdFileIds
     const database = new Database(config);
+    const initialIndexFiles = listIndexFiles(config.rootFolderId);
+    const initialIndexCount = initialIndexFiles.length;
+
     database.createDatabase(); // Creates MasterIndex in ScriptProperties (accessed via PropertiesService)
     database.initialise();     // Should NOT create index file
     
@@ -65,9 +85,9 @@ function createDatabaseBackupIndexTestSuite() {
     const collectionName = 'test_col_no_backup';
     database.createCollection(collectionName);
     
-    // Assert
+    // Assert: count index files and ensure we didn't create any (allow for pre-existing index files)
     const indexFileCount = countIndexFiles(config.rootFolderId);
-    TestFramework.assertEquals(0, indexFileCount, 'No index file should be created when backupOnInitialise is false');
+    TestFramework.assertEquals(initialIndexCount, indexFileCount, 'No index file should be created when backupOnInitialise is false');
     
     // Cleanup
     deleteScriptProperty(uniqueKey);
@@ -127,18 +147,34 @@ function createDatabaseBackupIndexTestSuite() {
 
     // Ensure we track any pre-existing collection file for cleanup
     const collectionName = 'test_col_creation_check';
-    const preExistingCollection = database.getCollection(collectionName);
-    const preExistingCollectionFileId = preExistingCollection?.getDriveFileId?.();
+    // Avoid auto-creating the collection during existence checks (getCollection autogenerates if autoCreateCollections is enabled)
+    const existingCollections = database.listCollections();
+    let preExistingCollectionFileId = null;
+    if (existingCollections.indexOf(collectionName) >= 0) {
+      const preExistingCollection = database.getCollection(collectionName);
+      preExistingCollectionFileId = preExistingCollection?.getDriveFileId?.();
+    }
     if (preExistingCollectionFileId) {
       DATABASE_TEST_DATA.createdFileIds.push(preExistingCollectionFileId);
     }
 
     // Act - create a collection while backup is disabled
+    const initialIndexFiles = listIndexFiles(config.rootFolderId);
+    const initialCount = initialIndexFiles.length;
+
     database.createCollection(collectionName);
 
-    // Assert
-    const indexFileCount = countIndexFiles(config.rootFolderId);
-    TestFramework.assertEquals(0, indexFileCount, 'createCollection should not create index file when backup disabled');
+    // Assert: verify that we didn't increase the number of index files
+    const finalIndexFiles = listIndexFiles(config.rootFolderId);
+    const finalCount = finalIndexFiles.length;
+    TestFramework.assertEquals(initialCount, finalCount, 'createCollection should not create index file when backup disabled');
+
+    // Track any new index files (shouldn't be any) for cleanup if they were created by someone else
+    finalIndexFiles.forEach(id => {
+      if (initialIndexFiles.indexOf(id) === -1) {
+        DATABASE_TEST_DATA.createdFileIds.push(id);
+      }
+    });
 
     // Cleanup
     deleteScriptProperty(uniqueKey);
