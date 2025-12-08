@@ -18,6 +18,8 @@ function runDatabaseTests() {
       registerTestSuite(createDatabaseInitializationTestSuite());
       registerTestSuite(createCollectionManagementTestSuite());
       registerTestSuite(createIndexFileStructureTestSuite());
+      // Register backup index suite
+      registerTestSuite(createDatabaseBackupIndexTestSuite());
       // Register integration suite
       registerTestSuite(createDatabaseMasterIndexIntegrationTestSuite());
       // Register merged recovery tests
