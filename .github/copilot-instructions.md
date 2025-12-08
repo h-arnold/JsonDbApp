@@ -5,6 +5,7 @@
 - CRUD on named collections (JSON files in Google Drive).
 - Access via authenticated Apps Script libraries.
 - Consistency via ScriptProperties-based master index.
+- **IN PROGRESS**: Buidling a simple GAS WebApp frontend to allow user to query the database.
 
 ## Core Principles
 - **TDD**: Red-Green-Refactor. Write failing tests first, minimal passing code, then refactor.

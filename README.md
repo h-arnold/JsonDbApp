@@ -8,6 +8,7 @@ A document database implemented in Google Apps Script using the Google Drive API
   - [Getting started](#getting-started)
   - [Supported MongoDB query operators](#supported-mongodb-query-operators)
   - [Supported update operators](#supported-update-operators)
+  - [Frontend web app](#frontend-web-app)
   - [Roadmap - priorities and next steps](#roadmap---priorities-and-next-steps)
   - [Docs](#docs)
 
@@ -80,6 +81,15 @@ Notes:
 - Use `masterIndexKey` (not `masterIndexName`).
 - Avoid `JSON.stringify(db)`; inspect specific values instead (e.g. `db.listCollections()`).
 - Write operations are in-memory until you call `collection.save()`. Batch multiple writes, then `save()` once to persist to Drive.
+
+## Frontend web app
+
+- The GAS webapp entrypoint `doGet` enforces `Session.getEffectiveUser() === Session.getActiveUser()` and throws on mismatch to prevent accidental exposure if deployment scope widens.
+- Frontend scaffold lives under `src/frontend/` (Vite + Vitest + jsdom). Commands:
+  - `npm run frontend:dev` – local dev server
+  - `npm run frontend:build` – builds to `dist/frontend`
+  - `npm run frontend:test` – runs Vitest unit tests
+- Deployment wiring: the current `doGet` returns a placeholder HTML output. Once the frontend is ready, either inline the built HTML into `HtmlService.createHtmlOutput` or copy the `dist/frontend` assets into the Apps Script project and switch `doGet` to `HtmlService.createHtmlOutputFromFile`.
 
 ## Supported MongoDB query operators
 

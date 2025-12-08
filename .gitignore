@@ -6,3 +6,5 @@ test-execution.log
 *.pid
 node_modules
 .env
+dist/
+coverage/
