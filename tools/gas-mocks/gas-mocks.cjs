@@ -102,6 +102,9 @@ class MockFile {
     const mimeType = this.mimeType;
     return {
       getDataAsString() {
+        if (!fs.existsSync(filePath)) {
+          return '';
+        }
         return fs.readFileSync(filePath, 'utf8');
       },
       getContentType() {
@@ -197,7 +200,8 @@ class MockFolder {
     const id = generateId();
     const filePath = path.join(this.folderPath, name);
     ensureDir(this.folderPath);
-    fs.writeFileSync(filePath, contents);
+    const fileContent = contents != null ? String(contents) : '';
+    fs.writeFileSync(filePath, fileContent);
     const file = new MockFile({
       id,
       name,
@@ -320,7 +324,8 @@ function createGasMocks(options = {}) {
       const id = generateId();
       const filePath = path.join(rootPath, name);
       ensureDir(rootPath);
-      fs.writeFileSync(filePath, contents);
+      const fileContent = contents != null ? String(contents) : '';
+      fs.writeFileSync(filePath, fileContent);
       const file = new MockFile({
         id,
         name,
