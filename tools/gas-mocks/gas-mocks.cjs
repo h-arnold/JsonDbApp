@@ -120,7 +120,8 @@ class MockFile {
    */
   setContent(content) {
     ensureDir(path.dirname(this.filePath));
-    fs.writeFileSync(this.filePath, content != null ? String(content) : '');
+    const fileContent = content == null ? '' : String(content);
+    fs.writeFileSync(this.filePath, fileContent);
     if (this.store && this.store.files) {
       this.store.files.set(this.id, this);
     }
@@ -200,7 +201,7 @@ class MockFolder {
     const id = generateId();
     const filePath = path.join(this.folderPath, name);
     ensureDir(this.folderPath);
-    const fileContent = contents != null ? String(contents) : '';
+    const fileContent = contents == null ? '' : String(contents);
     fs.writeFileSync(filePath, fileContent);
     const file = new MockFile({
       id,
@@ -324,7 +325,7 @@ function createGasMocks(options = {}) {
       const id = generateId();
       const filePath = path.join(rootPath, name);
       ensureDir(rootPath);
-      const fileContent = contents != null ? String(contents) : '';
+      const fileContent = contents == null ? '' : String(contents);
       fs.writeFileSync(filePath, fileContent);
       const file = new MockFile({
         id,
