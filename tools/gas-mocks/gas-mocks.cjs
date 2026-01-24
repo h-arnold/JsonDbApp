@@ -25,10 +25,11 @@ function readJson(filePath, fallback) {
     return fallback;
   }
   const raw = fs.readFileSync(filePath, 'utf8');
-  if (!raw) {
+  try {
+    return JSON.parse(raw);
+  } catch (e) {
     return fallback;
   }
-  return JSON.parse(raw);
 }
 
 function writeJson(filePath, data) {
@@ -92,6 +93,78 @@ class MockFile {
     return this.mimeType;
   }
 
+  /**
+   * Returns a Blob object for the file with content and MIME type.
+   * @returns {Object} Blob-like object with getDataAsString() and getContentType().
+   */
+  getBlob() {
+    const filePath = this.filePath;
+    const mimeType = this.mimeType;
+    return {
+      getDataAsString() {
+        return fs.readFileSync(filePath, 'utf8');
+      },
+      getContentType() {
+        return mimeType;
+      }
+    };
+  }
+
+  /**
+   * Updates the file contents in the underlying mock storage.
+   * @param {string} content - New file contents.
+   * @returns {MockFile} This file, for chaining.
+   */
+  setContent(content) {
+    ensureDir(path.dirname(this.filePath));
+    fs.writeFileSync(this.filePath, content != null ? String(content) : '');
+    if (this.store && this.store.files) {
+      this.store.files.set(this.id, this);
+    }
+    return this;
+  }
+
+  /**
+   * Indicates whether the file is currently trashed.
+   * @returns {boolean} True if the file is trashed.
+   */
+  isTrashed() {
+    return this.trashed;
+  }
+
+  /**
+   * Returns the file size in bytes.
+   * @returns {number} File size.
+   */
+  getSize() {
+    if (fs.existsSync(this.filePath)) {
+      return fs.statSync(this.filePath).size;
+    }
+    return 0;
+  }
+
+  /**
+   * Returns the last modified date.
+   * @returns {Date} Last modified date.
+   */
+  getLastUpdated() {
+    if (fs.existsSync(this.filePath)) {
+      return fs.statSync(this.filePath).mtime;
+    }
+    return new Date();
+  }
+
+  /**
+   * Returns the creation date.
+   * @returns {Date} Creation date.
+   */
+  getDateCreated() {
+    if (fs.existsSync(this.filePath)) {
+      return fs.statSync(this.filePath).birthtime;
+    }
+    return new Date();
+  }
+
   setTrashed(trashed) {
     this.trashed = Boolean(trashed);
     this.store.files.set(this.id, this);
@@ -138,14 +211,14 @@ class MockFolder {
 
   getFiles() {
     const files = Array.from(this.store.files.values())
-      .filter(file => file.filePath.startsWith(this.folderPath))
+      .filter(file => path.dirname(file.filePath) === this.folderPath)
       .filter(file => !file.trashed);
     return new MockFileIterator(files);
   }
 
   getFilesByType(mimeType) {
     const files = Array.from(this.store.files.values())
-      .filter(file => file.filePath.startsWith(this.folderPath))
+      .filter(file => path.dirname(file.filePath) === this.folderPath)
       .filter(file => !file.trashed)
       .filter(file => file.mimeType === mimeType);
     return new MockFileIterator(files);
@@ -166,7 +239,7 @@ class MockProperties {
   }
 
   getProperty(key) {
-    return this.cache[key] || null;
+    return Object.prototype.hasOwnProperty.call(this.cache, key) ? this.cache[key] : null;
   }
 
   setProperty(key, value) {
@@ -186,6 +259,15 @@ class MockLock {
     this.locked = false;
   }
 
+  /**
+   * Acquires the lock or throws on timeout.
+   * NOTE: This implementation uses a busy-wait loop that blocks the JavaScript event loop.
+   * In single-threaded Node.js, this won't properly simulate concurrent lock contention
+   * like the real GAS LockService does. This mock is suitable for single-threaded
+   * sequential test scenarios but won't simulate true concurrent lock behavior.
+   * @param {number} timeoutInMillis - Maximum time to wait in milliseconds.
+   * @throws {Error} When timeout is reached.
+   */
   waitLock(timeoutInMillis) {
     const start = Date.now();
     while (this.locked) {
@@ -234,6 +316,21 @@ function createGasMocks(options = {}) {
       store.folders.set(id, folder);
       return folder;
     },
+    createFile(name, contents, mimeType) {
+      const id = generateId();
+      const filePath = path.join(rootPath, name);
+      ensureDir(rootPath);
+      fs.writeFileSync(filePath, contents);
+      const file = new MockFile({
+        id,
+        name,
+        mimeType,
+        filePath,
+        store
+      });
+      store.files.set(id, file);
+      return file;
+    },
     getFolderById(id) {
       const folder = store.folders.get(id);
       if (!folder || folder.trashed) {
@@ -263,6 +360,12 @@ function createGasMocks(options = {}) {
   };
 
   const ScriptProperties = {
+    getProperty(key) {
+      return scriptProperties.getProperty(key);
+    },
+    setProperty(key, value) {
+      return scriptProperties.setProperty(key, value);
+    },
     deleteProperty(key) {
       scriptProperties.deleteProperty(key);
     }
@@ -275,6 +378,14 @@ function createGasMocks(options = {}) {
   };
 
   const Utilities = {
+    /**
+     * Mock implementation of Utilities.sleep.
+     * NOTE: This implementation uses a busy-wait loop that blocks the JavaScript event loop
+     * and wastes CPU cycles. While it simulates the blocking behavior of Utilities.sleep(),
+     * it's inefficient and could cause issues in test environments. Most tests should not
+     * depend on actual timing delays.
+     * @param {number} milliseconds - Sleep duration in milliseconds.
+     */
     sleep(milliseconds) {
       const start = Date.now();
       while (Date.now() - start < milliseconds) {

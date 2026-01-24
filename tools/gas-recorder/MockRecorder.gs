@@ -63,6 +63,22 @@ function recordDriveApp() {
   var fileById = DriveApp.getFileById(file.getId());
   var folderById = DriveApp.getFolderById(folder.getId());
 
+  // Capture file content methods
+  var blob = fileById.getBlob();
+  var blobContent = blob.getDataAsString();
+  var blobContentType = blob.getContentType();
+
+  // Capture file metadata methods
+  var fileSize = fileById.getSize();
+  var fileLastUpdated = fileById.getLastUpdated();
+  var fileDateCreated = fileById.getDateCreated();
+  var fileIsTrashed = fileById.isTrashed();
+
+  // Update file content
+  var updatedContent = JSON.stringify({ ok: true, updatedAt: new Date().toISOString() }, null, 2);
+  fileById.setContent(updatedContent);
+  var contentAfterSet = fileById.getBlob().getDataAsString();
+
   var filesIterator = folderById.getFiles();
   var files = [];
   while (filesIterator.hasNext()) {
@@ -86,6 +102,7 @@ function recordDriveApp() {
   }
 
   fileById.setTrashed(true);
+  var isTrashedAfterSet = fileById.isTrashed();
   folderById.setTrashed(true);
 
   return {
@@ -105,6 +122,23 @@ function recordDriveApp() {
     getFileById: {
       id: fileById.getId(),
       name: fileById.getName()
+    },
+    fileBlob: {
+      content: blobContent,
+      contentType: blobContentType
+    },
+    fileMetadata: {
+      size: fileSize,
+      lastUpdated: fileLastUpdated ? fileLastUpdated.toISOString() : null,
+      dateCreated: fileDateCreated ? fileDateCreated.toISOString() : null,
+      isTrashed: fileIsTrashed
+    },
+    setContent: {
+      original: payload,
+      updated: contentAfterSet
+    },
+    setTrashed: {
+      isTrashedAfterSet: isTrashedAfterSet
     },
     listFiles: files,
     listTextFiles: textFiles

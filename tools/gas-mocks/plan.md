@@ -9,6 +9,7 @@ This plan summarizes the Google Apps Script reference signatures for the APIs ex
 | --- | --- | --- |
 | `getRootFolder` | `DriveApp.getRootFolder(): Folder` | Return singleton root folder. |
 | `createFolder` | `DriveApp.createFolder(name: String): Folder` | Create a folder under root. |
+| `createFile` | `DriveApp.createFile(name: String, content: String, mimeType: String): File` | Create a file in root folder. |
 | `getFolderById` | `DriveApp.getFolderById(id: String): Folder` | Lookup by ID; throw if missing. |
 | `getFileById` | `DriveApp.getFileById(id: String): File` | Lookup by ID; throw if missing. |
 | `getFolders` | `DriveApp.getFolders(): FolderIterator` | Iterate folders under root. |
@@ -34,6 +35,12 @@ This plan summarizes the Google Apps Script reference signatures for the APIs ex
 | `getId` | `File.getId(): String` | Return stable ID. |
 | `getName` | `File.getName(): String` | Return file name. |
 | `getMimeType` | `File.getMimeType(): String` | Return MIME type string. |
+| `getBlob` | `File.getBlob(): Blob` | Return Blob object with `getDataAsString()` and `getContentType()`. |
+| `setContent` | `File.setContent(content: String): File` | Update file contents; returns file for chaining. |
+| `isTrashed` | `File.isTrashed(): Boolean` | Return true if file is trashed. |
+| `getSize` | `File.getSize(): Integer` | Return file size in bytes. |
+| `getLastUpdated` | `File.getLastUpdated(): Date` | Return last modified date. |
+| `getDateCreated` | `File.getDateCreated(): Date` | Return creation date. |
 | `setTrashed` | `File.setTrashed(trashed: Boolean): void` | Mark file as deleted. |
 
 ### Iterators
@@ -94,7 +101,8 @@ This plan summarizes the Google Apps Script reference signatures for the APIs ex
 ## Expected Data Shapes
 
 - **Folder**: `{ id: string, name: string, trashed: boolean }`
-- **File**: `{ id: string, name: string, mimeType: string, trashed: boolean, contents: string }`
+- **File**: `{ id: string, name: string, mimeType: string, trashed: boolean }`
+  - Note: Mocks may maintain additional internal fields (e.g. `filePath` or raw `contents`) that are not part of the public GAS `File` API. File content should be accessed via `file.getBlob().getDataAsString()`.
 - **Properties**: `{ [key: string]: string }`
 - **Iterators**: `{ hasNext(): boolean, next(): File | Folder }`
 - **Lock**: `{ waitLock(timeout: number): void, releaseLock(): void }`
