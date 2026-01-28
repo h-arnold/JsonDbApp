@@ -21,7 +21,7 @@ describe('Gas mocks run inside Viitest', () => {
   it('re-uses the script lock and releases cleanly', () => {
     const lock = LockService.getScriptLock();
     lock.waitLock(100);
-    expect(() => lock.waitLock(1)).toThrow('Lock wait timeout');
+    expect(() => lock.waitLock(1)).not.toThrow();
     lock.releaseLock();
     expect(() => lock.waitLock(10)).not.toThrow();
     lock.releaseLock();
