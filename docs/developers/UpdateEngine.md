@@ -635,4 +635,4 @@ Validation tests cover:
 - Date operator removal
 - No-op modifiedCount scenarios
 
-Refer to `tests/validation/04_ArrayUpdateOperators.js` for concrete examples.
+Refer to `old_tests/validation/04_ArrayUpdateOperators.js` for concrete examples.

@@ -11,6 +11,7 @@
     "test:gas": "./test-runner.sh",
     "test:validate": "./test-runner.sh --validate",
     "test:logs": "./test-runner.sh --logs-only",
+    "test:vitest": "vitest run --config tests/vitest.config.js",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
@@ -30,7 +31,8 @@
     "@google/clasp": "^2.5.0",
     "eslint": "^9.29.0",
     "eslint-config-google": "^0.14.0",
-    "eslint-plugin-googleappsscript": "^1.0.5"
+    "eslint-plugin-googleappsscript": "^1.0.5",
+    "vitest": "^4.0.18"
   },
   "type": "module"
 }

@@ -51,9 +51,9 @@ This script automates the process of testing Google Apps Script projects using `
 
 ### Sections
 
-- `1`, `section1`: Run Section 1 tests/validation only.
-- `2`, `section2`: Run Section 2 tests/validation only.
-- `3`, `section3`: Run Section 3 tests/validation only.
+- `1`, `section1`: Run Section 1 old_tests/validation only.
+- `2`, `section2`: Run Section 2 old_tests/validation only.
+- `3`, `section3`: Run Section 3 old_tests/validation only.
 - `all`: Run all sections (default if no section is specified).
 
 ### Examples

@@ -25,16 +25,17 @@
 - `src/03_services/`: DbLockService.js, FileService.js
 - `src/04_core/`: Database.js, DatabaseConfig.js, MasterIndex.js
   - `src/04_core/Collection/`: 01_CollectionReadOperations.js, 02_CollectionWriteOperations.js, 99_Collection.js (composed into a single Collection class at runtime)
-- `tests/data/`: MockQueryData.js (and other mock data)
-- `tests/framework/`: 01_AssertionUtilities.js, 02_TestResult.js, 03_TestRunner.js, 04_TestSuite.js, 05_TestFramework.js
-- `tests/unit/`: Unit test suites by class/component:
+- `old_tests/data/`: MockQueryData.js (and other mock data)
+- `old_tests/framework/`: 01_AssertionUtilities.js, 02_TestResult.js, 03_TestRunner.js, 04_TestSuite.js, 05_TestFramework.js
+- `old_tests/unit/`: Unit test suites by class/component:
   - Collection/ (multiple test suites)
   - CollectionCoordinator/ (multiple test suites)
   - DbLockService/
   - DocumentOperations/
   - UtilityTests/
   - ...
-- `tests/validation/`: Operator validation suites and orchestrator
+- `old_tests/validation/`: Operator validation suites and orchestrator
+- `tests/`: New Viitest harness (see `tests/README.md` for how it wires the GAS mocks)
 - `README.md`, `LICENSE`, `package.json`, `appsscript.json`: Project config and metadata
 
 ## Naming Conventions

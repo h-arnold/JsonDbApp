@@ -124,7 +124,7 @@ deploy_executable_api() {
     fi
 }
 
-# Function to login for run operations (tests/validation)
+# Function to login for run operations (old_tests/validation)
 login_for_run() {
     if [ "$LOGIN_FOR_RUN_SUCCESSFUL" = true ]; then
         print_info "Already logged in for 'clasp run' operations in this session."

@@ -33,7 +33,7 @@ export default defineConfig([
     ignores: [
       'eslint.config.js',  
       'node_modules/',
-      'tests/data/',
+      'old_tests/data/',
       '*.log',
       '*.pid'
     ]
