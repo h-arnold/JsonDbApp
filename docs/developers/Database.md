@@ -93,6 +93,8 @@ Database (Orchestrator)
 
 **Important:** No longer falls back to Drive index file.
 
+You can tune the behaviour by enabling `stripDisallowedCollectionNameCharacters` on `DatabaseConfig`. When enabled, these characters are stripped from the requested name before validation, the cleaned name is logged when characters were removed, and the cleaned name is the one persisted in caches and the MasterIndex. The sanitised name still undergoes the reserved-name and empty-name checks so the system never exposes a forbidden value, it just removes the offending characters first.
+
 ## Database Initialization and Recovery Workflow
 
 **NEW:** The Database class now enforces a clear separation between creation, initialization, and recovery:
@@ -199,15 +201,15 @@ const db = new Database({
 - **Throws:** `Error` when MasterIndex is missing, corrupted, or initialization fails
 - **Side Effects:**
   - Loads collections from MasterIndex into memory
-  - Creates or finds Drive-based index file for backup purposes
-  - Backs up MasterIndex to Drive index file
+  - When `backupOnInitialise` is `true`, ensures a Drive-based index file exists for backups
+  - When `backupOnInitialise` is `true`, backs up the MasterIndex to the Drive index file
 
 **Process:**
 
 1. Verify MasterIndex exists and is valid
 2. Load existing collections from MasterIndex (single source of truth)
-3. Create or find Drive-based index file for backup
-4. Backup MasterIndex to Drive index file if collections exist
+3. When `backupOnInitialise` is `true`, create or find the Drive-based index file used for backups
+4. When `backupOnInitialise` is `true` and collections exist, back up the MasterIndex to the Drive index file
 5. Populate in-memory collections cache
 
 **Important:** No longer falls back to Drive index file. If MasterIndex is missing or corrupted, use `createDatabase()` for fresh setup or `recoverDatabase()` for recovery.
@@ -291,7 +293,7 @@ Explicitly creates a new collection.
 2. Delete collection Drive file
 3. Remove from in-memory cache
 4. Remove from MasterIndex
-5. Remove from Drive index file (backup)
+5. Remove from Drive index file (backup updates occur only when Drive backups are enabled)
 
 **Important:** No longer falls back to Drive index file.
 
@@ -307,6 +309,8 @@ Loads and validates Drive-based index file data.
 - Validates JSON structure
 - Repairs missing `collections` or `lastUpdated` properties
 - Detects and reports corruption scenarios
+
+Before reading the Drive index file, `loadIndex()` calls `ensureIndexFile()` so the file is only created or touched when backups are enabled (`backupOnInitialise: true`) or when an explicit index operation needs it.
 
 #### `backupIndexToDrive()`
 
@@ -333,6 +337,10 @@ Creates a new Drive-based index file with initial structure.
 
 - **Side Effects:** Sets `this.indexFileId`
 - **Initial Structure:** Empty collections, timestamps, version
+
+#### `ensureIndexFile()`
+
+Lazily locates or creates the Drive-based index file. This helper is invoked when `backupOnInitialise` is `true` during `initialise()` and before any other Drive index operations so unnecessary Drive writes are avoided when backups are disabled.
 
 #### `_loadIndexFile()`
 
@@ -361,8 +369,8 @@ Validates collection name according to GAS DB rules.
 - **Throws:** `Error` for invalid names
 - **Rules:**
   - Must be non-empty string
-  - No invalid filesystem characters
-  - Not reserved names (index, master, system, admin)
+  - No invalid filesystem characters (`[\/\\:*?"<>|]`). When `stripDisallowedCollectionNameCharacters` is enabled on the configuration, the characters are removed before the checks below, and any modification is logged for diagnostics.
+  - Not reserved names (index, master, system, admin). The reserved-name check is applied after sanitisation so `index/` will still be rejected even though the slash is removed.
 
 ## Usage Examples
 

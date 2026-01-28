@@ -10,9 +10,9 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
 
   suite.addTest('should integrate with master index on initialisation', function() {
     // Arrange - use a unique master index key for this test to avoid conflicts
-    const uniqueMasterIndexKey = 'GASDB_MASTER_INDEX_TEST_INIT_' + new Date().getTime();
+    const uniqueMasterIndexKey = 'GASDB_MASTER_INDEX_TEST_INIT_' + Date.now();
     // Arrange - configure and create fresh database
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { masterIndexKey: uniqueMasterIndexKey });
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueMasterIndexKey };
     const database = new Database(config);
     database.createDatabase();
     // Pre-populate MasterIndex
@@ -40,8 +40,8 @@ function createDatabaseMasterIndexIntegrationTestSuite() {
 
   suite.addTest('should co-ordinate collection operations with master index', function() {
     // Arrange - use a fresh database instance with unique master index key for this test
-    const uniqueConfig = Object.assign({}, DATABASE_TEST_DATA.testConfig);
-    uniqueConfig.masterIndexKey = 'GASDB_MASTER_INDEX_TEST_COORDINATION_' + new Date().getTime();
+    const uniqueConfig = { ...DATABASE_TEST_DATA.testConfig };
+    uniqueConfig.masterIndexKey = 'GASDB_MASTER_INDEX_TEST_COORDINATION_' + Date.now();
     const database = new Database(uniqueConfig);
     // First-time setup: create MasterIndex before initialising
     database.createDatabase();

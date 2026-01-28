@@ -67,7 +67,8 @@ function createDatabaseConfigCreationTestSuite() {
       TestFramework.assertEquals(config.retryDelayMs, 1000, 'Default retryDelayMs should be 1000ms');
       TestFramework.assertTrue(config.cacheEnabled, 'Cache should be enabled by default');
       TestFramework.assertEquals(config.logLevel, 'INFO', 'Default log level should be INFO');
-  TestFramework.assertFalse(config.backupOnInitialise, 'backupOnInitialise should be false by default');
+      TestFramework.assertFalse(config.backupOnInitialise, 'backupOnInitialise should be false by default');
+      TestFramework.assertFalse(config.stripDisallowedCollectionNameCharacters, 'Sanitisation flag should default to false');
     } catch (error) {
       throw new Error('DatabaseConfig not implemented: ' + error.message);
     }
@@ -81,8 +82,9 @@ function createDatabaseConfigCreationTestSuite() {
       retryAttempts: 5,
       retryDelayMs: 2000,
       cacheEnabled: false,
-  logLevel: 'DEBUG',
-  backupOnInitialise: true
+      logLevel: 'DEBUG',
+      backupOnInitialise: true,
+      stripDisallowedCollectionNameCharacters: true
     };
     // Act - This should fail initially (TDD Red phase)
     try {
@@ -95,7 +97,8 @@ function createDatabaseConfigCreationTestSuite() {
       TestFramework.assertEquals(config.retryDelayMs, 2000, 'Custom retryDelayMs should be used');
       TestFramework.assertFalse(config.cacheEnabled, 'Cache should be disabled');
       TestFramework.assertEquals(config.logLevel, 'DEBUG', 'Log level should be DEBUG');
-  TestFramework.assertTrue(config.backupOnInitialise, 'backupOnInitialise should be true when set');
+      TestFramework.assertTrue(config.backupOnInitialise, 'backupOnInitialise should be true when set');
+      TestFramework.assertTrue(config.stripDisallowedCollectionNameCharacters, 'Sanitisation flag should respect custom value');
     } catch (error) {
       throw new Error('DatabaseConfig constructor not implemented: ' + error.message);
     }
@@ -118,10 +121,23 @@ function createDatabaseConfigCreationTestSuite() {
       TestFramework.assertTrue(config.autoCreateCollections, 'Default autoCreateCollections should be preserved');
       TestFramework.assertTrue(config.cacheEnabled, 'Default cacheEnabled should be preserved');
       TestFramework.assertDefined(config.rootFolderId, 'Default rootFolderId should be set');
-  TestFramework.assertFalse(config.backupOnInitialise, 'Default backupOnInitialise should be preserved (false)');
+      TestFramework.assertFalse(config.backupOnInitialise, 'Default backupOnInitialise should be preserved (false)');
+      TestFramework.assertFalse(config.stripDisallowedCollectionNameCharacters, 'Sanitisation flag should default to false');
     } catch (error) {
       throw new Error('DatabaseConfig merging not implemented: ' + error.message);
     }
+  });
+
+  suite.addTest('should preserve sanitisation flag through clone and serialization', function() {
+    const config = new DatabaseConfig({ stripDisallowedCollectionNameCharacters: true });
+    const clone = config.clone();
+    TestFramework.assertTrue(clone.stripDisallowedCollectionNameCharacters, 'clone() should retain the sanitisation flag');
+
+    const serialised = clone.toJSON();
+    TestFramework.assertTrue(serialised.stripDisallowedCollectionNameCharacters, 'toJSON() should include the sanitisation flag');
+
+    const deserialised = DatabaseConfig.fromJSON(serialised);
+    TestFramework.assertTrue(deserialised.stripDisallowedCollectionNameCharacters, 'fromJSON() should restore the sanitisation flag');
   });
   
   return suite;
@@ -216,11 +232,22 @@ function createDatabaseConfigValidationTestSuite() {
         new DatabaseConfig({ cacheEnabled: 'invalid' });
       }, Error, 'Should throw error for non-boolean cacheEnabled');
       
+      // Test invalid sanitisation flag
+      TestFramework.assertThrows(() => {
+        new DatabaseConfig({ stripDisallowedCollectionNameCharacters: 'invalid' });
+      }, Error, 'Should throw error for non-boolean sanitisation flag');
+
       // Test valid boolean values should work
-      const validConfig1 = new DatabaseConfig({ autoCreateCollections: true, cacheEnabled: false, backupOnInitialise: true });
+      const validConfig1 = new DatabaseConfig({
+        autoCreateCollections: true,
+        cacheEnabled: false,
+        backupOnInitialise: true,
+        stripDisallowedCollectionNameCharacters: true
+      });
       TestFramework.assertTrue(validConfig1.autoCreateCollections, 'Valid boolean true should be accepted');
       TestFramework.assertFalse(validConfig1.cacheEnabled, 'Valid boolean false should be accepted');
       TestFramework.assertTrue(validConfig1.backupOnInitialise, 'Valid boolean true for backupOnInitialise should be accepted');
+      TestFramework.assertTrue(validConfig1.stripDisallowedCollectionNameCharacters, 'Valid boolean true for sanitisation flag should be accepted');
 
       // Test invalid backupOnInitialise
       TestFramework.assertThrows(() => {

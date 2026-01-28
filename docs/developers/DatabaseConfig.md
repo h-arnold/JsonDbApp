@@ -63,6 +63,7 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | `cacheEnabled` | Boolean | `true` | Enable file caching |
 | `logLevel` | String | 'INFO' | Log level (DEBUG, INFO, WARN, ERROR) |
 | `backupOnInitialise` | Boolean | `false` | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
+| `stripDisallowedCollectionNameCharacters` | Boolean | `false` | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks. |
 
 ## Constructor
 
@@ -171,6 +172,7 @@ Validates all configuration properties according to rules.
 - `autoCreateCollections`: Must be true or false
 - `cacheEnabled`: Must be true or false
 - Type coercion not performed
+- `stripDisallowedCollectionNameCharacters`: Must be true or false; default `false` enforces strict rejection of invalid names, while `true` enables sanitisation.
 
 **masterIndexKey:**
 
@@ -188,6 +190,7 @@ Common validation errors and their meanings:
 | "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level | Use exact string match |
 | "Auto create collections must be a boolean" | Non-boolean value | Use true or false explicitly |
 | "Failed to get default root folder" | Drive access issue | Check permissions and authentication |
+| "Collection sanitisation flag must be a boolean" | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly |
 
 ## Usage Examples
 

@@ -24,6 +24,7 @@
  * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} If LockService is unavailable.
  * @throws {ErrorHandler.ErrorTypes.LOCK_TIMEOUT} If a lock cannot be acquired within the timeout.
  */
+/* exported DbLockService */
 class DbLockService {
   /**
    * Constructor for DbLockService

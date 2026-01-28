@@ -10,6 +10,7 @@
  * - modificationToken: Token for conflict detection
  * - lockStatus: Lock state information
  */
+/* exported CollectionMetadata */
 class CollectionMetadata {
   /**
    * Create CollectionMetadata instance

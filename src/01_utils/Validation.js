@@ -4,6 +4,7 @@
  * Provides static methods for common validation patterns used throughout the codebase.
  * Throws standardised ErrorHandler.ErrorTypes.INVALID_ARGUMENT exceptions for consistency.
  */
+/* exported Validate */
 class Validate {
   
   /**

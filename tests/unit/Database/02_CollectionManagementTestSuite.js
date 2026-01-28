@@ -56,7 +56,7 @@ function createCollectionManagementTestSuite() {
       TestFramework.assertNotNull(collection, 'Collection should be auto-created');
       TestFramework.assertEquals(collection.name, collectionName, 'Collection name should match');
       // Track created file for clean-up
-      if (collection.driveFileId) {
+      if (collection?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
     } catch (error) {
@@ -97,11 +97,12 @@ function createCollectionManagementTestSuite() {
     // First create a collection to delete
     try {
       const collection = database.createCollection(collectionName);
-      if (collection && collection.driveFileId) {
+      if (collection?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
     } catch (error) {
-      // Expected to fail in Red phase
+      // Expected to fail in Red phase - assert it was an Error to be explicit
+      TestFramework.assertTrue(error instanceof Error, 'Expected error during RED phase createCollection');
     }
     // Act - This should fail initially (TDD Red phase)
     try {
@@ -119,7 +120,7 @@ function createCollectionManagementTestSuite() {
 
   suite.addTest('should throw error if collection does not exist and autoCreateCollections is false', function() {
     // Arrange
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { autoCreateCollections: false });
+    const config = { ...DATABASE_TEST_DATA.testConfig, autoCreateCollections: false };
     const database = new Database(config);
     database.initialise();
     // Act & Assert
@@ -144,8 +145,78 @@ function createCollectionManagementTestSuite() {
       TestFramework.assertThrows(() => {
         database.createCollection('invalid/name');
       }, Error, 'Should throw error for collection name with invalid characters');
+      TestFramework.assertThrows(() => {
+        database.createCollection('index');
+      }, Error, 'Should throw error for reserved collection name');
     } catch (error) {
       throw new Error('Collection name validation not implemented: ' + error.message);
+    }
+  });
+
+  suite.addTest('should sanitise invalid collection names when permissive mode enabled', function() {
+    // Arrange - create unique config for sanitisation tests
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true };
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    const suffix = '_' + Date.now();
+    const originalName = `permissive/Collection${suffix}`;
+    const expectedName = `permissiveCollection${suffix}`;
+    try {
+      // Act
+      const collection = database.createCollection(originalName);
+      if (collection?.driveFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
+      }
+      // Assert
+      TestFramework.assertEquals(collection.name, expectedName, 'Collection name should be sanitised before returning');
+      const reaccessed = database.collection(originalName);
+      TestFramework.assertEquals(reaccessed.name, expectedName, 'Should re-access collection by original name via sanitisation');
+      const collectionList = database.listCollections();
+      TestFramework.assertTrue(collectionList.includes(expectedName), 'listCollections should list sanitised name');
+      const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
+      const miCollections = masterIndex.getCollections();
+      TestFramework.assertTrue(miCollections.hasOwnProperty(expectedName), 'MasterIndex should store sanitised collection name');
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+    }
+  });
+
+  suite.addTest('should refuse reserved names even after sanitisation', function() {
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_RESERVED_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true, autoCreateCollections: false };
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    try {
+      TestFramework.assertThrows(() => {
+        database.createCollection('index/');
+      }, Error, 'Should throw error for reserved name after sanitisation');
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+    }
+  });
+
+  suite.addTest('should prevent duplicate collections that collide after sanitisation', function() {
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_DUPLICATE_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true };
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    try {
+      const suffix = '_' + Date.now();
+      const first = database.createCollection(`dup/name${suffix}`);
+      if (first?.driveFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(first.driveFileId);
+      }
+      TestFramework.assertThrows(() => {
+        database.createCollection(`dup:name${suffix}`);
+      }, Error, 'Should reject second collection when sanitised names collide');
+      const reaccessed = database.collection(`dup:name${suffix}`);
+      TestFramework.assertEquals(reaccessed.name, `dupname${suffix}`, 'Should return existing collection when referencing equivalent name');
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
     }
   });
 

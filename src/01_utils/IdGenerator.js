@@ -13,8 +13,8 @@ class IdGenerator {
   static generateUUID() {
     try {
       return Utilities.getUuid();
-    } catch (error) {
-      // Fallback if Utilities is not available (e.g., in tests)
+    } catch {
+      // Fallback if Utilities.getUuid() is not available (e.g., in tests)
       return IdGenerator.generateFallbackUUID();
     }
   }

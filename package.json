@@ -27,11 +27,10 @@
   "author": "",
   "license": "ISC",
   "devDependencies": {
-    "@google/clasp": "^2.4.2",
+    "@google/clasp": "^2.5.0",
     "eslint": "^9.29.0",
     "eslint-config-google": "^0.14.0",
     "eslint-plugin-googleappsscript": "^1.0.5"
   },
-  "type": "module",
-  "dependencies": {}
+  "type": "module"
 }

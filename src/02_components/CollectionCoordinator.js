@@ -6,6 +6,7 @@
  *
  * @class
  */
+/* exported CollectionCoordinator */
 class CollectionCoordinator {
   /**
    * Create a new CollectionCoordinator
@@ -157,7 +158,7 @@ class CollectionCoordinator {
     const name = this._collection.getName();
     try {
       this._masterIndex.releaseCollectionLock(name, operationId);
-    } catch (e) {
+    } catch {
       this._logger.error('Lock release failed', { collection: name, operationId });
       // swallow release errors to avoid masking operation errors
     }

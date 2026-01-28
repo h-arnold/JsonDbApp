@@ -9,6 +9,7 @@
 /**
  * ObjectUtils class providing date-preserving object operations
  */
+/* exported ObjectUtils */
 class ObjectUtils {
   /**
    * Deep clone an object while preserving Date instances and other complex objects

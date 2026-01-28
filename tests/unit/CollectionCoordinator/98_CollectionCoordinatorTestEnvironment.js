@@ -322,7 +322,7 @@ function createTestCollectionCoordinator(configName = 'default', overrideConfig 
   }
   // Fetch base profile and merge with any overrides
   const baseConfig = COLLECTION_COORDINATOR_TEST_DATA.coordinationConfigs[configName] || {};
-  const mergedConfig = Object.assign({}, baseConfig, overrideConfig);
+  const mergedConfig = { ...baseConfig, ...overrideConfig };
   
   return new CollectionCoordinator(
     COLLECTION_COORDINATOR_TEST_DATA.testCollection,

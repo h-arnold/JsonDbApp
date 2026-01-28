@@ -10,7 +10,7 @@ function createIndexFileStructureTestSuite() {
 
   suite.addTest('should create index file with correct structure', function() {
     // Arrange
-  const configWithBackup = Object.assign({}, DATABASE_TEST_DATA.testConfig, { backupOnInitialise: true });
+  const configWithBackup = { ...DATABASE_TEST_DATA.testConfig, backupOnInitialise: true };
   const database = new Database(configWithBackup);
     // Act - This should fail initially (TDD Red phase)
     try {
@@ -31,7 +31,7 @@ function createIndexFileStructureTestSuite() {
     // Arrange
     const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
     database.initialise();
-    const collectionName = 'indexTestCollection';
+    const collectionName = `indexTestCollection_${Date.now()}`;
     // Act - This should fail initially (TDD Red phase)
     try {
       // Create a collection
@@ -46,7 +46,7 @@ function createIndexFileStructureTestSuite() {
       TestFramework.assertDefined(collectionData.created, 'Collection should have created timestamp');
       TestFramework.assertDefined(collectionData.lastUpdated, 'Collection should have lastUpdated timestamp');
       // Track created file for clean-up
-      if (collection && collection.driveFileId) {
+      if (collection?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
     } catch (error) {
@@ -58,7 +58,7 @@ function createIndexFileStructureTestSuite() {
     // Arrange
     const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
     database.initialise();
-    const collectionName = 'masterIndexSyncTest';
+    const collectionName = `masterIndexSyncTest_${Date.now()}`;
     // Act
     database.createCollection(collectionName);
     const masterIndex = new MasterIndex({ masterIndexKey: DATABASE_TEST_DATA.testConfig.masterIndexKey });
@@ -70,6 +70,37 @@ function createIndexFileStructureTestSuite() {
     );
   });
 
+  suite.addTest('should record sanitised collection names in index file when sanitisation enabled', function() {
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_INDEX_SANITISE_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true, backupOnInitialise: true };
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    try {
+      const suffix = '_' + Date.now();
+      const requestedName = `index/backup${suffix}`;
+      const expectedName = `indexbackup${suffix}`;
+      const collection = database.createCollection(requestedName);
+      if (collection?.driveFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
+      }
+      if (database.indexFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(database.indexFileId);
+      }
+      const indexData = database.loadIndex();
+      TestFramework.assertTrue(
+        indexData.collections.hasOwnProperty(expectedName),
+        'Index file should list sanitised collection name'
+      );
+      TestFramework.assertEquals(
+        indexData.collections[expectedName].name,
+        expectedName,
+        'Stored collection entry should use sanitised name'
+      );
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+    }
+  });
 
   return suite;
 }

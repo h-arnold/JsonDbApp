@@ -575,7 +575,8 @@ function createObjectUtilsTestSuite() {
       lockTimeout: 10000,
       cacheEnabled: false,
       logLevel: 'DEBUG',
-      masterIndexKey: 'TEST_KEY'
+      masterIndexKey: 'TEST_KEY',
+      stripDisallowedCollectionNameCharacters: true
     });
     const serialisedConfig = ObjectUtils.serialise(originalConfig);
     const deserialisedConfig = ObjectUtils.deserialise(serialisedConfig);
@@ -587,6 +588,7 @@ function createObjectUtilsTestSuite() {
     TestFramework.assertEquals(originalConfig.cacheEnabled, deserialisedConfig.cacheEnabled, 'cacheEnabled should match');
     TestFramework.assertEquals(originalConfig.logLevel, deserialisedConfig.logLevel, 'logLevel should match');
     TestFramework.assertEquals(originalConfig.masterIndexKey, deserialisedConfig.masterIndexKey, 'masterIndexKey should match');
+    TestFramework.assertTrue(deserialisedConfig.stripDisallowedCollectionNameCharacters, 'Sanitisation flag should be revived');
 
     // Prepare a CollectionMetadata instance and serialise
     const originalMeta = new CollectionMetadata(
@@ -610,6 +612,23 @@ function createObjectUtilsTestSuite() {
     TestFramework.assertEquals(originalMeta.modificationToken, deserialisedMeta.modificationToken, 'modificationToken should match');
     TestFramework.assertTrue(deserialisedMeta.created instanceof Date, 'created should be Date');
     TestFramework.assertTrue(deserialisedMeta.lastUpdated instanceof Date, 'lastUpdated should be Date');
+  });
+
+  suite.addTest('testObjectUtilsRoundTripDatabaseConfigSanitisationFlag', function() {
+    const originalConfig = new DatabaseConfig({
+      rootFolderId: 'testRoot',
+      stripDisallowedCollectionNameCharacters: true,
+      cacheEnabled: false,
+      logLevel: 'WARN'
+    });
+    const serialised = ObjectUtils.serialise(originalConfig);
+    const deserialised = ObjectUtils.deserialise(serialised);
+
+    TestFramework.assertTrue(deserialised instanceof DatabaseConfig, 'Should revive DatabaseConfig instance');
+    TestFramework.assertEquals(originalConfig.rootFolderId, deserialised.rootFolderId, 'rootFolderId should match');
+    TestFramework.assertEquals(originalConfig.logLevel, deserialised.logLevel, 'logLevel should match');
+    TestFramework.assertFalse(deserialised.cacheEnabled, 'cacheEnabled should match');
+    TestFramework.assertTrue(deserialised.stripDisallowedCollectionNameCharacters, 'Sanitisation flag should survive serialisation');
   });
   
   suite.addTest('testObjectUtilsRoundTripSerialisation', function() {
@@ -687,7 +706,7 @@ function createObjectUtilsTestSuite() {
   suite.addTest('testObjectUtilsRoundTripWithNaNAndInfinity', function() {
     // Test handling of special numeric values
     const specialNumbers = {
-      nanValue: NaN,
+      nanValue: Number.NaN,
       infinityValue: Infinity,
       negativeInfinityValue: -Infinity,
       normalNumber: 42.5
@@ -713,7 +732,7 @@ function createObjectUtilsTestSuite() {
     
     // This should not crash (though it might create a deep copy with duplication)
     try {
-      const cloned = ObjectUtils.deepClone(obj);
+      ObjectUtils.deepClone(obj);
       TestFramework.assertTrue(true, 'Should handle circular references without crashing');
     } catch (error) {
       // If it throws, that's also acceptable behaviour for circular references
