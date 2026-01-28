@@ -12,7 +12,8 @@ const DATABASE_TEST_DATA = {
   testIndexFileName: 'GASDB_Test_Index_' + new Date().getTime() + '.json',
   testFolderId: null,
   testFolderName: 'GASDB_Test_Database_' + new Date().getTime(),
-  testCollectionNames: ['testCollection1', 'testCollection2', 'tempCollection'],
+  baseCollectionNames: ['testCollection1', 'testCollection2', 'tempCollection'],
+  testCollectionNames: [],
   createdFileIds: [], // Track all files created for clean-up
   createdFolderIds: [], // Track all folders created for clean-up
   testConfig: null,
@@ -40,6 +41,11 @@ function setupDatabaseTestEnvironment() {
   masterIndexKey: 'GASDB_MASTER_INDEX_TEST_DB',
   backupOnInitialise: false
     };
+    const indexKey = DATABASE_TEST_DATA.testConfig.masterIndexKey;
+    ScriptProperties.deleteProperty(indexKey);
+    ScriptProperties.deleteProperty('GASDB_MASTER_INDEX_TEST_INTEGRATION');
+    const suffix = '_' + new Date().getTime();
+    DATABASE_TEST_DATA.testCollectionNames = DATABASE_TEST_DATA.baseCollectionNames.map(name => name + suffix);
     
     logger.info('Created test folder for Database', { 
       folderId: DATABASE_TEST_DATA.testFolderId, 

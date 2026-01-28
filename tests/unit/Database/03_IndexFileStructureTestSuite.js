@@ -31,7 +31,7 @@ function createIndexFileStructureTestSuite() {
     // Arrange
     const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
     database.initialise();
-    const collectionName = 'indexTestCollection';
+    const collectionName = `indexTestCollection_${Date.now()}`;
     // Act - This should fail initially (TDD Red phase)
     try {
       // Create a collection
@@ -58,7 +58,7 @@ function createIndexFileStructureTestSuite() {
     // Arrange
     const database = DATABASE_TEST_DATA.testDatabase || new Database(DATABASE_TEST_DATA.testConfig);
     database.initialise();
-    const collectionName = 'masterIndexSyncTest';
+    const collectionName = `masterIndexSyncTest_${Date.now()}`;
     // Act
     database.createCollection(collectionName);
     const masterIndex = new MasterIndex({ masterIndexKey: DATABASE_TEST_DATA.testConfig.masterIndexKey });
@@ -81,7 +81,10 @@ function createIndexFileStructureTestSuite() {
     database.createDatabase();
     database.initialise();
     try {
-      const collection = database.createCollection('index/backup');
+      const suffix = '_' + new Date().getTime();
+      const requestedName = `index/backup${suffix}`;
+      const expectedName = `indexbackup${suffix}`;
+      const collection = database.createCollection(requestedName);
       if (collection && collection.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
@@ -90,12 +93,12 @@ function createIndexFileStructureTestSuite() {
       }
       const indexData = database.loadIndex();
       TestFramework.assertTrue(
-        indexData.collections.hasOwnProperty('indexbackup'),
+        indexData.collections.hasOwnProperty(expectedName),
         'Index file should list sanitised collection name'
       );
       TestFramework.assertEquals(
-        indexData.collections.indexbackup.name,
-        'indexbackup',
+        indexData.collections[expectedName].name,
+        expectedName,
         'Stored collection entry should use sanitised name'
       );
     } finally {

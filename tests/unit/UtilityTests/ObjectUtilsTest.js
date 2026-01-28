@@ -575,7 +575,8 @@ function createObjectUtilsTestSuite() {
       lockTimeout: 10000,
       cacheEnabled: false,
       logLevel: 'DEBUG',
-      masterIndexKey: 'TEST_KEY'
+      masterIndexKey: 'TEST_KEY',
+      stripDisallowedCollectionNameCharacters: true
     });
     const serialisedConfig = ObjectUtils.serialise(originalConfig);
     const deserialisedConfig = ObjectUtils.deserialise(serialisedConfig);

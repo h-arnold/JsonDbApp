@@ -162,8 +162,9 @@ function createCollectionManagementTestSuite() {
     const database = new Database(config);
     database.createDatabase();
     database.initialise();
-    const originalName = 'permissive/Collection';
-    const expectedName = 'permissiveCollection';
+    const suffix = '_' + new Date().getTime();
+    const originalName = `permissive/Collection${suffix}`;
+    const expectedName = `permissiveCollection${suffix}`;
     try {
       // Act
       const collection = database.createCollection(originalName);
@@ -213,15 +214,16 @@ function createCollectionManagementTestSuite() {
     database.createDatabase();
     database.initialise();
     try {
-      const first = database.createCollection('dup/name');
+      const suffix = '_' + new Date().getTime();
+      const first = database.createCollection(`dup/name${suffix}`);
       if (first && first.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(first.driveFileId);
       }
       TestFramework.assertThrows(() => {
-        database.createCollection('dup:name');
+        database.createCollection(`dup:name${suffix}`);
       }, Error, 'Should reject second collection when sanitised names collide');
-      const reaccessed = database.collection('dup:name');
-      TestFramework.assertEquals(reaccessed.name, 'dupname', 'Should return existing collection when referencing equivalent name');
+      const reaccessed = database.collection(`dup:name${suffix}`);
+      TestFramework.assertEquals(reaccessed.name, `dupname${suffix}`, 'Should return existing collection when referencing equivalent name');
     } finally {
       PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
     }
