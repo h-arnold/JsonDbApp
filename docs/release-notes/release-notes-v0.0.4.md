@@ -6,6 +6,8 @@ Release date: 2026-01-28
 
 Enhancements to collection name sanitisation (now configurable), improved local testing support via GAS API mocks and recorder stubs, documentation and development environment improvements, and a small bug fix correcting the error type thrown for corrupted collection metadata. Includes test updates and tooling additions to make local development and testing easier.
 
+[Get copies of the latest scripts here](https://drive.google.com/drive/folders/1Y_2UTeT_eY7uWZ_4964FeFcjnwa1tOm-?usp=sharing)
+
 ### Highlights
 
 - Add configurable collection name sanitisation with a new option to control sanitisation behaviour.
