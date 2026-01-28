@@ -11,7 +11,7 @@ export default defineConfig({
     globals: true,
     environment: 'node',
     setupFiles: './setup/gas-mocks.setup.js',
-    include: ['sample/**/*.test.js'],
+    include: ['unit/**/*.test.js', 'helpers/**/*.test.js'],
     clearMocks: true,
     cleanupMocks: true
   }

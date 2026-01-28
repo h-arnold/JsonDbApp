@@ -3,9 +3,10 @@
 This directory is the home of the new Viitest-based test harness.
 
 ## What lives here
-- `vitest.config.js`: points the runner at `tests/sample` and wires global setup and mocked GAS APIs.
+- `vitest.config.js`: points the runner at `tests/unit`/`tests/helpers`, wires setup, and bootstraps the GAS mocks.
 - `setup/gas-mocks.setup.js`: injects `DriveApp`, `ScriptProperties`, `LockService`, etc. by reusing `tools/gas-mocks/gas-mocks.cjs`.
-- `sample/gas-mocks.test.js`: a small working example that creates files, inspects blobs, and exercises the mock lock and properties.
+- `unit/master-index/MasterIndex.test.js`: MasterIndex-focused tests for persistence, conflicts, and locking.
+- `helpers/gas-mocks/gas-mocks.test.js`: lightweight smoke tests that verify the mock GAS surface before other suites rely on it.
 - `sample/MasterIndex.test.js`: exercises `MasterIndex` initialisation, persistence and locking using the GAS mocks.
 
 ## Running the suite
