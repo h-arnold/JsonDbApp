@@ -6,6 +6,7 @@
  * 
  * @class DatabaseConfig
  */
+/* exported DatabaseConfig */
 class DatabaseConfig {
   
   /**
@@ -25,14 +26,14 @@ class DatabaseConfig {
   constructor(config = {}) {
     // Set default values
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
-    this.autoCreateCollections = config.autoCreateCollections !== undefined ? config.autoCreateCollections : true;
-    this.lockTimeout = config.lockTimeout !== undefined ? config.lockTimeout : 30000;
-    this.retryAttempts = config.retryAttempts !== undefined ? config.retryAttempts : 3;
-    this.retryDelayMs = config.retryDelayMs !== undefined ? config.retryDelayMs : 1000;
-    this.cacheEnabled = config.cacheEnabled !== undefined ? config.cacheEnabled : true;
+    this.autoCreateCollections = config.autoCreateCollections ?? true;
+    this.lockTimeout = config.lockTimeout ?? 30000;
+    this.retryAttempts = config.retryAttempts ?? 3;
+    this.retryDelayMs = config.retryDelayMs ?? 1000;
+    this.cacheEnabled = config.cacheEnabled ?? true;
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
-  this.backupOnInitialise = config.backupOnInitialise !== undefined ? config.backupOnInitialise : false;
+    this.backupOnInitialise = config.backupOnInitialise ?? false;
     // Validate configuration
     this._validateConfig();
   }
@@ -132,20 +133,20 @@ class DatabaseConfig {
    * @static
    */
   static fromJSON(obj) {
-    if (typeof obj !== 'object' || obj === null || obj.__type !== 'DatabaseConfig') {
-      throw new InvalidArgumentError('obj', obj, 'Invalid JSON for DatabaseConfig');
+    if (obj && typeof obj === 'object' && obj.__type === 'DatabaseConfig') {
+      const config = {
+        rootFolderId: obj.rootFolderId,
+        autoCreateCollections: obj.autoCreateCollections,
+        lockTimeout: obj.lockTimeout,
+        retryAttempts: obj.retryAttempts,
+        retryDelayMs: obj.retryDelayMs,
+        cacheEnabled: obj.cacheEnabled,
+        logLevel: obj.logLevel,
+        masterIndexKey: obj.masterIndexKey,
+        backupOnInitialise: obj.backupOnInitialise
+      };
+      return new DatabaseConfig(config);
     }
-    const config = {
-      rootFolderId: obj.rootFolderId,
-      autoCreateCollections: obj.autoCreateCollections,
-      lockTimeout: obj.lockTimeout,
-      retryAttempts: obj.retryAttempts,
-      retryDelayMs: obj.retryDelayMs,
-      cacheEnabled: obj.cacheEnabled,
-      logLevel: obj.logLevel,
-  masterIndexKey: obj.masterIndexKey,
-  backupOnInitialise: obj.backupOnInitialise
-    };
-    return new DatabaseConfig(config);
+    throw new InvalidArgumentError('obj', obj, 'Invalid JSON for DatabaseConfig');
   }
 }
