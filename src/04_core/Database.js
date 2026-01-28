@@ -754,24 +754,6 @@ class Database {
     }
     return resolvedName;
   }
-    if (this.config.stripDisallowedCollectionNameCharacters) {
-      resolvedName = this._sanitizeCollectionName(name);
-      if (resolvedName.length === 0) {
-        throw new Error('Collection name cannot be empty after sanitisation');
-      }
-    } else {
-      // Use RegExp constructor to avoid unnecessary escape warnings in static analysis
-      const invalidChars = new RegExp('[\\/\\\\:*?"<>|]');
-      if (invalidChars.test(name)) {
-        throw new Error('Collection name contains invalid characters');
-      }
-    }
-    const lowerCaseName = resolvedName.toLowerCase();
-    if (reservedNames.includes(lowerCaseName)) {
-      throw new Error(`Collection name '${resolvedName}' is reserved`);
-    }
-    return resolvedName;
-  }
 
   /**
    * Sanitises a collection name by stripping disallowed filesystem characters.
