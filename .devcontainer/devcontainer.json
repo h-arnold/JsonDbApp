@@ -1,6 +1,9 @@
 {
   "name": "JsonDbApp Dev Container",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:latest",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {}
+  },
   "runArgs": ["--init"],
   "workspaceFolder": "/workspace",
   "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
