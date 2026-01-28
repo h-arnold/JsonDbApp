@@ -256,6 +256,28 @@ function createDatabaseinitialiseRefactorTestSuite() {
     }, Error, 'Should throw error when MasterIndex is corrupted');
   });
 
+  suite.addTest('should persist sanitised collection names to MasterIndex when flag enabled', function() {
+    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
+    config.masterIndexKey = 'GASDB_INIT_SANITISE_' + new Date().getTime();
+    config.stripDisallowedCollectionNameCharacters = true;
+    DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
+
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+
+    const collection = database.createCollection('sanitize/This');
+    if (collection && collection.driveFileId) {
+      DB_REFACTOR_TEST_DATA.createdFileIds.push(collection.driveFileId);
+    }
+
+    const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
+    const collections = masterIndex.getCollections();
+
+    TestFramework.assertTrue(collections.hasOwnProperty('sanitizeThis'), 'MasterIndex should store sanitised collection name');
+    TestFramework.assertEquals(collections.sanitizeThis.name, 'sanitizeThis', 'Stored collection name should match sanitised name');
+  });
+
   return suite;
 }
 

@@ -22,18 +22,18 @@ Define how to make collection-name sanitisation optionally permissive via config
    - If serialization tests exist (e.g. `tests/unit/UtilityTests/ObjectUtilsTest.js`), ensure they continue to verify the new flag survives serialisation.
    - Remember to refresh any logging or help text that references collection name validation so it aligns with the two-mode behaviour.
    - Add or update the following explicit test cases:
-     * `tests/unit/DatabaseConfigTest.js`
+     - `tests/unit/DatabaseConfigTest.js`
        - Assert `stripDisallowedCollectionNameCharacters` defaults to `false`, rejects non-boolean inputs, and is copied through `clone()`.
        - Extend serialization/deserialization coverage to ensure `toJSON()`/`fromJSON()` and any `ObjectUtils`-based tests keep the flag value intact.
-     * `tests/unit/UtilityTests/ObjectUtilsTest.js`
+     - `tests/unit/UtilityTests/ObjectUtilsTest.js`
        - Confirm `ObjectUtils.serialise()`/`deserialise()` can round-trip a `DatabaseConfig` that has `stripDisallowedCollectionNameCharacters` set to `true`.
-     * `tests/unit/Database/02_CollectionManagementTestSuite.js`
+     - `tests/unit/Database/02_CollectionManagementTestSuite.js`
        - Strict mode: existing checks still throw for invalid characters, empty names, and reserved words.
        - Permissive mode: invalid characters are stripped, the cleaned name is what `collection()`, `createCollection()`, `getCollection()`, and `dropCollection()` return/list/store, and reserved-name re-check runs on the cleaned value (e.g. `"index/"` still rejected).
        - Permissive mode: confirm sanitized names are used for caches/MasterIndex lookups so re-accessing the collection by the cleaned name succeeds and duplicates that collide after stripping are rejected.
-     * `tests/unit/DatabaseInitializationRefactorTest.js` and `tests/unit/Database/03_IndexFileStructureTestSuite.js`
+     - `tests/unit/DatabaseInitializationRefactorTest.js` and `tests/unit/Database/03_IndexFileStructureTestSuite.js`
        - Verify master index/index file entries record the sanitized name when the flag is enabled so persistence stays consistent.
-     * `tests/unit/Collection/*` suites that assert `collection.getName()` or rely on stored names
+     - `tests/unit/Collection/*` suites that assert `collection.getName()` or rely on stored names
        - Ensure those expectations reflect the cleaned name when sanitisation is on while still expecting strict behaviour otherwise.
 
 4. **Follow-up**

@@ -144,8 +144,86 @@ function createCollectionManagementTestSuite() {
       TestFramework.assertThrows(() => {
         database.createCollection('invalid/name');
       }, Error, 'Should throw error for collection name with invalid characters');
+      TestFramework.assertThrows(() => {
+        database.createCollection('index');
+      }, Error, 'Should throw error for reserved collection name');
     } catch (error) {
       throw new Error('Collection name validation not implemented: ' + error.message);
+    }
+  });
+
+  suite.addTest('should sanitise invalid collection names when permissive mode enabled', function() {
+    // Arrange - create unique config for sanitisation tests
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_' + new Date().getTime();
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
+      masterIndexKey: uniqueKey,
+      stripDisallowedCollectionNameCharacters: true
+    });
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    const originalName = 'permissive/Collection';
+    const expectedName = 'permissiveCollection';
+    try {
+      // Act
+      const collection = database.createCollection(originalName);
+      if (collection && collection.driveFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
+      }
+      // Assert
+      TestFramework.assertEquals(collection.name, expectedName, 'Collection name should be sanitised before returning');
+      const reaccessed = database.collection(originalName);
+      TestFramework.assertEquals(reaccessed.name, expectedName, 'Should re-access collection by original name via sanitisation');
+      const collectionList = database.listCollections();
+      TestFramework.assertTrue(collectionList.includes(expectedName), 'listCollections should list sanitised name');
+      const masterIndex = new MasterIndex({ masterIndexKey: config.masterIndexKey });
+      const miCollections = masterIndex.getCollections();
+      TestFramework.assertTrue(miCollections.hasOwnProperty(expectedName), 'MasterIndex should store sanitised collection name');
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+    }
+  });
+
+  suite.addTest('should refuse reserved names even after sanitisation', function() {
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_RESERVED_' + new Date().getTime();
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
+      masterIndexKey: uniqueKey,
+      stripDisallowedCollectionNameCharacters: true,
+      autoCreateCollections: false
+    });
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    try {
+      TestFramework.assertThrows(() => {
+        database.createCollection('index/');
+      }, Error, 'Should throw error for reserved name after sanitisation');
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+    }
+  });
+
+  suite.addTest('should prevent duplicate collections that collide after sanitisation', function() {
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_DUPLICATE_' + new Date().getTime();
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
+      masterIndexKey: uniqueKey,
+      stripDisallowedCollectionNameCharacters: true
+    });
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    try {
+      const first = database.createCollection('dup/name');
+      if (first && first.driveFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(first.driveFileId);
+      }
+      TestFramework.assertThrows(() => {
+        database.createCollection('dup:name');
+      }, Error, 'Should reject second collection when sanitised names collide');
+      const reaccessed = database.collection('dup:name');
+      TestFramework.assertEquals(reaccessed.name, 'dupname', 'Should return existing collection when referencing equivalent name');
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
     }
   });
 

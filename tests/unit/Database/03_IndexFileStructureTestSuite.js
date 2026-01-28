@@ -70,6 +70,38 @@ function createIndexFileStructureTestSuite() {
     );
   });
 
+  suite.addTest('should record sanitised collection names in index file when sanitisation enabled', function() {
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_INDEX_SANITISE_' + new Date().getTime();
+    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
+      masterIndexKey: uniqueKey,
+      stripDisallowedCollectionNameCharacters: true,
+      backupOnInitialise: true
+    });
+    const database = new Database(config);
+    database.createDatabase();
+    database.initialise();
+    try {
+      const collection = database.createCollection('index/backup');
+      if (collection && collection.driveFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
+      }
+      if (database.indexFileId) {
+        DATABASE_TEST_DATA.createdFileIds.push(database.indexFileId);
+      }
+      const indexData = database.loadIndex();
+      TestFramework.assertTrue(
+        indexData.collections.hasOwnProperty('indexbackup'),
+        'Index file should list sanitised collection name'
+      );
+      TestFramework.assertEquals(
+        indexData.collections.indexbackup.name,
+        'indexbackup',
+        'Stored collection entry should use sanitised name'
+      );
+    } finally {
+      PropertiesService.getScriptProperties().deleteProperty(config.masterIndexKey);
+    }
+  });
 
   return suite;
 }

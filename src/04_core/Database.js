@@ -200,19 +200,18 @@ class Database {
    * @throws {Error} When collection name is invalid or creation fails
    */
   collection(name) {
-    Validate.nonEmptyString(name, 'name');
-    this._validateCollectionName(name);
-    
+    const resolvedName = this._validateCollectionName(name);
+
     // Check if collection already exists in memory
-    if (this.collections.has(name)) {
-      return this.collections.get(name);
+    if (this.collections.has(resolvedName)) {
+      return this.collections.get(resolvedName);
     }
     
     // Check if collection exists in MasterIndex (single source of truth)
-    const miCollection = this._masterIndex.getCollection(name);
+    const miCollection = this._masterIndex.getCollection(resolvedName);
     if (miCollection?.fileId) {
-      const collection = this._createCollectionObject(name, miCollection.fileId);
-      this.collections.set(name, collection);
+      const collection = this._createCollectionObject(resolvedName, miCollection.fileId);
+      this.collections.set(resolvedName, collection);
       return collection;
     }
     
@@ -232,27 +231,29 @@ class Database {
    * @throws {Error} When collection name is invalid or creation fails
    */
   createCollection(name) {
-    Validate.nonEmptyString(name, 'name');
-    this._validateCollectionName(name);
+    const resolvedName = this._validateCollectionName(name);
     
-    this._logger.debug('Creating new collection', { name });
+    this._logger.debug('Creating new collection', {
+      requestedName: name,
+      collectionName: resolvedName
+    });
     
     try {
       // Check if collection already exists in MasterIndex
-      if (this._masterIndex.getCollection(name)) {
-        throw new Error(`Collection '${name}' already exists in MasterIndex`);
+      if (this._masterIndex.getCollection(resolvedName)) {
+        throw new Error(`Collection '${resolvedName}' already exists in MasterIndex`);
       }
       
       // Check if collection already exists in memory
-      if (this.collections.has(name)) {
-        throw new Error(`Collection '${name}' already exists in memory`);
+      if (this.collections.has(resolvedName)) {
+        throw new Error(`Collection '${resolvedName}' already exists in memory`);
       }
       
       // Create initial collection data
       const initialData = {
         documents: {},
         metadata: {
-          name: name,
+          name: resolvedName,
           created: new Date(),
           lastUpdated: new Date(),
           documentCount: 0,
@@ -261,17 +262,17 @@ class Database {
       };
       
       // Create collection file
-      const fileName = `${name}_collection.json`;
+      const fileName = `${resolvedName}_collection.json`;
       const driveFileId = this._fileService.createFile(fileName, initialData, this.config.rootFolderId);
       
       // Create collection object
-      const collection = this._createCollectionObject(name, driveFileId);
+      const collection = this._createCollectionObject(resolvedName, driveFileId);
       
       // Add to memory
-      this.collections.set(name, collection);
+      this.collections.set(resolvedName, collection);
       
       // Update master index (PRIMARY source of truth)
-      this._addCollectionToMasterIndex(name, driveFileId);
+      this._addCollectionToMasterIndex(resolvedName, driveFileId);
       
       // Update index file (now secondary/backup source)
       if (this.config.backupOnInitialise) {
@@ -326,24 +327,26 @@ class Database {
    * @throws {Error} When collection name is invalid
    */
   dropCollection(name) {
-    Validate.nonEmptyString(name, 'name');
-    this._validateCollectionName(name);
+    const resolvedName = this._validateCollectionName(name);
     
-    this._logger.debug('Dropping collection', { name });
+    this._logger.debug('Dropping collection', {
+      requestedName: name,
+      collectionName: resolvedName
+    });
     
     try {
       // Check MasterIndex for the collection (single source of truth)
-      const miCollection = this._masterIndex.getCollection(name);
+      const miCollection = this._masterIndex.getCollection(resolvedName);
       
       if (miCollection?.fileId) {
         // Delete collection file
         this._fileService.deleteFile(miCollection.fileId);
         
         // Remove from memory
-        this.collections.delete(name);
+        this.collections.delete(resolvedName);
         
         // Remove from master index (primary source of truth)
-        this._removeCollectionFromMasterIndex(name);
+        this._removeCollectionFromMasterIndex(resolvedName);
         
         // Remove from index file (secondary/backup source)
         if (this.config.backupOnInitialise) {
@@ -374,17 +377,16 @@ class Database {
    * @throws {Error} When collection missing and auto-create disabled
    */
   getCollection(name) {
-    Validate.nonEmptyString(name, 'name');
-    this._validateCollectionName(name);
+    const resolvedName = this._validateCollectionName(name);
     // Return if already in memory
-    if (this.collections.has(name)) {
-      return this.collections.get(name);
+    if (this.collections.has(resolvedName)) {
+      return this.collections.get(resolvedName);
     }
     // Load from MasterIndex if exists
-    const mi = this._masterIndex.getCollection(name);
+    const mi = this._masterIndex.getCollection(resolvedName);
     if (mi?.fileId) {
-      const coll = this._createCollectionObject(name, mi.fileId);
-      this.collections.set(name, coll);
+      const coll = this._createCollectionObject(resolvedName, mi.fileId);
+      this.collections.set(resolvedName, coll);
       return coll;
     }
     // Auto-create if configured
@@ -714,24 +716,53 @@ class Database {
   }
   
   /**
-   * Validate collection name
+   * Validates (and optionally sanitises) collection names.
    * 
    * @param {string} name - Collection name to validate
+   * @returns {string} Validated (and potentially sanitised) collection name
    * @throws {Error} When collection name is invalid
    * @private
    */
   _validateCollectionName(name) {
     Validate.nonEmptyString(name, 'name');
-    // Check for invalid characters
-    const invalidChars = /[\/\\:*?"<>|]/;
-    if (invalidChars.test(name)) {
-      throw new Error('Collection name contains invalid characters');
-    }
-    // Check for reserved names
     const reservedNames = ['index', 'master', 'system', 'admin'];
-    if (reservedNames.includes(name.toLowerCase())) {
-      throw new Error(`Collection name '${name}' is reserved`);
+    let resolvedName = name;
+    if (this.config.stripDisallowedCollectionNameCharacters) {
+      resolvedName = this._sanitizeCollectionName(name);
+      if (resolvedName.length === 0) {
+        throw new Error('Collection name cannot be empty after sanitisation');
+      }
+    } else {
+      const invalidChars = /[\/\\:*?"<>|]/;
+      if (invalidChars.test(name)) {
+        throw new Error('Collection name contains invalid characters');
+      }
     }
+    const lowerCaseName = resolvedName.toLowerCase();
+    if (reservedNames.includes(lowerCaseName)) {
+      throw new Error(`Collection name '${resolvedName}' is reserved`);
+    }
+    return resolvedName;
+  }
+
+  /**
+   * Sanitises a collection name by stripping disallowed filesystem characters.
+   * Logs the adjustment when characters were removed to aid debugging.
+   * 
+   * @param {string} name - The original collection name
+   * @returns {string} Sanitised collection name
+   * @private
+   */
+  _sanitizeCollectionName(name) {
+    const invalidPattern = /[\/\\:*?"<>|]/g;
+    const sanitised = name.replace(invalidPattern, '');
+    if (sanitised !== name) {
+      this._logger.info('Collection name sanitised', {
+        originalName: name,
+        sanitisedName: sanitised
+      });
+    }
+    return sanitised;
   }
 
 

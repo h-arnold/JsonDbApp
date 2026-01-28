@@ -34,6 +34,7 @@ class DatabaseConfig {
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
     this.backupOnInitialise = config.backupOnInitialise ?? false;
+    this.stripDisallowedCollectionNameCharacters = config.stripDisallowedCollectionNameCharacters ?? false;
     // Validate configuration
     this._validateConfig();
   }
@@ -83,6 +84,7 @@ class DatabaseConfig {
   Validate.boolean(this.autoCreateCollections, 'autoCreateCollections');
   Validate.boolean(this.cacheEnabled, 'cacheEnabled');
   Validate.boolean(this.backupOnInitialise, 'backupOnInitialise');
+  Validate.boolean(this.stripDisallowedCollectionNameCharacters, 'stripDisallowedCollectionNameCharacters');
 
   // Optional string: masterIndexKey
   Validate.optional(this.masterIndexKey, Validate.string, 'masterIndexKey');
@@ -102,8 +104,9 @@ class DatabaseConfig {
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
-  masterIndexKey: this.masterIndexKey,
-  backupOnInitialise: this.backupOnInitialise
+      masterIndexKey: this.masterIndexKey,
+      backupOnInitialise: this.backupOnInitialise,
+      stripDisallowedCollectionNameCharacters: this.stripDisallowedCollectionNameCharacters
     });
   }
   
@@ -121,8 +124,9 @@ class DatabaseConfig {
       retryDelayMs: this.retryDelayMs,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
-  masterIndexKey: this.masterIndexKey,
-  backupOnInitialise: this.backupOnInitialise
+      masterIndexKey: this.masterIndexKey,
+      backupOnInitialise: this.backupOnInitialise,
+      stripDisallowedCollectionNameCharacters: this.stripDisallowedCollectionNameCharacters
     };
   }
 
@@ -143,7 +147,8 @@ class DatabaseConfig {
         cacheEnabled: obj.cacheEnabled,
         logLevel: obj.logLevel,
         masterIndexKey: obj.masterIndexKey,
-        backupOnInitialise: obj.backupOnInitialise
+        backupOnInitialise: obj.backupOnInitialise,
+        stripDisallowedCollectionNameCharacters: obj.stripDisallowedCollectionNameCharacters
       };
       return new DatabaseConfig(config);
     }

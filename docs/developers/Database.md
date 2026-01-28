@@ -93,6 +93,8 @@ Database (Orchestrator)
 
 **Important:** No longer falls back to Drive index file.
 
+You can tune the behaviour by enabling `stripDisallowedCollectionNameCharacters` on `DatabaseConfig`. When enabled, these characters are stripped from the requested name before validation, the cleaned name is logged when characters were removed, and the cleaned name is the one persisted in caches and the MasterIndex. The sanitised name still undergoes the reserved-name and empty-name checks so the system never exposes a forbidden value, it just removes the offending characters first.
+
 ## Database Initialization and Recovery Workflow
 
 **NEW:** The Database class now enforces a clear separation between creation, initialization, and recovery:
@@ -361,8 +363,8 @@ Validates collection name according to GAS DB rules.
 - **Throws:** `Error` for invalid names
 - **Rules:**
   - Must be non-empty string
-  - No invalid filesystem characters
-  - Not reserved names (index, master, system, admin)
+  - No invalid filesystem characters (`[\/\\:*?"<>|]`). When `stripDisallowedCollectionNameCharacters` is enabled on the configuration, the characters are removed before the checks below, and any modification is logged for diagnostics.
+  - Not reserved names (index, master, system, admin). The reserved-name check is applied after sanitisation so `index/` will still be rejected even though the slash is removed.
 
 ## Usage Examples
 

@@ -1,7 +1,6 @@
-/* eslint-disable no-console */
-const fs = require('fs');
-const os = require('os');
-const path = require('path');
+const fs = require('node:fs');
+const os = require('node:os');
+const path = require('node:path');
 
 const DEFAULT_ROOT = path.join(os.tmpdir(), 'gasdb-drive');
 const DEFAULT_PROPERTIES_FILE = path.join(os.tmpdir(), 'gasdb-script-properties.json');
@@ -27,7 +26,10 @@ function readJson(filePath, fallback) {
   const raw = fs.readFileSync(filePath, 'utf8');
   try {
     return JSON.parse(raw);
-  } catch (e) {
+  } catch (err) {
+    // Invalid JSON in file — return fallback.
+    /* eslint-disable-next-line no-console */
+    console.warn('Failed to parse JSON file:', err?.message ?? err);
     return fallback;
   }
 }
@@ -122,10 +124,8 @@ class MockFile {
     ensureDir(path.dirname(this.filePath));
     const fileContent = content == null ? '' : String(content);
     fs.writeFileSync(this.filePath, fileContent);
-    if (this.store && this.store.files) {
-      this.store.files.set(this.id, this);
-    }
-    return this;
+    this.store?.files?.set(this.id, this);
+    return this; 
   }
 
   /**
@@ -244,7 +244,7 @@ class MockProperties {
   }
 
   getProperty(key) {
-    return Object.prototype.hasOwnProperty.call(this.cache, key) ? this.cache[key] : null;
+    return Object.hasOwn(this.cache, key) ? this.cache[key] : null;
   }
 
   setProperty(key, value) {
@@ -260,9 +260,8 @@ class MockProperties {
 }
 
 class MockLock {
-  constructor() {
-    this.locked = false;
-  }
+  locked = false;
+  
 
   /**
    * Acquires the lock or throws on timeout.
@@ -402,6 +401,7 @@ function createGasMocks(options = {}) {
 
   const Logger = {
     log(data) {
+      /* eslint-disable-next-line no-console */
       console.log(data);
     }
   };
