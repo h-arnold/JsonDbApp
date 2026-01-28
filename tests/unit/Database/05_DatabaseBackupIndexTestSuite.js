@@ -66,11 +66,8 @@ function createDatabaseBackupIndexTestSuite() {
 
   suite.addTest('should NOT create index file when backupOnInitialise is false', function() {
     // Arrange
-    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_NO_BACKUP_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
-      masterIndexKey: uniqueKey,
-      backupOnInitialise: false
-    });
+    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_NO_BACKUP_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, backupOnInitialise: false }; 
     // Ensure no pre-existing master index script property before starting
     deleteScriptProperty(uniqueKey);
     // Cleanup handled later via DATABASE_TEST_DATA.createdFileIds
@@ -104,11 +101,8 @@ function createDatabaseBackupIndexTestSuite() {
 
   suite.addTest('should create index file when backupOnInitialise is true', function() {
     // Arrange
-    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_WITH_BACKUP_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { 
-      masterIndexKey: uniqueKey,
-      backupOnInitialise: true 
-    });
+    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_WITH_BACKUP_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, backupOnInitialise: true };
 
     // Ensure no pre-existing master index script property before starting
     deleteScriptProperty(uniqueKey);
@@ -131,11 +125,8 @@ function createDatabaseBackupIndexTestSuite() {
 
   suite.addTest('createCollection should not create index file when backup disabled', function() {
     // Arrange
-    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_CREATECOL_NO_BACKUP_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
-      masterIndexKey: uniqueKey,
-      backupOnInitialise: false
-    });
+    const uniqueKey = 'GASDB_MASTER_INDEX_TEST_CREATECOL_NO_BACKUP_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, backupOnInitialise: false };
 
     // Ensure no pre-existing master index script property before starting
     deleteScriptProperty(uniqueKey);

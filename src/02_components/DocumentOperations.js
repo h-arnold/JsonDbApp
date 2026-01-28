@@ -18,6 +18,7 @@
  * - Document deletion by ID
  * - Document counting and existence checks
  */
+/* exported DocumentOperations */
 class DocumentOperations {
   /**
    * Creates a new DocumentOperations instance

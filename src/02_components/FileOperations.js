@@ -9,6 +9,7 @@
 /**
  * FileOperations class for direct Drive API interactions
  */
+/* exported FileOperations */
 class FileOperations {
   /**
    * Creates a new FileOperations instance

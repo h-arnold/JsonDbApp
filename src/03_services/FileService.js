@@ -11,6 +11,7 @@
 /**
  * FileService class for optimised file operations
  */
+/* exported FileService */
 class FileService {
   /**
    * Creates a new FileService instance

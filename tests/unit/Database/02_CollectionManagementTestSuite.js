@@ -56,7 +56,7 @@ function createCollectionManagementTestSuite() {
       TestFramework.assertNotNull(collection, 'Collection should be auto-created');
       TestFramework.assertEquals(collection.name, collectionName, 'Collection name should match');
       // Track created file for clean-up
-      if (collection.driveFileId) {
+      if (collection?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
     } catch (error) {
@@ -97,11 +97,12 @@ function createCollectionManagementTestSuite() {
     // First create a collection to delete
     try {
       const collection = database.createCollection(collectionName);
-      if (collection && collection.driveFileId) {
+      if (collection?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
     } catch (error) {
-      // Expected to fail in Red phase
+      // Expected to fail in Red phase - assert it was an Error to be explicit
+      TestFramework.assertTrue(error instanceof Error, 'Expected error during RED phase createCollection');
     }
     // Act - This should fail initially (TDD Red phase)
     try {
@@ -119,7 +120,7 @@ function createCollectionManagementTestSuite() {
 
   suite.addTest('should throw error if collection does not exist and autoCreateCollections is false', function() {
     // Arrange
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { autoCreateCollections: false });
+    const config = { ...DATABASE_TEST_DATA.testConfig, autoCreateCollections: false };
     const database = new Database(config);
     database.initialise();
     // Act & Assert
@@ -154,21 +155,18 @@ function createCollectionManagementTestSuite() {
 
   suite.addTest('should sanitise invalid collection names when permissive mode enabled', function() {
     // Arrange - create unique config for sanitisation tests
-    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
-      masterIndexKey: uniqueKey,
-      stripDisallowedCollectionNameCharacters: true
-    });
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true };
     const database = new Database(config);
     database.createDatabase();
     database.initialise();
-    const suffix = '_' + new Date().getTime();
+    const suffix = '_' + Date.now();
     const originalName = `permissive/Collection${suffix}`;
     const expectedName = `permissiveCollection${suffix}`;
     try {
       // Act
       const collection = database.createCollection(originalName);
-      if (collection && collection.driveFileId) {
+      if (collection?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(collection.driveFileId);
       }
       // Assert
@@ -186,12 +184,8 @@ function createCollectionManagementTestSuite() {
   });
 
   suite.addTest('should refuse reserved names even after sanitisation', function() {
-    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_RESERVED_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
-      masterIndexKey: uniqueKey,
-      stripDisallowedCollectionNameCharacters: true,
-      autoCreateCollections: false
-    });
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_RESERVED_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true, autoCreateCollections: false };
     const database = new Database(config);
     database.createDatabase();
     database.initialise();
@@ -205,18 +199,15 @@ function createCollectionManagementTestSuite() {
   });
 
   suite.addTest('should prevent duplicate collections that collide after sanitisation', function() {
-    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_DUPLICATE_' + new Date().getTime();
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, {
-      masterIndexKey: uniqueKey,
-      stripDisallowedCollectionNameCharacters: true
-    });
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_SANITISE_DUPLICATE_' + Date.now();
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey, stripDisallowedCollectionNameCharacters: true };
     const database = new Database(config);
     database.createDatabase();
     database.initialise();
     try {
-      const suffix = '_' + new Date().getTime();
+      const suffix = '_' + Date.now();
       const first = database.createCollection(`dup/name${suffix}`);
-      if (first && first.driveFileId) {
+      if (first?.driveFileId) {
         DATABASE_TEST_DATA.createdFileIds.push(first.driveFileId);
       }
       TestFramework.assertThrows(() => {

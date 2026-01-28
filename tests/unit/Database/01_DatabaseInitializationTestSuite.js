@@ -40,7 +40,7 @@ function createDatabaseInitializationTestSuite() {
 
   suite.addTest('should initialise database and create index file', function() {
     // Arrange
-  const configWithBackup = Object.assign({}, DATABASE_TEST_DATA.testConfig, { backupOnInitialise: true });
+  const configWithBackup = { ...DATABASE_TEST_DATA.testConfig, backupOnInitialise: true };
   const database = new Database(configWithBackup);
     // Act - First-time setup: create MasterIndex then initialise database
     try {
@@ -61,11 +61,11 @@ function createDatabaseInitializationTestSuite() {
 
   suite.addTest('should handle initialisation with existing index file', function() {
     // Arrange - create a unique test collection for this specific test
-    const testCollectionName = 'existingCollection_' + new Date().getTime();
+    const testCollectionName = 'existingCollection_' + Date.now();
     // Use a fresh masterIndexKey for this test to avoid collisions
-    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_EXIST_' + new Date().getTime();
+    const uniqueKey = DATABASE_TEST_DATA.testConfig.masterIndexKey + '_EXIST_' + Date.now();
     // First, create a database and add a collection to ensure it exists in MasterIndex
-    const setupConfig = Object.assign({}, DATABASE_TEST_DATA.testConfig, { masterIndexKey: uniqueKey });
+    const setupConfig = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey };
     const setupDatabase = new Database(setupConfig);
     // First-time setup: create MasterIndex then initialise
     setupDatabase.createDatabase();
@@ -82,7 +82,7 @@ function createDatabaseInitializationTestSuite() {
       }
     }
     // Act - create a new database instance that should load the existing collection
-    const config = Object.assign({}, DATABASE_TEST_DATA.testConfig, { masterIndexKey: uniqueKey });
+    const config = { ...DATABASE_TEST_DATA.testConfig, masterIndexKey: uniqueKey };
     const database = new Database(config);
     database.initialise();
     const collections = database.listCollections();

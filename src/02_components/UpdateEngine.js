@@ -3,6 +3,7 @@
  *
  * Section 7: Update Engine Implementation (Green Phase)
  */
+/* exported UpdateEngine */
 class UpdateEngine {
   /**
    * Creates a new UpdateEngine instance

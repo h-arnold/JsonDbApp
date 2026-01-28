@@ -5,6 +5,7 @@
  * Apps Script libraries only expose top-level functions on the chosen identifier,
  * not classes. These factories provide a stable, documented entry point.
  */
+/* exported loadDatabase, createAndInitialiseDatabase */
 
 /**
  * Load an existing Database (MasterIndex must already exist for the key).

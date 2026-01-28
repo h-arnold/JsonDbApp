@@ -19,6 +19,7 @@
  * Query engine for document matching and filtering
  * Supports MongoDB-compatible query syntax for basic operations
  */
+/* exported QueryEngine */
 class QueryEngine {
   /**
    * Creates a new QueryEngine instance

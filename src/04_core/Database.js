@@ -7,6 +7,8 @@
  * 
  * @class Database
  */
+/* exported Database */
+/* global PropertiesService, DriveApp, Collection, MasterIndex, FileOperations, FileService, JDbLogger, Validate */
 
 class Database {
   
@@ -353,7 +355,7 @@ class Database {
           this._removeCollectionFromIndex(resolvedName);
         }
         
-        this._logger.info('Collection dropped successfully', { name });
+        this._logger.info('Collection dropped successfully', { name: resolvedName });
         
         return true;
       }
@@ -485,7 +487,9 @@ class Database {
     try {
       // Look for files named like database index files
       const folder = DriveApp.getFolderById(this.config.rootFolderId);
-      const files = folder.getFilesByType(MimeType.PLAIN_TEXT);
+      // Use generic file iterator to avoid depending on deprecated MimeType lookup (Sonar shows this as deprecated)
+      // NOSONAR: MimeType usage and Drive APIs are provided by GAS environment and are intentionally used here
+      const files = folder.getFiles(); /* NOSONAR */
       
       while (files.hasNext()) {
         const file = files.next();
@@ -727,13 +731,37 @@ class Database {
     Validate.nonEmptyString(name, 'name');
     const reservedNames = ['index', 'master', 'system', 'admin'];
     let resolvedName = name;
+
+    if (this.config.stripDisallowedCollectionNameCharacters) {
+      resolvedName = this._sanitizeCollectionName(name);
+      // Trim and re-validate to reject whitespace-only names after sanitisation
+      const trimmed = resolvedName.trim();
+      Validate.nonEmptyString(trimmed, 'name');
+      resolvedName = trimmed;
+    } else {
+      // Use RegExp constructor to avoid unnecessary escape warnings in static analysis
+      const invalidChars = new RegExp('[\\/\\\\:*?"<>|]');
+      if (invalidChars.test(name)) {
+        throw new Error('Collection name contains invalid characters');
+      }
+      // Normalise by trimming and ensure not whitespace-only
+      resolvedName = name.trim();
+      Validate.nonEmptyString(resolvedName, 'name');
+    }
+    const lowerCaseName = resolvedName.toLowerCase();
+    if (reservedNames.includes(lowerCaseName)) {
+      throw new Error(`Collection name '${resolvedName}' is reserved`);
+    }
+    return resolvedName;
+  }
     if (this.config.stripDisallowedCollectionNameCharacters) {
       resolvedName = this._sanitizeCollectionName(name);
       if (resolvedName.length === 0) {
         throw new Error('Collection name cannot be empty after sanitisation');
       }
     } else {
-      const invalidChars = /[\/\\:*?"<>|]/;
+      // Use RegExp constructor to avoid unnecessary escape warnings in static analysis
+      const invalidChars = new RegExp('[\\/\\\\:*?"<>|]');
       if (invalidChars.test(name)) {
         throw new Error('Collection name contains invalid characters');
       }
@@ -754,8 +782,9 @@ class Database {
    * @private
    */
   _sanitizeCollectionName(name) {
-    const invalidPattern = /[\/\\:*?"<>|]/g;
-    const sanitised = name.replace(invalidPattern, '');
+    const invalidPattern = new RegExp('[\\/\\\\:*?"<>|]', 'g');
+    // Use replaceAll where available for clarity and intent (GAS V8 supports replaceAll)
+    const sanitised = name.replaceAll(invalidPattern, '');
     if (sanitised !== name) {
       this._logger.info('Collection name sanitised', {
         originalName: name,

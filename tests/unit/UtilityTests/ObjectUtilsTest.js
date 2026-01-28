@@ -706,7 +706,7 @@ function createObjectUtilsTestSuite() {
   suite.addTest('testObjectUtilsRoundTripWithNaNAndInfinity', function() {
     // Test handling of special numeric values
     const specialNumbers = {
-      nanValue: NaN,
+      nanValue: Number.NaN,
       infinityValue: Infinity,
       negativeInfinityValue: -Infinity,
       normalNumber: 42.5
@@ -732,7 +732,7 @@ function createObjectUtilsTestSuite() {
     
     // This should not crash (though it might create a deep copy with duplication)
     try {
-      const cloned = ObjectUtils.deepClone(obj);
+      ObjectUtils.deepClone(obj);
       TestFramework.assertTrue(true, 'Should handle circular references without crashing');
     } catch (error) {
       // If it throws, that's also acceptable behaviour for circular references

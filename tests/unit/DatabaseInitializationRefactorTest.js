@@ -8,7 +8,7 @@
 // Test data for the refactored Database tests
 const DB_REFACTOR_TEST_DATA = {
   testFolderId: null,
-  testFolderName: 'GASDB_Refactor_Test_' + new Date().getTime(),
+  testFolderName: 'GASDB_Refactor_Test_' + Date.now(),
   createdFileIds: [],
   createdFolderIds: [],
   testConfig: null,
@@ -108,8 +108,8 @@ function createDatabaseCreateNoSetupTestSuite() {
 
   suite.addTest('should create database with fresh MasterIndex', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_CREATE_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_CREATE_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Ensure MasterIndex does not exist
@@ -149,8 +149,8 @@ function createDatabaseCreateExistsTestSuite() {
 
   suite.addTest('should throw error if MasterIndex already exists', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_CREATE_EXISTS_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_CREATE_EXISTS_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Pre-populate MasterIndex
@@ -188,8 +188,8 @@ function createDatabaseinitialiseRefactorTestSuite() {
 
   suite.addTest('should initialise from MasterIndex only', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_INIT_ONLY_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_INIT_ONLY_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Pre-populate MasterIndex with collections
@@ -224,8 +224,8 @@ function createDatabaseinitialiseRefactorTestSuite() {
 
   suite.addTest('should throw error if MasterIndex is missing', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_INIT_MISSING_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_INIT_MISSING_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Ensure MasterIndex does not exist
@@ -241,8 +241,8 @@ function createDatabaseinitialiseRefactorTestSuite() {
 
   suite.addTest('should throw error if MasterIndex is corrupted', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_INIT_CORRUPT_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_INIT_CORRUPT_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Set corrupted MasterIndex data
@@ -257,8 +257,8 @@ function createDatabaseinitialiseRefactorTestSuite() {
   });
 
   suite.addTest('should persist sanitised collection names to MasterIndex when flag enabled', function() {
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_INIT_SANITISE_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_INIT_SANITISE_' + Date.now();
     config.stripDisallowedCollectionNameCharacters = true;
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
@@ -296,8 +296,8 @@ function createDatabaseRecoverMethodTestSuite() {
 
   suite.addTest('should recover database from backup index file', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_RECOVER_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_RECOVER_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Create backup index file with collections
@@ -343,8 +343,8 @@ function createDatabaseRecoverMethodTestSuite() {
 
   suite.addTest('should throw error if backup file is invalid', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_RECOVER_INVALID_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_RECOVER_INVALID_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     // Create invalid backup file
@@ -378,8 +378,8 @@ function createCollectionMethodsNoFallbackTestSuite() {
 
   suite.addTest('should access collection from MasterIndex only', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_COLLECTION_ONLY_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_COLLECTION_ONLY_TEST_' + Date.now();
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 
     const database = new Database(config);
@@ -410,8 +410,8 @@ function createCollectionMethodsNoFallbackTestSuite() {
 
   suite.addTest('should throw error if collection not in MasterIndex', function() {
     // Arrange
-    const config = Object.assign({}, DB_REFACTOR_TEST_DATA.testConfig);
-    config.masterIndexKey = 'GASDB_COLLECTION_NOT_FOUND_TEST_' + new Date().getTime();
+    const config = { ...DB_REFACTOR_TEST_DATA.testConfig };
+    config.masterIndexKey = 'GASDB_COLLECTION_NOT_FOUND_TEST_' + Date.now();
     config.autoCreateCollections = false; // Disable auto-create
     DB_REFACTOR_TEST_DATA.masterIndexKeys.push(config.masterIndexKey);
 

@@ -13,6 +13,7 @@
  * - CollectionCoordinator: Manages cross-instance consistency.
  * - DocumentOperations: Performs low-level document manipulation.
  */
+/* exported Collection */
 class Collection {
     /**
      * Creates a new Collection instance
