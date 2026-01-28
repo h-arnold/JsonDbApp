@@ -1,0 +1,17 @@
+{
+  "name": "JsonDbApp Dev Container",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:latest",
+  "runArgs": ["--init"],
+  "workspaceFolder": "/workspace",
+  "workspaceMount": "source=${localWorkspaceFolder},target=/workspace,type=bind,consistency=cached",
+  "postCreateCommand": "npm install",
+  "postStartCommand": "npm install",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "dbaeumer.vscode-eslint",
+        "esbenp.prettier-vscode"
+      ]
+    }
+  }
+}
