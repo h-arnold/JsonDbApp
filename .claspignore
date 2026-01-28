@@ -1,2 +1,3 @@
 eslint.config.js
 node_modules/**
+src/appsscript.json
