@@ -1,6 +1,6 @@
 {
   "name": "jsondbapp",
-  "version": "1.0.1",
+  "version": "0.0.4",
   "description": "A document database implemented in Google App Script using the Google Drive API. Recommended for masochists.",
   "main": "index.js",
   "directories": {
@@ -25,7 +25,7 @@
     "document-database"
   ],
   "author": "",
-  "license": "ISC",
+  "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@google/clasp": "^2.5.0",
     "eslint": "^9.29.0",
