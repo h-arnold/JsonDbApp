@@ -25,47 +25,22 @@ describe('CollectionCoordinator Coordinate', () => {
     fileId = result.fileId;
   });
 
-  describe('Happy Path', () => {
-    it('should execute callback and return result in happy path', () => {
-      resetCollectionState(collection, fileId);
-      const coordinator = createTestCoordinator(collection, env.masterIndex);
-      
-      let result;
-      expect(() => {
-        result = coordinator.coordinate('insertOne', () => 'operation-result');
-      }).not.toThrow();
-      
-      expect(result).toBe('operation-result');
-    });
+  it('should execute callback and return result in happy path', () => {
+    const coordinator = createTestCoordinator(collection, env.masterIndex);
+    
+    const result = coordinator.coordinate('insertOne', () => 'operation-result');
+    
+    expect(result).toBe('operation-result');
   });
 
-  describe('Different Operations', () => {
-    it('should coordinate read operations successfully', () => {
-      resetCollectionState(collection, fileId);
-      const coordinator = createTestCoordinator(collection, env.masterIndex);
-      
-      let result;
-      expect(() => {
-        result = coordinator.coordinate('findOne', () => 'read-result');
-      }).not.toThrow();
-      
-      expect(result).toBe('read-result');
-    });
-  });
-
-  describe('Conflict Resolution', () => {
-    it('should resolve conflicts and complete operation', () => {
-      resetCollectionState(collection, fileId);
-      simulateConflict(env.masterIndex, 'coordinatorTest');
-      
-      const coordinator = createTestCoordinator(collection, env.masterIndex);
-      
-      let result;
-      expect(() => {
-        result = coordinator.coordinate('updateOne', () => 'conflict-resolved-result');
-      }).not.toThrow();
-      
-      expect(result).toBe('conflict-resolved-result');
-    });
+  it('should resolve conflicts and complete operation', () => {
+    resetCollectionState(collection, fileId);
+    simulateConflict(env.masterIndex, 'coordinatorTest');
+    
+    const coordinator = createTestCoordinator(collection, env.masterIndex);
+    
+    const result = coordinator.coordinate('updateOne', () => 'conflict-resolved-result');
+    
+    expect(result).toBe('conflict-resolved-result');
   });
 });

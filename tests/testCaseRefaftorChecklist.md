@@ -80,11 +80,11 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionCoordinatorConfigDefaults
     - [x] testCollectionCoordinatorCustomConfig
 
-- [ ] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Coordinate_
-    - [ ] testCoordinateHappyPath
-    - [ ] testCoordinateWithCoordinationDisabled
-    - [ ] testCoordinateWithConflictResolution
+- [x] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Coordinate_
+    - [x] testCoordinateHappyPath
+    - [x] testCoordinateWithCoordinationDisabled (obsolete - feature removed)
+    - [x] testCoordinateWithConflictResolution
 
 - [ ] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js**
   - [ ] _Suite: CollectionCoordinator Acquire Operation Lock_
