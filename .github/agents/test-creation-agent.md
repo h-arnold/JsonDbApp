@@ -137,6 +137,68 @@ it('should perform operation correctly', () => {
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 - GAS API mocks are tested separately to ensure they work correctly
 
+## GAS Mock Limitations & Test Skipping
+
+### When GAS Mocks Are Inadequate
+
+**IMPORTANT**: GAS mocks must provide a realistic replacement for the real Google Apps Script APIs. However, if you encounter a situation where the mocks don't adequately mirror the real thing:
+
+**Indicators of Inadequate Mocks:**
+- Missing API methods or properties that the source code uses
+- Incorrect behavior that doesn't match GAS documentation
+- Missing event handlers or callback mechanisms
+- Incomplete parameter validation
+- Missing error conditions that real GAS would throw
+
+### How to Handle Missing Mock Coverage
+
+**When you encounter inadequate mock coverage:**
+
+1. **Skip the test** using Vitest's `it.skip()` or `describe.skip()`
+2. **Document WHY** the test is skipped with a detailed comment
+3. **Reference the missing GAS API** functionality
+4. **Provide context** for what needs to be added to gas-mocks
+
+**Example of properly skipped test:**
+```javascript
+// SKIPPED: GAS mocks don't currently support DriveApp.searchFiles() with complex queries
+// The real GAS API supports query parameters like 'mimeType contains "image/"' but our
+// mock implementation only supports basic name-based searches.
+// TODO: Expand gas-mocks to support full query syntax before implementing this test
+it.skip('should find files by MIME type using complex query', () => {
+  // Test implementation would go here once mocks are expanded
+});
+```
+
+**Comment Template:**
+```javascript
+// SKIPPED: [Brief reason]
+// [Detailed explanation of what GAS API feature is missing]
+// [What behavior the mock needs to support]
+// TODO: Expand gas-mocks to [specific enhancement] before implementing this test
+it.skip('test description', () => {
+  // ...
+});
+```
+
+### Documenting Mock Gaps
+
+When skipping tests due to mock limitations:
+- Be specific about which GAS API method/property is missing
+- Explain what the real GAS behavior should be
+- Add enough detail for someone to implement the mock later
+- Note if this affects multiple tests (consider batching documentation)
+
+### Mock Quality Standards
+
+Remember: **GAS mocks should provide realistic replacement**
+- Mock behavior should match Google Apps Script documentation
+- All commonly used APIs should be mocked
+- Error conditions should mirror real GAS
+- Performance characteristics don't need to match, but behavior does
+
+**Note**: All original tests passed in the real GAS environment. If a refactored test fails, it's likely a mock limitation, not a source code issue. Document and skip rather than modifying source code expectations.
+
 ## Code Quality Requirements
 
 ### 1. DRY (Don't Repeat Yourself)

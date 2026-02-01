@@ -258,6 +258,63 @@ it('should insert', () => {
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 - GAS API mocks tested separately to ensure correct behavior
 
+## GAS Mock Limitations & Skipped Tests
+
+### Important Context
+
+**All original tests passed in the real Google Apps Script environment.** Comments mentioning "RED PHASE" or test failures are **INACCURATE** - the source code is known to work correctly in production GAS.
+
+If a refactored test fails or seems impossible to implement, it's likely due to mock limitations, not source code issues.
+
+### Reviewing Tests with Mock Limitations
+
+**GAS mocks must provide realistic replacement** for the real Google Apps Script APIs. When reviewing, check for:
+
+**Valid Reasons to Skip Tests:**
+- GAS API methods/properties missing from mocks
+- Incorrect mock behavior that doesn't match GAS documentation
+- Missing event handlers or callback mechanisms
+- Incomplete parameter validation in mocks
+- Missing error conditions that real GAS would throw
+
+**When Tests Are Skipped:**
+1. Verify the skip reason is documented in detail
+2. Check that the comment explains what GAS API feature is missing
+3. Confirm there's a TODO for expanding gas-mocks
+4. Ensure the skip uses `it.skip()` or `describe.skip()`
+
+**Example of Properly Skipped Test:**
+```javascript
+// SKIPPED: GAS mocks don't currently support DriveApp.searchFiles() with complex queries
+// The real GAS API supports query parameters like 'mimeType contains "image/"' but our
+// mock implementation only supports basic name-based searches.
+// TODO: Expand gas-mocks to support full query syntax before implementing this test
+it.skip('should find files by MIME type using complex query', () => {
+  // Test implementation would go here once mocks are expanded
+});
+```
+
+### Review Checklist for Skipped Tests
+
+When reviewing skipped tests:
+- [ ] Skip reason is clearly documented
+- [ ] Specific GAS API gap is identified
+- [ ] Expected behavior is described
+- [ ] TODO includes what needs to be added to mocks
+- [ ] Skip is intentional (uses `it.skip()` or `describe.skip()`)
+- [ ] Test is not skipped due to actual source code issues
+
+**Red Flag**: If test is skipped without documentation or with vague reasons like "doesn't work" - require detailed documentation of the mock gap.
+
+### What NOT to Skip
+
+Don't accept skipped tests for:
+- Lazy test writing
+- Unclear requirements
+- Actual bugs in source code (those should be filed as issues)
+- Tests that are "too hard" with current mocks but could be adapted
+- Tests skipped just because they fail (investigate the failure first)
+
 ## Review Process
 
 ### Step 1: Initial Assessment
