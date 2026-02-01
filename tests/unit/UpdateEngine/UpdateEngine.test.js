@@ -1,7 +1,6 @@
-import { describe, it, expect, beforeEach, beforeAll } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import '../../setup/gas-mocks.setup.js';
 import { UpdateEngine } from '../../../src/02_components/UpdateEngine.js';
-import { ErrorHandler } from '../../../src/01_utils/ErrorHandler.js';
 
 describe('UpdateEngine Tests', () => {
   let engine;

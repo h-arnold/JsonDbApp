@@ -5,6 +5,10 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
 
+/**
+ * Returns test user data
+ * @returns {Array} Test users
+ */
 const getTestUsers = () => [
   { _id: 'user-1', name: 'John Smith', age: 30, email: 'john@example.com', active: true, profile: { yearsOfService: 5 } },
   { _id: 'user-2', name: 'Sarah Johnson', age: 28, email: 'sarah@example.com', active: true, profile: { yearsOfService: 3 } },
@@ -12,6 +16,11 @@ const getTestUsers = () => [
   { _id: 'user-4', name: 'Emily Davis', age: 40, email: 'emily@example.com', active: true, profile: { yearsOfService: 12 } }
 ];
 
+/**
+ * Generates large dataset
+ * @param {number} count - Number of documents
+ * @returns {Array} Dataset
+ */
 const getLargeDataset = (count) => {
   const dataset = [];
   for (let i = 0; i < count; i++) {
