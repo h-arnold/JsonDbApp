@@ -13,11 +13,22 @@ const legacyScripts = [
   'src/01_utils/ErrorHandler.js',
   'src/01_utils/Validation.js',
   'src/01_utils/JDbLogger.js',
+  'src/01_utils/IdGenerator.js',
+  'src/01_utils/ComparisonUtils.js',
   'src/04_core/DatabaseConfig.js',
   'src/01_utils/ObjectUtils.js',
   'src/03_services/DbLockService.js',
   'src/02_components/CollectionMetadata.js',
-  'src/04_core/MasterIndex.js'
+  'src/04_core/MasterIndex.js',
+  'src/02_components/FileOperations.js',
+  'src/03_services/FileService.js',
+  'src/02_components/DocumentOperations.js',
+  'src/02_components/QueryEngine.js',
+  'src/02_components/UpdateEngine.js',
+  'src/02_components/CollectionCoordinator.js',
+  'src/04_core/Collection/01_CollectionReadOperations.js',
+  'src/04_core/Collection/02_CollectionWriteOperations.js',
+  'src/04_core/Collection/99_Collection.js'
 ];
 
 function loadLegacyScript(relativePath) {

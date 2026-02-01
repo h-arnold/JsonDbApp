@@ -10,7 +10,29 @@ export default [
     },
   },
   {
-    files: ["**/*.js"],
+    files: ["tests/**/*.js"],
+    languageOptions: {
+      sourceType: "module",
+      ecmaVersion: 2021,
+      globals: {
+        ...googleappsscript.environments.googleappsscript.globals,
+        describe: "readonly",
+        it: "readonly",
+        expect: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+      },
+    },
+    rules: {
+      "max-len": ["warn", { code: 1000 }],
+      "require-jsdoc": "off",
+      "valid-jsdoc": "off",
+      "no-unused-vars": ["warn", { args: "none" }],
+      "no-console": "off",
+    },
+  },
+  {
+    files: ["src/**/*.js"],
     languageOptions: {
       sourceType: "script",
       ecmaVersion: 2021,
