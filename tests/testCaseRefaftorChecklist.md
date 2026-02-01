@@ -15,10 +15,10 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionLoadDataCorruptedFile
     - [x] testCollectionSaveDataToDrive
 
-- [ ] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js**
-  - [ ] _Suite: Collection Insert Operations_
-    - [ ] testCollectionInsertOne
-    - [ ] testCollectionInsertOneWithExplicitId
+- [x] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js**
+  - [x] _Suite: Collection Insert Operations_
+    - [x] testCollectionInsertOne
+    - [x] testCollectionInsertOneWithExplicitId
 
 - [ ] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js**
   - [ ] _Suite: Collection Find Operations_
