@@ -305,3 +305,8 @@ class CollectionMetadata {
 }
 
 
+
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { CollectionMetadata };
+}
