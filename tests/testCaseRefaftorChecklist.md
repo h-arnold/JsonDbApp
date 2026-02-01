@@ -151,12 +151,16 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should validate Date objects in input metadata
     - [ ] should handle zero document count operations
 
+REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
+
 - [ ] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
   - [ ] _Suite: Database Initialisation_
     - [ ] should create Database with default configuration
     - [ ] should create Database with custom configuration
     - [ ] should initialise database and create index file
     - [ ] should handle initialisation with existing index file
+
+REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 - [ ] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
   - [ ] _Suite: Collection Management_
@@ -171,6 +175,8 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should refuse reserved names even after sanitisation
     - [ ] should prevent duplicate collections that collide after sanitisation
 
+REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
+
 - [ ] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
   - [ ] _Suite: Index File Structure_
     - [ ] should create index file with correct structure
@@ -178,10 +184,14 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should synchronise with master index
     - [ ] should record sanitised collection names in index file when sanitisation enabled
 
+REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
+
 - [ ] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js**
   - [ ] _Suite: Database Master Index Integration_
     - [ ] should integrate with master index on initialisation
     - [ ] should co-ordinate collection operations with master index
+
+REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 - [ ] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js**
   - [ ] _Suite: Database Backup Index Tests_

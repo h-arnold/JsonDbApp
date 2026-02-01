@@ -360,6 +360,10 @@ For each issue found:
 - [ ] Helper list updated (if helpers changed)
 - [ ] No outstanding issues
 
+### Step 7: Commit and Push Changes
+
+- If you have verified the code as passing all checks, commit and push the changes.
+
 ## Reporting Issues
 
 ### Format
