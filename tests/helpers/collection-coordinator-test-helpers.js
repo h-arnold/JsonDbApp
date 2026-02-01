@@ -232,6 +232,68 @@ export const cleanupCoordinatorTests = () => {
 };
 
 /**
+ * Resets collection state to initial test data
+ * @param {object} collection - Collection instance to reset
+ * @param {string} fileId - File ID of the collection
+ */
+export const resetCollectionState = (collection, fileId) => {
+  const testData = {
+    collection: collection.name,
+    metadata: {
+      version: 1,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+      documentCount: 3,
+      modificationToken: `initial-token-${Date.now()}`
+    },
+    documents: {
+      'coord-test-1': {
+        _id: 'coord-test-1',
+        name: 'Test Document 1',
+        category: 'testing',
+        value: 100,
+        active: true,
+        created: new Date().toISOString()
+      },
+      'coord-test-2': {
+        _id: 'coord-test-2',
+        name: 'Test Document 2',
+        category: 'coordination',
+        value: 200,
+        active: false,
+        created: new Date().toISOString()
+      },
+      'coord-test-3': {
+        _id: 'coord-test-3',
+        name: 'Test Document 3',
+        category: 'testing',
+        value: 300,
+        active: true,
+        created: new Date().toISOString()
+      }
+    }
+  };
+
+  const file = DriveApp.getFileById(fileId);
+  file.setContent(JSON.stringify(testData, null, 2));
+
+  collection._isDirty = true;
+  collection._ensureLoaded();
+};
+
+/**
+ * Simulates a collection conflict by updating the master index token
+ * @param {object} masterIndex - MasterIndex instance
+ * @param {string} collectionName - Name of the collection
+ */
+export const simulateConflict = (masterIndex, collectionName) => {
+  const conflictToken = `conflict-token-${Date.now()}`;
+  masterIndex.updateCollectionMetadata(collectionName, {
+    modificationToken: conflictToken
+  });
+};
+
+/**
  * Auto-register cleanup for afterEach
  */
 afterEach(() => {
