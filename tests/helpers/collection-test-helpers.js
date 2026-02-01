@@ -70,6 +70,21 @@ export const createTestCollectionFile = (folderId, collectionName) => {
 };
 
 /**
+ * Creates a test collection file with custom content
+ * @param {string} folderId - Parent folder ID
+ * @param {string} fileName - Name of the file
+ * @param {string} content - File content (raw string)
+ * @returns {string} File ID
+ */
+export const createTestFileWithContent = (folderId, fileName, content) => {
+  const folder = DriveApp.getFolderById(folderId);
+  const file = folder.createFile(fileName, content);
+  const fileId = file.getId();
+  testResources.fileIds.add(fileId);
+  return fileId;
+};
+
+/**
  * Sets up a complete test environment for Collection tests
  * @returns {object} Test environment with all necessary dependencies
  */
