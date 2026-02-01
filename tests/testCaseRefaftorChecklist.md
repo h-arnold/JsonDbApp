@@ -73,12 +73,12 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionCountDocumentsByComparisonFilter
     - [x] testCollectionCountDocumentsNoMatch
 
-- [ ] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Constructor Validation_
-    - [ ] testCollectionCoordinatorConstructorValidation
-    - [ ] testCollectionCoordinatorValidConstructor
-    - [ ] testCollectionCoordinatorConfigDefaults
-    - [ ] testCollectionCoordinatorCustomConfig
+- [x] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Constructor Validation_
+    - [x] testCollectionCoordinatorConstructorValidation
+    - [x] testCollectionCoordinatorValidConstructor
+    - [x] testCollectionCoordinatorConfigDefaults
+    - [x] testCollectionCoordinatorCustomConfig
 
 - [ ] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js**
   - [ ] _Suite: CollectionCoordinator Coordinate_
