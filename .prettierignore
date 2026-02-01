@@ -1,0 +1,8 @@
+.clasp.json
+.clasprc.json
+.gas-testing.json
+node_modules
+test-execution.log
+*.log
+*.pid
+.env
