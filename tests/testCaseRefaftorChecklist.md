@@ -109,45 +109,45 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testLockReleasedOnException
     - [x] testCoordinationTimeout
 
-- [ ] **old_tests/unit/CollectionMetadataTest.js**
-  - [ ] _Suite: CollectionMetadata Constructor_
-    - [ ] should create metadata with default values when no input provided
-    - [ ] should create metadata with provided initial values
-    - [ ] should create metadata with name and fileId parameters
-    - [ ] should require both name and fileId
-    - [ ] should throw error for invalid name type
-    - [ ] should throw error for empty name string
-    - [ ] should throw error for invalid fileId type
-  - [ ] _Suite: CollectionMetadata Update Operations_
-    - [ ] should update lastModified timestamp
-    - [ ] should increment document count
-    - [ ] should decrement document count
-    - [ ] should not allow decrementing below zero
-    - [ ] should set document count to specific value
-    - [ ] should throw error for invalid document count in setDocumentCount
-    - [ ] should update lastModified when document count changes
-    - [ ] should get and set modificationToken
-    - [ ] should include modificationToken in toObject output
-    - [ ] should throw error for invalid modificationToken type
-    - [ ] should throw error for empty modificationToken
-    - [ ] should allow null modificationToken
-    - [ ] should get and set lockStatus
-    - [ ] should include lockStatus in toObject output
-    - [ ] should throw error for invalid lockStatus type
-    - [ ] should validate lockStatus properties
-    - [ ] should allow null lockStatus
-  - [ ] _Suite: CollectionMetadata Serialisation_
-    - [ ] should return plain object from toObject method
-    - [ ] should include all fields in toObject output
-    - [ ] should create independent clone
-    - [ ] should clone with independent timestamps
-    - [ ] should create instance from object using constructor
-    - [ ] should create instance using create factory method
-    - [ ] should throw error for invalid object in constructor
-    - [ ] should throw error for invalid field values in constructor
-  - [ ] _Suite: CollectionMetadata Edge Cases_
-    - [ ] should handle very large document counts
-    - [ ] should handle partial metadata objects
+- [x] **old_tests/unit/CollectionMetadataTest.js**
+  - [x] _Suite: CollectionMetadata Constructor_
+    - [x] should create metadata with default values when no input provided
+    - [x] should create metadata with provided initial values
+    - [x] should create metadata with name and fileId parameters
+    - [x] should require both name and fileId
+    - [x] should throw error for invalid name type
+    - [x] should throw error for empty name string
+    - [x] should throw error for invalid fileId type
+  - [x] _Suite: CollectionMetadata Update Operations_
+    - [x] should update lastModified timestamp
+    - [x] should increment document count
+    - [x] should decrement document count
+    - [x] should not allow decrementing below zero
+    - [x] should set document count to specific value
+    - [x] should throw error for invalid document count in setDocumentCount
+    - [x] should update lastModified when document count changes
+    - [x] should get and set modificationToken
+    - [x] should include modificationToken in toObject output
+    - [x] should throw error for invalid modificationToken type
+    - [x] should throw error for empty modificationToken
+    - [x] should allow null modificationToken
+    - [x] should get and set lockStatus
+    - [x] should include lockStatus in toObject output
+    - [x] should throw error for invalid lockStatus type
+    - [x] should validate lockStatus properties
+    - [x] should allow null lockStatus
+  - [x] _Suite: CollectionMetadata Serialisation_
+    - [x] should return plain object from toObject method
+    - [x] should include all fields in toObject output
+    - [x] should create independent clone
+    - [x] should clone with independent timestamps
+    - [x] should create instance from object using constructor
+    - [x] should create instance using create factory method
+    - [x] should throw error for invalid object in constructor
+    - [x] should throw error for invalid field values in constructor
+  - [x] _Suite: CollectionMetadata Edge Cases_
+    - [x] should handle very large document counts
+    - [x] should handle partial metadata objects
     - [ ] should validate Date objects in input metadata
     - [ ] should handle zero document count operations
 
