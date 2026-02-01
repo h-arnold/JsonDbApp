@@ -96,18 +96,18 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testValidateModificationTokenNoConflict
     - [x] testValidateModificationTokenConflict
 
-- [ ] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Conflict Resolution_
-    - [ ] testResolveConflictReloadAndRetry
+- [x] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Conflict Resolution_
+    - [x] testResolveConflictReloadAndRetry
 
-- [ ] **old_tests/unit/CollectionCoordinator/05_CollectionCoordinatorUpdateMasterIndexTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Update Master Index Metadata_
-    - [ ] testUpdateMasterIndexMetadata
+- [x] **old_tests/unit/CollectionCoordinator/05_CollectionCoordinatorUpdateMasterIndexTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Update Master Index Metadata_
+    - [x] testUpdateMasterIndexMetadata
 
-- [ ] **old_tests/unit/CollectionCoordinator/06_CollectionCoordinatorLockReleaseAndTimeoutTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Lock Release and Timeout_
-    - [ ] testLockReleasedOnException
-    - [ ] testCoordinationTimeout
+- [x] **old_tests/unit/CollectionCoordinator/06_CollectionCoordinatorLockReleaseAndTimeoutTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Lock Release and Timeout_
+    - [x] testLockReleasedOnException
+    - [x] testCoordinationTimeout
 
 - [ ] **old_tests/unit/CollectionMetadataTest.js**
   - [ ] _Suite: CollectionMetadata Constructor_
