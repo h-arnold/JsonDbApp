@@ -115,7 +115,14 @@ export const setupCollectionTestEnvironment = () => {
     _masterIndex: masterIndex,
     _fileOps: fileOps,
     _fileService: fileService,
+    /**
+     * Gets the master index
+     * @returns {Object} The master index
+     */
     getMasterIndex: () => masterIndex,
+    /**
+     * Marks the database as dirty (mock implementation)
+     */
     _markDirty: () => { /* mock implementation */ }
   };
   

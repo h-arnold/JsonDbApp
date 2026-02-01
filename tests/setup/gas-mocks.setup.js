@@ -31,6 +31,10 @@ const legacyScripts = [
   'src/04_core/Collection/99_Collection.js'
 ];
 
+/**
+ * Loads a legacy script into the current context
+ * @param {string} relativePath - Path to the script relative to the repository root
+ */
 function loadLegacyScript(relativePath) {
   const absolutePath = path.join(repoRoot, relativePath);
   const source = fs.readFileSync(absolutePath, 'utf8');

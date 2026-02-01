@@ -3,8 +3,17 @@ import { afterEach, describe, expect, it } from 'vitest';
 const scriptProperties = PropertiesService.getScriptProperties();
 const activeMasterIndexKeys = new Set();
 
+/**
+ * Creates a unique master index key for testing
+ * @returns {string} A unique test master index key
+ */
 const createKey = () => `VIITEST_MASTER_INDEX_${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
+/**
+ * Tracks a master index key for cleanup after tests
+ * @param {string} key - The master index key to track
+ * @returns {string} The same key for convenience
+ */
 const trackMasterIndexKey = (key) => {
   activeMasterIndexKeys.add(key);
   return key;
