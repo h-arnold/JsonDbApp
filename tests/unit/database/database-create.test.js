@@ -13,6 +13,11 @@ import {
 
 const { getScriptProperties } = PropertiesService;
 
+/**
+ * Returns the number of collections currently tracked in the MasterIndex.
+ * @param {MasterIndex} masterIndex - Index instance under test.
+ * @returns {number} Collection count to validate initialisation.
+ */
 const getCollectionsCount = (masterIndex) => Object.keys(masterIndex.getCollections()).length;
 
 describe('Database createDatabase()', () => {
@@ -28,7 +33,7 @@ describe('Database createDatabase()', () => {
 
     // Assert - MasterIndex should exist and start empty
     const masterIndex = new MasterIndex({ masterIndexKey });
-    expect(masterIndex.isInitialised()).toBe(true);
+    expect(masterIndex.isInitialised()).toBeTruthy();
     expect(getCollectionsCount(masterIndex)).toBe(0);
   });
 

@@ -232,25 +232,33 @@ it('should insert', () => {
 
 ### Collection Test Helpers (`tests/helpers/collection-test-helpers.js`)
 - `createMasterIndexKey()` - Creates unique master index key with auto-cleanup
-- `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
+- `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestFileWithContent(folderId, fileName, content)` - Creates file with custom content
-- `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
-- `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
+- `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
 - `registerAndCreateCollection(env, collectionName, fileId, documentCount)` - Registers metadata and creates Collection
+- `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 
 ### Collection Coordinator Test Helpers (`tests/helpers/collection-coordinator-test-helpers.js`)
-- `setupCoordinatorTestEnvironment()` - Sets up coordinator test environment
-- `createTestFolder()` - Creates test folder
-- `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestCollection(env, collectionName, fileId)` - Creates and registers collection
+- `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestCoordinator(env, customConfig)` - Creates CollectionCoordinator instance
+- `createTestFolder()` - Creates test folder
 - `resetCollectionState(collection, fileId)` - Resets collection to initial state
+- `setupCoordinatorTestEnvironment()` - Sets up coordinator test environment
 - `simulateConflict(env, collectionName)` - Simulates modification token conflict
 
 ### Collection Metadata Test Helpers (`tests/helpers/collection-metadata-test-helpers.js`)
 - `createBasicMetadata(overrides)` - Creates CollectionMetadata with defaults
 - `createMetadataWithCount(documentCount, overrides)` - Creates metadata with document count
+
+### Database Test Helpers (`tests/helpers/database-test-helpers.js`)
+- `cleanupDatabaseTests()` - Deletes registered master index keys and Drive files after each test
+- `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
+- `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects for Database tests
+- `registerDatabaseFile(fileId)` - Tracks Drive files created during Database tests for cleanup
+- `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
+- `setupDatabaseTestEnvironment(overrides)` - Constructs Database instances with isolated storage
 
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
 - Provides utilities for testing DocumentOperations component

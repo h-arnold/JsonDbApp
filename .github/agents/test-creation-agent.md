@@ -111,20 +111,20 @@ it('should perform operation correctly', () => {
 
 ### Collection Test Helpers (`tests/helpers/collection-test-helpers.js`)
 - `createMasterIndexKey()` - Creates unique master index key with auto-cleanup
-- `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
+- `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestFileWithContent(folderId, fileName, content)` - Creates file with custom content
-- `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
-- `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
+- `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
 - `registerAndCreateCollection(env, collectionName, fileId, documentCount)` - Registers metadata and creates Collection
+- `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 
 ### Collection Coordinator Test Helpers (`tests/helpers/collection-coordinator-test-helpers.js`)
-- `setupCoordinatorTestEnvironment()` - Sets up coordinator test environment
-- `createTestFolder()` - Creates test folder
-- `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestCollection(env, collectionName, fileId)` - Creates and registers collection
+- `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestCoordinator(env, customConfig)` - Creates CollectionCoordinator instance
+- `createTestFolder()` - Creates test folder
 - `resetCollectionState(collection, fileId)` - Resets collection to initial state
+- `setupCoordinatorTestEnvironment()` - Sets up coordinator test environment
 - `simulateConflict(env, collectionName)` - Simulates modification token conflict
 
 ### Collection Metadata Test Helpers (`tests/helpers/collection-metadata-test-helpers.js`)
@@ -135,10 +135,12 @@ it('should perform operation correctly', () => {
 - Provides utilities for testing DocumentOperations component
 
 ### Database Test Helpers (`tests/helpers/database-test-helpers.js`)
-- `registerDatabaseFile(fileId)` - Marks Drive files for automatic cleanup
+- `cleanupDatabaseTests()` - Removes Drive files and ScriptProperties keys created during Database tests
+- `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
 - `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects
+- `registerDatabaseFile(fileId)` - Marks Drive files for automatic cleanup
+- `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
 - `setupDatabaseTestEnvironment(overrides)` - Creates Database instances with isolated storage
-- `cleanupDatabaseTests()` - Removes Drive files created during Database tests
 
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 - GAS API mocks are tested separately to ensure they work correctly
