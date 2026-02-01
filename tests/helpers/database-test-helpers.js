@@ -94,6 +94,18 @@ export const setupDatabaseTestEnvironment = (overrides = {}) => {
 };
 
 /**
+ * Creates and initialises a Database instance with isolated storage.
+ * @param {Object} overrides - Optional configuration overrides.
+ * @returns {Object} Environment containing the ready Database instance and identifiers.
+ */
+export const setupInitialisedDatabase = (overrides = {}) => {
+  const environment = setupDatabaseTestEnvironment(overrides);
+  environment.database.createDatabase();
+  environment.database.initialise();
+  return environment;
+};
+
+/**
  * Cleans up Drive files created during Database tests.
  */
 export const cleanupDatabaseTests = () => {

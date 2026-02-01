@@ -141,6 +141,7 @@ it('should perform operation correctly', () => {
 - `registerDatabaseFile(fileId)` - Marks Drive files for automatic cleanup
 - `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
 - `setupDatabaseTestEnvironment(overrides)` - Creates Database instances with isolated storage
+- `setupInitialisedDatabase(overrides)` - Creates Database instances that already ran createDatabase() and initialise()
 
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 - GAS API mocks are tested separately to ensure they work correctly

@@ -259,6 +259,7 @@ it('should insert', () => {
 - `registerDatabaseFile(fileId)` - Tracks Drive files created during Database tests for cleanup
 - `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
 - `setupDatabaseTestEnvironment(overrides)` - Constructs Database instances with isolated storage
+- `setupInitialisedDatabase(overrides)` - Builds Database instances that already executed createDatabase() and initialise()
 
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
 - Provides utilities for testing DocumentOperations component
