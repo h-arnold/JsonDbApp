@@ -4,150 +4,150 @@ Tracking old test suites and cases for migration into the new `tests` framework.
 
 ## Unit tests
 
-- [ ] **old_tests/unit/Collection/00_CollectionInitialisationTestSuite.js**
-  - [ ] _Suite: Collection Initialisation_
-    - [ ] testCollectionInitialisation
-    - [ ] testCollectionLazyLoading
+- [x] **old_tests/unit/Collection/00_CollectionInitialisationTestSuite.js**
+  - [x] _Suite: Collection Initialisation_
+    - [x] testCollectionInitialisation
+    - [x] testCollectionLazyLoading
 
-- [ ] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js**
-  - [ ] _Suite: Collection Data Operations_
-    - [ ] testCollectionLoadDataFromDrive
-    - [ ] testCollectionLoadDataCorruptedFile
-    - [ ] testCollectionSaveDataToDrive
+- [x] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js**
+  - [x] _Suite: Collection Data Operations_
+    - [x] testCollectionLoadDataFromDrive
+    - [x] testCollectionLoadDataCorruptedFile
+    - [x] testCollectionSaveDataToDrive
 
-- [ ] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js**
-  - [ ] _Suite: Collection Insert Operations_
-    - [ ] testCollectionInsertOne
-    - [ ] testCollectionInsertOneWithExplicitId
+- [x] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js**
+  - [x] _Suite: Collection Insert Operations_
+    - [x] testCollectionInsertOne
+    - [x] testCollectionInsertOneWithExplicitId
 
-- [ ] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js**
-  - [ ] _Suite: Collection Find Operations_
-    - [ ] testCollectionFindOneEmpty
-    - [ ] testCollectionFindOneById
-    - [ ] testCollectionFindOneUnsupportedQuery
-    - [ ] testCollectionFindEmpty
-    - [ ] testCollectionFindAll
-    - [ ] testCollectionFindUnsupportedQuery
-    - [ ] testCollectionFindByFieldMatching
-    - [ ] testCollectionFindByMultipleFields
-    - [ ] testCollectionFindByNestedField
-    - [ ] testCollectionFindByComparisonOperators
-    - [ ] testCollectionFindOneByFieldMatching
+- [x] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js**
+  - [x] _Suite: Collection Find Operations_
+    - [x] testCollectionFindOneEmpty
+    - [x] testCollectionFindOneById
+    - [x] testCollectionFindOneUnsupportedQuery
+    - [x] testCollectionFindEmpty
+    - [x] testCollectionFindAll
+    - [x] testCollectionFindUnsupportedQuery
+    - [x] testCollectionFindByFieldMatching
+    - [x] testCollectionFindByMultipleFields
+    - [x] testCollectionFindByNestedField
+    - [x] testCollectionFindByComparisonOperators
+    - [x] testCollectionFindOneByFieldMatching
 
-- [ ] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js**
-  - [ ] _Suite: Collection Update Operations_
-    - [ ] testCollectionUpdateOneById
-    - [ ] testCollectionUpdateOneUnsupportedFilter
-    - [ ] testCollectionUpdateOneUnsupportedOperators
-    - [ ] testCollectionUpdateOneByFieldFilter
-    - [ ] testCollectionUpdateOneByMultipleFieldFilter
-    - [ ] testCollectionUpdateOneByNestedFieldFilter
-    - [ ] testCollectionUpdateOneByComparisonFilter
-    - [ ] testCollectionUpdateOneNoMatch
-    - [ ] testCollectionUpdateManyReturnsModifiedCount
-    - [ ] testCollectionReplaceOneById
-    - [ ] testCollectionReplaceOneByFilter
-    - [ ] testCollectionReplaceCorrectDocument
-    - [ ] testCollectionUpdateWithMultipleOperators
-    - [ ] testCollectionErrorPropagation
-    - [ ] testCollectionLockingDuringUpdate
-    - [ ] testCollectionUpdateLogging
+- [x] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js**
+  - [x] _Suite: Collection Update Operations_
+    - [x] testCollectionUpdateOneById
+    - [x] testCollectionUpdateOneUnsupportedFilter
+    - [x] testCollectionUpdateOneUnsupportedOperators
+    - [x] testCollectionUpdateOneByFieldFilter
+    - [x] testCollectionUpdateOneByMultipleFieldFilter
+    - [x] testCollectionUpdateOneByNestedFieldFilter
+    - [x] testCollectionUpdateOneByComparisonFilter
+    - [x] testCollectionUpdateOneNoMatch
+    - [x] testCollectionUpdateManyReturnsModifiedCount
+    - [x] testCollectionReplaceOneById
+    - [x] testCollectionReplaceOneByFilter
+    - [x] testCollectionReplaceCorrectDocument
+    - [x] testCollectionUpdateWithMultipleOperators
+    - [x] testCollectionErrorPropagation
+    - [x] testCollectionLockingDuringUpdate
+    - [x] testCollectionUpdateLogging
 
-- [ ] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js**
-  - [ ] _Suite: Collection Delete Operations_
-    - [ ] testCollectionDeleteOneById
-    - [ ] testCollectionDeleteOneUnsupportedFilter
-    - [ ] testCollectionDeleteOneByFieldFilter
-    - [ ] testCollectionDeleteOneByMultipleFieldFilter
-    - [ ] testCollectionDeleteOneByNestedFieldFilter
-    - [ ] testCollectionDeleteOneByComparisonFilter
-    - [ ] testCollectionDeleteOneNoMatch
+- [x] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js**
+  - [x] _Suite: Collection Delete Operations_
+    - [x] testCollectionDeleteOneById
+    - [x] testCollectionDeleteOneUnsupportedFilter
+    - [x] testCollectionDeleteOneByFieldFilter
+    - [x] testCollectionDeleteOneByMultipleFieldFilter
+    - [x] testCollectionDeleteOneByNestedFieldFilter
+    - [x] testCollectionDeleteOneByComparisonFilter
+    - [x] testCollectionDeleteOneNoMatch
 
-- [ ] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js**
-  - [ ] _Suite: Collection Count Operations_
-    - [ ] testCollectionCountDocumentsAll
-    - [ ] testCollectionCountDocumentsUnsupportedFilter
-    - [ ] testCollectionCountDocumentsByFieldFilter
-    - [ ] testCollectionCountDocumentsByMultipleFieldFilter
-    - [ ] testCollectionCountDocumentsByNestedFieldFilter
-    - [ ] testCollectionCountDocumentsByComparisonFilter
-    - [ ] testCollectionCountDocumentsNoMatch
+- [x] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js**
+  - [x] _Suite: Collection Count Operations_
+    - [x] testCollectionCountDocumentsAll
+    - [x] testCollectionCountDocumentsUnsupportedFilter
+    - [x] testCollectionCountDocumentsByFieldFilter
+    - [x] testCollectionCountDocumentsByMultipleFieldFilter
+    - [x] testCollectionCountDocumentsByNestedFieldFilter
+    - [x] testCollectionCountDocumentsByComparisonFilter
+    - [x] testCollectionCountDocumentsNoMatch
 
-- [ ] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Constructor Validation_
-    - [ ] testCollectionCoordinatorConstructorValidation
-    - [ ] testCollectionCoordinatorValidConstructor
-    - [ ] testCollectionCoordinatorConfigDefaults
-    - [ ] testCollectionCoordinatorCustomConfig
+- [x] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Constructor Validation_
+    - [x] testCollectionCoordinatorConstructorValidation
+    - [x] testCollectionCoordinatorValidConstructor
+    - [x] testCollectionCoordinatorConfigDefaults
+    - [x] testCollectionCoordinatorCustomConfig
 
-- [ ] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Coordinate_
-    - [ ] testCoordinateHappyPath
-    - [ ] testCoordinateWithCoordinationDisabled
-    - [ ] testCoordinateWithConflictResolution
+- [x] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Coordinate_
+    - [x] testCoordinateHappyPath
+    - [x] testCoordinateWithCoordinationDisabled (obsolete - feature removed)
+    - [x] testCoordinateWithConflictResolution
 
-- [ ] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Acquire Operation Lock_
-    - [ ] testAcquireOperationLockRetrySuccess
-    - [ ] testAcquireOperationLockRetryFailure
+- [x] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Acquire Operation Lock_
+    - [x] testAcquireOperationLockRetrySuccess
+    - [x] testAcquireOperationLockRetryFailure
 
-- [ ] **old_tests/unit/CollectionCoordinator/03_CollectionCoordinatorModificationTokenTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Modification Token_
-    - [ ] testValidateModificationTokenNoConflict
-    - [ ] testValidateModificationTokenConflict
+- [x] **old_tests/unit/CollectionCoordinator/03_CollectionCoordinatorModificationTokenTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Modification Token_
+    - [x] testValidateModificationTokenNoConflict
+    - [x] testValidateModificationTokenConflict
 
-- [ ] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Conflict Resolution_
-    - [ ] testResolveConflictReloadAndRetry
+- [x] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Conflict Resolution_
+    - [x] testResolveConflictReloadAndRetry
 
-- [ ] **old_tests/unit/CollectionCoordinator/05_CollectionCoordinatorUpdateMasterIndexTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Update Master Index Metadata_
-    - [ ] testUpdateMasterIndexMetadata
+- [x] **old_tests/unit/CollectionCoordinator/05_CollectionCoordinatorUpdateMasterIndexTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Update Master Index Metadata_
+    - [x] testUpdateMasterIndexMetadata
 
-- [ ] **old_tests/unit/CollectionCoordinator/06_CollectionCoordinatorLockReleaseAndTimeoutTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Lock Release and Timeout_
-    - [ ] testLockReleasedOnException
-    - [ ] testCoordinationTimeout
+- [x] **old_tests/unit/CollectionCoordinator/06_CollectionCoordinatorLockReleaseAndTimeoutTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Lock Release and Timeout_
+    - [x] testLockReleasedOnException
+    - [x] testCoordinationTimeout
 
-- [ ] **old_tests/unit/CollectionMetadataTest.js**
-  - [ ] _Suite: CollectionMetadata Constructor_
-    - [ ] should create metadata with default values when no input provided
-    - [ ] should create metadata with provided initial values
-    - [ ] should create metadata with name and fileId parameters
-    - [ ] should require both name and fileId
-    - [ ] should throw error for invalid name type
-    - [ ] should throw error for empty name string
-    - [ ] should throw error for invalid fileId type
-  - [ ] _Suite: CollectionMetadata Update Operations_
-    - [ ] should update lastModified timestamp
-    - [ ] should increment document count
-    - [ ] should decrement document count
-    - [ ] should not allow decrementing below zero
-    - [ ] should set document count to specific value
-    - [ ] should throw error for invalid document count in setDocumentCount
-    - [ ] should update lastModified when document count changes
-    - [ ] should get and set modificationToken
-    - [ ] should include modificationToken in toObject output
-    - [ ] should throw error for invalid modificationToken type
-    - [ ] should throw error for empty modificationToken
-    - [ ] should allow null modificationToken
-    - [ ] should get and set lockStatus
-    - [ ] should include lockStatus in toObject output
-    - [ ] should throw error for invalid lockStatus type
-    - [ ] should validate lockStatus properties
-    - [ ] should allow null lockStatus
-  - [ ] _Suite: CollectionMetadata Serialisation_
-    - [ ] should return plain object from toObject method
-    - [ ] should include all fields in toObject output
-    - [ ] should create independent clone
-    - [ ] should clone with independent timestamps
-    - [ ] should create instance from object using constructor
-    - [ ] should create instance using create factory method
-    - [ ] should throw error for invalid object in constructor
-    - [ ] should throw error for invalid field values in constructor
-  - [ ] _Suite: CollectionMetadata Edge Cases_
-    - [ ] should handle very large document counts
-    - [ ] should handle partial metadata objects
+- [x] **old_tests/unit/CollectionMetadataTest.js**
+  - [x] _Suite: CollectionMetadata Constructor_
+    - [x] should create metadata with default values when no input provided
+    - [x] should create metadata with provided initial values
+    - [x] should create metadata with name and fileId parameters
+    - [x] should require both name and fileId
+    - [x] should throw error for invalid name type
+    - [x] should throw error for empty name string
+    - [x] should throw error for invalid fileId type
+  - [x] _Suite: CollectionMetadata Update Operations_
+    - [x] should update lastModified timestamp
+    - [x] should increment document count
+    - [x] should decrement document count
+    - [x] should not allow decrementing below zero
+    - [x] should set document count to specific value
+    - [x] should throw error for invalid document count in setDocumentCount
+    - [x] should update lastModified when document count changes
+    - [x] should get and set modificationToken
+    - [x] should include modificationToken in toObject output
+    - [x] should throw error for invalid modificationToken type
+    - [x] should throw error for empty modificationToken
+    - [x] should allow null modificationToken
+    - [x] should get and set lockStatus
+    - [x] should include lockStatus in toObject output
+    - [x] should throw error for invalid lockStatus type
+    - [x] should validate lockStatus properties
+    - [x] should allow null lockStatus
+  - [x] _Suite: CollectionMetadata Serialisation_
+    - [x] should return plain object from toObject method
+    - [x] should include all fields in toObject output
+    - [x] should create independent clone
+    - [x] should clone with independent timestamps
+    - [x] should create instance from object using constructor
+    - [x] should create instance using create factory method
+    - [x] should throw error for invalid object in constructor
+    - [x] should throw error for invalid field values in constructor
+  - [x] _Suite: CollectionMetadata Edge Cases_
+    - [x] should handle very large document counts
+    - [x] should handle partial metadata objects
     - [ ] should validate Date objects in input metadata
     - [ ] should handle zero document count operations
 

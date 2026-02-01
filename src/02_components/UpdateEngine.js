@@ -650,3 +650,7 @@ _isPlainObject(val) {
     }
   }
 }
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { UpdateEngine };
+}
