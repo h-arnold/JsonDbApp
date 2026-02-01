@@ -14,23 +14,19 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import MockQueryData from '../../data/MockQueryData.js';
 
-let testDocuments = [];
-let edgeCaseDocuments = [];
-
 /**
  * Setup test environment with mock data
  */
 function setupQueryEngineTestEnvironment() {
-  testDocuments = MockQueryData.getAllTestDocuments();
-  edgeCaseDocuments = MockQueryData.getEdgeCaseDocuments();
+  MockQueryData.getAllTestDocuments();
+  MockQueryData.getEdgeCaseDocuments();
 }
 
 /**
  * Cleanup test environment
  */
 function cleanupQueryEngineTestEnvironment() {
-  testDocuments = [];
-  edgeCaseDocuments = [];
+  // Cleanup if needed
 }
 
 /**
