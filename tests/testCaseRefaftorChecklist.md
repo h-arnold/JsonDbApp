@@ -34,24 +34,24 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionFindByComparisonOperators
     - [x] testCollectionFindOneByFieldMatching
 
-- [ ] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js**
-  - [ ] _Suite: Collection Update Operations_
-    - [ ] testCollectionUpdateOneById
-    - [ ] testCollectionUpdateOneUnsupportedFilter
-    - [ ] testCollectionUpdateOneUnsupportedOperators
-    - [ ] testCollectionUpdateOneByFieldFilter
-    - [ ] testCollectionUpdateOneByMultipleFieldFilter
-    - [ ] testCollectionUpdateOneByNestedFieldFilter
-    - [ ] testCollectionUpdateOneByComparisonFilter
-    - [ ] testCollectionUpdateOneNoMatch
-    - [ ] testCollectionUpdateManyReturnsModifiedCount
-    - [ ] testCollectionReplaceOneById
-    - [ ] testCollectionReplaceOneByFilter
-    - [ ] testCollectionReplaceCorrectDocument
-    - [ ] testCollectionUpdateWithMultipleOperators
-    - [ ] testCollectionErrorPropagation
-    - [ ] testCollectionLockingDuringUpdate
-    - [ ] testCollectionUpdateLogging
+- [x] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js**
+  - [x] _Suite: Collection Update Operations_
+    - [x] testCollectionUpdateOneById
+    - [x] testCollectionUpdateOneUnsupportedFilter
+    - [x] testCollectionUpdateOneUnsupportedOperators
+    - [x] testCollectionUpdateOneByFieldFilter
+    - [x] testCollectionUpdateOneByMultipleFieldFilter
+    - [x] testCollectionUpdateOneByNestedFieldFilter
+    - [x] testCollectionUpdateOneByComparisonFilter
+    - [x] testCollectionUpdateOneNoMatch
+    - [x] testCollectionUpdateManyReturnsModifiedCount
+    - [x] testCollectionReplaceOneById
+    - [x] testCollectionReplaceOneByFilter
+    - [x] testCollectionReplaceCorrectDocument
+    - [x] testCollectionUpdateWithMultipleOperators
+    - [x] testCollectionErrorPropagation
+    - [x] testCollectionLockingDuringUpdate
+    - [x] testCollectionUpdateLogging
 
 - [ ] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js**
   - [ ] _Suite: Collection Delete Operations_
