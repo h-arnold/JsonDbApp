@@ -134,6 +134,12 @@ it('should perform operation correctly', () => {
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
 - Provides utilities for testing DocumentOperations component
 
+### Database Test Helpers (`tests/helpers/database-test-helpers.js`)
+- `registerDatabaseFile(fileId)` - Marks Drive files for automatic cleanup
+- `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects
+- `setupDatabaseTestEnvironment(overrides)` - Creates Database instances with isolated storage
+- `cleanupDatabaseTests()` - Removes Drive files created during Database tests
+
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 - GAS API mocks are tested separately to ensure they work correctly
 
@@ -328,4 +334,4 @@ describe('Collection', () => {
 - **Follow patterns** - Look at existing tests for examples
 - **DRY is mandatory** - Extract duplication into helpers
 - **Lint is mandatory** - Zero tolerance for lint errors/warnings
-- **Update documentation** - Keep the helper list current
+- **Update documentation** - eep helper lists current. If you discover something important that's missing from your instructions, add them here instead of letting the next agent waste time rediscovering things.

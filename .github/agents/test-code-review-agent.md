@@ -455,5 +455,5 @@ For each issue found:
 - **DRY is mandatory** - Extract all duplication
 - **Quality over speed** - Thorough review is essential
 - **Fix, don't just report** - Make the code better
-- **Update documentation** - Keep helper lists current
+- **Update documentation** - Keep helper lists current. If you discover something important that's missing from your instructions, add them here instead of letting the next agent waste time rediscovering things.
 - **Run tests after fixes** - Verify everything still works

@@ -79,8 +79,22 @@ methodName(param) {
 - **Validation**: Use `Validate` class; class-specific validation as private method.
 - **TDD**: Always follow Red-Green-Refactor.
 
-## After Implementation
-1. Run `clasp push`.
-2. Ask user to run tests and await instructions.
+## Calling Sub-Agents
+
+MANDATORY: Every #runSubagent call must include agentName: "{name of subagent}". Calls that omit this parameter violate the workflow contract and should be rejected/retried.
+
+Example (exact shape requested):
+
+{
+  "type": "function_call",
+  "name": "runSubagent",
+  "arguments": "{\"prompt\":\"Please implement a dummy task: add CLI command 'foo' that scaffolds an exercise.\",\"description\":\"Create files: exercises/ex999_dummy/, notebooks/solutions/ex999_dummy.ipynb, tests/test_ex999_dummy.py. Ensure tests pass and linting is clean.\",\"agentName\":\"Implementer\"}",
+  "call_id": "call_000000000001"
+}
+
+The sub-agents you can call are (first-line names are case-sensitive):
+
+  - test-code-review-agent
+  - test-creation-agent
 
 **Always write concisely in British English.**

@@ -16,6 +16,7 @@ const legacyScripts = [
   'src/01_utils/IdGenerator.js',
   'src/01_utils/ComparisonUtils.js',
   'src/04_core/DatabaseConfig.js',
+  'src/04_core/Database.js',
   'src/01_utils/ObjectUtils.js',
   'src/03_services/DbLockService.js',
   'src/02_components/CollectionMetadata.js',
