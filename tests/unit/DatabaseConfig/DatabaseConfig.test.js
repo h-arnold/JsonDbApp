@@ -7,7 +7,25 @@
  * - Parameter validation
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+
+let testFolderId;
+
+beforeAll(() => {
+  const folder = DriveApp.createFolder(`GASDB_DatabaseConfig_Test_${Date.now()}`);
+  testFolderId = folder.getId();
+});
+
+afterAll(() => {
+  try {
+    if (testFolderId) {
+      const folder = DriveApp.getFolderById(testFolderId);
+      folder.setTrashed(true);
+    }
+  } catch {
+    // ignore cleanup errors in mock
+  }
+});
 
 describe('DatabaseConfig Creation and Default Values', () => {
   it('should create DatabaseConfig with default values', () => {
@@ -27,7 +45,7 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
   it('should create DatabaseConfig with custom values', () => {
     const customConfig = {
-      rootFolderId: 'custom-folder-id',
+      rootFolderId: testFolderId,
       autoCreateCollections: false,
       lockTimeout: 60000,
       retryAttempts: 5,
@@ -55,7 +73,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
     const partialConfig = {
       lockTimeout: 45000,
       retryAttempts: 7,
-      logLevel: 'WARN'
+      logLevel: 'WARN',
+      rootFolderId: testFolderId
     };
     
     const config = new DatabaseConfig(partialConfig);

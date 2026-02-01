@@ -152,14 +152,14 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should handle zero document count operations
 
 - [ ] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
-  - [ ] _Suite: Database Initialisation_
+- [x] _Suite: Database Initialisation_
     - [ ] should create Database with default configuration
     - [ ] should create Database with custom configuration
     - [ ] should initialise database and create index file
     - [ ] should handle initialisation with existing index file
 
 - [ ] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
-  - [ ] _Suite: Collection Management_
+- [x] _Suite: Collection Management_
     - [ ] should create new collection
     - [ ] should access existing collection
     - [ ] should auto-create collection when configured
@@ -172,24 +172,24 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should prevent duplicate collections that collide after sanitisation
 
 - [ ] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
-  - [ ] _Suite: Index File Structure_
+- [x] _Suite: Index File Structure_
     - [ ] should create index file with correct structure
     - [ ] should update index file when collections change
     - [ ] should synchronise with master index
     - [ ] should record sanitised collection names in index file when sanitisation enabled
 
 - [ ] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js**
-  - [ ] _Suite: Database Master Index Integration_
+- [x] _Suite: Database Master Index Integration_
     - [ ] should integrate with master index on initialisation
     - [ ] should co-ordinate collection operations with master index
 
 - [ ] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js**
-  - [ ] _Suite: Database Backup Index Tests_
+- [x] _Suite: Database Backup Index Tests_
     - [ ] should NOT create index file when backupOnInitialise is false
     - [ ] should create index file when backupOnInitialise is true
     - [ ] createCollection should not create index file when backup disabled
 
-- [ ] **old_tests/unit/DatabaseConfigTest.js**
+- [x] **old_tests/unit/DatabaseConfigTest.js**
   - [ ] _Suite: DatabaseConfig Setup - Create Test Environment_
     - [ ] should create test folder for DatabaseConfig tests
   - [ ] _Suite: DatabaseConfig Creation and Default Values_
@@ -209,7 +209,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] testValidMinimumLockTimeout
     - [ ] testTooLowLockTimeoutThrowsError
 
-- [ ] **old_tests/unit/DatabaseInitializationRefactorTest.js**
+- [x] **old_tests/unit/DatabaseInitializationRefactorTest.js**
   - [ ] _Suite: Database createDatabase() Method (No Setup)_
     - [ ] should create database with fresh MasterIndex
   - [ ] _Suite: Database createDatabase() Method (Exists)_
@@ -805,4 +805,3 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should add multiple unique values with $each
     - [ ] should create an array field if it does not exist
     - [ ] should throw an error when used on a non-array field
-
