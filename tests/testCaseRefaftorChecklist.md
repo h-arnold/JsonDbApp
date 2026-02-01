@@ -63,15 +63,15 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionDeleteOneByComparisonFilter
     - [x] testCollectionDeleteOneNoMatch
 
-- [ ] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js**
-  - [ ] _Suite: Collection Count Operations_
-    - [ ] testCollectionCountDocumentsAll
-    - [ ] testCollectionCountDocumentsUnsupportedFilter
-    - [ ] testCollectionCountDocumentsByFieldFilter
-    - [ ] testCollectionCountDocumentsByMultipleFieldFilter
-    - [ ] testCollectionCountDocumentsByNestedFieldFilter
-    - [ ] testCollectionCountDocumentsByComparisonFilter
-    - [ ] testCollectionCountDocumentsNoMatch
+- [x] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js**
+  - [x] _Suite: Collection Count Operations_
+    - [x] testCollectionCountDocumentsAll
+    - [x] testCollectionCountDocumentsUnsupportedFilter
+    - [x] testCollectionCountDocumentsByFieldFilter
+    - [x] testCollectionCountDocumentsByMultipleFieldFilter
+    - [x] testCollectionCountDocumentsByNestedFieldFilter
+    - [x] testCollectionCountDocumentsByComparisonFilter
+    - [x] testCollectionCountDocumentsNoMatch
 
 - [ ] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js**
   - [ ] _Suite: CollectionCoordinator Constructor Validation_
