@@ -20,19 +20,19 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionInsertOne
     - [x] testCollectionInsertOneWithExplicitId
 
-- [ ] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js**
-  - [ ] _Suite: Collection Find Operations_
-    - [ ] testCollectionFindOneEmpty
-    - [ ] testCollectionFindOneById
-    - [ ] testCollectionFindOneUnsupportedQuery
-    - [ ] testCollectionFindEmpty
-    - [ ] testCollectionFindAll
-    - [ ] testCollectionFindUnsupportedQuery
-    - [ ] testCollectionFindByFieldMatching
-    - [ ] testCollectionFindByMultipleFields
-    - [ ] testCollectionFindByNestedField
-    - [ ] testCollectionFindByComparisonOperators
-    - [ ] testCollectionFindOneByFieldMatching
+- [x] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js**
+  - [x] _Suite: Collection Find Operations_
+    - [x] testCollectionFindOneEmpty
+    - [x] testCollectionFindOneById
+    - [x] testCollectionFindOneUnsupportedQuery
+    - [x] testCollectionFindEmpty
+    - [x] testCollectionFindAll
+    - [x] testCollectionFindUnsupportedQuery
+    - [x] testCollectionFindByFieldMatching
+    - [x] testCollectionFindByMultipleFields
+    - [x] testCollectionFindByNestedField
+    - [x] testCollectionFindByComparisonOperators
+    - [x] testCollectionFindOneByFieldMatching
 
 - [ ] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js**
   - [ ] _Suite: Collection Update Operations_
