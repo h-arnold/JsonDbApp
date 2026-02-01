@@ -17,8 +17,8 @@
     "logs": "clasp logs",
     "format": "prettier --check .",
     "format:write": "prettier --write .",
-    "lint": "eslint 'src/**/*.js' --ext .js",
-    "lint:fix": "eslint 'src/**/*.js' --ext .js --fix",
+    "lint": "eslint 'src/**/*.js' 'tests/**/*.js' --ext .js",
+    "lint:fix": "eslint 'src/**/*.js' 'tests/**/*.js' --ext .js --fix",
     "prepare": "husky"
   },
   "keywords": [
@@ -33,6 +33,7 @@
     "@google/clasp": "^3.1.3",
     "eslint": "^9.39.2",
     "eslint-config-google": "^0.14.0",
+    "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-googleappsscript": "^1.0.5",
     "eslint-plugin-jsdoc": "^62.5.0",
     "husky": "^9.1.7",

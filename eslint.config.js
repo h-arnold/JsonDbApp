@@ -1,31 +1,8 @@
 // ESLint configuration for Google Apps Script (GAS) projects
 import jsdoc from 'eslint-plugin-jsdoc';
 import googleappsscript from 'eslint-plugin-googleappsscript';
+import prettierConfig from 'eslint-config-prettier';
 import { defineConfig } from 'eslint/config';
-
-const gasGlobals = {
-  ...googleappsscript.environments.googleappsscript.globals,
-  CalendarApp: 'readonly',
-  CardService: 'readonly',
-  Charts: 'readonly',
-  Classroom: 'readonly',
-  DataStudioApp: 'readonly',
-  DocumentApp: 'readonly',
-  Drive: 'readonly',
-  DriveApp: 'readonly',
-  GmailApp: 'readonly',
-  HtmlService: 'readonly',
-  LockService: 'readonly',
-  MailApp: 'readonly',
-  PropertiesService: 'readonly',
-  ScriptApp: 'readonly',
-  Session: 'readonly',
-  SlidesApp: 'readonly',
-  SpreadsheetApp: 'readonly',
-  UrlFetchApp: 'readonly',
-  Utilities: 'readonly',
-  XmlService: 'readonly'
-};
 
 export default defineConfig([
   {
@@ -40,7 +17,7 @@ export default defineConfig([
     languageOptions: {
       sourceType: 'script',
       ecmaVersion: 2021,
-      globals: gasGlobals
+      globals: googleappsscript.environments.googleappsscript.globals
     },
     plugins: {
       googleappsscript,
@@ -111,5 +88,6 @@ export default defineConfig([
       '*.log',
       '*.pid'
     ]
-  }
+  },
+  prettierConfig
 ]);
