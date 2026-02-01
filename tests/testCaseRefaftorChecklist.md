@@ -162,18 +162,18 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [ ] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
-  - [ ] _Suite: Collection Management_
-    - [ ] should create new collection
-    - [ ] should access existing collection
-    - [ ] should auto-create collection when configured
-    - [ ] should list all collections
-    - [ ] should delete collection
-    - [ ] should throw error if collection does not exist and autoCreateCollections is false
-    - [ ] should handle collection name validation
-    - [ ] should sanitise invalid collection names when permissive mode enabled
-    - [ ] should refuse reserved names even after sanitisation
-    - [ ] should prevent duplicate collections that collide after sanitisation
+- [x] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
+  - [x] _Suite: Collection Management_
+    - [x] should create new collection
+    - [x] should access existing collection
+    - [x] should auto-create collection when configured
+    - [x] should list all collections
+    - [x] should delete collection
+    - [x] should throw error if collection does not exist and autoCreateCollections is false
+    - [x] should handle collection name validation
+    - [x] should sanitise invalid collection names when permissive mode enabled
+    - [x] should refuse reserved names even after sanitisation
+    - [x] should prevent duplicate collections that collide after sanitisation
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
@@ -233,8 +233,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should recover database from backup index file
     - [x] should throw error if backup file is invalid
   - [ ] _Suite: Collection Methods No Fallback_
-    - [ ] should access collection from MasterIndex only
-    - [ ] should throw error if collection not in MasterIndex
+    - [x] should access collection from MasterIndex only
+    - [x] should throw error if collection not in MasterIndex
 
 - [ ] **old_tests/unit/DbLockService/01_LockServiceConstructorTestSuite.js**
   - [ ] _Suite: LockService Constructor_
