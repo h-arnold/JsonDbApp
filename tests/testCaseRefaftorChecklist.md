@@ -53,15 +53,15 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionLockingDuringUpdate
     - [x] testCollectionUpdateLogging
 
-- [ ] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js**
-  - [ ] _Suite: Collection Delete Operations_
-    - [ ] testCollectionDeleteOneById
-    - [ ] testCollectionDeleteOneUnsupportedFilter
-    - [ ] testCollectionDeleteOneByFieldFilter
-    - [ ] testCollectionDeleteOneByMultipleFieldFilter
-    - [ ] testCollectionDeleteOneByNestedFieldFilter
-    - [ ] testCollectionDeleteOneByComparisonFilter
-    - [ ] testCollectionDeleteOneNoMatch
+- [x] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js**
+  - [x] _Suite: Collection Delete Operations_
+    - [x] testCollectionDeleteOneById
+    - [x] testCollectionDeleteOneUnsupportedFilter
+    - [x] testCollectionDeleteOneByFieldFilter
+    - [x] testCollectionDeleteOneByMultipleFieldFilter
+    - [x] testCollectionDeleteOneByNestedFieldFilter
+    - [x] testCollectionDeleteOneByComparisonFilter
+    - [x] testCollectionDeleteOneNoMatch
 
 - [ ] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js**
   - [ ] _Suite: Collection Count Operations_
