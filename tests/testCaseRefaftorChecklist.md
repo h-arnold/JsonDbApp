@@ -86,15 +86,15 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCoordinateWithCoordinationDisabled (obsolete - feature removed)
     - [x] testCoordinateWithConflictResolution
 
-- [ ] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Acquire Operation Lock_
-    - [ ] testAcquireOperationLockRetrySuccess
-    - [ ] testAcquireOperationLockRetryFailure
+- [x] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Acquire Operation Lock_
+    - [x] testAcquireOperationLockRetrySuccess
+    - [x] testAcquireOperationLockRetryFailure
 
-- [ ] **old_tests/unit/CollectionCoordinator/03_CollectionCoordinatorModificationTokenTestSuite.js**
-  - [ ] _Suite: CollectionCoordinator Modification Token_
-    - [ ] testValidateModificationTokenNoConflict
-    - [ ] testValidateModificationTokenConflict
+- [x] **old_tests/unit/CollectionCoordinator/03_CollectionCoordinatorModificationTokenTestSuite.js**
+  - [x] _Suite: CollectionCoordinator Modification Token_
+    - [x] testValidateModificationTokenNoConflict
+    - [x] testValidateModificationTokenConflict
 
 - [ ] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js**
   - [ ] _Suite: CollectionCoordinator Conflict Resolution_
