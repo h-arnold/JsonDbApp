@@ -45,6 +45,6 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
         Utilities.sleep(600);
         return 'should not reach here';
       });
-    }).toThrow();
+    }).toThrow(ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT);
   });
 });

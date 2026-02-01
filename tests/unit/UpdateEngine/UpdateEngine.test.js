@@ -1,6 +1,8 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import '../../setup/gas-mocks.setup.js';
-import { UpdateEngine } from '../../../src/02_components/UpdateEngine.js';
+
+// Note: UpdateEngine is loaded globally via gas-mocks.setup.js
+// using vm.runInThisContext(). Do not import as ES6 module.
 
 describe('UpdateEngine Tests', () => {
   let engine;

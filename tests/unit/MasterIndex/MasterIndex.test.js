@@ -1,7 +1,9 @@
 import { describe, it, expect, beforeEach } from 'vitest';
 import '../../setup/gas-mocks.setup.js';
-import { MasterIndex } from '../../../src/04_core/MasterIndex.js';
-import { CollectionMetadata } from '../../../src/02_components/CollectionMetadata.js';
+
+// Note: MasterIndex and CollectionMetadata are loaded globally via gas-mocks.setup.js
+// using vm.runInThisContext(). Do not import them as ES6 modules as it creates duplicate
+// class definitions causing instanceof checks to fail.
 
 describe('MasterIndex Functionality', () => {
   let masterIndex;

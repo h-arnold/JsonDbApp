@@ -54,7 +54,7 @@ describe('CollectionCoordinator Modification Token', () => {
       
       expect(() => {
         coordinator.validateModificationToken(localToken, remoteToken);
-      }).toThrow();
+      }).toThrow(ErrorHandler.ErrorTypes.MODIFICATION_CONFLICT);
     });
   });
 });
