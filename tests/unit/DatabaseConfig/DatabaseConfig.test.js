@@ -7,29 +7,27 @@
  * - Parameter validation
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createTestFolder, trackFolderId } from '../../helpers/database-test-helpers.js';
 
 let testFolderId;
 
-beforeAll(() => {
-  const folder = DriveApp.createFolder(`GASDB_DatabaseConfig_Test_${Date.now()}`);
-  testFolderId = folder.getId();
+beforeEach(() => {
+  testFolderId = createTestFolder();
 });
 
-afterAll(() => {
-  try {
-    if (testFolderId) {
-      const folder = DriveApp.getFolderById(testFolderId);
-      folder.setTrashed(true);
-    }
-  } catch {
-    // ignore cleanup errors in mock
-  }
+describe('DatabaseConfig Setup - Create Test Environment', () => {
+  it('should create test folder for DatabaseConfig tests', () => {
+    expect(testFolderId).toBeDefined();
+    const folder = DriveApp.getFolderById(testFolderId);
+    expect(folder).toBeDefined();
+  });
 });
 
 describe('DatabaseConfig Creation and Default Values', () => {
   it('should create DatabaseConfig with default values', () => {
     const config = new DatabaseConfig();
+    trackFolderId(config.rootFolderId);
     
     expect(config).not.toBeNull();
     expect(config.rootFolderId).toBeDefined();
@@ -57,6 +55,7 @@ describe('DatabaseConfig Creation and Default Values', () => {
     };
     
     const config = new DatabaseConfig(customConfig);
+    trackFolderId(config.rootFolderId);
     
     expect(config.rootFolderId).toBe(customConfig.rootFolderId);
     expect(config.autoCreateCollections).toBe(false);
@@ -78,6 +77,7 @@ describe('DatabaseConfig Creation and Default Values', () => {
     };
     
     const config = new DatabaseConfig(partialConfig);
+    trackFolderId(config.rootFolderId);
     
     expect(config.lockTimeout).toBe(45000);
     expect(config.retryAttempts).toBe(7);
@@ -92,6 +92,7 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
   it('should preserve sanitisation flag through clone and serialization', () => {
     const config = new DatabaseConfig({ stripDisallowedCollectionNameCharacters: true });
+    trackFolderId(config.rootFolderId);
     const clone = config.clone();
     
     expect(clone.stripDisallowedCollectionNameCharacters).toBe(true);

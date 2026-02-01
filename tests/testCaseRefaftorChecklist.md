@@ -151,80 +151,80 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should validate Date objects in input metadata
     - [ ] should handle zero document count operations
 
-- [ ] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
+- [x] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
 - [x] _Suite: Database Initialisation_
-    - [ ] should create Database with default configuration
-    - [ ] should create Database with custom configuration
-    - [ ] should initialise database and create index file
-    - [ ] should handle initialisation with existing index file
+    - [x] should create Database with default configuration
+    - [x] should create Database with custom configuration
+    - [x] should initialise database and create index file
+    - [x] should handle initialisation with existing index file
 
-- [ ] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
+- [x] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
 - [x] _Suite: Collection Management_
-    - [ ] should create new collection
-    - [ ] should access existing collection
-    - [ ] should auto-create collection when configured
-    - [ ] should list all collections
-    - [ ] should delete collection
-    - [ ] should throw error if collection does not exist and autoCreateCollections is false
-    - [ ] should handle collection name validation
-    - [ ] should sanitise invalid collection names when permissive mode enabled
-    - [ ] should refuse reserved names even after sanitisation
-    - [ ] should prevent duplicate collections that collide after sanitisation
+    - [x] should create new collection
+    - [x] should access existing collection
+    - [x] should auto-create collection when configured
+    - [x] should list all collections
+    - [x] should delete collection
+    - [x] should throw error if collection does not exist and autoCreateCollections is false
+    - [x] should handle collection name validation
+    - [x] should sanitise invalid collection names when permissive mode enabled
+    - [x] should refuse reserved names even after sanitisation
+    - [x] should prevent duplicate collections that collide after sanitisation
 
-- [ ] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
+- [x] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
 - [x] _Suite: Index File Structure_
-    - [ ] should create index file with correct structure
-    - [ ] should update index file when collections change
-    - [ ] should synchronise with master index
-    - [ ] should record sanitised collection names in index file when sanitisation enabled
+    - [x] should create index file with correct structure
+    - [x] should update index file when collections change
+    - [x] should synchronise with master index
+    - [x] should record sanitised collection names in index file when sanitisation enabled
 
 - [ ] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js**
 - [x] _Suite: Database Master Index Integration_
-    - [ ] should integrate with master index on initialisation
-    - [ ] should co-ordinate collection operations with master index
+    - [x] should integrate with master index on initialisation
+    - [x] should co-ordinate collection operations with master index
 
 - [ ] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js**
 - [x] _Suite: Database Backup Index Tests_
-    - [ ] should NOT create index file when backupOnInitialise is false
-    - [ ] should create index file when backupOnInitialise is true
-    - [ ] createCollection should not create index file when backup disabled
+    - [x] should NOT create index file when backupOnInitialise is false
+    - [x] should create index file when backupOnInitialise is true
+    - [x] createCollection should not create index file when backup disabled
 
 - [x] **old_tests/unit/DatabaseConfigTest.js**
   - [ ] _Suite: DatabaseConfig Setup - Create Test Environment_
-    - [ ] should create test folder for DatabaseConfig tests
+    - [x] should create test folder for DatabaseConfig tests
   - [ ] _Suite: DatabaseConfig Creation and Default Values_
-    - [ ] should create DatabaseConfig with default values
-    - [ ] should create DatabaseConfig with custom values
-    - [ ] should merge custom config with defaults
-    - [ ] should preserve sanitisation flag through clone and serialization
+    - [x] should create DatabaseConfig with default values
+    - [x] should create DatabaseConfig with custom values
+    - [x] should merge custom config with defaults
+    - [x] should preserve sanitisation flag through clone and serialization
   - [ ] _Suite: DatabaseConfig Validation_
-    - [ ] should validate lock timeout parameter
-    - [ ] should validate retryAttempts and retryDelayMs parameters
-    - [ ] should validate log level parameter
-    - [ ] should validate boolean parameters
-    - [ ] should validate rootFolderId parameter
+    - [x] should validate lock timeout parameter
+    - [x] should validate retryAttempts and retryDelayMs parameters
+    - [x] should validate log level parameter
+    - [x] should validate boolean parameters
+    - [x] should validate rootFolderId parameter
   - [ ] _Suite: DatabaseConfig Cleanup - Remove Test Resources_
     - [ ] should clean up test folders
   - [ ] _Suite: DatabaseConfig lockTimeout validation_
-    - [ ] testValidMinimumLockTimeout
-    - [ ] testTooLowLockTimeoutThrowsError
+    - [x] testValidMinimumLockTimeout
+    - [x] testTooLowLockTimeoutThrowsError
 
 - [x] **old_tests/unit/DatabaseInitializationRefactorTest.js**
-  - [ ] _Suite: Database createDatabase() Method (No Setup)_
-    - [ ] should create database with fresh MasterIndex
-  - [ ] _Suite: Database createDatabase() Method (Exists)_
-    - [ ] should throw error if MasterIndex already exists
-  - [ ] _Suite: Database initialise() Refactor_
-    - [ ] should initialise from MasterIndex only
-    - [ ] should throw error if MasterIndex is missing
-    - [ ] should throw error if MasterIndex is corrupted
-    - [ ] should persist sanitised collection names to MasterIndex when flag enabled
-  - [ ] _Suite: Database recoverDatabase() Method_
-    - [ ] should recover database from backup index file
-    - [ ] should throw error if backup file is invalid
-  - [ ] _Suite: Collection Methods No Fallback_
-    - [ ] should access collection from MasterIndex only
-    - [ ] should throw error if collection not in MasterIndex
+  - [x] _Suite: Database createDatabase() Method (No Setup)_
+    - [x] should create database with fresh MasterIndex
+  - [x] _Suite: Database createDatabase() Method (Exists)_
+    - [x] should throw error if MasterIndex already exists
+  - [x] _Suite: Database initialise() Refactor_
+    - [x] should initialise from MasterIndex only
+    - [x] should throw error if MasterIndex is missing
+    - [x] should throw error if MasterIndex is corrupted
+    - [x] should persist sanitised collection names to MasterIndex when flag enabled
+  - [x] _Suite: Database recoverDatabase() Method_
+    - [x] should recover database from backup index file
+    - [x] should throw error if backup file is invalid
+  - [x] _Suite: Collection Methods No Fallback_
+    - [x] should access collection from MasterIndex only
+    - [x] should throw error if collection not in MasterIndex
 
 - [x] **old_tests/unit/DbLockService/01_LockServiceConstructorTestSuite.js**
   - [x] _Suite: LockService Constructor_
@@ -305,73 +305,73 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] should maintain backwards compatibility with existing ID-based methods
     - [x] should validate queries and propagate errors properly
 
-- [ ] **old_tests/unit/FileOperationsTest.js**
-  - [ ] _Suite: FileOperations Setup - Create Test Files_
-    - [ ] should create test folder in Drive root
-    - [ ] should create initial test file with JSON content
-    - [ ] should verify test file can be accessed
-  - [ ] _Suite: FileOperations Functionality_
-    - [ ] should read file content from Drive using real file ID
-    - [ ] should write data to existing Drive file
-    - [ ] should create new file in test folder
-    - [ ] should check if file exists in Drive
-    - [ ] should delete file from Drive
-    - [ ] should retrieve file metadata from Drive
-  - [ ] _Suite: FileOperations Error Handling_
-    - [ ] should handle Drive API quota exceeded error with retry
-    - [ ] should handle Drive API permission denied error
-    - [ ] should handle Drive API file not found error
-    - [ ] should retry operations on transient failures
-    - [ ] should handle malformed JSON in file content
-    - [ ] should handle corrupted files with partial JSON and date strings
-    - [ ] should handle files with invalid JSON that could trigger double-parsing detection
-    - [ ] should handle empty files gracefully without date processing
-  - [ ] _Suite: FileOperations Edge Cases_
-    - [ ] should handle very large file content gracefully
-    - [ ] should handle special characters in file names and content
-    - [ ] should handle empty files and null data appropriately
-  - [ ] _Suite: FileOperations Cleanup - Remove Test Files_
-    - [ ] should delete all created test files
-    - [ ] should delete all created test folders
-    - [ ] should reset test data globals
-  - [ ] _Suite: FileOperations Date Handling_
-    - [ ] should preserve Date objects through write-read cycle
-    - [ ] should store Date objects as ISO strings in actual file content
-    - [ ] should handle arrays with multiple Date objects
-    - [ ] should handle deeply nested Date objects
-    - [ ] should handle mixed Date objects and ISO strings correctly
-    - [ ] should handle edge cases with invalid date-like strings
-    - [ ] should handle Date objects with various time zones and precision
+- [x] **old_tests/unit/FileOperationsTest.js**
+  - [x] _Suite: FileOperations Setup - Create Test Files_
+    - [x] should create test folder in Drive root
+    - [x] should create initial test file with JSON content
+    - [x] should verify test file can be accessed
+  - [x] _Suite: FileOperations Functionality_
+    - [x] should read file content from Drive using real file ID
+    - [x] should write data to existing Drive file
+    - [x] should create new file in test folder
+    - [x] should check if file exists in Drive
+    - [x] should delete file from Drive
+    - [x] should retrieve file metadata from Drive
+  - [x] _Suite: FileOperations Error Handling_
+    - [x] should handle Drive API quota exceeded error with retry
+    - [x] should handle Drive API permission denied error
+    - [x] should handle Drive API file not found error
+    - [x] should retry operations on transient failures
+    - [x] should handle malformed JSON in file content
+    - [x] should handle corrupted files with partial JSON and date strings
+    - [x] should handle files with invalid JSON that could trigger double-parsing detection
+    - [x] should handle empty files gracefully without date processing
+  - [x] _Suite: FileOperations Edge Cases_
+    - [x] should handle very large file content gracefully
+    - [x] should handle special characters in file names and content
+    - [x] should handle empty files and null data appropriately
+  - [x] _Suite: FileOperations Cleanup - Remove Test Files_
+    - [x] should delete all created test files
+    - [x] should delete all created test folders
+    - [x] should reset test data globals
+  - [x] _Suite: FileOperations Date Handling_
+    - [x] should preserve Date objects through write-read cycle
+    - [x] should store Date objects as ISO strings in actual file content
+    - [x] should handle arrays with multiple Date objects
+    - [x] should handle deeply nested Date objects
+    - [x] should handle mixed Date objects and ISO strings correctly
+    - [x] should handle edge cases with invalid date-like strings
+    - [x] should handle Date objects with various time zones and precision
 
-- [ ] **old_tests/unit/FileServiceTest.js**
-  - [ ] _Suite: FileService Setup - Create Test Resources_
-    - [ ] should create test folder in Drive root
-    - [ ] should create initial test file with JSON content
-    - [ ] should initialise mock FileOperations for dependency injection
-  - [ ] _Suite: FileService Functionality_
-    - [ ] should initialise with FileOperations dependency
-    - [ ] should read file through optimised interface
-    - [ ] should write file through optimised interface
-    - [ ] should create file through optimised interface
-    - [ ] should check file existence through optimised interface
-    - [ ] should get file metadata through optimised interface
-  - [ ] _Suite: FileService Optimisation_
-    - [ ] should batch multiple read operations when possible
-    - [ ] should optimise metadata retrieval for multiple files
-    - [ ] should handle mixed success and failure in batch operations
-    - [ ] should implement intelligent caching for frequently accessed files
-  - [ ] _Suite: FileService Error Recovery_
-    - [ ] should implement exponential backoff for quota limits
-    - [ ] should gracefully degrade batch operations on partial failures
-    - [ ] should implement circuit breaker pattern for failing operations
-  - [ ] _Suite: FileService Integration_
-    - [ ] should coordinate operations between FileOperations and FileService
-    - [ ] should minimise Drive API calls through intelligent coordination
-    - [ ] should maintain consistency during concurrent file operations
-  - [ ] _Suite: FileService Cleanup - Remove Test Files_
-    - [ ] should delete all created test files
-    - [ ] should delete all created test folders
-    - [ ] should reset test data globals
+- [x] **old_tests/unit/FileServiceTest.js**
+  - [x] _Suite: FileService Setup - Create Test Resources_
+    - [x] should create test folder in Drive root
+    - [x] should create initial test file with JSON content
+    - [x] should initialise mock FileOperations for dependency injection
+  - [x] _Suite: FileService Functionality_
+    - [x] should initialise with FileOperations dependency
+    - [x] should read file through optimised interface
+    - [x] should write file through optimised interface
+    - [x] should create file through optimised interface
+    - [x] should check file existence through optimised interface
+    - [x] should get file metadata through optimised interface
+  - [x] _Suite: FileService Optimisation_
+    - [x] should batch multiple read operations when possible
+    - [x] should optimise metadata retrieval for multiple files
+    - [x] should handle mixed success and failure in batch operations
+    - [x] should implement intelligent caching for frequently accessed files
+  - [x] _Suite: FileService Error Recovery_
+    - [x] should implement exponential backoff for quota limits
+    - [x] should gracefully degrade batch operations on partial failures
+    - [x] should implement circuit breaker pattern for failing operations
+  - [x] _Suite: FileService Integration_
+    - [x] should coordinate operations between FileOperations and FileService
+    - [x] should minimise Drive API calls through intelligent coordination
+    - [x] should maintain consistency during concurrent file operations
+  - [x] _Suite: FileService Cleanup - Remove Test Files_
+    - [x] should delete all created test files
+    - [x] should delete all created test folders
+    - [x] should reset test data globals
 
 - [ ] **old_tests/unit/MasterIndexTest.js**
   - [ ] _Suite: MasterIndex Functionality_

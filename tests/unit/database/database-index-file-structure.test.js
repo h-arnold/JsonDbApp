@@ -15,6 +15,7 @@ describe('Database Index File Structure', () => {
     const config = createDatabaseConfig({ backupOnInitialise: true });
     const database = new Database(config);
 
+    database.createDatabase();
     database.initialise();
     const indexData = database.loadIndex();
 
