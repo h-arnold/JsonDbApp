@@ -165,6 +165,40 @@ export const createTestCollection = (env, collectionName) => {
 };
 
 /**
+ * Registers a collection file in the master index and creates a Collection instance
+ * @param {object} env - Environment from setupCollectionTestEnvironment
+ * @param {string} collectionName - Name for the collection
+ * @param {string} fileId - File ID of the collection file
+ * @param {number} documentCount - Document count for metadata (optional, defaults to 0)
+ * @returns {object} Collection instance
+ */
+export const registerAndCreateCollection = (env, collectionName, fileId, documentCount = 0) => {
+  // Register collection in master index
+  const metadataData = {
+    name: collectionName,
+    fileId: fileId,
+    created: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    documentCount: documentCount,
+    modificationToken: `token-${Date.now()}`,
+    lockStatus: null
+  };
+  
+  const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
+  env.masterIndex.addCollection(collectionName, collectionMetadata);
+  
+  // Create Collection instance
+  const collection = new Collection(
+    collectionName,
+    fileId,
+    env.database,
+    env.fileService
+  );
+  
+  return collection;
+};
+
+/**
  * Cleanup function - automatically registered with afterEach
  */
 export const cleanupCollectionTests = () => {

@@ -8,7 +8,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   setupCollectionTestEnvironment,
-  createTestFileWithContent
+  createTestFileWithContent,
+  registerAndCreateCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Data Operations', () => {
@@ -34,30 +35,10 @@ describe('Collection Data Operations', () => {
       JSON.stringify(testData)
     );
     
-    // Register collection in master index
     const collectionName = 'dataTestCollection';
-    const metadataData = {
-      name: collectionName,
-      fileId: fileId,
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      documentCount: 2,
-      modificationToken: `token-${Date.now()}`,
-      lockStatus: null
-    };
+    const collection = registerAndCreateCollection(env, collectionName, fileId, 2);
     
-    const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
-    env.masterIndex.addCollection(collectionName, collectionMetadata);
-    
-    // Act
-    const collection = new Collection(
-      collectionName,
-      fileId,
-      env.database,
-      env.fileService
-    );
-    
-    // Trigger data loading
+    // Act - Trigger data loading
     const documents = collection.find({});
     
     // Assert
@@ -75,30 +56,10 @@ describe('Collection Data Operations', () => {
       '{ "invalid": json data }'
     );
     
-    // Register collection in master index
     const collectionName = 'corruptedTestCollection';
-    const metadataData = {
-      name: collectionName,
-      fileId: fileId,
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      documentCount: 0,
-      modificationToken: `token-${Date.now()}`,
-      lockStatus: null
-    };
+    const collection = registerAndCreateCollection(env, collectionName, fileId);
     
-    const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
-    env.masterIndex.addCollection(collectionName, collectionMetadata);
-    
-    // Act
-    const collection = new Collection(
-      collectionName,
-      fileId,
-      env.database,
-      env.fileService
-    );
-    
-    // Assert - Should handle corrupted file gracefully
+    // Act & Assert - Should handle corrupted file gracefully
     expect(() => {
       collection.find({});
     }).toThrow(OperationError);
@@ -121,29 +82,9 @@ describe('Collection Data Operations', () => {
       })
     );
     
-    // Register collection in master index
-    const metadataData = {
-      name: collectionName,
-      fileId: fileId,
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      documentCount: 0,
-      modificationToken: `token-${Date.now()}`,
-      lockStatus: null
-    };
+    const collection = registerAndCreateCollection(env, collectionName, fileId);
     
-    const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
-    env.masterIndex.addCollection(collectionName, collectionMetadata);
-    
-    // Act
-    const collection = new Collection(
-      collectionName,
-      fileId,
-      env.database,
-      env.fileService
-    );
-    
-    // Insert a document to make collection dirty
+    // Act - Insert a document to make collection dirty
     collection.insertOne({ name: 'Test Save Doc', value: 500 });
     
     // Assert

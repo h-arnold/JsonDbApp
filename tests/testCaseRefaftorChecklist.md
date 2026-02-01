@@ -9,11 +9,11 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionInitialisation
     - [x] testCollectionLazyLoading
 
-- [ ] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js**
-  - [ ] _Suite: Collection Data Operations_
-    - [ ] testCollectionLoadDataFromDrive
-    - [ ] testCollectionLoadDataCorruptedFile
-    - [ ] testCollectionSaveDataToDrive
+- [x] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js**
+  - [x] _Suite: Collection Data Operations_
+    - [x] testCollectionLoadDataFromDrive
+    - [x] testCollectionLoadDataCorruptedFile
+    - [x] testCollectionSaveDataToDrive
 
 - [ ] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js**
   - [ ] _Suite: Collection Insert Operations_
