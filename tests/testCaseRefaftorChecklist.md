@@ -148,17 +148,17 @@ Tracking old test suites and cases for migration into the new `tests` framework.
   - [x] _Suite: CollectionMetadata Edge Cases_
     - [x] should handle very large document counts
     - [x] should handle partial metadata objects
-    - [ ] should validate Date objects in input metadata
-    - [ ] should handle zero document count operations
+    - [x] should validate Date objects in input metadata
+    - [x] should handle zero document count operations
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [ ] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
-  - [ ] _Suite: Database Initialisation_
-    - [ ] should create Database with default configuration
-    - [ ] should create Database with custom configuration
-    - [ ] should initialise database and create index file
-    - [ ] should handle initialisation with existing index file
+- [x] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
+  - [x] _Suite: Database Initialisation_
+    - [x] should create Database with default configuration
+    - [x] should create Database with custom configuration
+    - [x] should initialise database and create index file
+    - [x] should handle initialisation with existing index file
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
@@ -221,17 +221,17 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 - [ ] **old_tests/unit/DatabaseInitializationRefactorTest.js**
   - [ ] _Suite: Database createDatabase() Method (No Setup)_
-    - [ ] should create database with fresh MasterIndex
+    - [x] should create database with fresh MasterIndex
   - [ ] _Suite: Database createDatabase() Method (Exists)_
-    - [ ] should throw error if MasterIndex already exists
+    - [x] should throw error if MasterIndex already exists
   - [ ] _Suite: Database initialise() Refactor_
-    - [ ] should initialise from MasterIndex only
-    - [ ] should throw error if MasterIndex is missing
-    - [ ] should throw error if MasterIndex is corrupted
-    - [ ] should persist sanitised collection names to MasterIndex when flag enabled
+    - [x] should initialise from MasterIndex only
+    - [x] should throw error if MasterIndex is missing
+    - [x] should throw error if MasterIndex is corrupted
+    - [x] should persist sanitised collection names to MasterIndex when flag enabled
   - [ ] _Suite: Database recoverDatabase() Method_
-    - [ ] should recover database from backup index file
-    - [ ] should throw error if backup file is invalid
+    - [x] should recover database from backup index file
+    - [x] should throw error if backup file is invalid
   - [ ] _Suite: Collection Methods No Fallback_
     - [ ] should access collection from MasterIndex only
     - [ ] should throw error if collection not in MasterIndex
