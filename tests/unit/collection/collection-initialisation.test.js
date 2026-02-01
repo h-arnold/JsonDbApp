@@ -8,8 +8,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   setupCollectionTestEnvironment,
-  createTestCollection,
-  createTestCollectionFile
+  createTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Initialisation', () => {
@@ -32,28 +31,7 @@ describe('Collection Initialisation', () => {
     // Arrange
     const env = setupCollectionTestEnvironment();
     const collectionName = 'lazy_test_collection';
-    const fileId = createTestCollectionFile(env.folderId, collectionName);
-    
-    // Register in master index
-    const metadataData = {
-      name: collectionName,
-      fileId: fileId,
-      created: new Date().toISOString(),
-      lastUpdated: new Date().toISOString(),
-      documentCount: 0,
-      modificationToken: `token-${Date.now()}`,
-      lockStatus: null
-    };
-    const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
-    env.masterIndex.addCollection(collectionName, collectionMetadata);
-    
-    // Act
-    const collection = new Collection(
-      collectionName,
-      fileId,
-      env.database,
-      env.fileService
-    );
+    const { collection } = createTestCollection(env, collectionName);
     
     // Assert - Collection should not be loaded initially
     // First operation (find) should trigger loading

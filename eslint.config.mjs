@@ -44,8 +44,6 @@ export default [
     rules: {
       // Add project-specific rules here
       "max-len": ["warn", { code: 1000 }],
-      "require-jsdoc": "on",
-      "valid-jsdoc": "on",
       "no-unused-vars": ["warn", { args: "none" }],
       "no-console": "off",
     },

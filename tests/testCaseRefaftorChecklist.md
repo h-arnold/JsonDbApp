@@ -4,10 +4,10 @@ Tracking old test suites and cases for migration into the new `tests` framework.
 
 ## Unit tests
 
-- [ ] **old_tests/unit/Collection/00_CollectionInitialisationTestSuite.js**
-  - [ ] _Suite: Collection Initialisation_
-    - [ ] testCollectionInitialisation
-    - [ ] testCollectionLazyLoading
+- [x] **old_tests/unit/Collection/00_CollectionInitialisationTestSuite.js**
+  - [x] _Suite: Collection Initialisation_
+    - [x] testCollectionInitialisation
+    - [x] testCollectionLazyLoading
 
 - [ ] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js**
   - [ ] _Suite: Collection Data Operations_
