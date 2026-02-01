@@ -5,6 +5,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import '../../setup/gas-mocks.setup.js';
+
+const { DbLockService, LockTimeoutError } = globalThis;
 
 describe('DbLockService Script Lock Timeout', () => {
   describe('Timeout Error', () => {
@@ -21,7 +24,7 @@ describe('DbLockService Script Lock Timeout', () => {
         };
       };
 
-      expect(() => svc.acquireScriptLock(10)).toThrow(ErrorHandler.ErrorTypes.LOCK_TIMEOUT);
+      expect(() => svc.acquireScriptLock(10)).toThrow(LockTimeoutError);
     });
   });
 });

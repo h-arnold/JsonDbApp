@@ -5,6 +5,9 @@
  */
 
 import { describe, it, expect } from 'vitest';
+import '../../setup/gas-mocks.setup.js';
+
+const { DbLockService, InvalidArgumentError } = globalThis;
 
 describe('DbLockService Script Lock Operations', () => {
   describe('Acquire and Release', () => {
@@ -20,21 +23,22 @@ describe('DbLockService Script Lock Operations', () => {
   });
 
   describe('Release Without Acquire', () => {
-    it('should not throw when releasing without acquire', () => {
+    it('should warn and return when releasing without acquire', () => {
       const svc = new DbLockService();
       expect(() => svc.releaseScriptLock()).not.toThrow();
+      expect(svc._scriptLock).toBeNull();
     });
   });
 
   describe('Invalid Timeout', () => {
     it('should throw for non-number timeout', () => {
       const svc = new DbLockService();
-      expect(() => svc.acquireScriptLock('invalid')).toThrow();
+      expect(() => svc.acquireScriptLock('invalid')).toThrow(InvalidArgumentError);
     });
 
     it('should throw for negative timeout', () => {
       const svc = new DbLockService();
-      expect(() => svc.acquireScriptLock(-1)).toThrow();
+      expect(() => svc.acquireScriptLock(-1)).toThrow(InvalidArgumentError);
     });
   });
 });

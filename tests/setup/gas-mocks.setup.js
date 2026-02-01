@@ -15,7 +15,9 @@ const legacyScripts = [
   'src/01_utils/JDbLogger.js',
   'src/01_utils/IdGenerator.js',
   'src/01_utils/ComparisonUtils.js',
+  'old_tests/data/ValidationMockData.js',
   'src/04_core/DatabaseConfig.js',
+  'src/04_core/Database.js',
   'src/01_utils/ObjectUtils.js',
   'src/03_services/DbLockService.js',
   'src/02_components/CollectionMetadata.js',
@@ -58,5 +60,16 @@ globalThis.LockService = gasMocks.LockService;
 globalThis.Utilities = gasMocks.Utilities;
 globalThis.Logger = gasMocks.Logger;
 globalThis.MimeType = gasMocks.MimeType;
+// expose legacy classes to global scope
+if (typeof DbLockService !== 'undefined') globalThis.DbLockService = DbLockService;
+if (typeof DocumentOperations !== 'undefined') globalThis.DocumentOperations = DocumentOperations;
+if (typeof FileOperations !== 'undefined') globalThis.FileOperations = FileOperations;
+if (typeof FileService !== 'undefined') globalThis.FileService = FileService;
+if (typeof JDbLogger !== 'undefined') globalThis.JDbLogger = JDbLogger;
+if (typeof InvalidArgumentError !== 'undefined') globalThis.InvalidArgumentError = InvalidArgumentError;
+if (typeof ConflictError !== 'undefined') globalThis.ConflictError = ConflictError;
+if (typeof InvalidQueryError !== 'undefined') globalThis.InvalidQueryError = InvalidQueryError;
+if (typeof DocumentNotFoundError !== 'undefined') globalThis.DocumentNotFoundError = DocumentNotFoundError;
+if (typeof LockTimeoutError !== 'undefined') globalThis.LockTimeoutError = LockTimeoutError;
 
 export { gasMocks };

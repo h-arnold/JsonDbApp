@@ -5,7 +5,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupTestEnvironment } from '../../helpers/document-operations-test-helpers.js';
+import { setupTestEnvironment, DocumentOperations } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Constructor', () => {
   let env;

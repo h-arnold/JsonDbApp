@@ -226,84 +226,84 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should access collection from MasterIndex only
     - [ ] should throw error if collection not in MasterIndex
 
-- [ ] **old_tests/unit/DbLockService/01_LockServiceConstructorTestSuite.js**
-  - [ ] _Suite: LockService Constructor_
-    - [ ] testDefaultTimeout
-    - [ ] testCustomTimeout
-    - [ ] testInvalidConfigType
-    - [ ] testInvalidTimeoutType
+- [x] **old_tests/unit/DbLockService/01_LockServiceConstructorTestSuite.js**
+  - [x] _Suite: LockService Constructor_
+    - [x] testDefaultTimeout
+    - [x] testCustomTimeout
+    - [x] testInvalidConfigType
+    - [x] testInvalidTimeoutType
 
-- [ ] **old_tests/unit/DbLockService/02_LockServiceScriptLockTestSuite.js**
-  - [ ] _Suite: LockService Script Lock Operations_
-    - [ ] testAcquireAndReleaseScriptLock
-    - [ ] testReleaseWithoutAcquireThrows
-    - [ ] testInvalidTimeoutThrows
+- [x] **old_tests/unit/DbLockService/02_LockServiceScriptLockTestSuite.js**
+  - [x] _Suite: LockService Script Lock Operations_
+    - [x] testAcquireAndReleaseScriptLock
+    - [x] testReleaseWithoutAcquireThrows
+    - [x] testInvalidTimeoutThrows
 
-- [ ] **old_tests/unit/DbLockService/03_LockServiceScriptLockTimeoutTestSuite.js**
-  - [ ] _Suite: LockService Script Lock Timeout_
-    - [ ] testScriptLockTimeoutThrows
+- [x] **old_tests/unit/DbLockService/03_LockServiceScriptLockTimeoutTestSuite.js**
+  - [x] _Suite: LockService Script Lock Timeout_
+    - [x] testScriptLockTimeoutThrows
 
-- [ ] **old_tests/unit/DocumentOperations/01_DocumentOperationsConstructorTest.js**
-  - [ ] _Suite: DocumentOperations Constructor_
-    - [ ] should create DocumentOperations with valid collection reference
+- [x] **old_tests/unit/DocumentOperations/01_DocumentOperationsConstructorTest.js**
+  - [x] _Suite: DocumentOperations Constructor_
+    - [x] should create DocumentOperations with valid collection reference
 
-- [ ] **old_tests/unit/DocumentOperations/02_DocumentOperationsInsertTest.js**
-  - [ ] _Suite: DocumentOperations Insert Operations_
-    - [ ] should insert document with automatic ID generation
-    - [ ] should insert document with provided ID when valid
-    - [ ] should throw error when inserting document with duplicate ID
-    - [ ] should throw error when inserting invalid document
+- [x] **old_tests/unit/DocumentOperations/02_DocumentOperationsInsertTest.js**
+  - [x] _Suite: DocumentOperations Insert Operations_
+    - [x] should insert document with automatic ID generation
+    - [x] should insert document with provided ID when valid
+    - [x] should throw error when inserting document with duplicate ID
+    - [x] should throw error when inserting invalid document
 
-- [ ] **old_tests/unit/DocumentOperations/03_DocumentOperationsFindTest.js**
-  - [ ] _Suite: DocumentOperations Find Operations_
-    - [ ] should find document by valid ID
-    - [ ] should return null when document not found by ID
-    - [ ] should throw error when finding with invalid ID
-    - [ ] should find all documents when collection has content
-    - [ ] should return empty array when finding all documents in empty collection
+- [x] **old_tests/unit/DocumentOperations/03_DocumentOperationsFindTest.js**
+  - [x] _Suite: DocumentOperations Find Operations_
+    - [x] should find document by valid ID
+    - [x] should return null when document not found by ID
+    - [x] should throw error when finding with invalid ID
+    - [x] should find all documents when collection has content
+    - [x] should return empty array when finding all documents in empty collection
 
-- [ ] **old_tests/unit/DocumentOperations/04_DocumentOperationsUpdateTest.js**
-  - [ ] _Suite: DocumentOperations Update Operations_
-    - [ ] should update existing document by ID
-    - [ ] should return error result when updating non-existent document
-    - [ ] should throw error when updating with invalid parameters
-    - [ ] should update document with operators by ID
-    - [ ] should update documents matching query with single match
-    - [ ] should update documents matching query with multiple matches
-    - [ ] should throw error when updateByQuery finds no matches
-    - [ ] should replace document by ID
-    - [ ] should replace documents matching query
-    - [ ] should integrate with UpdateEngine for operator-based updates
-    - [ ] should throw error for unsupported update operators
-    - [ ] should throw error when no operators provided to updateDocumentWithOperators
+- [x] **old_tests/unit/DocumentOperations/04_DocumentOperationsUpdateTest.js**
+  - [x] _Suite: DocumentOperations Update Operations_
+    - [x] should update existing document by ID
+    - [x] should return error result when updating non-existent document
+    - [x] should throw error when updating with invalid parameters
+    - [x] should update document with operators by ID
+    - [x] should update documents matching query with single match
+    - [x] should update documents matching query with multiple matches
+    - [x] should throw error when updateByQuery finds no matches
+    - [x] should replace document by ID
+    - [x] should replace documents matching query
+    - [x] should integrate with UpdateEngine for operator-based updates
+    - [x] should throw error for unsupported update operators
+    - [x] should throw error when no operators provided to updateDocumentWithOperators
 
-- [ ] **old_tests/unit/DocumentOperations/05_DocumentOperationsDeleteTest.js**
-  - [ ] _Suite: DocumentOperations Delete Operations_
-    - [ ] should delete existing document by ID
-    - [ ] should return error result when deleting non-existent document
-    - [ ] should throw error when deleting with invalid ID
+- [x] **old_tests/unit/DocumentOperations/05_DocumentOperationsDeleteTest.js**
+  - [x] _Suite: DocumentOperations Delete Operations_
+    - [x] should delete existing document by ID
+    - [x] should return error result when deleting non-existent document
+    - [x] should throw error when deleting with invalid ID
 
-- [ ] **old_tests/unit/DocumentOperations/06_DocumentOperationsUtilityTest.js**
-  - [ ] _Suite: DocumentOperations Utility Operations_
-    - [ ] should count documents correctly
-    - [ ] should check document existence correctly
-    - [ ] should throw error when checking existence with invalid ID
-    - [ ] should generate valid document IDs
+- [x] **old_tests/unit/DocumentOperations/06_DocumentOperationsUtilityTest.js**
+  - [x] _Suite: DocumentOperations Utility Operations_
+    - [x] should count documents correctly
+    - [x] should check document existence correctly
+    - [x] should throw error when checking existence with invalid ID
+    - [x] should generate valid document IDs
 
-- [ ] **old_tests/unit/DocumentOperations/07_DocumentOperationsQueryEnhancementTest.js**
-  - [ ] _Suite: DocumentOperations Query Enhancement_
-    - [ ] should find document by field-based query with exact match
-    - [ ] should find document by comparison operator query
-    - [ ] should find document by logical AND query
-    - [ ] should find document by logical OR query
-    - [ ] should find document by nested field query
-    - [ ] should find multiple documents by query
-    - [ ] should count documents by query accurately
-    - [ ] should handle QueryEngine integration errors properly
-    - [ ] should handle empty results for non-matching queries
-    - [ ] should handle large result sets efficiently
-    - [ ] should maintain backwards compatibility with existing ID-based methods
-    - [ ] should validate queries and propagate errors properly
+- [x] **old_tests/unit/DocumentOperations/07_DocumentOperationsQueryEnhancementTest.js**
+  - [x] _Suite: DocumentOperations Query Enhancement_
+    - [x] should find document by field-based query with exact match
+    - [x] should find document by comparison operator query
+    - [x] should find document by logical AND query
+    - [x] should find document by logical OR query
+    - [x] should find document by nested field query
+    - [x] should find multiple documents by query
+    - [x] should count documents by query accurately
+    - [x] should handle QueryEngine integration errors properly
+    - [x] should handle empty results for non-matching queries
+    - [x] should handle large result sets efficiently
+    - [x] should maintain backwards compatibility with existing ID-based methods
+    - [x] should validate queries and propagate errors properly
 
 - [ ] **old_tests/unit/FileOperationsTest.js**
   - [ ] _Suite: FileOperations Setup - Create Test Files_
@@ -502,7 +502,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] testPullOnNonArrayThrows
     - [ ] testAddToSetOnNonArrayThrows
 
-- [ ] **old_tests/unit/UtilityTests/ComparisonUtilsTest.js**
+- [x] **old_tests/unit/UtilityTests/ComparisonUtilsTest.js**
   - [ ] _Suite: ComparisonUtils Tests_
     - [ ] testEqualsPrimitivesAndStrict
     - [ ] testEqualsDates
@@ -520,32 +520,32 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] testSubsetMatchMixed
     - [ ] testSubsetMatchOperatorObjectDirect
 
-- [ ] **old_tests/unit/UtilityTests/EnvironmentTest.js**
+- [x] **old_tests/unit/UtilityTests/EnvironmentTest.js**
   - [ ] _Suite: Environment Tests_
     - [ ] testClaspConfiguration
     - [ ] testDriveAccess
 
-- [ ] **old_tests/unit/UtilityTests/ErrorHandlerTest.js**
+- [x] **old_tests/unit/UtilityTests/ErrorHandlerTest.js**
   - [ ] _Suite: ErrorHandler Tests_
     - [ ] testErrorHandlerErrorTypes
     - [ ] testErrorCreation
     - [ ] testErrorValidation
     - [ ] testAllErrorTypesCreation
 
-- [ ] **old_tests/unit/UtilityTests/GASDBLoggerTest.js**
+- [x] **old_tests/unit/UtilityTests/GASDBLoggerTest.js**
   - [ ] _Suite: GASDBLogger Tests_
     - [ ] testLoggerBasicFunctionality
     - [ ] testLoggerLevels
     - [ ] testLoggerComponentLogger
 
-- [ ] **old_tests/unit/UtilityTests/IdGeneratorTest.js**
+- [x] **old_tests/unit/UtilityTests/IdGeneratorTest.js**
   - [ ] _Suite: IdGenerator Tests_
     - [ ] testIdGeneratorBasicFunctionality
     - [ ] testIdGeneratorUniqueness
     - [ ] testIdGeneratorFormats
     - [ ] testIdGeneratorCustomGenerator
 
-- [ ] **old_tests/unit/UtilityTests/ObjectUtilsTest.js**
+- [x] **old_tests/unit/UtilityTests/ObjectUtilsTest.js**
   - [ ] _Suite: ObjectUtils Tests_
     - [ ] testObjectUtilsDeepClonePrimitives
     - [ ] testObjectUtilsDeepCloneDateObjects
@@ -578,7 +578,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] testObjectUtilsEdgeCases
     - [ ] testObjectUtilsSpecialObjectTypes
 
-- [ ] **old_tests/unit/UtilityTests/ValidationUtilsTest.js**
+- [x] **old_tests/unit/UtilityTests/ValidationUtilsTest.js**
   - [ ] _Suite: ValidationUtils Tests_
     - [ ] testValidationUtilsValidateRequired
     - [ ] testValidationUtilsValidateType
@@ -607,7 +607,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
 
 ## Validation tests
 
-- [ ] **old_tests/validation/00_ComparisonOperators.js**
+- [x] **old_tests/validation/00_ComparisonOperators.js**
   - [ ] _Suite: $eq Equality Operator Tests_
     - [ ] should match string values exactly
     - [ ] should match numeric values exactly
@@ -646,7 +646,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should handle null in less than comparison
     - [ ] should handle missing fields correctly
 
-- [ ] **old_tests/validation/01_LogicalOperators.js**
+- [x] **old_tests/validation/01_LogicalOperators.js**
   - [ ] _Suite: $and Logical AND Operator Tests_
     - [ ] should match documents satisfying both field conditions
     - [ ] should match documents satisfying multiple field conditions
@@ -674,7 +674,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should throw error for invalid $and structure
     - [ ] should throw error for invalid $or structure
 
-- [ ] **old_tests/validation/02_FieldUpdateOperators.js**
+- [x] **old_tests/validation/02_FieldUpdateOperators.js**
   - [ ] _Suite: $set Basic Field Setting Tests_
     - [ ] should overwrite existing string values
     - [ ] should overwrite existing numeric values
@@ -711,7 +711,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should handle _id field unset appropriately
     - [ ] should handle unsetting field in non-existent parent object
 
-- [ ] **old_tests/validation/03_NumericUpdateOperators.js**
+- [x] **old_tests/validation/03_NumericUpdateOperators.js**
   - [ ] _Suite: $inc Basic Incrementation Tests_
     - [ ] should increment positive integer values
     - [ ] should increment positive decimal values
@@ -769,7 +769,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should handle maximum safe integer values
     - [ ] should handle date range maximums
 
-- [ ] **old_tests/validation/04_ArrayUpdateOperators.js**
+- [x] **old_tests/validation/04_ArrayUpdateOperators.js**
   - [ ] _Suite: $push Operator Tests_
     - [ ] should append a single value to an existing array
     - [ ] should append an object value to an array
@@ -796,7 +796,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [ ] should report no modification when pulling from non-existent array field
     - [ ] should report no modification when operator predicate matches nothing
 
-- [ ] **old_tests/validation/05_ArrayAddToSetValidation.js**
+- [x] **old_tests/validation/05_ArrayAddToSetValidation.js**
   - [ ] _Suite: $addToSet Operator Tests_
     - [ ] should add a value to a set if it is not already present
     - [ ] should not add a value to a set if it is already present

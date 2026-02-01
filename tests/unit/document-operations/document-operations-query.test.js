@@ -3,7 +3,13 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
+import {
+  setupTestEnvironment,
+  resetCollection,
+  DocumentOperations,
+  InvalidArgumentError,
+  InvalidQueryError
+} from '../../helpers/document-operations-test-helpers.js';
 
 /**
  * Returns test user data

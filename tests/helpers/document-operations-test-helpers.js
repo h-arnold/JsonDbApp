@@ -5,6 +5,18 @@
  */
 
 import { afterEach } from 'vitest';
+import '../setup/gas-mocks.setup.js';
+
+const {
+  JDbLogger,
+  FileOperations,
+  FileService,
+  DocumentOperations,
+  InvalidArgumentError,
+  ConflictError,
+  InvalidQueryError,
+  DocumentNotFoundError
+} = globalThis;
 
 const testResources = {
   fileIds: new Set(),
@@ -176,6 +188,14 @@ export const resetCollection = (collection) => {
   };
   collection._isDirty = true;
   collection._saveData();
+};
+
+export {
+  DocumentOperations,
+  InvalidArgumentError,
+  ConflictError,
+  InvalidQueryError,
+  DocumentNotFoundError
 };
 
 /**

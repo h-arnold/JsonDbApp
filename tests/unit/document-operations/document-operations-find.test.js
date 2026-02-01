@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
+import { setupTestEnvironment, resetCollection, DocumentOperations, InvalidArgumentError } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Find Operations', () => {
   let env, docOps;
