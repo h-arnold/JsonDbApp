@@ -40,14 +40,11 @@ afterEach(() => {
 });
 
 describe('FileService Functionality', () => {
-  let context;
   let fileService;
   let mockFileOps;
-  let mockLogger;
 
   beforeEach(() => {
-    context = createFileServiceTestContext();
-    ({ fileService, mockFileOps, mockLogger } = context);
+    ({ fileService, mockFileOps } = createFileServiceTestContext());
   });
 
   it('should initialise with FileOperations dependency', () => {
@@ -159,13 +156,11 @@ describe('FileService Functionality', () => {
 });
 
 describe('FileService Caching', () => {
-  let context;
   let fileService;
   let mockFileOps;
 
   beforeEach(() => {
-    context = createFileServiceTestContext();
-    ({ fileService, mockFileOps } = context);
+    ({ fileService, mockFileOps } = createFileServiceTestContext());
   });
 
   it('should cache file content on first read', () => {
@@ -203,8 +198,10 @@ describe('FileService Caching', () => {
     fileService.readFile('test-file-id');
     fileService.writeFile('test-file-id', updatedData);
 
-    const stats = fileService.getCacheStats();
-    expect(stats.size).toBe(1);
+    const cachedResult = fileService.readFile('test-file-id');
+    expect(cachedResult.value).toBe(2);
+    expect(mockFileOps.readFile).toHaveBeenCalledTimes(1);
+    expect(fileService.getCacheStats().size).toBe(1);
   });
 
   it('should clear cache when disabled', () => {
@@ -264,13 +261,11 @@ describe('FileService Caching', () => {
 });
 
 describe('FileService Batch Operations', () => {
-  let context;
   let fileService;
   let mockFileOps;
 
   beforeEach(() => {
-    context = createFileServiceTestContext();
-    ({ fileService, mockFileOps } = context);
+    ({ fileService, mockFileOps } = createFileServiceTestContext());
   });
 
   it('should batch read multiple files', () => {
@@ -346,13 +341,11 @@ describe('FileService Batch Operations', () => {
 });
 
 describe('FileService Error Handling', () => {
-  let context;
   let fileService;
   let mockFileOps;
 
   beforeEach(() => {
-    context = createFileServiceTestContext();
-    ({ fileService, mockFileOps } = context);
+    ({ fileService, mockFileOps } = createFileServiceTestContext());
   });
 
   it('should throw error when reading file without fileId', () => {
@@ -433,13 +426,11 @@ describe('FileService Error Handling', () => {
 });
 
 describe('FileService Integration with FileOperations', () => {
-  let context;
   let fileService;
   let mockFileOps;
 
   beforeEach(() => {
-    context = createFileServiceTestContext();
-    ({ fileService, mockFileOps } = context);
+    ({ fileService, mockFileOps } = createFileServiceTestContext());
   });
 
   it('should coordinate operations between FileOperations and FileService', () => {
