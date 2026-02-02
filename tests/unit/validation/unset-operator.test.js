@@ -159,6 +159,9 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should handle unsetting non-existent field gracefully', () => {
       // Arrange
       const collection = testEnv.collections.persons;
+      const original = collection.findOne({ _id: 'person1' });
+      expect(original).not.toBe(null);
+      expect(original.name).not.toBe(undefined);
       
       // Act
       const result = collection.updateOne(
@@ -167,11 +170,13 @@ describe('$unset Field Removal Operator Tests', () => {
       );
       
       // Assert
-      // MongoDB typically returns modifiedCount: 0 for non-existent fields
-      // but our implementation might differ - test for consistent behaviour
-      expect(result.modifiedCount).toBeGreaterThanOrEqual(0);
+      // Unsetting a non-existent field should be a no-op
+      expect(result.modifiedCount).toBe(0);
       const updated = collection.findOne({ _id: 'person1' });
+      // The non-existent field must remain absent and known fields unchanged
+      expect(updated).toEqual(original);
       expect(updated.nonExistentField).toBe(undefined);
+      expect(updated._id).toBe(original._id);
       expect(updated.name).not.toBe(undefined);
     });
 

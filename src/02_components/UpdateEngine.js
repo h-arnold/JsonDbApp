@@ -64,6 +64,10 @@ class UpdateEngine {
     this._validateOperationsNotEmpty(ops, '$set');
     
     for (const fieldPath in ops) {
+      if (this._isImmutableField(fieldPath)) {
+        this._logger.debug('Skipping immutable field update', { fieldPath });
+        continue;
+      }
       this._setFieldValue(document, fieldPath, ops[fieldPath]);
     }
     return document;
@@ -540,6 +544,19 @@ _isPlainObject(val) {
     }
     
     return false;
+  }
+
+  /**
+   * Determine whether a field path targets an immutable root field such as _id.
+   * @param {string} fieldPath - Dot notation path of the field
+   * @returns {boolean} True if the root segment is immutable
+   */
+  _isImmutableField(fieldPath) {
+    if (!fieldPath || typeof fieldPath !== 'string') {
+      return false;
+    }
+    const root = fieldPath.split('.')[0];
+    return root === '_id';
   }
 
   // Private validation methods

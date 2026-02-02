@@ -297,24 +297,29 @@ describe('$set Field Update Operator Tests', () => {
   });
 
   describe('Edge cases', () => {
-    it('should handle _id field setting appropriately', () => {
+    it('should not allow changing the _id field via $set', () => {
+      // Arrange
       const collection = testEnv.collections.persons;
-      
-      try {
-        const result = collection.updateOne(
-          { _id: 'person1' },
-          { $set: { _id: 'newId' } }
-        );
-        // If successful, verify _id still exists
-        expect(result.modifiedCount).toBeGreaterThanOrEqual(0);
-        const updated = collection.findOne({ _id: 'person1' });
-        expect(updated).not.toBe(null);
-        expect(updated._id).not.toBe(undefined);
-      } catch (error) {
-        // If error thrown, verify it's a valid error
-        expect(error).toBeDefined();
-        expect(error.message).toBeDefined();
-      }
+      const original = collection.findOne({ _id: 'person1' });
+      expect(original).not.toBe(null);
+      expect(original._id).toBe('person1');
+
+      // Act
+      const result = collection.updateOne(
+        { _id: 'person1' },
+        { $set: { _id: 'newId' } }
+      );
+
+      // Assert
+      // Attempting to change _id should not move or re-key the document.
+      // We expect no actual modification to be recorded.
+      expect(result.modifiedCount).toBe(0);
+
+      const updated = collection.findOne({ _id: 'person1' });
+      expect(updated).toEqual(original);
+
+      const moved = collection.findOne({ _id: 'newId' });
+      expect(moved).toBe(null);
     });
 
     it('should handle undefined vs null assignment', () => {
