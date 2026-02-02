@@ -57,6 +57,7 @@ export const setupValidationTestEnvironment = () => {
   // Prepare mock data
   const personsData = ValidationMockData.getPersons();
   const ordersData = ValidationMockData.getOrders();
+  const inventoryData = ValidationMockData.getInventory();
   
   const rootFolder = DriveApp.getFolderById(folderId);
   
@@ -148,6 +149,50 @@ export const setupValidationTestEnvironment = () => {
     fileService
   );
   
+  // Create and populate inventory collection
+  const inventoryDocumentsObj = {};
+  inventoryData.forEach(doc => {
+    inventoryDocumentsObj[doc._id] = doc;
+  });
+  
+  const inventoryCollectionData = {
+    collection: 'inventory',
+    metadata: {
+      version: 1,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+      documentCount: inventoryData.length,
+      modificationToken: `init-token-${generateTimestamp()}`
+    },
+    documents: inventoryDocumentsObj
+  };
+
+  const inventoryFile = rootFolder.createFile('inventory.json', JSON.stringify(inventoryCollectionData, null, 2));
+  const inventoryFileId = inventoryFile.getId();
+  fileIds.push(inventoryFileId);
+  
+  // Register inventory collection in master index
+  const inventoryMetadata = {
+    name: 'inventory',
+    fileId: inventoryFileId,
+    created: new Date().toISOString(),
+    lastUpdated: new Date().toISOString(),
+    documentCount: inventoryData.length,
+    modificationToken: `token-${generateTimestamp()}`,
+    lockStatus: null
+  };
+  
+  const inventoryCollectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(inventoryMetadata));
+  masterIndex.addCollection('inventory', inventoryCollectionMetadata);
+  
+  // Create inventory Collection instance
+  const inventoryCollection = new Collection(
+    'inventory',
+    inventoryFileId,
+    database,
+    fileService
+  );
+  
   return {
     masterIndexKey,
     folderId,
@@ -158,11 +203,13 @@ export const setupValidationTestEnvironment = () => {
     database,
     collections: {
       persons: personsCollection,
-      orders: ordersCollection
+      orders: ordersCollection,
+      inventory: inventoryCollection
     },
     mockData: {
       persons: personsData,
-      orders: ordersData
+      orders: ordersData,
+      inventory: inventoryData
     },
     _cleanup: {
       masterIndexKey,
