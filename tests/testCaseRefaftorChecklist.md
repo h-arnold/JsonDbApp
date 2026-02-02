@@ -199,40 +199,40 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should create index file when backupOnInitialise is true
     - [x] createCollection should not create index file when backup disabled
 
-- [ ] **old_tests/unit/DatabaseConfigTest.js**
-  - [ ] _Suite: DatabaseConfig Setup - Create Test Environment_
-    - [ ] should create test folder for DatabaseConfig tests
-  - [ ] _Suite: DatabaseConfig Creation and Default Values_
-    - [ ] should create DatabaseConfig with default values
-    - [ ] should create DatabaseConfig with custom values
-    - [ ] should merge custom config with defaults
-    - [ ] should preserve sanitisation flag through clone and serialization
-  - [ ] _Suite: DatabaseConfig Validation_
-    - [ ] should validate lock timeout parameter
-    - [ ] should validate retryAttempts and retryDelayMs parameters
-    - [ ] should validate log level parameter
-    - [ ] should validate boolean parameters
-    - [ ] should validate rootFolderId parameter
-  - [ ] _Suite: DatabaseConfig Cleanup - Remove Test Resources_
-    - [ ] should clean up test folders
-  - [ ] _Suite: DatabaseConfig lockTimeout validation_
-    - [ ] testValidMinimumLockTimeout
-    - [ ] testTooLowLockTimeoutThrowsError
+- [x] **old_tests/unit/DatabaseConfigTest.js**
+  - [x] _Suite: DatabaseConfig Setup - Create Test Environment_
+    - [x] should create test folder for DatabaseConfig tests
+  - [x] _Suite: DatabaseConfig Creation and Default Values_
+    - [x] should create DatabaseConfig with default values
+    - [x] should create DatabaseConfig with custom values
+    - [x] should merge custom config with defaults
+    - [x] should preserve sanitisation flag through clone and serialization
+  - [x] _Suite: DatabaseConfig Validation_
+    - [x] should validate lock timeout parameter
+    - [x] should validate retryAttempts and retryDelayMs parameters
+    - [x] should validate log level parameter
+    - [x] should validate boolean parameters
+    - [x] should validate rootFolderId parameter
+  - [x] _Suite: DatabaseConfig Cleanup - Remove Test Resources_
+    - [x] should clean up test folders
+  - [x] _Suite: DatabaseConfig lockTimeout validation_
+    - [x] testValidMinimumLockTimeout
+    - [x] testTooLowLockTimeoutThrowsError
 
-- [ ] **old_tests/unit/DatabaseInitializationRefactorTest.js**
-  - [ ] _Suite: Database createDatabase() Method (No Setup)_
+- [x] **old_tests/unit/DatabaseInitializationRefactorTest.js**
+  - [x] _Suite: Database createDatabase() Method (No Setup)_
     - [x] should create database with fresh MasterIndex
-  - [ ] _Suite: Database createDatabase() Method (Exists)_
+  - [x] _Suite: Database createDatabase() Method (Exists)_
     - [x] should throw error if MasterIndex already exists
-  - [ ] _Suite: Database initialise() Refactor_
+  - [x] _Suite: Database initialise() Refactor_
     - [x] should initialise from MasterIndex only
     - [x] should throw error if MasterIndex is missing
     - [x] should throw error if MasterIndex is corrupted
     - [x] should persist sanitised collection names to MasterIndex when flag enabled
-  - [ ] _Suite: Database recoverDatabase() Method_
+  - [x] _Suite: Database recoverDatabase() Method_
     - [x] should recover database from backup index file
     - [x] should throw error if backup file is invalid
-  - [ ] _Suite: Collection Methods No Fallback_
+  - [x] _Suite: Collection Methods No Fallback_
     - [x] should access collection from MasterIndex only
     - [x] should throw error if collection not in MasterIndex
 
