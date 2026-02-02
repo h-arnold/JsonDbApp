@@ -315,8 +315,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should maintain backwards compatibility with existing ID-based methods
     - [x] should validate queries and propagate errors properly
 
-- [ ] **old_tests/unit/FileOperationsTest.js**
-  - [ ] _Suite: FileOperations Setup - Create Test Files_
+- [x] **old_tests/unit/FileOperationsTest.js**
+  - [x] _Suite: FileOperations Setup - Create Test Files_
     - [ ] should create test folder in Drive root
     - [ ] should create initial test file with JSON content
     - [ ] should verify test file can be accessed
@@ -353,8 +353,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] should handle edge cases with invalid date-like strings
     - [ ] should handle Date objects with various time zones and precision
 
-- [ ] **old_tests/unit/FileServiceTest.js**
-  - [ ] _Suite: FileService Setup - Create Test Resources_
+- [x] **old_tests/unit/FileServiceTest.js**
+  - [x] _Suite: FileService Setup - Create Test Resources_
     - [ ] should create test folder in Drive root
     - [ ] should create initial test file with JSON content
     - [ ] should initialise mock FileOperations for dependency injection
@@ -383,8 +383,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] should delete all created test folders
     - [ ] should reset test data globals
 
-- [ ] **old_tests/unit/MasterIndexTest.js**
-  - [ ] _Suite: MasterIndex Functionality_
+- [x] **old_tests/unit/MasterIndexTest.js**
+  - [x] _Suite: MasterIndex Functionality_
     - [ ] should initialise master index with default configuration
     - [ ] should persist master index to ScriptProperties
     - [ ] should load existing master index from ScriptProperties
@@ -408,8 +408,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] should maintain CollectionMetadata integrity during conflict resolution
     - [ ] should handle CollectionMetadata in complete operation lifecycle with persistence
 
-- [ ] **old_tests/unit/QueryEngineTest.js**
-  - [ ] _Suite: QueryEngine Basic Functionality_
+- [x] **old_tests/unit/QueryEngineTest.js**
+  - [x] _Suite: QueryEngine Basic Functionality_
     - [ ] should have QueryEngine class available
     - [ ] should create QueryEngine instance
     - [ ] should have executeQuery method
@@ -455,16 +455,16 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] should handle numeric field names and special characters
     - [ ] should handle large number of documents efficiently
 
-- [ ] **old_tests/unit/TestFrameworkTest.js**
-  - [ ] _Suite: TestFramework Tests_
+- [x] **old_tests/unit/TestFrameworkTest.js**
+  - [x] _Suite: TestFramework Tests_
     - [ ] testAssertionUtilities
     - [ ] testAssertionThrows
     - [ ] testTestSuiteFunctionality
   - [ ] _Suite: TestSuite_
     - [ ] dummyTest
 
-- [ ] **old_tests/unit/UpdateEngineTest.js**
-  - [ ] _Suite: UpdateEngine Tests_
+- [x] **old_tests/unit/UpdateEngineTest.js**
+  - [x] _Suite: UpdateEngine Tests_
     - [ ] testUpdateEngineSetStringField
     - [ ] testUpdateEngineSetCreatesDeepPath
     - [ ] testUpdateEngineIncPositive
@@ -512,8 +512,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] testPullOnNonArrayThrows
     - [ ] testAddToSetOnNonArrayThrows
 
-- [ ] **old_tests/unit/UtilityTests/ComparisonUtilsTest.js**
-  - [ ] _Suite: ComparisonUtils Tests_
+- [x] **old_tests/unit/UtilityTests/ComparisonUtilsTest.js**
+  - [x] _Suite: ComparisonUtils Tests_
     - [ ] testEqualsPrimitivesAndStrict
     - [ ] testEqualsDates
     - [ ] testEqualsDeepObjectsAndArrays
@@ -530,33 +530,33 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] testSubsetMatchMixed
     - [ ] testSubsetMatchOperatorObjectDirect
 
-- [ ] **old_tests/unit/UtilityTests/EnvironmentTest.js**
-  - [ ] _Suite: Environment Tests_
+- [x] **old_tests/unit/UtilityTests/EnvironmentTest.js**
+  - [x] _Suite: Environment Tests_
     - [ ] testClaspConfiguration
     - [ ] testDriveAccess
 
-- [ ] **old_tests/unit/UtilityTests/ErrorHandlerTest.js**
-  - [ ] _Suite: ErrorHandler Tests_
+- [x] **old_tests/unit/UtilityTests/ErrorHandlerTest.js**
+  - [x] _Suite: ErrorHandler Tests_
     - [ ] testErrorHandlerErrorTypes
     - [ ] testErrorCreation
     - [ ] testErrorValidation
     - [ ] testAllErrorTypesCreation
 
-- [ ] **old_tests/unit/UtilityTests/GASDBLoggerTest.js**
-  - [ ] _Suite: GASDBLogger Tests_
+- [x] **old_tests/unit/UtilityTests/GASDBLoggerTest.js**
+  - [x] _Suite: GASDBLogger Tests_
     - [ ] testLoggerBasicFunctionality
     - [ ] testLoggerLevels
     - [ ] testLoggerComponentLogger
 
-- [ ] **old_tests/unit/UtilityTests/IdGeneratorTest.js**
-  - [ ] _Suite: IdGenerator Tests_
+- [x] **old_tests/unit/UtilityTests/IdGeneratorTest.js**
+  - [x] _Suite: IdGenerator Tests_
     - [ ] testIdGeneratorBasicFunctionality
     - [ ] testIdGeneratorUniqueness
     - [ ] testIdGeneratorFormats
     - [ ] testIdGeneratorCustomGenerator
 
-- [ ] **old_tests/unit/UtilityTests/ObjectUtilsTest.js**
-  - [ ] _Suite: ObjectUtils Tests_
+- [x] **old_tests/unit/UtilityTests/ObjectUtilsTest.js**
+  - [x] _Suite: ObjectUtils Tests_
     - [ ] testObjectUtilsDeepClonePrimitives
     - [ ] testObjectUtilsDeepCloneDateObjects
     - [ ] testObjectUtilsDeepCloneArrays
@@ -588,8 +588,8 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [ ] testObjectUtilsEdgeCases
     - [ ] testObjectUtilsSpecialObjectTypes
 
-- [ ] **old_tests/unit/UtilityTests/ValidationUtilsTest.js**
-  - [ ] _Suite: ValidationUtils Tests_
+- [x] **old_tests/unit/UtilityTests/ValidationUtilsTest.js**
+  - [x] _Suite: ValidationUtils Tests_
     - [ ] testValidationUtilsValidateRequired
     - [ ] testValidationUtilsValidateType
     - [ ] testValidationUtilsValidateNonEmptyString
