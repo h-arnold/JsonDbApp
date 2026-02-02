@@ -177,19 +177,19 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [ ] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
-  - [ ] _Suite: Index File Structure_
-    - [ ] should create index file with correct structure
-    - [ ] should update index file when collections change
-    - [ ] should synchronise with master index
-    - [ ] should record sanitised collection names in index file when sanitisation enabled
+- [x] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
+  - [x] _Suite: Index File Structure_
+    - [x] should create index file with correct structure
+    - [x] should update index file when collections change
+    - [x] should synchronise with master index
+    - [x] should record sanitised collection names in index file when sanitisation enabled
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [ ] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js**
-  - [ ] _Suite: Database Master Index Integration_
-    - [ ] should integrate with master index on initialisation
-    - [ ] should co-ordinate collection operations with master index
+- [x] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js**
+  - [x] _Suite: Database Master Index Integration_
+    - [x] should integrate with master index on initialisation
+    - [x] should co-ordinate collection operations with master index
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
