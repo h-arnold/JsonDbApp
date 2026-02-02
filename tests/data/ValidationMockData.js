@@ -146,5 +146,156 @@ export const ValidationMockData = {
         metadata: { version: 5, temporary: false, priority: 'high' }
       }
     ];
+  },
+
+  /**
+   * Returns a set of order documents for testing type changes and field updates
+   * @returns {Array<Object>} Array of order documents
+   */
+  getOrders() {
+    return [
+      {
+        _id: 'order1',
+        userId: 'person1',
+        orderNumber: 1001,
+        items: [
+          { sku: 'prod1', quantity: 2, price: 9.99, category: 'electronics' },
+          { sku: 'prod2', quantity: 1, price: 19.99, category: 'books' }
+        ],
+        status: 'processing',
+        priority: 1,
+        totalAmount: 39.97,
+        discountPercent: 0,
+        createdAt: new Date('2025-06-01T10:00:00Z'),
+        updatedAt: new Date('2025-06-01T10:00:00Z'),
+        isRush: false,
+        tags: ['online', 'new-customer'],
+        customerNotes: 'Please deliver after 6 PM',
+        metrics: {
+          processTime: 24,
+          satisfaction: 4.5,
+          delivery: {
+            estimatedDays: 3,
+            actualDays: null
+          }
+        }
+      },
+      {
+        _id: 'order2',
+        userId: 'person2',
+        orderNumber: 1002,
+        items: [],
+        status: 'cancelled',
+        priority: 3,
+        totalAmount: 0,
+        discountPercent: 100,
+        createdAt: new Date('2025-06-15T12:30:00Z'),
+        updatedAt: new Date('2025-06-15T13:00:00Z'),
+        isRush: false,
+        tags: [],
+        customerNotes: '',
+        metrics: {
+          processTime: 0,
+          satisfaction: 1.0,
+          delivery: {
+            estimatedDays: 0,
+            actualDays: 0
+          }
+        }
+      },
+      {
+        _id: 'order3',
+        userId: 'person3',
+        orderNumber: 1003,
+        items: [
+          { sku: 'prod1', quantity: 5, price: 9.99, category: 'electronics' },
+          { sku: 'prod3', quantity: 2, price: 29.99, category: 'home' },
+          { sku: 'prod1', quantity: 1, price: 9.99, category: 'electronics' }
+        ],
+        status: 'shipped',
+        priority: 2,
+        totalAmount: 119.93,
+        discountPercent: 10,
+        createdAt: new Date('2025-06-20T16:45:00Z'),
+        updatedAt: new Date('2025-06-22T09:30:00Z'),
+        isRush: true,
+        tags: ['bulk', 'repeat-customer', 'expedited'],
+        customerNotes: 'Fragile items - handle with care',
+        shipping: {
+          address: { street: '1000 Hero Ln', city: 'Metropolis', zip: '12345' },
+          carrier: { name: 'FastShip', tracking: 'TRACK123' },
+          cost: 15.99
+        },
+        metrics: {
+          processTime: 48,
+          satisfaction: 5.0,
+          delivery: {
+            estimatedDays: 2,
+            actualDays: 2
+          }
+        }
+      },
+      {
+        _id: 'order4',
+        userId: 'person4',
+        orderNumber: 1004,
+        items: [
+          { sku: 'prod4', quantity: 10, price: 5.50, category: 'office' }
+        ],
+        status: 'returned',
+        priority: 1,
+        totalAmount: 55.00,
+        discountPercent: 0,
+        createdAt: new Date('2025-06-22T09:00:00Z'),
+        updatedAt: new Date('2025-06-25T14:20:00Z'),
+        isRush: false,
+        tags: ['return', 'defective'],
+        customerNotes: null,
+        shipping: { 
+          address: null,
+          carrier: { name: 'StandardPost', tracking: null },
+          cost: 0
+        },
+        metrics: {
+          processTime: 72,
+          satisfaction: 2.0,
+          delivery: {
+            estimatedDays: 5,
+            actualDays: 3
+          }
+        }
+      },
+      {
+        _id: 'order5',
+        userId: 'person5',
+        orderNumber: 1005,
+        items: [
+          { sku: 'prod5', quantity: 1, price: 199.99, category: 'electronics' },
+          { sku: 'prod6', quantity: 3, price: 45.00, category: 'accessories' }
+        ],
+        status: 'delivered',
+        priority: 1,
+        totalAmount: 334.99,
+        discountPercent: 5,
+        createdAt: new Date('2025-05-30T08:15:00Z'),
+        updatedAt: new Date('2025-06-05T16:30:00Z'),
+        isRush: true,
+        tags: ['premium', 'express', 'gift'],
+        customerNotes: 'Gift wrap requested',
+        shipping: {
+          address: { street: '500 Mission St', city: 'San Francisco', zip: '94105' },
+          carrier: { name: 'ExpressDelivery', tracking: 'EXPRESS789' },
+          cost: 25.99
+        },
+        metrics: {
+          processTime: 12,
+          satisfaction: 4.8,
+          delivery: {
+            estimatedDays: 1,
+            actualDays: 1
+          }
+        }
+      }
+    ];
   }
 };
