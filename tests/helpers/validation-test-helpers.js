@@ -5,17 +5,7 @@
  * These tests validate MongoDB-compatible operators against realistic datasets.
  */
 
-import { afterEach } from 'vitest';
 import { ValidationMockData } from '../data/ValidationMockData.js';
-
-/**
- * Tracks created Drive resources for cleanup
- */
-const validationTestResources = {
-  fileIds: new Set(),
-  folderIds: new Set(),
-  masterIndexKeys: new Set()
-};
 
 /**
  * Generates a unique timestamp-based identifier
@@ -24,70 +14,18 @@ const validationTestResources = {
 const generateTimestamp = () => `${Date.now()}_${Math.random().toString(36).slice(2)}`;
 
 /**
- * Creates a unique master index key for validation testing
- * @returns {string} Master index key
+ * Sets up a complete validation test environment with pre-populated collections
+ * @returns {object} Test environment with database, collections, mock data, and cleanup metadata
  */
-export const createValidationMasterIndexKey = () => {
-  const key = `VIITEST_VALIDATION_${generateTimestamp()}`;
-  validationTestResources.masterIndexKeys.add(key);
-  return key;
-};
-
-/**
- * Creates a test folder in the mock Drive for validation tests
- * @returns {string} Folder ID
- */
-export const createValidationTestFolder = () => {
+export const setupValidationTestEnvironment = () => {
+  const masterIndexKey = `VIITEST_VALIDATION_${generateTimestamp()}`;
   const folderName = `GASDB_Validation_Test_${generateTimestamp()}`;
   const folder = DriveApp.createFolder(folderName);
   const folderId = folder.getId();
-  validationTestResources.folderIds.add(folderId);
-  return folderId;
-};
-
-/**
- * Creates a collection file pre-populated with validation mock data
- * @param {string} folderId - Parent folder ID
- * @param {string} collectionName - Name of the collection
- * @param {Array<Object>} documents - Array of documents to populate
- * @returns {string} File ID
- */
-export const createValidationCollectionFile = (folderId, collectionName, documents) => {
-  const folder = DriveApp.getFolderById(folderId);
-  const fileName = `${collectionName}.json`;
   
-  // Build documents object from array
-  const documentsObj = {};
-  documents.forEach(doc => {
-    documentsObj[doc._id] = doc;
-  });
-  
-  const collectionData = {
-    collection: collectionName,
-    metadata: {
-      version: 1,
-      created: new Date().toISOString(),
-      updated: new Date().toISOString(),
-      documentCount: documents.length,
-      modificationToken: `init-token-${generateTimestamp()}`
-    },
-    documents: documentsObj
-  };
-
-  const file = folder.createFile(fileName, JSON.stringify(collectionData, null, 2));
-  const fileId = file.getId();
-  validationTestResources.fileIds.add(fileId);
-  
-  return fileId;
-};
-
-/**
- * Sets up a complete validation test environment with pre-populated collections
- * @returns {object} Test environment with database, collections, and mock data
- */
-export const setupValidationTestEnvironment = () => {
-  const masterIndexKey = createValidationMasterIndexKey();
-  const folderId = createValidationTestFolder();
+  // Track resources for cleanup
+  const fileIds = [];
+  const folderIds = [folderId];
   
   // Create logger
   const logger = JDbLogger.createComponentLogger("Validation-Test");
@@ -120,7 +58,29 @@ export const setupValidationTestEnvironment = () => {
   const personsData = ValidationMockData.getPersons();
   
   // Create and populate persons collection
-  const personsFileId = createValidationCollectionFile(folderId, 'persons', personsData);
+  const personsFolder = DriveApp.getFolderById(folderId);
+  const fileName = 'persons.json';
+  
+  const documentsObj = {};
+  personsData.forEach(doc => {
+    documentsObj[doc._id] = doc;
+  });
+  
+  const collectionData = {
+    collection: 'persons',
+    metadata: {
+      version: 1,
+      created: new Date().toISOString(),
+      updated: new Date().toISOString(),
+      documentCount: personsData.length,
+      modificationToken: `init-token-${generateTimestamp()}`
+    },
+    documents: documentsObj
+  };
+
+  const file = personsFolder.createFile(fileName, JSON.stringify(collectionData, null, 2));
+  const personsFileId = file.getId();
+  fileIds.push(personsFileId);
   
   // Register collection in master index
   const personsMetadata = {
@@ -157,23 +117,32 @@ export const setupValidationTestEnvironment = () => {
     },
     mockData: {
       persons: personsData
+    },
+    _cleanup: {
+      masterIndexKey,
+      fileIds,
+      folderIds
     }
   };
 };
 
 /**
  * Cleanup function for validation tests
+ * @param {object} env - Test environment object with _cleanup metadata
  */
-export const cleanupValidationTests = () => {
-  const scriptProperties = PropertiesService.getScriptProperties();
-  
-  // Clean up master index keys
-  for (const key of validationTestResources.masterIndexKeys) {
-    scriptProperties.deleteProperty(key);
+export const cleanupValidationTests = (env) => {
+  if (!env || !env._cleanup) {
+    return;
   }
   
+  const scriptProperties = PropertiesService.getScriptProperties();
+  const { masterIndexKey, fileIds, folderIds } = env._cleanup;
+  
+  // Clean up master index key
+  scriptProperties.deleteProperty(masterIndexKey);
+  
   // Clean up files
-  for (const fileId of validationTestResources.fileIds) {
+  for (const fileId of fileIds) {
     try {
       const file = DriveApp.getFileById(fileId);
       file.setTrashed(true);
@@ -183,7 +152,7 @@ export const cleanupValidationTests = () => {
   }
   
   // Clean up folders
-  for (const folderId of validationTestResources.folderIds) {
+  for (const folderId of folderIds) {
     try {
       const folder = DriveApp.getFolderById(folderId);
       folder.setTrashed(true);
@@ -191,16 +160,4 @@ export const cleanupValidationTests = () => {
       // Folder may already be deleted, ignore
     }
   }
-  
-  // Clear tracking sets
-  validationTestResources.masterIndexKeys.clear();
-  validationTestResources.fileIds.clear();
-  validationTestResources.folderIds.clear();
 };
-
-/**
- * Auto-register cleanup for afterEach
- */
-afterEach(() => {
-  cleanupValidationTests();
-});

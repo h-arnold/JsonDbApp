@@ -13,15 +13,23 @@
  * - Non-existent paths
  */
 
-import { describe, it, expect } from 'vitest';
-import { setupValidationTestEnvironment } from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { setupValidationTestEnvironment, cleanupValidationTests } from '../../helpers/validation-test-helpers.js';
+
+let testEnv;
 
 describe('$eq Equality Operator Tests', () => {
+  beforeAll(() => {
+    testEnv = setupValidationTestEnvironment();
+  });
+
+  afterAll(() => {
+    cleanupValidationTests(testEnv);
+  });
   describe('Basic equality matching', () => {
     it('should match string values exactly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'name.first': { $eq: 'Anna' } });
@@ -33,8 +41,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match numeric values exactly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ age: { $eq: 29 } });
@@ -46,8 +53,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match zero values correctly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ age: { $eq: 0 } });
@@ -59,8 +65,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match boolean values exactly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ isActive: { $eq: true } });
@@ -74,8 +79,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match null values correctly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ lastLogin: { $eq: null } });
@@ -89,8 +93,7 @@ describe('$eq Equality Operator Tests', () => {
   describe('Date object equality', () => {
     it('should match Date objects by exact timestamp', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       const targetDate = new Date('2025-06-20T10:30:00Z');
       
       // Act
@@ -105,8 +108,7 @@ describe('$eq Equality Operator Tests', () => {
   describe('Nested object equality', () => {
     it('should match nested objects exactly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'name': { $eq: { first: 'Anna', last: 'Brown' } } });
@@ -120,8 +122,7 @@ describe('$eq Equality Operator Tests', () => {
   describe('Edge cases', () => {
     it('should distinguish empty string from null', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const emptyResults = collection.find({ 'contact.email': { $eq: '' } });
@@ -137,8 +138,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should distinguish zero from false', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const zeroResults = collection.find({ age: { $eq: 0 } });
@@ -157,8 +157,7 @@ describe('$eq Equality Operator Tests', () => {
   describe('Case sensitivity for strings', () => {
     it('should be case sensitive for strings', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const lowerResults = collection.find({ 'name.first': { $eq: 'anna' } });
@@ -173,8 +172,7 @@ describe('$eq Equality Operator Tests', () => {
   describe('Nested field equality with dot notation', () => {
     it('should match nested fields with dot notation', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'contact.email': { $eq: 'anna.brown@example.com' } });
@@ -186,8 +184,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match deep nested fields', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'preferences.settings.notifications.email.enabled': { $eq: true } });
@@ -201,8 +198,7 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should handle non-existent nested paths', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'nonexistent.field': { $eq: 'value' } });

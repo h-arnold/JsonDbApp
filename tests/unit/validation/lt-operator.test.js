@@ -14,21 +14,29 @@
  * - Missing fields
  */
 
-import { describe, it, expect } from 'vitest';
-import { setupValidationTestEnvironment } from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { setupValidationTestEnvironment, cleanupValidationTests } from '../../helpers/validation-test-helpers.js';
+
+let testEnv;
 
 describe('$lt Less Than Operator Tests', () => {
+  beforeAll(() => {
+    testEnv = setupValidationTestEnvironment();
+  });
+
+  afterAll(() => {
+    cleanupValidationTests(testEnv);
+  });
   describe('Basic numeric comparisons', () => {
     it('should compare integers correctly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ age: { $lt: 40 } });
       
       // Assert
-      expect(results.length).toBeGreaterThanOrEqual(2);
+      expect(results).toHaveLength(3);
       const ageIds = results.map(doc => doc._id);
       expect(ageIds).toContain('person1');
       expect(ageIds).toContain('person2');
@@ -37,8 +45,7 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should compare floats correctly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ score: { $lt: 80.0 } });
@@ -52,8 +59,7 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle negative number boundaries', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ balance: { $lt: 0 } });
@@ -65,8 +71,7 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle zero boundary cases', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ age: { $lt: 1 } });
@@ -80,8 +85,7 @@ describe('$lt Less Than Operator Tests', () => {
   describe('Date comparisons', () => {
     it('should compare Date objects chronologically', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       const cutoffDate = new Date('2025-06-20T00:00:00Z');
       
       // Act
@@ -98,8 +102,7 @@ describe('$lt Less Than Operator Tests', () => {
   describe('String comparisons', () => {
     it('should compare strings lexicographically', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'name.first': { $lt: 'D' } });
@@ -116,8 +119,7 @@ describe('$lt Less Than Operator Tests', () => {
   describe('Boundary testing with extreme values', () => {
     it('should handle large number boundaries', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ balance: { $lt: 15000 } });
@@ -128,8 +130,7 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle floating point precision', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ score: { $lt: 85.5 } });
@@ -144,8 +145,7 @@ describe('$lt Less Than Operator Tests', () => {
   describe('Type mixing and null handling', () => {
     it('should handle null in less than comparison', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ lastLogin: { $lt: new Date('2025-12-31') } });
@@ -153,14 +153,13 @@ describe('$lt Less Than Operator Tests', () => {
       // Assert
       expect(results.length).toBeGreaterThanOrEqual(5);
       results.forEach(doc => {
-        expect(doc.lastLogin).not.toBeNull();
+        expect(doc.lastLogin).not.toBe(null);
       });
     });
 
     it('should handle missing fields correctly', () => {
       // Arrange
-      const env = setupValidationTestEnvironment();
-      const collection = env.collections.persons;
+      const collection = testEnv.collections.persons;
       
       // Act
       const results = collection.find({ 'missing.field': { $lt: 100 } });
