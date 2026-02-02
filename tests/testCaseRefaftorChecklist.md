@@ -617,202 +617,202 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 ## Validation tests
 
-- [ ] **old_tests/validation/00_ComparisonOperators.js**
-  - [ ] _Suite: $eq Equality Operator Tests_
-    - [ ] should match string values exactly
-    - [ ] should match numeric values exactly
-    - [ ] should match zero values correctly
-    - [ ] should match boolean values exactly
-    - [ ] should match null values correctly
-    - [ ] should match Date objects by exact timestamp
-    - [ ] should match nested objects exactly
-    - [ ] should distinguish empty string from null
-    - [ ] should distinguish zero from false
-    - [ ] should be case sensitive for strings
-    - [ ] should match nested fields with dot notation
-    - [ ] should match deep nested fields
-    - [ ] should handle non-existent nested paths
-  - [ ] _Suite: $gt Greater Than Operator Tests_
-    - [ ] should compare integers correctly
-    - [ ] should compare floats correctly
-    - [ ] should handle mixed integer and float comparison
-    - [ ] should handle negative numbers correctly
-    - [ ] should handle zero boundary cases
-    - [ ] should compare Date objects chronologically
-    - [ ] should compare strings lexicographically
-    - [ ] should handle case sensitivity in string comparison
-    - [ ] should not compare number with string
-    - [ ] should handle null values in comparison
-    - [ ] should handle missing fields in comparison
-  - [ ] _Suite: $lt Less Than Operator Tests_
-    - [ ] should compare integers correctly
-    - [ ] should compare floats correctly
-    - [ ] should handle negative number boundaries
-    - [ ] should handle zero boundary cases
-    - [ ] should compare Date objects chronologically
-    - [ ] should compare strings lexicographically
-    - [ ] should handle large number boundaries
-    - [ ] should handle floating point precision
-    - [ ] should handle null in less than comparison
-    - [ ] should handle missing fields correctly
+- [x] **old_tests/validation/00_ComparisonOperators.js** → Refactored to tests/unit/validation/eq-operator.test.js, gt-operator.test.js, lt-operator.test.js
+  - [x] _Suite: $eq Equality Operator Tests_
+    - [x] should match string values exactly
+    - [x] should match numeric values exactly
+    - [x] should match zero values correctly
+    - [x] should match boolean values exactly
+    - [x] should match null values correctly
+    - [x] should match Date objects by exact timestamp
+    - [x] should match nested objects exactly
+    - [x] should distinguish empty string from null
+    - [x] should distinguish zero from false
+    - [x] should be case sensitive for strings
+    - [x] should match nested fields with dot notation
+    - [x] should match deep nested fields
+    - [x] should handle non-existent nested paths
+  - [x] _Suite: $gt Greater Than Operator Tests_
+    - [x] should compare integers correctly
+    - [x] should compare floats correctly
+    - [x] should handle mixed integer and float comparison
+    - [x] should handle negative numbers correctly
+    - [x] should handle zero boundary cases
+    - [x] should compare Date objects chronologically
+    - [x] should compare strings lexicographically
+    - [x] should handle case sensitivity in string comparison
+    - [x] should not compare number with string
+    - [x] should handle null values in comparison
+    - [x] should handle missing fields in comparison
+  - [x] _Suite: $lt Less Than Operator Tests_
+    - [x] should compare integers correctly
+    - [x] should compare floats correctly
+    - [x] should handle negative number boundaries
+    - [x] should handle zero boundary cases
+    - [x] should compare Date objects chronologically
+    - [x] should compare strings lexicographically
+    - [x] should handle large number boundaries
+    - [x] should handle floating point precision
+    - [x] should handle null in less than comparison
+    - [x] should handle missing fields correctly
 
-- [ ] **old_tests/validation/01_LogicalOperators.js**
-  - [ ] _Suite: $and Logical AND Operator Tests_
-    - [ ] should match documents satisfying both field conditions
-    - [ ] should match documents satisfying multiple field conditions
-    - [ ] should work with mixed comparison operators
-    - [ ] should handle nested $and operations
-    - [ ] should match all documents with empty $and array
-    - [ ] should handle single condition in $and
-    - [ ] should return no results for contradictory conditions
-  - [ ] _Suite: $or Logical OR Operator Tests_
-    - [ ] should match documents satisfying either field condition
-    - [ ] should match documents satisfying any of multiple conditions
-    - [ ] should work with mixed comparison operators
-    - [ ] should handle nested $or operations
-    - [ ] should match no documents with empty $or array
-    - [ ] should handle single condition in $or
-    - [ ] should handle duplicate conditions in $or
-  - [ ] _Suite: Combined Logical Operations Tests_
-    - [ ] should handle $and containing $or clauses
-    - [ ] should handle $or containing $and clauses
-    - [ ] should handle complex nested logical operations
-    - [ ] should handle implicit AND with explicit $and
-    - [ ] should handle implicit AND with explicit $or
-    - [ ] should handle multiple fields with multiple logical operators
-  - [ ] _Suite: Logical Operator Error Handling Tests_
-    - [ ] should throw error for invalid $and structure
-    - [ ] should throw error for invalid $or structure
+- [x] **old_tests/validation/01_LogicalOperators.js** → Refactored to tests/unit/validation/and-operator.test.js, or-operator.test.js, combined-logical-operators.test.js
+  - [x] _Suite: $and Logical AND Operator Tests_
+    - [x] should match documents satisfying both field conditions
+    - [x] should match documents satisfying multiple field conditions
+    - [x] should work with mixed comparison operators
+    - [x] should handle nested $and operations
+    - [x] should match all documents with empty $and array
+    - [x] should handle single condition in $and
+    - [x] should return no results for contradictory conditions
+  - [x] _Suite: $or Logical OR Operator Tests_
+    - [x] should match documents satisfying either field condition
+    - [x] should match documents satisfying any of multiple conditions
+    - [x] should work with mixed comparison operators
+    - [x] should handle nested $or operations
+    - [x] should match no documents with empty $or array
+    - [x] should handle single condition in $or
+    - [x] should handle duplicate conditions in $or
+  - [x] _Suite: Combined Logical Operations Tests_
+    - [x] should handle $and containing $or clauses
+    - [x] should handle $or containing $and clauses
+    - [x] should handle complex nested logical operations
+    - [x] should handle implicit AND with explicit $and
+    - [x] should handle implicit AND with explicit $or
+    - [x] should handle multiple fields with multiple logical operators
+  - [x] _Suite: Logical Operator Error Handling Tests_
+    - [x] should throw error for invalid $and structure
+    - [x] should throw error for invalid $or structure
 
-- [ ] **old_tests/validation/02_FieldUpdateOperators.js**
-  - [ ] _Suite: $set Basic Field Setting Tests_
-    - [ ] should overwrite existing string values
-    - [ ] should overwrite existing numeric values
-    - [ ] should overwrite existing boolean values
-    - [ ] should overwrite existing array values
-    - [ ] should overwrite existing object values
-    - [ ] should create new top-level fields
-    - [ ] should set nested fields using dot notation
-    - [ ] should set deeply nested fields
-  - [ ] _Suite: $set Type Changes Tests_
-    - [ ] should change string field to number
-    - [ ] should change number field to array
-    - [ ] should change object field to primitive
-    - [ ] should change null field to non-null value
-  - [ ] _Suite: $set Object Creation Tests_
-    - [ ] should create nested object structure via dot notation
-    - [ ] should perform partial object updates
-    - [ ] should handle mixed existing and new nested fields
-  - [ ] _Suite: $set Edge Cases Tests_
-    - [ ] should handle _id field setting appropriately
-    - [ ] should handle undefined vs null assignment
-    - [ ] should distinguish empty string from null assignment
-  - [ ] _Suite: $unset Basic Field Removal Tests_
-    - [ ] should remove top-level fields
-    - [ ] should remove multiple top-level fields
-    - [ ] should remove nested fields using dot notation
-    - [ ] should remove deeply nested fields
-  - [ ] _Suite: $unset Object Structure Preservation Tests_
-    - [ ] should leave parent object when removing field
-    - [ ] should leave empty object when removing all fields
-    - [ ] should maintain object hierarchy when removing nested field
-  - [ ] _Suite: $unset Edge Cases Tests_
-    - [ ] should handle unsetting non-existent field gracefully
-    - [ ] should handle _id field unset appropriately
-    - [ ] should handle unsetting field in non-existent parent object
+- [x] **old_tests/validation/02_FieldUpdateOperators.js** → Refactored to tests/unit/validation/set-operator.test.js, unset-operator.test.js
+  - [x] _Suite: $set Basic Field Setting Tests_
+    - [x] should overwrite existing string values
+    - [x] should overwrite existing numeric values
+    - [x] should overwrite existing boolean values
+    - [x] should overwrite existing array values
+    - [x] should overwrite existing object values
+    - [x] should create new top-level fields
+    - [x] should set nested fields using dot notation
+    - [x] should set deeply nested fields
+  - [x] _Suite: $set Type Changes Tests_
+    - [x] should change string field to number
+    - [x] should change number field to array
+    - [x] should change object field to primitive
+    - [x] should change null field to non-null value
+  - [x] _Suite: $set Object Creation Tests_
+    - [x] should create nested object structure via dot notation
+    - [x] should perform partial object updates
+    - [x] should handle mixed existing and new nested fields
+  - [x] _Suite: $set Edge Cases Tests_
+    - [x] should handle _id field setting appropriately
+    - [x] should handle undefined vs null assignment
+    - [x] should distinguish empty string from null assignment
+  - [x] _Suite: $unset Basic Field Removal Tests_
+    - [x] should remove top-level fields
+    - [x] should remove multiple top-level fields
+    - [x] should remove nested fields using dot notation
+    - [x] should remove deeply nested fields
+  - [x] _Suite: $unset Object Structure Preservation Tests_
+    - [x] should leave parent object when removing field
+    - [x] should leave empty object when removing all fields
+    - [x] should maintain object hierarchy when removing nested field
+  - [x] _Suite: $unset Edge Cases Tests_
+    - [x] should handle unsetting non-existent field gracefully
+    - [x] should handle _id field unset appropriately
+    - [x] should handle unsetting field in non-existent parent object
 
-- [ ] **old_tests/validation/03_NumericUpdateOperators.js**
-  - [ ] _Suite: $inc Basic Incrementation Tests_
-    - [ ] should increment positive integer values
-    - [ ] should increment positive decimal values
-    - [ ] should decrement with negative increment values
-    - [ ] should handle zero increment as no-op
-    - [ ] should handle fractional increments correctly
-  - [ ] _Suite: $inc Field Creation Tests_
-    - [ ] should create non-existent field with increment value
-    - [ ] should create non-existent decimal field with increment value
-    - [ ] should create nested object structure when incrementing nested field
-  - [ ] _Suite: $inc Type Validation Tests_
-    - [ ] should error when incrementing non-numeric field
-    - [ ] should error when incrementing boolean field
-    - [ ] should error with non-numeric increment value
-    - [ ] should error with boolean increment value
-    - [ ] should error with null increment value
-  - [ ] _Suite: $inc Boundary Testing Tests_
-    - [ ] should handle large number increments
-    - [ ] should maintain floating point precision
-    - [ ] should handle near-maximum safe integer values
-  - [ ] _Suite: $mul Basic Multiplication Tests_
-    - [ ] should multiply by positive integer
-    - [ ] should multiply by positive decimal
-    - [ ] should multiply by negative value
-    - [ ] should set field to zero when multiplying by zero
-    - [ ] should multiply by fractional values
-  - [ ] _Suite: $mul Field Creation Tests_
-    - [ ] should create non-existent field as 0 when multiplied
-    - [ ] should create nested non-existent field as 0
-  - [ ] _Suite: $mul Type Validation Tests_
-    - [ ] should error when multiplying non-numeric field
-    - [ ] should error with non-numeric multiplier
-  - [ ] _Suite: $min Value Comparison Tests_
-    - [ ] should replace field when new value is smaller
-    - [ ] should not change field when current value is smaller
-    - [ ] should not change field when values are equal
-    - [ ] should handle mixed integer/float comparisons
-  - [ ] _Suite: $min Field Creation Tests_
-    - [ ] should create non-existent field with min value
-  - [ ] _Suite: $min Type Handling Tests_
-    - [ ] should handle Date comparisons correctly
-    - [ ] should handle string comparisons lexicographically
-    - [ ] should handle type mismatches appropriately
-  - [ ] _Suite: $min Edge Cases Tests_
-    - [ ] should handle null vs number comparisons
-    - [ ] should handle undefined field appropriately
-  - [ ] _Suite: $max Value Comparison Tests_
-    - [ ] should replace field when new value is larger
-    - [ ] should not change field when current value is larger
-    - [ ] should not change field when values are equal
-    - [ ] should handle mixed integer/float comparisons
-  - [ ] _Suite: $max Field Creation Tests_
-    - [ ] should create non-existent field with max value
-  - [ ] _Suite: $max Boundary Testing Tests_
-    - [ ] should handle maximum safe integer values
-    - [ ] should handle date range maximums
+- [x] **old_tests/validation/03_NumericUpdateOperators.js** → Refactored to tests/unit/validation/inc-operator.test.js, mul-operator.test.js, min-operator.test.js, max-operator.test.js
+  - [x] _Suite: $inc Basic Incrementation Tests_
+    - [x] should increment positive integer values
+    - [x] should increment positive decimal values
+    - [x] should decrement with negative increment values
+    - [x] should handle zero increment as no-op
+    - [x] should handle fractional increments correctly
+  - [x] _Suite: $inc Field Creation Tests_
+    - [x] should create non-existent field with increment value
+    - [x] should create non-existent decimal field with increment value
+    - [x] should create nested object structure when incrementing nested field
+  - [x] _Suite: $inc Type Validation Tests_
+    - [x] should error when incrementing non-numeric field
+    - [x] should error when incrementing boolean field
+    - [x] should error with non-numeric increment value
+    - [x] should error with boolean increment value
+    - [x] should error with null increment value
+  - [x] _Suite: $inc Boundary Testing Tests_
+    - [x] should handle large number increments
+    - [x] should maintain floating point precision
+    - [x] should handle near-maximum safe integer values
+  - [x] _Suite: $mul Basic Multiplication Tests_
+    - [x] should multiply by positive integer
+    - [x] should multiply by positive decimal
+    - [x] should multiply by negative value
+    - [x] should set field to zero when multiplying by zero
+    - [x] should multiply by fractional values
+  - [x] _Suite: $mul Field Creation Tests_
+    - [x] should create non-existent field as 0 when multiplied
+    - [x] should create nested non-existent field as 0
+  - [x] _Suite: $mul Type Validation Tests_
+    - [x] should error when multiplying non-numeric field
+    - [x] should error with non-numeric multiplier
+  - [x] _Suite: $min Value Comparison Tests_
+    - [x] should replace field when new value is smaller
+    - [x] should not change field when current value is smaller
+    - [x] should not change field when values are equal
+    - [x] should handle mixed integer/float comparisons
+  - [x] _Suite: $min Field Creation Tests_
+    - [x] should create non-existent field with min value
+  - [x] _Suite: $min Type Handling Tests_
+    - [x] should handle Date comparisons correctly
+    - [x] should handle string comparisons lexicographically
+    - [x] should handle type mismatches appropriately
+  - [x] _Suite: $min Edge Cases Tests_
+    - [x] should handle null vs number comparisons
+    - [x] should handle undefined field appropriately
+  - [x] _Suite: $max Value Comparison Tests_
+    - [x] should replace field when new value is larger
+    - [x] should not change field when current value is larger
+    - [x] should not change field when values are equal
+    - [x] should handle mixed integer/float comparisons
+  - [x] _Suite: $max Field Creation Tests_
+    - [x] should create non-existent field with max value
+  - [x] _Suite: $max Boundary Testing Tests_
+    - [x] should handle maximum safe integer values
+    - [x] should handle date range maximums
 
-- [ ] **old_tests/validation/04_ArrayUpdateOperators.js**
-  - [ ] _Suite: $push Operator Tests_
-    - [ ] should append a single value to an existing array
-    - [ ] should append an object value to an array
-    - [ ] should create array when pushing to a non-existent field
-    - [ ] should create array when pushing to a nested non-existent field
-    - [ ] should throw error when pushing to a non-array field
-    - [ ] should push multiple values with $each modifier
-    - [ ] should handle empty array with $each modifier
-    - [ ] should push array of objects with $each
-  - [ ] _Suite: $pull Operator Tests_
-    - [ ] should remove a specific value from an array
-    - [ ] should remove all occurrences of a value
-    - [ ] should handle pulling from a non-array field gracefully
-    - [ ] should handle pulling a non-existent value
-    - [ ] should handle pulling from an empty array
-    - [ ] should remove numeric values matching operator object
-    - [ ] should remove objects matching mixed field and operator predicates
-    - [ ] should remove exact matching object in array
-    - [ ] should not match operator object against object element directly
-    - [ ] should not match when predicate references missing field
-    - [ ] should match null equality correctly
-    - [ ] should compare dates by timestamp for operator removal
-    - [ ] should remove object using partial predicate
-    - [ ] should report no modification when pulling from non-existent array field
-    - [ ] should report no modification when operator predicate matches nothing
+- [x] **old_tests/validation/04_ArrayUpdateOperators.js** → Refactored to tests/unit/validation/push-operator.test.js, pull-operator.test.js
+  - [x] _Suite: $push Operator Tests_
+    - [x] should append a single value to an existing array
+    - [x] should append an object value to an array
+    - [x] should create array when pushing to a non-existent field
+    - [x] should create array when pushing to a nested non-existent field
+    - [x] should throw error when pushing to a non-array field
+    - [x] should push multiple values with $each modifier
+    - [x] should handle empty array with $each modifier
+    - [x] should push array of objects with $each
+  - [x] _Suite: $pull Operator Tests_
+    - [x] should remove a specific value from an array
+    - [x] should remove all occurrences of a value
+    - [x] should handle pulling from a non-array field gracefully
+    - [x] should handle pulling a non-existent value
+    - [x] should handle pulling from an empty array
+    - [x] should remove numeric values matching operator object
+    - [x] should remove objects matching mixed field and operator predicates
+    - [x] should remove exact matching object in array
+    - [x] should not match operator object against object element directly
+    - [x] should not match when predicate references missing field
+    - [x] should match null equality correctly
+    - [x] should compare dates by timestamp for operator removal
+    - [x] should remove object using partial predicate
+    - [x] should report no modification when pulling from non-existent array field
+    - [x] should report no modification when operator predicate matches nothing
 
-- [ ] **old_tests/validation/05_ArrayAddToSetValidation.js**
-  - [ ] _Suite: $addToSet Operator Tests_
-    - [ ] should add a value to a set if it is not already present
-    - [ ] should not add a value to a set if it is already present
-    - [ ] should add a unique object to an array of objects
-    - [ ] should not add a duplicate object to an array of objects
-    - [ ] should add multiple unique values with $each
-    - [ ] should create an array field if it does not exist
-    - [ ] should throw an error when used on a non-array field
+- [x] **old_tests/validation/05_ArrayAddToSetValidation.js** → Refactored to tests/unit/validation/addtoset-operator.test.js
+  - [x] _Suite: $addToSet Operator Tests_
+    - [x] should add a value to a set if it is not already present
+    - [x] should not add a value to a set if it is already present
+    - [x] should add a unique object to an array of objects
+    - [x] should not add a duplicate object to an array of objects
+    - [x] should add multiple unique values with $each
+    - [x] should create an array field if it does not exist
+    - [x] should throw an error when used on a non-array field
 
