@@ -193,11 +193,11 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [ ] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js**
-  - [ ] _Suite: Database Backup Index Tests_
-    - [ ] should NOT create index file when backupOnInitialise is false
-    - [ ] should create index file when backupOnInitialise is true
-    - [ ] createCollection should not create index file when backup disabled
+- [x] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js**
+  - [x] _Suite: Database Backup Index Tests_
+    - [x] should NOT create index file when backupOnInitialise is false
+    - [x] should create index file when backupOnInitialise is true
+    - [x] createCollection should not create index file when backup disabled
 
 - [ ] **old_tests/unit/DatabaseConfigTest.js**
   - [ ] _Suite: DatabaseConfig Setup - Create Test Environment_
