@@ -4,35 +4,7 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
-
-/**
- * Returns test user data
- * @returns {Array} Test users
- */
-const getTestUsers = () => [
-  { _id: 'user-1', name: 'John Smith', age: 30, email: 'john@example.com', active: true, profile: { yearsOfService: 5 } },
-  { _id: 'user-2', name: 'Sarah Johnson', age: 28, email: 'sarah@example.com', active: true, profile: { yearsOfService: 3 } },
-  { _id: 'user-3', name: 'Mike Brown', age: 35, email: 'mike@example.com', active: false, profile: { yearsOfService: 8 } },
-  { _id: 'user-4', name: 'Emily Davis', age: 40, email: 'emily@example.com', active: true, profile: { yearsOfService: 12 } }
-];
-
-/**
- * Generates large dataset
- * @param {number} count - Number of documents
- * @returns {Array} Dataset
- */
-const getLargeDataset = (count) => {
-  const dataset = [];
-  for (let i = 0; i < count; i++) {
-    dataset.push({
-      _id: `doc-${i}`,
-      category: 'test',
-      index: i,
-      value: Math.random() * 100
-    });
-  }
-  return dataset;
-};
+import MockQueryData from '../../data/MockQueryData.js';
 
 describe('DocumentOperations Query Enhancement', () => {
   let env, docOps;
@@ -43,12 +15,18 @@ describe('DocumentOperations Query Enhancement', () => {
     docOps = new DocumentOperations(env.collection);
   });
 
+  /**
+   * Inserts standard user documents into the collection for query tests
+   * @returns {Array<object>} Users inserted into the collection
+   */
+  const seedTestUsers = () => {
+    const users = MockQueryData.getTestUsers();
+    users.forEach(user => docOps.insertDocument(user));
+    return users;
+  };
+
   it('should find document by field-based query with exact match', () => {
-    const testUsers = getTestUsers();
-    const johnUser = testUsers[0];
-    const sarahUser = testUsers[1];
-    docOps.insertDocument(johnUser);
-    docOps.insertDocument(sarahUser);
+    const [johnUser] = seedTestUsers();
     
     const result = docOps.findByQuery({ name: "John Smith" });
     
@@ -59,8 +37,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should find document by comparison operator query', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const result = docOps.findByQuery({ age: { $gt: 25 } });
     
@@ -69,8 +46,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should find document by logical AND query', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const result = docOps.findByQuery({
       $and: [
@@ -85,8 +61,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should find document by logical OR query', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const result = docOps.findByQuery({
       $or: [
@@ -102,8 +77,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should find document by nested field query', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const result = docOps.findByQuery({ "profile.yearsOfService": 5 });
     
@@ -112,8 +86,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should find multiple documents by query', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const results = docOps.findMultipleByQuery({ active: true });
     
@@ -126,8 +99,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should count documents by query accurately', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const activeCount = docOps.countByQuery({ active: true });
     const totalCount = docOps.countByQuery({});
@@ -155,8 +127,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should handle empty results for non-matching queries', () => {
-    const testUsers = getTestUsers();
-    testUsers.forEach(user => docOps.insertDocument(user));
+    seedTestUsers();
     
     const singleResult = docOps.findByQuery({ name: "NonExistent User" });
     const multipleResults = docOps.findMultipleByQuery({ age: { $gt: 100 } });
@@ -169,7 +140,7 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should handle large result sets efficiently', () => {
-    const largeDataset = getLargeDataset(100);
+    const largeDataset = MockQueryData.getLargeDataset(100);
     largeDataset.forEach(doc => docOps.insertDocument(doc));
     const startTime = new Date().getTime();
     

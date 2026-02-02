@@ -1,18 +1,106 @@
 /**
  * FileOperations.test.js - FileOperations Class Tests (Vitest)
- * 
+ *
  * Comprehensive tests for the FileOperations class including:
  * - Direct Drive API interactions
  * - Retry logic and error handling
  * - File CRUD operations
  * - Date handling and serialization
- * 
+ *
  * Converted from old_tests/unit/FileOperationsTest.js
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+
+const createTestData = () => ({
+  test: 'testDataFromSetup',
+  collection: 'test',
+  collectionName: 'testCollectionFromSetup',
+  metadata: {
+    version: 1,
+    created: new Date().toISOString(),
+    updated: new Date().toISOString()
+  },
+  documents: [
+    { _id: 'doc1_setup', data: 'sample document 1 from setup' }
+  ]
+});
+
+const createFileOperationsTestContext = (overrides = {}) => {
+  const initialData = overrides.initialData ? ObjectUtils.deepClone(overrides.initialData) : createTestData();
+  const testFileId = overrides.testFileId || 'test-file-id-123';
+  const testFolderId = overrides.testFolderId || 'test-folder-id-456';
+  const fileName = overrides.fileName || 'test-file.json';
+  let storedContent = JSON.stringify(initialData);
+
+  const mockFile = {
+    getId: vi.fn(() => testFileId),
+    getName: vi.fn(() => fileName),
+    getBlob: vi.fn(() => ({
+      getDataAsString: vi.fn(() => storedContent),
+      getContentType: vi.fn(() => 'application/json')
+    })),
+    setContent: vi.fn((content) => {
+      storedContent = content;
+    }),
+    setTrashed: vi.fn(),
+    isTrashed: vi.fn(() => false),
+    getSize: vi.fn(() => overrides.fileSize ?? 1024),
+    getLastUpdated: vi.fn(() => overrides.modifiedTime ?? new Date('2024-01-01T00:00:00.000Z')),
+    getDateCreated: vi.fn(() => overrides.createdTime ?? new Date('2023-01-01T00:00:00.000Z'))
+  };
+
+  const mockFolder = {
+    getId: vi.fn(() => testFolderId),
+    createFile: vi.fn((name, content) => {
+      storedContent = content;
+      mockFile.getName = vi.fn(() => name);
+      return mockFile;
+    })
+  };
+
+  const mockDriveApp = {
+    getFileById: vi.fn(() => mockFile),
+    getFolderById: vi.fn(() => mockFolder),
+    createFolder: vi.fn(() => mockFolder)
+  };
+
+  const originalDriveApp = global.DriveApp;
+  const originalUtilities = global.Utilities;
+
+  global.DriveApp = mockDriveApp;
+  global.Utilities = {
+    ...(originalUtilities || {}),
+    sleep: vi.fn()
+  };
+
+  const fileOps = new FileOperations();
+
+  return {
+    fileOps,
+    mockDriveApp,
+    mockFile,
+    mockFolder,
+    testFileId,
+    testFolderId,
+    setFileContent: (content) => {
+      storedContent = JSON.stringify(content);
+    },
+    setRawFileContent: (content) => {
+      storedContent = content;
+    },
+    getStoredContent: () => storedContent,
+    restoreGlobals: () => {
+      global.DriveApp = originalDriveApp;
+      global.Utilities = originalUtilities;
+    }
+  };
+};
+
+const ERROR_TYPES = ErrorHandler.ErrorTypes;
 
 describe('FileOperations Functionality', () => {
+  let context;
   let fileOps;
   let mockDriveApp;
   let mockFile;
@@ -22,45 +110,14 @@ describe('FileOperations Functionality', () => {
   let testData;
 
   beforeEach(() => {
-    testFileId = 'test-file-id-123';
-    testFolderId = 'test-folder-id-456';
-    testData = {
-      test: 'testDataFromSetup',
-      collection: 'test',
-      collectionName: 'testCollectionFromSetup',
-      metadata: {
-        version: 1,
-        created: new Date().toISOString(),
-        updated: new Date().toISOString()
-      },
-      documents: [
-        { _id: 'doc1_setup', data: 'sample document 1 from setup' }
-      ]
-    };
+    testData = createTestData();
+    context = createFileOperationsTestContext({ initialData: testData });
+    ({ fileOps, mockDriveApp, mockFile, mockFolder, testFileId, testFolderId } = context);
+  });
 
-    mockFile = {
-      getId: vi.fn(() => testFileId),
-      getName: vi.fn(() => 'test-file.json'),
-      getBlob: vi.fn(() => ({
-        getDataAsString: vi.fn(() => JSON.stringify(testData))
-      })),
-      setContent: vi.fn(),
-      setTrashed: vi.fn()
-    };
-
-    mockFolder = {
-      getId: vi.fn(() => testFolderId),
-      createFile: vi.fn(() => mockFile)
-    };
-
-    mockDriveApp = {
-      getFileById: vi.fn(() => mockFile),
-      getFolderById: vi.fn(() => mockFolder),
-      createFolder: vi.fn(() => mockFolder)
-    };
-
-    global.DriveApp = mockDriveApp;
-    fileOps = new FileOperations();
+  afterEach(() => {
+    context.restoreGlobals();
+    vi.restoreAllMocks();
   });
 
   it('should read file content from Drive using real file ID', () => {
@@ -80,13 +137,11 @@ describe('FileOperations Functionality', () => {
     };
 
     fileOps.writeFile(testFileId, updatedData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(updatedData))
-    }));
-
     const readResult = fileOps.readFile(testFileId);
+    const storedContent = JSON.parse(context.getStoredContent());
 
+    expect(mockFile.setContent).toHaveBeenCalledTimes(1);
+    expect(storedContent.collection).toBe('updated_test');
     expect(readResult.test).toBe('updated_data');
     expect(readResult.collection).toBe('updated_test');
     expect(readResult.documents).toBeDefined();
@@ -98,77 +153,112 @@ describe('FileOperations Functionality', () => {
     const newFileId = 'new-file-id-789';
 
     mockFile.getId = vi.fn(() => newFileId);
-    mockFile.getName = vi.fn(() => fileName);
 
     const createdFileId = fileOps.createFile(fileName, newTestData, testFolderId);
 
-    expect(createdFileId).toBeDefined();
-    expect(typeof createdFileId).toBe('string');
-    expect(createdFileId.length).toBeGreaterThan(0);
+    expect(mockDriveApp.getFolderById).toHaveBeenCalledWith(testFolderId);
+    expect(mockFolder.createFile).toHaveBeenCalledWith(
+      fileName,
+      expect.stringContaining('"metadata"'),
+      'application/json'
+    );
+    expect(createdFileId).toBe(newFileId);
   });
 
-  it.skip('should check if file exists in Drive', () => {
-    // Skipped: Mocking is complex with global setup
+  it('should check if file exists in Drive', () => {
+    mockFile.isTrashed = vi.fn(() => false);
+    const existsResult = fileOps.fileExists(testFileId);
+
+    mockDriveApp.getFileById = vi.fn(() => {
+      throw new Error('File not found');
+    });
+
+    const notExistsResult = fileOps.fileExists('non-existent-file-id');
+
+    expect(existsResult).toBe(true);
+    expect(notExistsResult).toBe(false);
   });
 
-  it.skip('should delete file from Drive', () => {
-    // Skipped: Mocking is complex with global setup
+  it('should delete file from Drive', () => {
+    const result = fileOps.deleteFile(testFileId);
+
+    expect(result).toBe(true);
+    expect(mockFile.setTrashed).toHaveBeenCalledWith(true);
   });
 
-  it.skip('should retrieve file metadata from Drive', () => {
-    // Skipped: Mocking is complex with global setup
+  it('should retrieve file metadata from Drive', () => {
+    const metadata = fileOps.getFileMetadata(testFileId);
+
+    expect(metadata.id).toBe(testFileId);
+    expect(metadata.name).toBe('test-file.json');
+    expect(metadata.mimeType).toBe('application/json');
+    expect(metadata.modifiedTime).toBeInstanceOf(Date);
+    expect(mockFile.getBlob).toHaveBeenCalled();
   });
 });
 
 describe('FileOperations Error Handling', () => {
+  let context;
   let fileOps;
   let mockDriveApp;
+  let mockFile;
+  let testFileId;
 
   beforeEach(() => {
-    mockDriveApp = {
-      getFileById: vi.fn(() => {
-        throw new Error('File not found');
-      })
-    };
+    context = createFileOperationsTestContext();
+    ({ fileOps, mockDriveApp, mockFile, testFileId } = context);
+  });
 
-    global.DriveApp = mockDriveApp;
-    fileOps = new FileOperations();
+  afterEach(() => {
+    context.restoreGlobals();
+    vi.restoreAllMocks();
   });
 
   it('should handle Drive API quota exceeded error with retry', () => {
-    const testFileId = 'quota-error-file-id-nonexistent';
+    mockDriveApp.getFileById = vi.fn(() => {
+      throw new Error('Quota exceeded: Too many requests');
+    });
 
-    expect(() => {
-      fileOps.readFile(testFileId);
-    }).toThrow();
+    expect(() => fileOps.readFile(testFileId)).toThrow(ERROR_TYPES.QUOTA_EXCEEDED);
+    expect(mockDriveApp.getFileById).toHaveBeenCalledTimes(3);
+    expect(global.Utilities.sleep).toHaveBeenCalledTimes(2);
   });
 
   it('should handle Drive API permission denied error', () => {
-    const restrictedFileId = 'permission-denied-file-id-nonexistent';
+    mockDriveApp.getFileById = vi.fn(() => {
+      throw new Error('Permission denied');
+    });
 
-    expect(() => {
-      fileOps.readFile(restrictedFileId);
-    }).toThrow();
+    expect(() => fileOps.readFile(testFileId)).toThrow(ERROR_TYPES.PERMISSION_DENIED);
+    expect(mockDriveApp.getFileById).toHaveBeenCalledTimes(1);
   });
 
   it('should handle Drive API file not found error', () => {
-    const missingFileId = 'missing-file-id-nonexistent';
+    mockDriveApp.getFileById = vi.fn(() => {
+      throw new Error('File not found');
+    });
 
-    expect(() => {
-      fileOps.readFile(missingFileId);
-    }).toThrow();
+    expect(() => fileOps.readFile(testFileId)).toThrow(ERROR_TYPES.FILE_NOT_FOUND);
   });
 
   it('should retry operations on transient failures', () => {
-    const testFileId = 'transient-error-file-id-nonexistent';
+    let attempts = 0;
+    mockDriveApp.getFileById = vi.fn(() => {
+      attempts += 1;
+      if (attempts < 3) {
+        throw new Error('Transient network error');
+      }
+      return mockFile;
+    });
 
-    expect(() => {
-      fileOps.readFile(testFileId);
-    }).toThrow();
+    const result = fileOps.readFile(testFileId);
+
+    expect(result.test).toBeDefined();
+    expect(mockDriveApp.getFileById).toHaveBeenCalledTimes(3);
+    expect(global.Utilities.sleep).toHaveBeenCalledTimes(2);
   });
 
   it('should handle malformed JSON in file content', () => {
-    const malformedFileId = 'malformed-json-file-id';
     const malformedJsonContent = '{ "incomplete": "json", "missing": }';
 
     mockDriveApp.getFileById = vi.fn(() => ({
@@ -177,13 +267,10 @@ describe('FileOperations Error Handling', () => {
       }))
     }));
 
-    expect(() => {
-      fileOps.readFile(malformedFileId);
-    }).toThrow();
+    expect(() => fileOps.readFile('malformed-json-file-id')).toThrow(ERROR_TYPES.INVALID_FILE_FORMAT);
   });
 
   it('should handle corrupted files with partial JSON and date strings', () => {
-    const corruptedFileId = 'corrupted-with-dates-file-id';
     const corruptedContent = '{ "created": "2023-06-15T10:30:00.000Z", "data": { "incomplete"';
 
     mockDriveApp.getFileById = vi.fn(() => ({
@@ -192,14 +279,11 @@ describe('FileOperations Error Handling', () => {
       }))
     }));
 
-    expect(() => {
-      fileOps.readFile(corruptedFileId);
-    }).toThrow();
+    expect(() => fileOps.readFile('corrupted-with-dates-file-id')).toThrow(ERROR_TYPES.INVALID_FILE_FORMAT);
   });
 
   it('should handle files with invalid JSON that could trigger double-parsing detection', () => {
-    const doubleParseFileId = 'double-parse-file-id';
-    const doubleParseContent = '"{\\"already\\": \\"stringified\\", \\"date\\": \\"2023-06-15T10:30:00.000Z\\"}"';
+    const doubleParseContent = '"{\"already\": \"stringified\", \"date\": \"2023-06-15T10:30:00.000Z\"}"';
 
     mockDriveApp.getFileById = vi.fn(() => ({
       getBlob: vi.fn(() => ({
@@ -207,63 +291,35 @@ describe('FileOperations Error Handling', () => {
       }))
     }));
 
-    let caughtError = null;
-    try {
-      fileOps.readFile(doubleParseFileId);
-    } catch (error) {
-      caughtError = error;
-    }
-
-    expect(caughtError).toBeDefined();
+    expect(() => fileOps.readFile('double-parse-file-id')).toThrow(ERROR_TYPES.INVALID_FILE_FORMAT);
   });
 
   it('should handle empty files gracefully without date processing', () => {
-    const emptyFileId = 'empty-file-id';
-
     mockDriveApp.getFileById = vi.fn(() => ({
       getBlob: vi.fn(() => ({
         getDataAsString: vi.fn(() => '')
       }))
     }));
 
-    expect(() => {
-      fileOps.readFile(emptyFileId);
-    }).toThrow();
+    expect(() => fileOps.readFile('empty-file-id')).toThrow(ERROR_TYPES.INVALID_FILE_FORMAT);
   });
 });
 
 describe('FileOperations Edge Cases', () => {
+  let context;
   let fileOps;
-  let mockDriveApp;
   let mockFile;
   let testFileId;
   let testFolderId;
 
   beforeEach(() => {
-    testFileId = 'test-file-id-123';
-    testFolderId = 'test-folder-id-456';
+    context = createFileOperationsTestContext({ initialData: {} });
+    ({ fileOps, mockFile, testFileId, testFolderId } = context);
+  });
 
-    mockFile = {
-      getId: vi.fn(() => testFileId),
-      getName: vi.fn(() => 'test-file.json'),
-      getBlob: vi.fn(() => ({
-        getDataAsString: vi.fn(() => '{}')
-      })),
-      setContent: vi.fn()
-    };
-
-    const mockFolder = {
-      getId: vi.fn(() => testFolderId),
-      createFile: vi.fn(() => mockFile)
-    };
-
-    mockDriveApp = {
-      getFileById: vi.fn(() => mockFile),
-      getFolderById: vi.fn(() => mockFolder)
-    };
-
-    global.DriveApp = mockDriveApp;
-    fileOps = new FileOperations();
+  afterEach(() => {
+    context.restoreGlobals();
+    vi.restoreAllMocks();
   });
 
   it('should handle very large file content gracefully', () => {
@@ -272,10 +328,6 @@ describe('FileOperations Edge Cases', () => {
       metadata: { size: 'large' },
       timestamp: new Date().toISOString()
     };
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(largeData))
-    }));
 
     fileOps.writeFile(testFileId, largeData);
     const readData = fileOps.readFile(testFileId);
@@ -296,24 +348,17 @@ describe('FileOperations Edge Cases', () => {
 
     const newFileId = 'new-special-file-id';
     mockFile.getId = vi.fn(() => newFileId);
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(specialData))
-    }));
 
     const createdFileId = fileOps.createFile(specialFileName, specialData, testFolderId);
     const readData = fileOps.readFile(createdFileId);
 
-    expect(createdFileId).toBeDefined();
+    expect(createdFileId).toBe(newFileId);
     expect(readData.unicode).toBe('你好世界');
     expect(readData.emoji).toBe('🚀📊💾');
   });
 
   it('should handle empty files and null data appropriately', () => {
     const emptyData = {};
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(emptyData))
-    }));
 
     fileOps.writeFile(testFileId, emptyData);
     const readData = fileOps.readFile(testFileId);
@@ -324,39 +369,18 @@ describe('FileOperations Edge Cases', () => {
 });
 
 describe('FileOperations Date Handling', () => {
+  let context;
   let fileOps;
-  let mockDriveApp;
-  let mockFile;
   let testFileId;
-  let storedContent;
 
   beforeEach(() => {
-    testFileId = 'test-file-id-123';
-    storedContent = '';
+    context = createFileOperationsTestContext();
+    ({ fileOps, testFileId } = context);
+  });
 
-    mockFile = {
-      getId: vi.fn(() => testFileId),
-      getBlob: vi.fn(() => ({
-        getDataAsString: vi.fn(() => storedContent)
-      })),
-      setContent: vi.fn((content) => {
-        storedContent = content;
-      })
-    };
-
-    mockDriveApp = {
-      getFileById: vi.fn(() => mockFile)
-    };
-
-    global.DriveApp = mockDriveApp;
-    global.Utilities = {
-      newBlob: vi.fn((content) => ({
-        setDataFromString: vi.fn(),
-        getDataAsString: vi.fn(() => content)
-      }))
-    };
-
-    fileOps = new FileOperations();
+  afterEach(() => {
+    context.restoreGlobals();
+    vi.restoreAllMocks();
   });
 
   it('should preserve Date objects through write-read cycle', () => {
@@ -377,19 +401,6 @@ describe('FileOperations Date Handling', () => {
     };
 
     fileOps.writeFile(testFileId, testData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => {
-        const serialized = JSON.stringify(testData, (key, value) => {
-          if (value instanceof Date) {
-            return value.toISOString();
-          }
-          return value;
-        });
-        return serialized;
-      })
-    }));
-
     const result = fileOps.readFile(testFileId);
 
     expect(result.created instanceof Date).toBe(true);
@@ -411,10 +422,7 @@ describe('FileOperations Date Handling', () => {
 
     fileOps.writeFile(testFileId, testData);
 
-    const rawParsed = JSON.parse(storedContent || JSON.stringify({
-      eventDate: testDate.toISOString(),
-      description: 'Test event'
-    }));
+    const rawParsed = JSON.parse(context.getStoredContent());
 
     expect(typeof rawParsed.eventDate).toBe('string');
     expect(rawParsed.eventDate).toBe(testDate.toISOString());
@@ -435,27 +443,16 @@ describe('FileOperations Date Handling', () => {
     };
 
     fileOps.writeFile(testFileId, testData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(testData, (key, value) => {
-        if (value instanceof Date) return value.toISOString();
-        return value;
-      }))
-    }));
-
     const result = fileOps.readFile(testFileId);
 
     expect(Array.isArray(result.events)).toBe(true);
     expect(Array.isArray(result.milestones)).toBe(true);
-
-    result.events.forEach((event, index) => {
+    result.events.forEach((event) => {
       expect(event.date instanceof Date).toBe(true);
     });
-
-    result.milestones.forEach((milestone, index) => {
+    result.milestones.forEach((milestone) => {
       expect(milestone instanceof Date).toBe(true);
     });
-
     expect(result.events[0].date.getFullYear()).toBe(2023);
     expect(result.events[2].date.getMonth()).toBe(11);
     expect(result.milestones[0].getMonth()).toBe(2);
@@ -487,14 +484,6 @@ describe('FileOperations Date Handling', () => {
     };
 
     fileOps.writeFile(testFileId, testData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(testData, (key, value) => {
-        if (value instanceof Date) return value.toISOString();
-        return value;
-      }))
-    }));
-
     const result = fileOps.readFile(testFileId);
 
     expect(result.user.profile.personal.birthDate instanceof Date).toBe(true);
@@ -518,14 +507,6 @@ describe('FileOperations Date Handling', () => {
     };
 
     fileOps.writeFile(testFileId, testData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(testData, (key, value) => {
-        if (value instanceof Date) return value.toISOString();
-        return value;
-      }))
-    }));
-
     const result = fileOps.readFile(testFileId);
 
     expect(result.actualDate instanceof Date).toBe(true);
@@ -551,14 +532,6 @@ describe('FileOperations Date Handling', () => {
     };
 
     fileOps.writeFile(testFileId, testData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(testData, (key, value) => {
-        if (value instanceof Date) return value.toISOString();
-        return value;
-      }))
-    }));
-
     const result = fileOps.readFile(testFileId);
 
     expect(result.validDate instanceof Date).toBe(true);
@@ -581,17 +554,9 @@ describe('FileOperations Date Handling', () => {
     };
 
     fileOps.writeFile(testFileId, testData);
-
-    mockFile.getBlob = vi.fn(() => ({
-      getDataAsString: vi.fn(() => JSON.stringify(testData, (key, value) => {
-        if (value instanceof Date) return value.toISOString();
-        return value;
-      }))
-    }));
-
     const result = fileOps.readFile(testFileId);
 
-    Object.keys(testData).forEach(key => {
+    Object.keys(testData).forEach((key) => {
       expect(result[key] instanceof Date).toBe(true);
       expect(result[key].getTime()).toBe(testData[key].getTime());
     });

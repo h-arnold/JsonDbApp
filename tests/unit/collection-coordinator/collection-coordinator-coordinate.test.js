@@ -20,9 +20,8 @@ describe('CollectionCoordinator Coordinate', () => {
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
-    const result = createTestCollection(env, 'coordinatorTest');
-    collection = result.collection;
-    fileId = result.fileId;
+    ({ collection, fileId } = createTestCollection(env, 'coordinatorTest'));
+    resetCollectionState(collection, fileId);
   });
 
   it('should execute callback and return result in happy path', () => {
@@ -34,7 +33,6 @@ describe('CollectionCoordinator Coordinate', () => {
   });
 
   it('should resolve conflicts and complete operation', () => {
-    resetCollectionState(collection, fileId);
     simulateConflict(env.masterIndex, 'coordinatorTest');
     
     const coordinator = createTestCoordinator(collection, env.masterIndex);

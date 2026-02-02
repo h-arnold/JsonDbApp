@@ -13,15 +13,23 @@ import {
 
 describe('CollectionCoordinator Acquire Operation Lock', () => {
   let env;
+  let collection;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
+    ({ collection } = createTestCollection(env, 'coordinatorTest'));
   });
+
+  /**
+   * Creates a CollectionCoordinator for the shared collection.
+   * @param {Object} config - Optional coordinator configuration overrides.
+   * @returns {CollectionCoordinator} Configured coordinator instance.
+   */
+  const createCoordinator = (config = {}) => createTestCoordinator(collection, env.masterIndex, config);
 
   describe('Retry Success', () => {
     it('should successfully acquire lock with default configuration', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
-      const coordinator = createTestCoordinator(collection, env.masterIndex);
+      const coordinator = createCoordinator();
       
       expect(() => {
         coordinator.acquireOperationLock('test-op-id');
@@ -31,17 +39,13 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
 
   describe('Retry Failure', () => {
     it('should throw LOCK_ACQUISITION_FAILURE when lock already held', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
-      
       env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 30000);
       
-      const aggressiveConfig = {
+      const coordinator = createCoordinator({
         lockTimeout: 500,
         retryAttempts: 2,
         retryDelayMs: 50
-      };
-      
-      const coordinator = createTestCoordinator(collection, env.masterIndex, aggressiveConfig);
+      });
       
       expect(() => {
         coordinator.acquireOperationLock('test-op-id-2');

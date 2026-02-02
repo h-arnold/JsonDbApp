@@ -14,17 +14,18 @@ import {
 
 describe('CollectionCoordinator Update Master Index Metadata', () => {
   let env;
+  let collection;
+  let fileId;
+  let coordinator;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
+    ({ collection, fileId } = createTestCollection(env, 'coordinatorTest'));
+    resetCollectionState(collection, fileId);
+    coordinator = createTestCoordinator(collection, env.masterIndex);
   });
 
   it('should update master index metadata without throwing', () => {
-    const { collection, fileId } = createTestCollection(env, 'coordinatorTest');
-    resetCollectionState(collection, fileId);
-    
-    const coordinator = createTestCoordinator(collection, env.masterIndex);
-    
     expect(() => {
       coordinator.updateMasterIndexMetadata();
     }).not.toThrow();

@@ -14,16 +14,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Delete Operations', () => {
   describe('deleteOne by ID', () => {
     it('deletes a document by its ID', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteOneByIdTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteOneByIdTestCollection');
       
       const doc1 = collection.insertOne({ name: 'Delete Doc 1', value: 100 });
       collection.insertOne({ name: 'Delete Doc 2', value: 200 });
@@ -40,8 +38,7 @@ describe('Collection Delete Operations', () => {
   describe('deleteOne by filter', () => {
     it('deletes document by field-based filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteOneUnsupportedFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteOneUnsupportedFilterTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       collection.insertOne({ name: 'Other', value: 200 });
@@ -61,8 +58,7 @@ describe('Collection Delete Operations', () => {
 
     it('deletes first matching document by single field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteFieldFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
       collection.insertOne({ name: 'Bob', department: 'Marketing', status: 'active' });
@@ -85,8 +81,7 @@ describe('Collection Delete Operations', () => {
 
     it('deletes document by multiple field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteMultiFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteMultiFieldFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active', level: 'Senior' });
       collection.insertOne({ name: 'Bob', department: 'Engineering', status: 'inactive', level: 'Senior' });
@@ -114,8 +109,7 @@ describe('Collection Delete Operations', () => {
 
     it('deletes document by nested field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteNestedFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteNestedFieldFilterTestCollection');
       
       collection.insertOne({ 
         name: 'Alice', 
@@ -150,8 +144,7 @@ describe('Collection Delete Operations', () => {
 
     it('deletes document by comparison filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteComparisonFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteComparisonFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', score: 85, lastActive: new Date('2023-01-15') });
       collection.insertOne({ name: 'Bob', score: 92, lastActive: new Date('2023-01-20') });
@@ -174,8 +167,7 @@ describe('Collection Delete Operations', () => {
 
     it('returns zero deletions when filter matches no documents', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'deleteNoMatchTestCollection');
+      const { collection } = createIsolatedTestCollection('deleteNoMatchTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering' });
       collection.insertOne({ name: 'Bob', department: 'Marketing' });

@@ -13,16 +13,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Count Operations', () => {
   describe('countDocuments - basic operations', () => {
     it('returns 0 for empty collection', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countDocumentsEmptyTestCollection');
+      const { collection } = createIsolatedTestCollection('countDocumentsEmptyTestCollection');
       
       // Act
       const count = collection.countDocuments({});
@@ -33,8 +31,7 @@ describe('Collection Count Operations', () => {
 
     it('counts all documents in populated collection', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countDocumentsAllTestCollection');
+      const { collection } = createIsolatedTestCollection('countDocumentsAllTestCollection');
       
       collection.insertOne({ name: 'Count Doc 1', value: 100 });
       collection.insertOne({ name: 'Count Doc 2', value: 200 });
@@ -51,8 +48,7 @@ describe('Collection Count Operations', () => {
   describe('countDocuments - field-based filters', () => {
     it('counts documents by single field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countDocumentsByFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('countDocumentsByFieldTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       collection.insertOne({ name: 'Other', value: 200 });
@@ -67,8 +63,7 @@ describe('Collection Count Operations', () => {
 
     it('returns 0 for non-matching filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countDocumentsNoMatchTestCollection');
+      const { collection } = createIsolatedTestCollection('countDocumentsNoMatchTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       collection.insertOne({ name: 'Other', value: 200 });
@@ -82,8 +77,7 @@ describe('Collection Count Operations', () => {
 
     it('counts documents by department field', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('countFieldFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
       collection.insertOne({ name: 'Bob', department: 'Marketing', status: 'active' });
@@ -97,8 +91,7 @@ describe('Collection Count Operations', () => {
 
     it('counts documents by status field', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countStatusFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('countStatusFieldTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
       collection.insertOne({ name: 'Bob', department: 'Marketing', status: 'active' });
@@ -114,8 +107,7 @@ describe('Collection Count Operations', () => {
   describe('countDocuments - multiple field filters', () => {
     it('counts documents matching two field criteria', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countMultiFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('countMultiFieldFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active', level: 'Senior' });
       collection.insertOne({ name: 'Bob', department: 'Engineering', status: 'inactive', level: 'Senior' });
@@ -138,8 +130,7 @@ describe('Collection Count Operations', () => {
 
     it('counts documents matching three field criteria', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countThreeFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('countThreeFieldTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active', level: 'Senior' });
       collection.insertOne({ name: 'Bob', department: 'Engineering', status: 'inactive', level: 'Senior' });
@@ -161,8 +152,7 @@ describe('Collection Count Operations', () => {
   describe('countDocuments - nested field filters', () => {
     it('counts documents by nested field using dot notation', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countNestedFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('countNestedFieldFilterTestCollection');
       
       collection.insertOne({ 
         name: 'Alice', 
@@ -195,8 +185,7 @@ describe('Collection Count Operations', () => {
   describe('countDocuments - comparison operators', () => {
     it('counts documents using $gt operator', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countComparisonFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('countComparisonFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
       collection.insertOne({ name: 'Bob', score: 92, experience: 3 });
@@ -210,8 +199,7 @@ describe('Collection Count Operations', () => {
 
     it('counts documents using $lt operator', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countLessThanTestCollection');
+      const { collection } = createIsolatedTestCollection('countLessThanTestCollection');
       
       collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
       collection.insertOne({ name: 'Bob', score: 92, experience: 3 });
@@ -224,8 +212,7 @@ describe('Collection Count Operations', () => {
 
     it('counts documents using $eq operator', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countEqualsTestCollection');
+      const { collection } = createIsolatedTestCollection('countEqualsTestCollection');
       
       collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
       collection.insertOne({ name: 'Bob', score: 92, experience: 3 });
@@ -243,8 +230,7 @@ describe('Collection Count Operations', () => {
   describe('countDocuments - no match scenarios', () => {
     it('returns 0 when filter matches no documents', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countNoMatchDeptTestCollection');
+      const { collection } = createIsolatedTestCollection('countNoMatchDeptTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering' });
       collection.insertOne({ name: 'Bob', department: 'Marketing' });
@@ -258,8 +244,7 @@ describe('Collection Count Operations', () => {
 
     it('returns 0 when comparison filter matches no documents', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'countNoMatchScoreTestCollection');
+      const { collection } = createIsolatedTestCollection('countNoMatchScoreTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering' });
       collection.insertOne({ name: 'Bob', department: 'Marketing' });

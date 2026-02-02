@@ -1,3 +1,5 @@
+/* global MasterIndex */
+
 /**
  * Database Collection Management Tests
  *
@@ -7,21 +9,9 @@
 import { describe, it, expect } from 'vitest';
 import {
   registerDatabaseFile,
-  setupInitialisedDatabase
+  setupInitialisedDatabase,
+  generateUniqueName
 } from '../../helpers/database-test-helpers.js';
-
-/**
- * Generates a unique suffix for collection names to avoid collisions.
- * @returns {string} Random suffix containing timestamp and base36 fragment.
- */
-const uniqueSuffix = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
-
-/**
- * Builds a unique, descriptive collection name for the current test case.
- * @param {string} prefix - Human-friendly descriptor for the collection.
- * @returns {string} Unique collection name.
- */
-const generateUniqueCollectionName = (prefix) => `${prefix}_${uniqueSuffix()}`;
 
 /**
  * Reproduces the Database sanitisation routine for disallowed characters.
@@ -30,11 +20,17 @@ const generateUniqueCollectionName = (prefix) => `${prefix}_${uniqueSuffix()}`;
  */
 const sanitiseCollectionName = (name) => name.replace(/[\/\\:*?"<>|]/g, '');
 
+/**
+ * Generates a compact unique suffix for Drive artefact names.
+ * @returns {string} Unique suffix string.
+ */
+const createUniqueSuffix = () => `${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
 describe('Database collection management', () => {
   it('should create a new collection and persist metadata to the MasterIndex', () => {
     // Arrange - Initialise an isolated database instance
     const { database, masterIndexKey } = setupInitialisedDatabase();
-    const collectionName = generateUniqueCollectionName('createdCollection');
+    const collectionName = generateUniqueName('createdCollection');
 
     // Act - Create the collection
     const collection = database.createCollection(collectionName);
@@ -52,7 +48,7 @@ describe('Database collection management', () => {
   it('should access existing collections from the MasterIndex when not cached in memory', () => {
     // Arrange - Create and then clear the in-memory cache for the collection
     const { database, masterIndexKey } = setupInitialisedDatabase();
-    const collectionName = generateUniqueCollectionName('cachedCollection');
+    const collectionName = generateUniqueName('cachedCollection');
     const createdCollection = database.createCollection(collectionName);
     registerDatabaseFile(createdCollection.driveFileId);
     database.collections.delete(collectionName);
@@ -70,7 +66,7 @@ describe('Database collection management', () => {
   it('should auto-create collections when autoCreateCollections is enabled', () => {
     // Arrange - Prepare database with default auto-create behaviour
     const { database, masterIndexKey } = setupInitialisedDatabase();
-    const targetName = generateUniqueCollectionName('autoCreated');
+    const targetName = generateUniqueName('autoCreated');
 
     // Act - Access a non-existent collection, triggering auto creation
     const autoCreated = database.collection(targetName);
@@ -85,7 +81,7 @@ describe('Database collection management', () => {
   it('should throw when accessing a missing collection with auto-create disabled', () => {
     // Arrange - Disable auto-create in the configuration
     const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
-    const missingName = generateUniqueCollectionName('missingCollection');
+    const missingName = generateUniqueName('missingCollection');
 
     // Act & Assert - Accessing should fail with an informative message
     expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);
@@ -94,8 +90,8 @@ describe('Database collection management', () => {
   it('should list all collections that have been created', () => {
     // Arrange - Create two distinct collections
     const { database } = setupInitialisedDatabase();
-    const primaryName = generateUniqueCollectionName('primaryList');
-    const secondaryName = generateUniqueCollectionName('secondaryList');
+    const primaryName = generateUniqueName('primaryList');
+    const secondaryName = generateUniqueName('secondaryList');
     const first = database.createCollection(primaryName);
     const second = database.createCollection(secondaryName);
     registerDatabaseFile(first.driveFileId);
@@ -112,7 +108,7 @@ describe('Database collection management', () => {
   it('should drop an existing collection and remove its metadata', () => {
     // Arrange - Create a collection to be dropped later
     const { database, masterIndexKey } = setupInitialisedDatabase();
-    const droppableName = generateUniqueCollectionName('droppable');
+    const droppableName = generateUniqueName('droppable');
     const collection = database.createCollection(droppableName);
     registerDatabaseFile(collection.driveFileId);
 
@@ -150,7 +146,7 @@ describe('Database collection management', () => {
     const { database, masterIndexKey } = setupInitialisedDatabase({
       stripDisallowedCollectionNameCharacters: true
     });
-    const originalName = `permissive/Collection_${uniqueSuffix()}`;
+    const originalName = `permissive/Collection_${createUniqueSuffix()}`;
     const expectedName = sanitiseCollectionName(originalName);
 
     // Act - Create the collection with an invalid character
@@ -183,7 +179,7 @@ describe('Database collection management', () => {
     const { database } = setupInitialisedDatabase({
       stripDisallowedCollectionNameCharacters: true
     });
-    const suffix = uniqueSuffix();
+    const suffix = createUniqueSuffix();
     const firstInput = `dup/name_${suffix}`;
     const secondInput = `dup:name_${suffix}`;
 

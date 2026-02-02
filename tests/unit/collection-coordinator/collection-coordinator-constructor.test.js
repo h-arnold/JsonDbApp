@@ -27,9 +27,13 @@ describe('CollectionCoordinator Constructor', () => {
   });
 
   describe('Valid Constructor', () => {
+    let collection;
+
+    beforeEach(() => {
+      ({ collection } = createTestCollection(env, 'coordinatorTest'));
+    });
+
     it('should create CollectionCoordinator with valid dependencies', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
-      
       let coordinator;
       expect(() => {
         coordinator = createTestCoordinator(collection, env.masterIndex);
@@ -40,8 +44,13 @@ describe('CollectionCoordinator Constructor', () => {
   });
 
   describe('Configuration', () => {
+    let collection;
+
+    beforeEach(() => {
+      ({ collection } = createTestCollection(env, 'coordinatorTest'));
+    });
+
     it('should use default configuration values', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
       const coordinator = createTestCoordinator(collection, env.masterIndex);
       
       expect(coordinator._config.lockTimeout).toBe(30000);
@@ -50,7 +59,6 @@ describe('CollectionCoordinator Constructor', () => {
     });
 
     it('should use custom configuration values', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
       const customConfig = {
         lockTimeout: 12345,
         retryAttempts: 7,

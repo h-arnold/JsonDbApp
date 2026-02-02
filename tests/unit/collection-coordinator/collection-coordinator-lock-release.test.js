@@ -14,16 +14,24 @@ import {
 
 describe('CollectionCoordinator Lock Release and Timeout', () => {
   let env;
+  let collection;
+  let fileId;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
+    ({ collection, fileId } = createTestCollection(env, 'coordinatorTest'));
+    resetCollectionState(collection, fileId);
   });
 
+  /**
+   * Creates a CollectionCoordinator for the shared test collection.
+   * @param {Object} config - Optional configuration overrides.
+   * @returns {CollectionCoordinator} Coordinator instance ready for tests.
+   */
+  const createCoordinator = (config = {}) => createTestCoordinator(collection, env.masterIndex, config);
+
   it('should release lock when exception is thrown during coordination', () => {
-    const { collection, fileId } = createTestCollection(env, 'coordinatorTest');
-    resetCollectionState(collection, fileId);
-    
-    const coordinator = createTestCoordinator(collection, env.masterIndex);
+    const coordinator = createCoordinator();
     
     expect(() => {
       coordinator.coordinate('testOperation', () => {
@@ -33,10 +41,7 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
   });
 
   it('should throw timeout error for operations exceeding lockTimeout', () => {
-    const { collection, fileId } = createTestCollection(env, 'coordinatorTest');
-    resetCollectionState(collection, fileId);
-    
-    const coordinator = createTestCoordinator(collection, env.masterIndex, {
+    const coordinator = createCoordinator({
       lockTimeout: 500
     });
     

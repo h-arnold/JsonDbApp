@@ -1,6 +1,8 @@
+/* global CollectionMetadata, InvalidArgumentError */
+
 /**
  * CollectionMetadata Constructor Tests
- * 
+ *
  * Tests for CollectionMetadata constructor validation and initialization.
  */
 

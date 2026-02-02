@@ -4,23 +4,23 @@ Tracking old test suites and cases for migration into the new `tests` framework.
 
 ## Unit tests
 
-- [x] **old_tests/unit/Collection/00_CollectionInitialisationTestSuite.js**
+- [x] **old_tests/unit/Collection/00_CollectionInitialisationTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Initialisation_
     - [x] testCollectionInitialisation
     - [x] testCollectionLazyLoading
 
-- [x] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js**
+- [x] **old_tests/unit/Collection/01_CollectionDataOperationsTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Data Operations_
     - [x] testCollectionLoadDataFromDrive
     - [x] testCollectionLoadDataCorruptedFile
     - [x] testCollectionSaveDataToDrive
 
-- [x] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js**
+- [x] **old_tests/unit/Collection/02_CollectionInsertOperationsTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Insert Operations_
     - [x] testCollectionInsertOne
     - [x] testCollectionInsertOneWithExplicitId
 
-- [x] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js**
+- [x] **old_tests/unit/Collection/03_CollectionFindOperationsTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Find Operations_
     - [x] testCollectionFindOneEmpty
     - [x] testCollectionFindOneById
@@ -34,7 +34,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionFindByComparisonOperators
     - [x] testCollectionFindOneByFieldMatching
 
-- [x] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js**
+- [x] **old_tests/unit/Collection/04_CollectionUpdateOperationsTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Update Operations_
     - [x] testCollectionUpdateOneById
     - [x] testCollectionUpdateOneUnsupportedFilter
@@ -53,7 +53,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionLockingDuringUpdate
     - [x] testCollectionUpdateLogging
 
-- [x] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js**
+- [x] **old_tests/unit/Collection/05_CollectionDeleteOperationsTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Delete Operations_
     - [x] testCollectionDeleteOneById
     - [x] testCollectionDeleteOneUnsupportedFilter
@@ -63,7 +63,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionDeleteOneByComparisonFilter
     - [x] testCollectionDeleteOneNoMatch
 
-- [x] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js**
+- [x] **old_tests/unit/Collection/06_CollectionCountOperationsTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Count Operations_
     - [x] testCollectionCountDocumentsAll
     - [x] testCollectionCountDocumentsUnsupportedFilter
@@ -73,43 +73,43 @@ Tracking old test suites and cases for migration into the new `tests` framework.
     - [x] testCollectionCountDocumentsByComparisonFilter
     - [x] testCollectionCountDocumentsNoMatch
 
-- [x] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/00_CollectionCoordinatorConstructorValidationTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Constructor Validation_
     - [x] testCollectionCoordinatorConstructorValidation
     - [x] testCollectionCoordinatorValidConstructor
     - [x] testCollectionCoordinatorConfigDefaults
     - [x] testCollectionCoordinatorCustomConfig
 
-- [x] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/01_CollectionCoordinatorCoordinateTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Coordinate_
     - [x] testCoordinateHappyPath
     - [x] testCoordinateWithCoordinationDisabled (obsolete - feature removed)
     - [x] testCoordinateWithConflictResolution
 
-- [x] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/02_CollectionCoordinatorAcquireOperationLockTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Acquire Operation Lock_
     - [x] testAcquireOperationLockRetrySuccess
     - [x] testAcquireOperationLockRetryFailure
 
-- [x] **old_tests/unit/CollectionCoordinator/03_CollectionCoordinatorModificationTokenTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/03_CollectionCoordinatorModificationTokenTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Modification Token_
     - [x] testValidateModificationTokenNoConflict
     - [x] testValidateModificationTokenConflict
 
-- [x] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/04_CollectionCoordinatorConflictResolutionTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Conflict Resolution_
     - [x] testResolveConflictReloadAndRetry
 
-- [x] **old_tests/unit/CollectionCoordinator/05_CollectionCoordinatorUpdateMasterIndexTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/05_CollectionCoordinatorUpdateMasterIndexTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Update Master Index Metadata_
     - [x] testUpdateMasterIndexMetadata
 
-- [x] **old_tests/unit/CollectionCoordinator/06_CollectionCoordinatorLockReleaseAndTimeoutTestSuite.js**
+- [x] **old_tests/unit/CollectionCoordinator/06_CollectionCoordinatorLockReleaseAndTimeoutTestSuite.js** ✅ Verified
   - [x] _Suite: CollectionCoordinator Lock Release and Timeout_
     - [x] testLockReleasedOnException
     - [x] testCoordinationTimeout
 
-- [x] **old_tests/unit/CollectionMetadataTest.js**
+- [x] **old_tests/unit/CollectionMetadataTest.js** ✅ Verified
   - [x] _Suite: CollectionMetadata Constructor_
     - [x] should create metadata with default values when no input provided
     - [x] should create metadata with provided initial values
@@ -153,7 +153,7 @@ Tracking old test suites and cases for migration into the new `tests` framework.
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [x] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js**
+- [x] **old_tests/unit/Database/01_DatabaseInitializationTestSuite.js** ✅ Verified
   - [x] _Suite: Database Initialisation_
     - [x] should create Database with default configuration
     - [x] should create Database with custom configuration
@@ -162,7 +162,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [x] **old_tests/unit/Database/02_CollectionManagementTestSuite.js**
+- [x] **old_tests/unit/Database/02_CollectionManagementTestSuite.js** ✅ Verified
   - [x] _Suite: Collection Management_
     - [x] should create new collection
     - [x] should access existing collection
@@ -177,7 +177,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [x] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js**
+- [x] **old_tests/unit/Database/03_IndexFileStructureTestSuite.js** ✅ Verified
   - [x] _Suite: Index File Structure_
     - [x] should create index file with correct structure
     - [x] should update index file when collections change
@@ -186,20 +186,20 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [x] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js**
+- [x] **old_tests/unit/Database/04_DatabaseMasterIndexIntegrationTestSuite.js** ✅ Verified
   - [x] _Suite: Database Master Index Integration_
     - [x] should integrate with master index on initialisation
     - [x] should co-ordinate collection operations with master index
 
 REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
 
-- [x] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js**
+- [x] **old_tests/unit/Database/05_DatabaseBackupIndexTestSuite.js** ✅ Verified
   - [x] _Suite: Database Backup Index Tests_
     - [x] should NOT create index file when backupOnInitialise is false
     - [x] should create index file when backupOnInitialise is true
     - [x] createCollection should not create index file when backup disabled
 
-- [x] **old_tests/unit/DatabaseConfigTest.js**
+- [x] **old_tests/unit/DatabaseConfigTest.js** ✅ Verified
   - [x] _Suite: DatabaseConfig Setup - Create Test Environment_
     - [x] should create test folder for DatabaseConfig tests
   - [x] _Suite: DatabaseConfig Creation and Default Values_
@@ -219,7 +219,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] testValidMinimumLockTimeout
     - [x] testTooLowLockTimeoutThrowsError
 
-- [x] **old_tests/unit/DatabaseInitializationRefactorTest.js**
+- [x] **old_tests/unit/DatabaseInitializationRefactorTest.js** ✅ Verified
   - [x] _Suite: Database createDatabase() Method (No Setup)_
     - [x] should create database with fresh MasterIndex
   - [x] _Suite: Database createDatabase() Method (Exists)_
@@ -236,35 +236,35 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should access collection from MasterIndex only
     - [x] should throw error if collection not in MasterIndex
 
-- [x] **old_tests/unit/DbLockService/01_LockServiceConstructorTestSuite.js**
+- [x] **old_tests/unit/DbLockService/01_LockServiceConstructorTestSuite.js** ✅ Verified
   - [x] _Suite: LockService Constructor_
     - [x] testDefaultTimeout
     - [x] testCustomTimeout
     - [x] testInvalidConfigType
     - [x] testInvalidTimeoutType
 
-- [x] **old_tests/unit/DbLockService/02_LockServiceScriptLockTestSuite.js**
+- [x] **old_tests/unit/DbLockService/02_LockServiceScriptLockTestSuite.js** ✅ Verified
   - [x] _Suite: LockService Script Lock Operations_
     - [x] testAcquireAndReleaseScriptLock
     - [x] testReleaseWithoutAcquireThrows
     - [x] testInvalidTimeoutThrows
 
-- [x] **old_tests/unit/DbLockService/03_LockServiceScriptLockTimeoutTestSuite.js**
+- [x] **old_tests/unit/DbLockService/03_LockServiceScriptLockTimeoutTestSuite.js** ✅ Verified
   - [x] _Suite: LockService Script Lock Timeout_
     - [x] testScriptLockTimeoutThrows
 
-- [x] **old_tests/unit/DocumentOperations/01_DocumentOperationsConstructorTest.js**
+- [x] **old_tests/unit/DocumentOperations/01_DocumentOperationsConstructorTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Constructor_
     - [x] should create DocumentOperations with valid collection reference
 
-- [x] **old_tests/unit/DocumentOperations/02_DocumentOperationsInsertTest.js**
+- [x] **old_tests/unit/DocumentOperations/02_DocumentOperationsInsertTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Insert Operations_
     - [x] should insert document with automatic ID generation
     - [x] should insert document with provided ID when valid
     - [x] should throw error when inserting document with duplicate ID
     - [x] should throw error when inserting invalid document
 
-- [x] **old_tests/unit/DocumentOperations/03_DocumentOperationsFindTest.js**
+- [x] **old_tests/unit/DocumentOperations/03_DocumentOperationsFindTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Find Operations_
     - [x] should find document by valid ID
     - [x] should return null when document not found by ID
@@ -272,7 +272,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should find all documents when collection has content
     - [x] should return empty array when finding all documents in empty collection
 
-- [x] **old_tests/unit/DocumentOperations/04_DocumentOperationsUpdateTest.js**
+- [x] **old_tests/unit/DocumentOperations/04_DocumentOperationsUpdateTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Update Operations_
     - [x] should update existing document by ID
     - [x] should return error result when updating non-existent document
@@ -287,20 +287,20 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should throw error for unsupported update operators
     - [x] should throw error when no operators provided to updateDocumentWithOperators
 
-- [x] **old_tests/unit/DocumentOperations/05_DocumentOperationsDeleteTest.js**
+- [x] **old_tests/unit/DocumentOperations/05_DocumentOperationsDeleteTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Delete Operations_
     - [x] should delete existing document by ID
     - [x] should return error result when deleting non-existent document
     - [x] should throw error when deleting with invalid ID
 
-- [x] **old_tests/unit/DocumentOperations/06_DocumentOperationsUtilityTest.js**
+- [x] **old_tests/unit/DocumentOperations/06_DocumentOperationsUtilityTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Utility Operations_
     - [x] should count documents correctly
     - [x] should check document existence correctly
     - [x] should throw error when checking existence with invalid ID
     - [x] should generate valid document IDs
 
-- [x] **old_tests/unit/DocumentOperations/07_DocumentOperationsQueryEnhancementTest.js**
+- [x] **old_tests/unit/DocumentOperations/07_DocumentOperationsQueryEnhancementTest.js** ✅ Verified
   - [x] _Suite: DocumentOperations Query Enhancement_
     - [x] should find document by field-based query with exact match
     - [x] should find document by comparison operator query

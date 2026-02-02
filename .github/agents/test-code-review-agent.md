@@ -236,6 +236,7 @@ it('should insert', () => {
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestFileWithContent(folderId, fileName, content)` - Creates file with custom content
 - `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
+- `createIsolatedTestCollection(collectionName)` - Builds fresh environment and returns env, collection, and file ID
 - `registerAndCreateCollection(env, collectionName, fileId, documentCount)` - Registers metadata and creates Collection
 - `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 

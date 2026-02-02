@@ -12,16 +12,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Replace Operations', () => {
   describe('replaceOne by ID', () => {
     it('completely replaces a document by its ID', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'replaceOneByIdTestCollection');
+      const { collection } = createIsolatedTestCollection('replaceOneByIdTestCollection');
       
       const insertResult = collection.insertOne({ 
         name: 'Original Doc', 
@@ -58,8 +56,7 @@ describe('Collection Replace Operations', () => {
   describe('replaceOne by filter', () => {
     it('replaces first matching document by field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'replaceOneByFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('replaceOneByFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', role: 'Developer' });
       collection.insertOne({ name: 'Bob', department: 'Engineering', role: 'Manager' });
@@ -89,8 +86,7 @@ describe('Collection Replace Operations', () => {
 
     it('replaces only the specific matching document', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'replaceCorrectDocTestCollection');
+      const { collection } = createIsolatedTestCollection('replaceCorrectDocTestCollection');
       
       collection.insertOne({ name: 'Alice', age: 30, department: 'Engineering' });
       collection.insertOne({ name: 'Alice', age: 25, department: 'Marketing' });

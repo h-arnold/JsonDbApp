@@ -1,6 +1,8 @@
+/* global CollectionMetadata, InvalidArgumentError */
+
 /**
  * CollectionMetadata Serialization Tests
- * 
+ *
  * Tests for CollectionMetadata serialization, cloning, and factory methods.
  */
 
@@ -9,16 +11,17 @@ import { createTestMetadata, createTestLockStatus, waitForTimestamp } from '../.
 
 describe('CollectionMetadata Serialization', () => {
   describe('Object Conversion', () => {
-    it('should return plain object with correct types', () => {
+    it('should return plain object from toJSON with correct types', () => {
       const metadata = new CollectionMetadata('testCollection', 'testFileId');
-      
-      expect(typeof metadata).toBe('object');
-      expect(metadata.created).toBeInstanceOf(Date);
-      expect(metadata.lastUpdated).toBeInstanceOf(Date);
-      expect(typeof metadata.documentCount).toBe('number');
+      const metadataSnapshot = metadata.toJSON();
+
+      expect(typeof metadataSnapshot).toBe('object');
+      expect(metadataSnapshot.created).toBeInstanceOf(Date);
+      expect(metadataSnapshot.lastUpdated).toBeInstanceOf(Date);
+      expect(typeof metadataSnapshot.documentCount).toBe('number');
     });
 
-    it('should include all fields in metadata object', () => {
+    it('should include all fields in serialised output', () => {
       const name = 'testCollection';
       const fileId = 'file123';
       const modificationToken = 'mod-token-12345';
@@ -27,18 +30,19 @@ describe('CollectionMetadata Serialization', () => {
       const metadata = new CollectionMetadata(name, fileId);
       metadata.setModificationToken(modificationToken);
       metadata.setLockStatus(lockStatus);
-      
-      expect(metadata.name).toBe(name);
-      expect(metadata.fileId).toBe(fileId);
-      expect(metadata.modificationToken).toBe(modificationToken);
-      expect(metadata).toHaveProperty('lockStatus');
-      expect(metadata.lockStatus.isLocked).toBe(lockStatus.isLocked);
-      expect(metadata.lockStatus.lockedBy).toBe(lockStatus.lockedBy);
-      expect(metadata.lockStatus.lockedAt).toBe(lockStatus.lockedAt);
-      expect(metadata.lockStatus.lockTimeout).toBe(lockStatus.lockTimeout);
-      expect(metadata.created).toBeInstanceOf(Date);
-      expect(metadata.lastUpdated).toBeInstanceOf(Date);
-      expect(typeof metadata.documentCount).toBe('number');
+
+      const metadataSnapshot = metadata.toJSON();
+      expect(metadataSnapshot.name).toBe(name);
+      expect(metadataSnapshot.fileId).toBe(fileId);
+      expect(metadataSnapshot.modificationToken).toBe(modificationToken);
+      expect(metadataSnapshot).toHaveProperty('lockStatus');
+      expect(metadataSnapshot.lockStatus.isLocked).toBe(lockStatus.isLocked);
+      expect(metadataSnapshot.lockStatus.lockedBy).toBe(lockStatus.lockedBy);
+      expect(metadataSnapshot.lockStatus.lockedAt).toBe(lockStatus.lockedAt);
+      expect(metadataSnapshot.lockStatus.lockTimeout).toBe(lockStatus.lockTimeout);
+      expect(metadataSnapshot.created).toBeInstanceOf(Date);
+      expect(metadataSnapshot.lastUpdated).toBeInstanceOf(Date);
+      expect(typeof metadataSnapshot.documentCount).toBe('number');
     });
   });
 
@@ -191,12 +195,13 @@ describe('CollectionMetadata Serialization', () => {
       };
       
       const metadata = new CollectionMetadata(partialMetadata);
-      
-      expect(metadata.name).toBe('testCollection');
-      expect(metadata.fileId).toBe('testFileId');
-      expect(metadata.documentCount).toBe(3);
-      expect(metadata.created).toBeInstanceOf(Date);
-      expect(metadata.lastUpdated).toBeInstanceOf(Date);
+      const metadataSnapshot = metadata.toJSON();
+
+      expect(metadataSnapshot.name).toBe('testCollection');
+      expect(metadataSnapshot.fileId).toBe('testFileId');
+      expect(metadataSnapshot.documentCount).toBe(3);
+      expect(metadataSnapshot.created).toBeInstanceOf(Date);
+      expect(metadataSnapshot.lastUpdated).toBeInstanceOf(Date);
     });
 
     it('should validate Date objects in input metadata', () => {

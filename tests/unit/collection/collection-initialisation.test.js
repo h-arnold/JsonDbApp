@@ -7,18 +7,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Initialisation', () => {
   it('creates and initialises a Collection instance with correct properties', () => {
     // Arrange
-    const env = setupCollectionTestEnvironment();
     const collectionName = 'test_collection';
-    
-    // Act
-    const { collection } = createTestCollection(env, collectionName);
+    const { collection } = createIsolatedTestCollection(collectionName);
     
     // Assert
     expect(collection).toBeDefined();
@@ -29,9 +25,8 @@ describe('Collection Initialisation', () => {
 
   it('loads data lazily on first operation', () => {
     // Arrange
-    const env = setupCollectionTestEnvironment();
     const collectionName = 'lazy_test_collection';
-    const { collection } = createTestCollection(env, collectionName);
+    const { collection } = createIsolatedTestCollection(collectionName);
     
     // Assert - Collection should not be loaded initially
     // First operation (find) should trigger loading

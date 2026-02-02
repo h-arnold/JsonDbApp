@@ -1,3 +1,5 @@
+/* global Database, DatabaseConfig, MasterIndex, PropertiesService */
+
 /**
  * Database Initialisation Tests
  *
@@ -9,17 +11,11 @@ import {
   createDatabaseTestConfig,
   setupDatabaseTestEnvironment,
   registerDatabaseFile,
-  registerMasterIndexKey
+  registerMasterIndexKey,
+  generateUniqueName
 } from '../../helpers/database-test-helpers.js';
 
 const MIN_INDEX_ID_LENGTH = 10;
-
-/**
- * Generates a unique identifier for test collections.
- * @param {string} prefix - Text prefix to make the name descriptive.
- * @returns {string} Unique collection name.
- */
-const generateUniqueName = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 describe('Database Initialisation', () => {
   describe('constructor', () => {

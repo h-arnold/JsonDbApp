@@ -13,16 +13,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Find Operations', () => {
   describe('findOne operations', () => {
     it('returns null when finding in an empty collection', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneEmptyTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneEmptyTestCollection');
       
       // Act
       const result = collection.findOne({});
@@ -33,8 +31,7 @@ describe('Collection Find Operations', () => {
 
     it('finds a single document by ID', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneByIdTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneByIdTestCollection');
       
       const doc1 = collection.insertOne({ name: 'First Doc', value: 100 });
       collection.insertOne({ name: 'Second Doc', value: 200 });
@@ -49,8 +46,7 @@ describe('Collection Find Operations', () => {
 
     it('finds a document by field-based query', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneUnsupportedTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneUnsupportedTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       
@@ -64,8 +60,7 @@ describe('Collection Find Operations', () => {
 
     it('returns null when field-based query has no matches', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneNoMatchTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneNoMatchTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       
@@ -78,8 +73,7 @@ describe('Collection Find Operations', () => {
 
     it('finds first matching document by field criteria', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneFieldTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', priority: 1 });
       collection.insertOne({ name: 'Bob', department: 'Engineering', priority: 2 });
@@ -96,8 +90,7 @@ describe('Collection Find Operations', () => {
 
     it('finds document matching multiple field criteria', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneMultiCriteriaTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneMultiCriteriaTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', priority: 1 });
       collection.insertOne({ name: 'Bob', department: 'Engineering', priority: 2 });
@@ -113,8 +106,7 @@ describe('Collection Find Operations', () => {
 
     it('returns null when no documents match multiple criteria', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findOneNoMatchMultiTestCollection');
+      const { collection } = createIsolatedTestCollection('findOneNoMatchMultiTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', priority: 1 });
       
@@ -129,8 +121,7 @@ describe('Collection Find Operations', () => {
   describe('find operations', () => {
     it('returns empty array when finding in an empty collection', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findEmptyTestCollection');
+      const { collection } = createIsolatedTestCollection('findEmptyTestCollection');
       
       // Act
       const results = collection.find({});
@@ -142,8 +133,7 @@ describe('Collection Find Operations', () => {
 
     it('finds all documents when query is empty', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findAllTestCollection');
+      const { collection } = createIsolatedTestCollection('findAllTestCollection');
       
       collection.insertOne({ name: 'Doc A', value: 100, category: 'test' });
       collection.insertOne({ name: 'Doc B', value: 200, category: 'prod' });
@@ -159,8 +149,7 @@ describe('Collection Find Operations', () => {
 
     it('finds documents by field-based query', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findUnsupportedTestCollection');
+      const { collection } = createIsolatedTestCollection('findUnsupportedTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       collection.insertOne({ name: 'Other', value: 200 });
@@ -175,8 +164,7 @@ describe('Collection Find Operations', () => {
 
     it('returns empty array when field-based query has no matches', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findNoMatchTestCollection');
+      const { collection } = createIsolatedTestCollection('findNoMatchTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       collection.insertOne({ name: 'Other', value: 200 });
@@ -190,8 +178,7 @@ describe('Collection Find Operations', () => {
 
     it('finds documents by exact field match', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findByFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('findByFieldTestCollection');
       
       collection.insertOne({ name: 'Alice', age: 30, active: true, department: 'Engineering' });
       collection.insertOne({ name: 'Bob', age: 25, active: false, department: 'Marketing' });
@@ -214,8 +201,7 @@ describe('Collection Find Operations', () => {
 
     it('finds documents matching multiple fields (implicit AND)', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findMultiFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('findMultiFieldTestCollection');
       
       collection.insertOne({ name: 'Alice', age: 30, active: true, department: 'Engineering' });
       collection.insertOne({ name: 'Bob', age: 30, active: false, department: 'Engineering' });
@@ -231,8 +217,7 @@ describe('Collection Find Operations', () => {
 
     it('finds documents by nested field (dot notation)', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findNestedFieldTestCollection');
+      const { collection } = createIsolatedTestCollection('findNestedFieldTestCollection');
       
       collection.insertOne({ 
         name: 'Alice', 
@@ -258,8 +243,7 @@ describe('Collection Find Operations', () => {
 
     it('finds documents using comparison operators ($gt, $lt)', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'findComparisonTestCollection');
+      const { collection } = createIsolatedTestCollection('findComparisonTestCollection');
       
       collection.insertOne({ name: 'Alice', score: 85, joinDate: new Date('2020-01-15') });
       collection.insertOne({ name: 'Bob', score: 92, joinDate: new Date('2021-03-20') });

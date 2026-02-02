@@ -132,6 +132,13 @@ export const cleanupDatabaseTests = () => {
   databaseTestResources.masterIndexKeys.clear();
 };
 
+/**
+ * Generates a unique identifier for test collections or entities.
+ * @param {string} prefix - Human-friendly descriptor prefix.
+ * @returns {string} Unique name combining prefix, timestamp, and random suffix.
+ */
+export const generateUniqueName = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
 afterEach(() => {
   cleanupDatabaseTests();
 });

@@ -206,6 +206,17 @@ export const registerAndCreateCollection = (env, collectionName, fileId, documen
 };
 
 /**
+ * Creates an isolated collection with a fresh environment
+ * @param {string} collectionName - Name for the collection
+ * @returns {{env: object, collection: Collection, fileId: string}} Environment, collection instance, and file ID
+ */
+export const createIsolatedTestCollection = (collectionName) => {
+  const env = setupCollectionTestEnvironment();
+  const { collection, fileId } = createTestCollection(env, collectionName);
+  return { env, collection, fileId };
+};
+
+/**
  * Cleanup function - automatically registered with afterEach
  */
 export const cleanupCollectionTests = () => {

@@ -1,3 +1,5 @@
+/* global Database, MasterIndex, PropertiesService, DriveApp */
+
 /**
  * Database Create Tests
  *

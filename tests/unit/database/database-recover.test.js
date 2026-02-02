@@ -1,3 +1,5 @@
+/* global Database, MasterIndex, DriveApp, ErrorHandler */
+
 /**
  * Database Recover Tests
  *

@@ -1,3 +1,5 @@
+/* global DriveApp */
+
 /**
  * Database Backup Index Tests
  *
@@ -8,15 +10,9 @@ import { describe, it, expect } from 'vitest';
 import {
   registerDatabaseFile,
   setupDatabaseTestEnvironment,
-  setupInitialisedDatabase
+  setupInitialisedDatabase,
+  generateUniqueName
 } from '../../helpers/database-test-helpers.js';
-
-/**
- * Generates a unique identifier for collections within tests.
- * @param {string} prefix - Prefix aiding traceability when tests fail.
- * @returns {string} Unique collection name.
- */
-const generateUniqueCollectionName = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 /**
  * Lists backup index files stored inside the provided Drive folder.
@@ -66,7 +62,7 @@ describe('Database backup index', () => {
     const afterInitialiseFiles = listBackupIndexFiles(rootFolderId);
     registerNewIndexFiles(trackedFileIds, afterInitialiseFiles);
 
-    const collectionName = generateUniqueCollectionName('noBackup');
+    const collectionName = generateUniqueName('noBackup');
     const collection = database.createCollection(collectionName);
     registerDatabaseFile(collection.getDriveFileId());
 
@@ -99,7 +95,7 @@ describe('Database backup index', () => {
     const { database, rootFolderId } = setupInitialisedDatabase({ backupOnInitialise: false });
     const initialFiles = listBackupIndexFiles(rootFolderId);
     const trackedFileIds = new Set(initialFiles.map((file) => file.id));
-    const collectionName = generateUniqueCollectionName('collectionOnly');
+    const collectionName = generateUniqueName('collectionOnly');
 
     // Act - Create a collection and record Drive artefacts
     const collection = database.createCollection(collectionName);

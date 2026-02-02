@@ -7,16 +7,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Insert Operations', () => {
   it('inserts a single document and returns MongoDB-compatible result', () => {
     // Arrange
-    const env = setupCollectionTestEnvironment();
     const collectionName = 'insertTestCollection';
-    const { collection } = createTestCollection(env, collectionName);
+    const { collection } = createIsolatedTestCollection(collectionName);
     
     const testDoc = { name: 'Insert Test Doc', value: 300, tags: ['test', 'insert'] };
     
@@ -32,9 +30,8 @@ describe('Collection Insert Operations', () => {
 
   it('inserts a document with explicit _id and uses the provided ID', () => {
     // Arrange
-    const env = setupCollectionTestEnvironment();
     const collectionName = 'insertExplicitIdTestCollection';
-    const { collection } = createTestCollection(env, collectionName);
+    const { collection } = createIsolatedTestCollection(collectionName);
     
     const testDoc = { _id: 'explicit-id-123', name: 'Explicit ID Doc', value: 400 };
     

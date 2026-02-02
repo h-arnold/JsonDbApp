@@ -1,3 +1,5 @@
+/* global MasterIndex */
+
 /**
  * Database Index Structure Tests
  *
@@ -8,15 +10,9 @@ import { describe, it, expect } from 'vitest';
 import {
   setupDatabaseTestEnvironment,
   setupInitialisedDatabase,
-  registerDatabaseFile
+  registerDatabaseFile,
+  generateUniqueName
 } from '../../helpers/database-test-helpers.js';
-
-/**
- * Generates a unique identifier for collections within tests.
- * @param {string} prefix - Prefix to aid debugging when tests fail.
- * @returns {string} Unique collection name.
- */
-const generateUniqueName = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 describe('Database Index Structure', () => {
   it('should create the index file with the expected structure when backup is enabled', () => {

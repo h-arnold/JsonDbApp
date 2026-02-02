@@ -15,15 +15,16 @@ import {
 
 describe('CollectionCoordinator Conflict Resolution', () => {
   let env;
+  let collection;
+  let fileId;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
+    ({ collection, fileId } = createTestCollection(env, 'coordinatorTest'));
+    resetCollectionState(collection, fileId);
   });
 
   it('should resolve conflict using reload strategy', () => {
-    const { collection, fileId } = createTestCollection(env, 'coordinatorTest');
-    resetCollectionState(collection, fileId);
-    
     simulateConflict(env.masterIndex, 'coordinatorTest');
     
     const coordinator = createTestCoordinator(collection, env.masterIndex);

@@ -14,15 +14,15 @@ import {
 
 describe('CollectionCoordinator Modification Token', () => {
   let env;
+  let collection;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
+    ({ collection } = createTestCollection(env, 'coordinatorTest'));
   });
 
   describe('No Conflict', () => {
     it('should not throw when tokens match', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
-      
       const localToken = collection._metadata.getModificationToken();
       
       env.masterIndex.updateCollectionMetadata('coordinatorTest', {
@@ -42,8 +42,6 @@ describe('CollectionCoordinator Modification Token', () => {
 
   describe('Conflict Detection', () => {
     it('should throw when tokens differ', () => {
-      const { collection } = createTestCollection(env, 'coordinatorTest');
-      
       simulateConflict(env.masterIndex, 'coordinatorTest');
       
       const coordinator = createTestCoordinator(collection, env.masterIndex);

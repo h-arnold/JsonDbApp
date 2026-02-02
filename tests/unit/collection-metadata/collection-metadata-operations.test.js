@@ -1,6 +1,8 @@
+/* global CollectionMetadata, InvalidArgumentError */
+
 /**
  * CollectionMetadata Operations Tests
- * 
+ *
  * Tests for CollectionMetadata update operations and property management.
  */
 
@@ -97,13 +99,14 @@ describe('CollectionMetadata Operations', () => {
       expect(metadata.modificationToken).toBe(token);
     });
 
-    it('should include modificationToken in metadata object', () => {
+    it('should include modificationToken when serialised', () => {
       const metadata = new CollectionMetadata('testCollection', 'file123');
       const token = 'mod-token-67890';
       
       metadata.setModificationToken(token);
       
-      expect(metadata.modificationToken).toBe(token);
+      const serialised = metadata.toJSON();
+      expect(serialised.modificationToken).toBe(token);
     });
 
     it('should throw error for invalid modificationToken type', () => {
@@ -146,7 +149,7 @@ describe('CollectionMetadata Operations', () => {
       expect(retrievedLockStatus.lockTimeout).toBe(lockStatus.lockTimeout);
     });
 
-    it('should include lockStatus in metadata object', () => {
+    it('should include lockStatus when serialised', () => {
       const metadata = new CollectionMetadata('testCollection', 'file123');
       const lockStatus = createTestLockStatus({
         isLocked: false,
@@ -157,10 +160,11 @@ describe('CollectionMetadata Operations', () => {
       
       metadata.setLockStatus(lockStatus);
       
-      expect(metadata.lockStatus.isLocked).toBe(false);
-      expect(metadata.lockStatus.lockedBy).toBe(null);
-      expect(metadata.lockStatus.lockedAt).toBe(null);
-      expect(metadata.lockStatus.lockTimeout).toBe(null);
+      const serialised = metadata.toJSON();
+      expect(serialised.lockStatus.isLocked).toBe(false);
+      expect(serialised.lockStatus.lockedBy).toBe(null);
+      expect(serialised.lockStatus.lockedAt).toBe(null);
+      expect(serialised.lockStatus.lockTimeout).toBe(null);
     });
 
     it('should throw error for invalid lockStatus type', () => {

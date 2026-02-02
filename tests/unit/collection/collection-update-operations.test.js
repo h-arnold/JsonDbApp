@@ -15,16 +15,14 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  setupCollectionTestEnvironment,
-  createTestCollection
+  createIsolatedTestCollection
 } from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Update Operations', () => {
   describe('updateOne by ID', () => {
     it('updates a document by its ID with replacement document', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateOneByIdTestCollection');
+      const { collection } = createIsolatedTestCollection('updateOneByIdTestCollection');
       
       const insertResult = collection.insertOne({ name: 'Original Doc', value: 100, status: 'active' });
       const docId = insertResult.insertedId;
@@ -41,8 +39,7 @@ describe('Collection Update Operations', () => {
 
     it('updates a document using $set operator', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateOneUnsupportedOperatorsTestCollection');
+      const { collection } = createIsolatedTestCollection('updateOneUnsupportedOperatorsTestCollection');
       
       const insertResult = collection.insertOne({ name: 'Test Doc', value: 100 });
       const docId = insertResult.insertedId;
@@ -65,8 +62,7 @@ describe('Collection Update Operations', () => {
   describe('updateOne by filter', () => {
     it('updates document by field-based filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateOneUnsupportedFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('updateOneUnsupportedFilterTestCollection');
       
       collection.insertOne({ name: 'Test', value: 100 });
       
@@ -86,8 +82,7 @@ describe('Collection Update Operations', () => {
 
     it('updates first matching document by single field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('updateFieldFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', salary: 75000 });
       collection.insertOne({ name: 'Bob', department: 'Marketing', salary: 65000 });
@@ -115,8 +110,7 @@ describe('Collection Update Operations', () => {
 
     it('updates document by multiple field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateMultiFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('updateMultiFieldFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering', level: 'Senior', active: true });
       collection.insertOne({ name: 'Bob', department: 'Engineering', level: 'Junior', active: true });
@@ -140,8 +134,7 @@ describe('Collection Update Operations', () => {
 
     it('updates document by nested field filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateNestedFieldFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('updateNestedFieldFilterTestCollection');
       
       collection.insertOne({ 
         name: 'Alice', 
@@ -176,8 +169,7 @@ describe('Collection Update Operations', () => {
 
     it('updates document by comparison filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateComparisonFilterTestCollection');
+      const { collection } = createIsolatedTestCollection('updateComparisonFilterTestCollection');
       
       collection.insertOne({ name: 'Alice', score: 85, bonus: 1000 });
       collection.insertOne({ name: 'Bob', score: 92, bonus: 1500 });
@@ -201,8 +193,7 @@ describe('Collection Update Operations', () => {
 
     it('returns zero matches when filter matches no documents', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateNoMatchTestCollection');
+      const { collection } = createIsolatedTestCollection('updateNoMatchTestCollection');
       
       collection.insertOne({ name: 'Alice', department: 'Engineering' });
       collection.insertOne({ name: 'Bob', department: 'Marketing' });
@@ -223,8 +214,7 @@ describe('Collection Update Operations', () => {
   describe('updateOne with multiple operators', () => {
     it('applies multiple update operators simultaneously', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateMultipleOperatorsTestCollection');
+      const { collection } = createIsolatedTestCollection('updateMultipleOperatorsTestCollection');
       
       const insertResult = collection.insertOne({ 
         name: 'Test User',
@@ -259,8 +249,7 @@ describe('Collection Update Operations', () => {
   describe('updateMany operations', () => {
     it('updates multiple documents and returns correct modified count', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateManyTestCollection');
+      const { collection } = createIsolatedTestCollection('updateManyTestCollection');
       
       collection.insertOne({ department: 'Engineering', level: 'Junior', salary: 70000 });
       collection.insertOne({ department: 'Engineering', level: 'Senior', salary: 90000 });
@@ -283,8 +272,7 @@ describe('Collection Update Operations', () => {
   describe('error handling', () => {
     it('throws InvalidArgumentError for null filter', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'errorPropagationTestCollection');
+      const { collection } = createIsolatedTestCollection('errorPropagationTestCollection');
       
       // Act & Assert
       expect(() => {
@@ -294,8 +282,7 @@ describe('Collection Update Operations', () => {
 
     it('throws InvalidArgumentError for null update', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'errorPropagationTestCollection2');
+      const { collection } = createIsolatedTestCollection('errorPropagationTestCollection2');
       
       // Act & Assert
       expect(() => {
@@ -305,8 +292,7 @@ describe('Collection Update Operations', () => {
 
     it('throws error for empty update object', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'errorPropagationTestCollection3');
+      const { collection } = createIsolatedTestCollection('errorPropagationTestCollection3');
       
       // Act & Assert
       expect(() => {
@@ -318,8 +304,7 @@ describe('Collection Update Operations', () => {
   describe('locking and logging', () => {
     it('successfully updates document with locking mechanism', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'lockingDuringUpdateTestCollection');
+      const { collection } = createIsolatedTestCollection('lockingDuringUpdateTestCollection');
       
       const insertResult = collection.insertOne({ name: 'Lock Test', value: 100 });
       const docId = insertResult.insertedId;
@@ -335,8 +320,7 @@ describe('Collection Update Operations', () => {
 
     it('completes update operation with logging', () => {
       // Arrange
-      const env = setupCollectionTestEnvironment();
-      const { collection } = createTestCollection(env, 'updateLoggingTestCollection');
+      const { collection } = createIsolatedTestCollection('updateLoggingTestCollection');
       
       const insertResult = collection.insertOne({ name: 'Log Test', value: 100 });
       const docId = insertResult.insertedId;

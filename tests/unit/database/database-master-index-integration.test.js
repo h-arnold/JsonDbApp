@@ -1,3 +1,5 @@
+/* global Database, MasterIndex, CollectionMetadata, JDbLogger, FileOperations, FileService */
+
 /**
  * Database Master Index Integration Tests
  *
@@ -8,15 +10,9 @@ import { describe, it, expect } from 'vitest';
 import {
   createDatabaseTestConfig,
   registerDatabaseFile,
-  setupInitialisedDatabase
+  setupInitialisedDatabase,
+  generateUniqueName
 } from '../../helpers/database-test-helpers.js';
-
-/**
- * Generates a unique identifier for test-specific collection names.
- * @param {string} prefix - Human-readable prefix for the collection name.
- * @returns {string} Unique collection name.
- */
-const generateUniqueCollectionName = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 describe('Database master index integration', () => {
   it('should hydrate collections from an existing MasterIndex entry during initialise', () => {
@@ -26,7 +22,7 @@ describe('Database master index integration', () => {
     const logger = JDbLogger.createComponentLogger('Database-MasterIndex-Integration-Test');
     const fileOps = new FileOperations(logger);
     const fileService = new FileService(fileOps, logger);
-    const collectionName = generateUniqueCollectionName('hydratedCollection');
+    const collectionName = generateUniqueName('hydratedCollection');
     const seedFileId = fileService.createFile(
       `${collectionName}.json`,
       {
@@ -64,7 +60,7 @@ describe('Database master index integration', () => {
   it('should update MasterIndex metadata when creating a new collection', () => {
     // Arrange - Create an initialised database ready for collection creation
     const { database, masterIndexKey } = setupInitialisedDatabase();
-    const collectionName = generateUniqueCollectionName('coordinatedCollection');
+    const collectionName = generateUniqueName('coordinatedCollection');
 
     // Act - Create the new collection through the Database API
     const createdCollection = database.createCollection(collectionName);
