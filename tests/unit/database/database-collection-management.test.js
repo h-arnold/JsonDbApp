@@ -63,6 +63,24 @@ describe('Database collection management', () => {
     expect(masterIndex.getCollections()[collectionName].fileId).toBe(createdCollection.driveFileId);
   });
 
+  it('should access existing collections via getCollection when not cached in memory', () => {
+    // Arrange - Create and evict the in-memory cache entry
+    const { database, masterIndexKey } = setupInitialisedDatabase();
+    const collectionName = generateUniqueName('getCollectionReload');
+    const createdCollection = database.createCollection(collectionName);
+    registerDatabaseFile(createdCollection.driveFileId);
+    database.collections.delete(collectionName);
+
+    // Act - Reload the collection through Database.getCollection()
+    const reloadedCollection = database.getCollection(collectionName);
+
+    // Assert - Reloaded collection should match persisted metadata
+    expect(reloadedCollection.name).toBe(collectionName);
+    expect(reloadedCollection.driveFileId).toBe(createdCollection.driveFileId);
+    const masterIndex = new MasterIndex({ masterIndexKey });
+    expect(masterIndex.getCollection(collectionName).fileId).toBe(createdCollection.driveFileId);
+  });
+
   it('should auto-create collections when autoCreateCollections is enabled', () => {
     // Arrange - Prepare database with default auto-create behaviour
     const { database, masterIndexKey } = setupInitialisedDatabase();
@@ -78,6 +96,21 @@ describe('Database collection management', () => {
     expect(Object.keys(masterIndex.getCollections())).toContain(targetName);
   });
 
+  it('should auto-create collections via getCollection when autoCreateCollections is enabled', () => {
+    // Arrange - Use default configuration that permits auto creation
+    const { database, masterIndexKey } = setupInitialisedDatabase();
+    const targetName = generateUniqueName('getCollectionAutoCreated');
+
+    // Act - Access a missing collection through getCollection()
+    const autoCreated = database.getCollection(targetName);
+    registerDatabaseFile(autoCreated.driveFileId);
+
+    // Assert - Collection should be created and registered in the MasterIndex
+    expect(autoCreated.name).toBe(targetName);
+    const masterIndex = new MasterIndex({ masterIndexKey });
+    expect(Object.keys(masterIndex.getCollections())).toContain(targetName);
+  });
+
   it('should throw when accessing a missing collection with auto-create disabled', () => {
     // Arrange - Disable auto-create in the configuration
     const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
@@ -85,6 +118,34 @@ describe('Database collection management', () => {
 
     // Act & Assert - Accessing should fail with an informative message
     expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);
+  });
+
+  it('should report original name when sanitised lookup fails and auto-create is disabled', () => {
+    // Arrange - Disable auto-create while allowing sanitisation adjustments
+    const { database } = setupInitialisedDatabase({
+      autoCreateCollections: false,
+      stripDisallowedCollectionNameCharacters: true
+    });
+    const unsanitisedName = 'invalid/name';
+
+    // Act & Assert - Resolution failure should surface the original unsanitised name
+    expect(() => database.collection(unsanitisedName)).toThrowError(
+      "Collection 'invalid/name' does not exist and auto-create is disabled"
+    );
+  });
+
+  it('should report original name via getCollection when sanitised lookup fails and auto-create is disabled', () => {
+    // Arrange - Disable auto-create while allowing sanitisation adjustments
+    const { database } = setupInitialisedDatabase({
+      autoCreateCollections: false,
+      stripDisallowedCollectionNameCharacters: true
+    });
+    const unsanitisedName = 'invalid/name';
+
+    // Act & Assert - Resolution failure should surface the original unsanitised name
+    expect(() => database.getCollection(unsanitisedName)).toThrowError(
+      "Collection 'invalid/name' does not exist and auto-create is disabled"
+    );
   });
 
   it('should list all collections that have been created', () => {

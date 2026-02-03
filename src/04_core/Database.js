@@ -208,26 +208,7 @@ class Database {
    */
   collection(name) {
     const resolvedName = this._validateCollectionName(name);
-
-    // Check if collection already exists in memory
-    if (this.collections.has(resolvedName)) {
-      return this.collections.get(resolvedName);
-    }
-    
-    // Check if collection exists in MasterIndex (single source of truth)
-    const miCollection = this._masterIndex.getCollection(resolvedName);
-    if (miCollection?.fileId) {
-      const collection = this._createCollectionObject(resolvedName, miCollection.fileId);
-      this.collections.set(resolvedName, collection);
-      return collection;
-    }
-    
-    // Auto-create if enabled
-    if (this.config.autoCreateCollections) {
-      return this.createCollection(name);
-    }
-    
-    throw new Error(`Collection '${name}' does not exist and auto-create is disabled`);
+    return this._resolveCollection(resolvedName, name);
   }
   
   /**
@@ -385,22 +366,35 @@ class Database {
    */
   getCollection(name) {
     const resolvedName = this._validateCollectionName(name);
-    // Return if already in memory
+    return this._resolveCollection(resolvedName, name);
+  }
+
+  /**
+   * Resolves the requested collection via cache or MasterIndex, optionally auto-creating when enabled.
+   *
+   * @param {string} resolvedName - Sanitised collection name used for lookup
+   * @param {string} originalName - Original collection name supplied by the caller
+   * @returns {Collection} Collection instance matching the resolved name
+   * @throws {Error} When the collection is missing and auto-create is disabled
+   * @private
+   */
+  _resolveCollection(resolvedName, originalName) {
     if (this.collections.has(resolvedName)) {
       return this.collections.get(resolvedName);
     }
-    // Load from MasterIndex if exists
-    const mi = this._masterIndex.getCollection(resolvedName);
-    if (mi?.fileId) {
-      const coll = this._createCollectionObject(resolvedName, mi.fileId);
-      this.collections.set(resolvedName, coll);
-      return coll;
+
+    const masterIndexEntry = this._masterIndex.getCollection(resolvedName);
+    if (masterIndexEntry?.fileId) {
+      const collection = this._createCollectionObject(resolvedName, masterIndexEntry.fileId);
+      this.collections.set(resolvedName, collection);
+      return collection;
     }
-    // Auto-create if configured
+
     if (this.config.autoCreateCollections) {
-      return this.createCollection(name);
+      return this.createCollection(originalName);
     }
-    throw new Error(`Collection '${name}' does not exist and auto-create is disabled`);
+
+    throw new Error(`Collection '${originalName}' does not exist and auto-create is disabled`);
   }
 
   /**
@@ -419,33 +413,12 @@ class Database {
    * @throws {Error} When index file cannot be loaded or is corrupted
    */
   loadIndex() {
-  // Lazily ensure index file exists before reading
-  this.ensureIndexFile();
+    // Lazily ensure index file exists before reading
+    this.ensureIndexFile();
     
     try {
       const indexData = this._fileService.readFile(this.indexFileId);
-      
-      // Validate that we have a valid object
-      if (typeof indexData !== 'object' || indexData === null) {
-        throw new Error('Index file contains invalid data structure');
-      }
-      
-      // Validate required structure and repair if possible
-      if (!indexData.collections) {
-        this._logger.warn('Index file missing collections property, repairing');
-        indexData.collections = {};
-      }
-      if (!indexData.lastUpdated) {
-        this._logger.warn('Index file missing lastUpdated property, repairing');
-        indexData.lastUpdated = new Date();
-      }
-      
-      // Validate collections structure
-      if (typeof indexData.collections !== 'object') {
-        throw new TypeError('Index file collections property is corrupted');
-      }
-      
-      return indexData;
+      return this._normaliseIndexData(indexData);
       
     } catch (error) {
       // Check if this is a JSON parsing error (various ways it might be indicated)
@@ -623,7 +596,7 @@ class Database {
    */
   _addCollectionToIndex(name, driveFileId) {
     try {
-  const indexData = this.loadIndex();
+      const indexData = this.loadIndex();
       
       indexData.collections[name] = {
         name: name,
@@ -657,7 +630,7 @@ class Database {
    */
   _removeCollectionFromIndex(name) {
     try {
-  const indexData = this.loadIndex();
+      const indexData = this.loadIndex();
       
       delete indexData.collections[name];
       indexData.lastUpdated = new Date();
@@ -780,6 +753,77 @@ class Database {
     }
     return sanitised;
   }
+  /**
+   * Normalises the Drive index payload before use.
+   *
+   * Ensures the JSON payload is an object, backfills missing structural fields,
+   * and surfaces explicit errors when corruption cannot be repaired. Repairs
+   * include creating an empty collections map and restoring the lastUpdated
+   * timestamp when the persisted data omits them.
+   *
+   * @param {Object} indexData - Raw content loaded from the index file.
+   * @returns {Object} Normalised index data ready for persistence operations.
+   * @throws {Error} When the payload is not an object structure.
+   * @throws {TypeError} When the collections property exists but is not an object.
+   * @private
+   */
+  _normaliseIndexData(indexData) {
+    this._assertIndexObject(indexData);
+    this._ensureCollectionsMap(indexData);
+    this._ensureLastUpdated(indexData);
+    return indexData;
+  }
+
+  /**
+   * Guards that the index payload is an object structure before repair attempts.
+   *
+   * @param {Object} indexData - Payload read from Drive.
+   * @throws {Error} When the payload is null or not an object.
+   * @private
+   */
+  _assertIndexObject(indexData) {
+    if (typeof indexData !== 'object' || indexData === null || Array.isArray(indexData)) {
+      throw new Error('Index file contains invalid data structure');
+    }
+  }
+
+  /**
+   * Ensures the collections map exists and is an object, repairing when possible.
+   *
+   * @param {Object} indexData - Payload read from Drive.
+   * @throws {TypeError} When the collections property exists but is not an object.
+   * @private
+   */
+  _ensureCollectionsMap(indexData) {
+    if (!indexData.collections) {
+      this._logger.warn('Index file missing collections property, repairing');
+      indexData.collections = {};
+      return;
+    }
+
+    if (
+      indexData.collections === null ||
+      typeof indexData.collections !== 'object' ||
+      Array.isArray(indexData.collections)
+    ) {
+      throw new TypeError('Index file collections property is corrupted');
+    }
+  }
+
+  /**
+   * Restores the lastUpdated timestamp when absent from the persisted payload.
+   *
+   * @param {Object} indexData - Payload read from Drive.
+   * @private
+   */
+  _ensureLastUpdated(indexData) {
+    if (!indexData.lastUpdated) {
+      this._logger.warn('Index file missing lastUpdated property, repairing');
+      indexData.lastUpdated = new Date();
+    }
+  }
+
+
 
 
 }
