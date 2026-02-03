@@ -21,13 +21,13 @@ class GASDBError extends Error {
     this.code = code;
     this.context = context;
     this.timestamp = new Date();
-    
+
     // Maintains proper stack trace for where error was thrown (Node.js only)
     if (Error.captureStackTrace) {
       Error.captureStackTrace(this, this.constructor);
     }
   }
-  
+
   /**
    * Convert error to JSON representation
    * @returns {Object} JSON representation of the error
@@ -104,7 +104,7 @@ class LockTimeoutError extends GASDBError {
     super(message, 'LOCK_TIMEOUT', { resource, timeout });
   }
 }
- 
+
 /**
  * File I/O error
  */
@@ -328,7 +328,6 @@ class CoordinationTimeoutError extends GASDBError {
  * ErrorHandler - Main error handling utility class
  */
 class ErrorHandler {
-  
   /**
    * Create a new error of the specified type
    * @param {string} errorType - The error type name
@@ -342,7 +341,7 @@ class ErrorHandler {
     }
     return new ErrorClass(...args);
   }
-  
+
   /**
    * Handle an error with appropriate logging and optional re-throwing
    * @param {Error} error - The error to handle
@@ -355,19 +354,19 @@ class ErrorHandler {
       type: error.constructor.name,
       message: error.message
     };
-    
+
     if (error instanceof GASDBError) {
       errorInfo.code = error.code;
       errorInfo.errorContext = error.context;
     }
-    
+
     JDbLogger.error(`Error in ${context}: ${error.message}`, errorInfo);
-    
+
     if (rethrow) {
       throw error;
     }
   }
-  
+
   /**
    * Wrap a function with error handling
    * @param {Function} fn - The function to wrap
@@ -375,7 +374,7 @@ class ErrorHandler {
    * @returns {Function} The wrapped function
    */
   static wrapFunction(fn, context) {
-    return function(...args) {
+    return function (...args) {
       try {
         return fn.apply(this, args);
       } catch (error) {
@@ -383,7 +382,7 @@ class ErrorHandler {
       }
     };
   }
-  
+
   /**
    * Validate that a value is not null or undefined
    * @param {*} value - The value to validate
@@ -394,7 +393,7 @@ class ErrorHandler {
     // Delegate to ValidationUtils for standardised validation
     Validate.required(value, name);
   }
-  
+
   /**
    * Validate that a value is of the expected type
    * @param {*} value - The value to validate
@@ -408,7 +407,7 @@ class ErrorHandler {
       throw new Error(`Parameter ${name} must be of type ${expectedType}, got ${actualType}`);
     }
   }
-  
+
   /**
    * Validate that a string is not empty
    * @param {string} value - The string to validate
@@ -421,7 +420,7 @@ class ErrorHandler {
       throw new Error(`Parameter ${name} cannot be empty`);
     }
   }
-  
+
   /**
    * Validate that an array contains elements
    * @param {Array} value - The array to validate
@@ -436,7 +435,7 @@ class ErrorHandler {
       throw new Error(`Parameter ${name} cannot be empty`);
     }
   }
-  
+
   /**
    * Validate that a value is within a specific range
    * @param {number} value - The value to validate
@@ -451,7 +450,7 @@ class ErrorHandler {
       throw new Error(`Parameter ${name} must be between ${min} and ${max}, got ${value}`);
     }
   }
-  
+
   /**
    * Check if an error is of a specific type
    * @param {Error} error - The error to check
@@ -462,7 +461,7 @@ class ErrorHandler {
     const ErrorClass = ErrorHandler.ErrorTypes[errorType];
     return ErrorClass && error instanceof ErrorClass;
   }
-  
+
   /**
    * Extract error information for logging or API responses
    * @param {Error} error - The error to extract information from
@@ -474,16 +473,16 @@ class ErrorHandler {
       message: error.message,
       timestamp: new Date()
     };
-    
+
     if (error instanceof GASDBError) {
       info.code = error.code;
       info.context = error.context;
       info.errorTimestamp = error.timestamp;
     }
-    
+
     return info;
   }
-  
+
   /**
    * Detects if someone is trying to JSON.parse() an already-parsed object
    * Provides helpful error message for this common mistake
@@ -495,13 +494,13 @@ class ErrorHandler {
   static detectDoubleParsing(data, parseError, context = 'JSON parsing') {
     // Check if the "JSON string" is actually an object
     if (typeof data === 'object' && data !== null) {
-      const errorMessage = 
+      const errorMessage =
         `Attempted to JSON.parse() an already-parsed object in ${context}. ` +
         'FileOperations and FileService return parsed JavaScript objects, not JSON strings. ' +
         'Use the returned object directly instead of calling JSON.parse() on it. ' +
         '\n\n' +
         'Common fix: Change "JSON.parse(fileService.readFile(id))" to "fileService.readFile(id)"';
-      
+
       JDbLogger.error('Double JSON parsing detected', {
         context,
         dataType: typeof data,
@@ -510,7 +509,7 @@ class ErrorHandler {
         originalError: parseError.message,
         suggestion: 'Remove JSON.parse() call - data is already parsed'
       });
-      
+
       throw new OperationError('Double JSON parsing error', errorMessage);
     }
   }

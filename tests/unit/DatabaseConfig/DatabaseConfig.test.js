@@ -1,6 +1,6 @@
 /**
  * DatabaseConfig.test.js - DatabaseConfig Class Tests (Vitest)
- * 
+ *
  * Comprehensive tests for the DatabaseConfig class including:
  * - Configuration creation and validation
  * - Default and custom values
@@ -12,7 +12,7 @@ import { describe, it, expect } from 'vitest';
 describe('DatabaseConfig Creation and Default Values', () => {
   it('should create DatabaseConfig with default values', () => {
     const config = new DatabaseConfig();
-    
+
     expect(config).not.toBeNull();
     expect(config.rootFolderId).toBeDefined();
     expect(config.autoCreateCollections).toBe(true);
@@ -37,9 +37,9 @@ describe('DatabaseConfig Creation and Default Values', () => {
       backupOnInitialise: true,
       stripDisallowedCollectionNameCharacters: true
     };
-    
+
     const config = new DatabaseConfig(customConfig);
-    
+
     expect(config.rootFolderId).toBe(customConfig.rootFolderId);
     expect(config.autoCreateCollections).toBe(false);
     expect(config.lockTimeout).toBe(60000);
@@ -57,9 +57,9 @@ describe('DatabaseConfig Creation and Default Values', () => {
       retryAttempts: 7,
       logLevel: 'WARN'
     };
-    
+
     const config = new DatabaseConfig(partialConfig);
-    
+
     expect(config.lockTimeout).toBe(45000);
     expect(config.retryAttempts).toBe(7);
     expect(config.retryDelayMs).toBe(1000);
@@ -74,7 +74,7 @@ describe('DatabaseConfig Creation and Default Values', () => {
   it('should preserve sanitisation flag through clone and serialization', () => {
     const config = new DatabaseConfig({ stripDisallowedCollectionNameCharacters: true });
     const clone = config.clone();
-    
+
     expect(clone.stripDisallowedCollectionNameCharacters).toBe(true);
 
     const serialised = clone.toJSON();
@@ -130,15 +130,15 @@ describe('DatabaseConfig Validation', () => {
     expect(() => {
       new DatabaseConfig({ logLevel: 'INVALID' });
     }).toThrow();
-    
+
     const configWithNull = new DatabaseConfig({ logLevel: null });
     expect(configWithNull.logLevel).toBe('INFO');
-    
+
     const configWithUndefined = new DatabaseConfig({ logLevel: undefined });
     expect(configWithUndefined.logLevel).toBe('INFO');
-    
+
     const validLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
-    validLevels.forEach(level => {
+    validLevels.forEach((level) => {
       const validConfig = new DatabaseConfig({ logLevel: level });
       expect(validConfig.logLevel).toBe(level);
     });
@@ -148,11 +148,11 @@ describe('DatabaseConfig Validation', () => {
     expect(() => {
       new DatabaseConfig({ autoCreateCollections: 'invalid' });
     }).toThrow();
-    
+
     expect(() => {
       new DatabaseConfig({ cacheEnabled: 'invalid' });
     }).toThrow();
-    
+
     expect(() => {
       new DatabaseConfig({ stripDisallowedCollectionNameCharacters: 'invalid' });
     }).toThrow();
@@ -177,18 +177,18 @@ describe('DatabaseConfig Validation', () => {
     const configWithEmpty = new DatabaseConfig({ rootFolderId: '' });
     expect(configWithEmpty.rootFolderId).toBeDefined();
     expect(configWithEmpty.rootFolderId.length).toBeGreaterThan(0);
-    
+
     const configWithNull = new DatabaseConfig({ rootFolderId: null });
     expect(configWithNull.rootFolderId).toBeDefined();
-    
+
     expect(() => {
       new DatabaseConfig({ rootFolderId: 123 });
     }).toThrow();
-    
+
     expect(() => {
       new DatabaseConfig({ rootFolderId: {} });
     }).toThrow();
-    
+
     const validConfig = new DatabaseConfig({ rootFolderId: 'test-folder-id' });
     expect(validConfig.rootFolderId).toBe('test-folder-id');
   });

@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Lock Release and Timeout Tests
- * 
+ *
  * Tests for CollectionCoordinator lock release and timeout behaviour.
  */
 
@@ -28,11 +28,12 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
    * @param {Object} config - Optional configuration overrides.
    * @returns {CollectionCoordinator} Coordinator instance ready for tests.
    */
-  const createCoordinator = (config = {}) => createTestCoordinator(collection, env.masterIndex, config);
+  const createCoordinator = (config = {}) =>
+    createTestCoordinator(collection, env.masterIndex, config);
 
   it('should release lock when exception is thrown during coordination', () => {
     const coordinator = createCoordinator();
-    
+
     expect(() => {
       coordinator.coordinate('testOperation', () => {
         throw new Error('test exception');
@@ -44,7 +45,7 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
     const coordinator = createCoordinator({
       lockTimeout: 500
     });
-    
+
     expect(() => {
       coordinator.coordinate('longOperation', () => {
         Utilities.sleep(600);

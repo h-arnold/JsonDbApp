@@ -14,7 +14,6 @@ const BACKOFF_BASE = 2;
  * conflict detection, and metadata synchronisation around core CRUD actions.
  */
 class CollectionCoordinator {
-
   /**
    * Create a new CollectionCoordinator
    * @param {Collection} collection - Collection instance to coordinate
@@ -66,8 +65,15 @@ class CollectionCoordinator {
         lockAcquired = true;
       } catch (e) {
         if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
-          this._logger.error('Lock acquisition timed out', { collection: name, operationId: opId, timeout: this._config.lockTimeout });
-          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeout);
+          this._logger.error('Lock acquisition timed out', {
+            collection: name,
+            operationId: opId,
+            timeout: this._config.lockTimeout
+          });
+          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+            operationName,
+            this._config.lockTimeout
+          );
         }
         throw e;
       }
@@ -83,8 +89,15 @@ class CollectionCoordinator {
       // Enforce coordination timeout on operation execution
       const elapsed = Date.now() - startTime;
       if (elapsed > this._config.lockTimeout) {
-        this._logger.error('Operation timed out', { collection: name, opId, timeout: this._config.lockTimeout });
-        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeout);
+        this._logger.error('Operation timed out', {
+          collection: name,
+          opId,
+          timeout: this._config.lockTimeout
+        });
+        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+          operationName,
+          this._config.lockTimeout
+        );
       }
 
       // Persist metadata updates
@@ -93,7 +106,11 @@ class CollectionCoordinator {
       return result;
     } catch (e) {
       // Log and rethrow
-      this._logger.error(`Operation ${operationName} failed`, { collection: name, opId, error: e.message });
+      this._logger.error(`Operation ${operationName} failed`, {
+        collection: name,
+        opId,
+        error: e.message
+      });
       throw e;
     } finally {
       if (lockAcquired) {
@@ -130,7 +147,7 @@ class CollectionCoordinator {
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
     const { retryAttempts, retryDelayMs, lockTimeout } = this._config;
-    
+
     let acquired = false;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
@@ -144,7 +161,11 @@ class CollectionCoordinator {
           Utilities.sleep(retryDelayMs * Math.pow(BACKOFF_BASE, attempt - 1));
         }
       } catch (e) {
-        this._logger.error('Unexpected error during lock acquisition attempt', { collection: name, operationId, error: e.message });
+        this._logger.error('Unexpected error during lock acquisition attempt', {
+          collection: name,
+          operationId,
+          error: e.message
+        });
         // Re-throw unexpected errors immediately, as they are not contention issues
         // and should not be handled by the standard retry/fail mechanism.
         throw e;
@@ -211,11 +232,11 @@ class CollectionCoordinator {
       }
     } catch (e) {
       // Log and wrap any failure in a MasterIndexError
-      this._logger.error('Master index metadata update failed', { collection: name, error: e.message });
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
-        'updateCollectionMetadata',
-        e.message
-      );
+      this._logger.error('Master index metadata update failed', {
+        collection: name,
+        error: e.message
+      });
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('updateCollectionMetadata', e.message);
     }
   }
 }

@@ -59,7 +59,9 @@ describe('MasterIndex Functionality', () => {
 
   it('should load existing master index from ScriptProperties', () => {
     const key = createMasterIndexKey();
-    const seededMetadata = new CollectionMetadata('existing', 'existing-file-id', { documentCount: 3 });
+    const seededMetadata = new CollectionMetadata('existing', 'existing-file-id', {
+      documentCount: 3
+    });
     const seededData = {
       version: 1,
       lastUpdated: new Date(),
@@ -236,7 +238,9 @@ describe('MasterIndex Functionality', () => {
     const key = createMasterIndexKey();
     scriptProperties.setProperty(key, '{corruptJson');
 
-    expect(() => new MasterIndex({ masterIndexKey: key })).toThrow(ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR);
+    expect(() => new MasterIndex({ masterIndexKey: key })).toThrow(
+      ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR
+    );
   });
 });
 
@@ -269,9 +273,13 @@ describe('Conflict Detection and Resolution', () => {
     const original = addTestCollection(masterIndex, 'conflictResolution', { documentCount: 5 });
     const originalToken = original.getModificationToken();
 
-    const resolution = masterIndex.resolveConflict('conflictResolution', {
-      documentCount: 8
-    }, 'LAST_WRITE_WINS');
+    const resolution = masterIndex.resolveConflict(
+      'conflictResolution',
+      {
+        documentCount: 8
+      },
+      'LAST_WRITE_WINS'
+    );
 
     expect(resolution.success).toBe(true);
     expect(resolution.data).toBeInstanceOf(CollectionMetadata);
@@ -335,10 +343,14 @@ describe('MasterIndex Integration', () => {
     });
 
     masterIndex.addCollection('metadataConflict', originalMetadata);
-    const resolution = masterIndex.resolveConflict('metadataConflict', {
-      documentCount: 8,
-      lastModified: new Date('2025-06-02T11:00:00Z')
-    }, 'LAST_WRITE_WINS');
+    const resolution = masterIndex.resolveConflict(
+      'metadataConflict',
+      {
+        documentCount: 8,
+        lastModified: new Date('2025-06-02T11:00:00Z')
+      },
+      'LAST_WRITE_WINS'
+    );
 
     const resolved = masterIndex.getCollection('metadataConflict');
     expect(resolution.success).toBe(true);

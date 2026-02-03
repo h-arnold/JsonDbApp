@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
+import {
+  setupTestEnvironment,
+  resetCollection
+} from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Insert Operations', () => {
   let env, docOps;
@@ -17,14 +20,14 @@ describe('DocumentOperations Insert Operations', () => {
   it('should insert document with automatic ID generation', () => {
     const testDoc = { name: 'Test User', email: 'test@example.com' };
     const result = docOps.insertDocument(testDoc);
-    
+
     expect(result).toBeDefined();
     expect(result._id).toBeDefined();
     expect(typeof result._id).toBe('string');
     expect(result._id.length).toBeGreaterThan(0);
     expect(result.name).toBe(testDoc.name);
     expect(result.email).toBe(testDoc.email);
-    
+
     env.collection._loadData();
     const savedDoc = env.collection._documents[result._id];
     expect(savedDoc).toBeDefined();
@@ -35,10 +38,10 @@ describe('DocumentOperations Insert Operations', () => {
     const customId = 'custom-id-123';
     const testDoc = { _id: customId, name: 'Test User', email: 'test@example.com' };
     const result = docOps.insertDocument(testDoc);
-    
+
     expect(result._id).toBe(customId);
     expect(result.name).toBe(testDoc.name);
-    
+
     env.collection._loadData();
     const savedDoc = env.collection._documents[customId];
     expect(savedDoc).toBeDefined();
@@ -48,9 +51,9 @@ describe('DocumentOperations Insert Operations', () => {
     const duplicateId = 'duplicate-id-123';
     const firstDoc = { _id: duplicateId, name: 'First User' };
     const secondDoc = { _id: duplicateId, name: 'Second User' };
-    
+
     docOps.insertDocument(firstDoc);
-    
+
     expect(() => {
       docOps.insertDocument(secondDoc);
     }).toThrow(ConflictError);

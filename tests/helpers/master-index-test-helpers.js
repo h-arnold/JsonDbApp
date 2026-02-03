@@ -37,9 +37,10 @@ export const createMasterIndexKey = () => {
  * @returns {{ key: string, masterIndex: MasterIndex }} Master index key and instance.
  */
 export const createTestMasterIndex = (config = {}) => {
-  const masterIndexKey = typeof config.masterIndexKey === 'string'
-    ? registerMasterIndexKey(config.masterIndexKey)
-    : createMasterIndexKey();
+  const masterIndexKey =
+    typeof config.masterIndexKey === 'string'
+      ? registerMasterIndexKey(config.masterIndexKey)
+      : createMasterIndexKey();
   const masterIndex = new MasterIndex({ ...config, masterIndexKey });
   return { key: masterIndexKey, masterIndex };
 };

@@ -45,7 +45,7 @@ class DatabaseCollectionManagement {
    * @param {string} resolvedName - Sanitised collection name
    * @param {string} originalName - Original collection name supplied by caller
    * @returns {Collection} Newly created collection instance
-    * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} When creation fails or collection already exists
+   * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} When creation fails or collection already exists
    */
   createCollection(resolvedName, originalName) {
     const db = this._database;
@@ -83,11 +83,7 @@ class DatabaseCollectionManagement {
       };
 
       const fileName = resolvedName + '_collection.json';
-      const driveFileId = db._fileService.createFile(
-        fileName,
-        initialData,
-        db.config.rootFolderId
-      );
+      const driveFileId = db._fileService.createFile(fileName, initialData, db.config.rootFolderId);
 
       const collection = db._createCollectionObject(resolvedName, driveFileId);
       db.collections.set(resolvedName, collection);
@@ -150,7 +146,7 @@ class DatabaseCollectionManagement {
    * @param {string} resolvedName - Sanitised collection name
    * @param {string} originalName - Original collection name supplied by caller
    * @returns {boolean} True when collection removed successfully
-    * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} When deletion fails
+   * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} When deletion fails
    */
   dropCollection(resolvedName, originalName) {
     const db = this._database;
@@ -212,7 +208,7 @@ class DatabaseCollectionManagement {
    * @param {string} resolvedName - Sanitised collection name for lookup
    * @param {string} originalName - Original collection name supplied by caller
    * @returns {Collection} Collection instance
-    * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} When collection is missing and auto-creation is disabled
+   * @throws {ErrorHandler.ErrorTypes.OPERATION_ERROR} When collection is missing and auto-creation is disabled
    * @private
    */
   _resolveCollection(resolvedName, originalName) {
@@ -249,7 +245,10 @@ class DatabaseCollectionManagement {
    * @private
    */
   _createOperationError(operation, message, reason) {
-    const operationError = new ErrorHandler.ErrorTypes.OPERATION_ERROR(operation, reason || message);
+    const operationError = new ErrorHandler.ErrorTypes.OPERATION_ERROR(
+      operation,
+      reason || message
+    );
     operationError.message = message;
     return operationError;
   }

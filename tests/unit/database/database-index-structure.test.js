@@ -114,7 +114,9 @@ describe('Database Index Structure', () => {
 
       // Assert - Collections are repaired and a warning is emitted
       expect(indexData.collections).toEqual({});
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[Database] Index file missing collections property, repairing'));
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing collections property, repairing')
+      );
     } finally {
       warnSpy.mockRestore();
     }
@@ -137,7 +139,9 @@ describe('Database Index Structure', () => {
 
       // Assert - lastUpdated should be repaired and warning generated
       expect(indexData.lastUpdated).toBeInstanceOf(Date);
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[Database] Index file missing lastUpdated property, repairing'));
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing lastUpdated property, repairing')
+      );
     } finally {
       warnSpy.mockRestore();
     }
@@ -161,7 +165,9 @@ describe('Database Index Structure', () => {
       // Assert - Helper repairs structure and logs the warning once
       const indexData = database.loadIndex();
       expect(indexData.collections).toHaveProperty('helperRepairAdd');
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[Database] Index file missing collections property, repairing'));
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing collections property, repairing')
+      );
     } finally {
       warnSpy.mockRestore();
     }
@@ -194,7 +200,9 @@ describe('Database Index Structure', () => {
       const indexData = database.loadIndex();
       expect(indexData.collections).not.toHaveProperty('helperRepairRemove');
       expect(indexData.lastUpdated).toBeInstanceOf(Date);
-      expect(warnSpy).toHaveBeenCalledWith(expect.stringContaining('[Database] Index file missing lastUpdated property, repairing'));
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing lastUpdated property, repairing')
+      );
     } finally {
       warnSpy.mockRestore();
     }

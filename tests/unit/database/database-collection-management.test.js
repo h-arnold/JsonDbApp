@@ -137,10 +137,14 @@ describe('Database collection management', () => {
     // Act & Assert - Resolution failure should surface the original unsanitised name
     try {
       database.collection(unsanitisedName);
-      throw new Error('Expected OperationError when sanitised lookup fails with auto-create disabled');
+      throw new Error(
+        'Expected OperationError when sanitised lookup fails with auto-create disabled'
+      );
     } catch (error) {
       expect(error).toBeInstanceOf(OperationError);
-      expect(error.message).toBe("Collection 'invalid/name' does not exist and auto-create is disabled");
+      expect(error.message).toBe(
+        "Collection 'invalid/name' does not exist and auto-create is disabled"
+      );
     }
   });
 
@@ -155,10 +159,14 @@ describe('Database collection management', () => {
     // Act & Assert - Resolution failure should surface the original unsanitised name
     try {
       database.getCollection(unsanitisedName);
-      throw new Error('Expected OperationError when sanitised getCollection fails with auto-create disabled');
+      throw new Error(
+        'Expected OperationError when sanitised getCollection fails with auto-create disabled'
+      );
     } catch (error) {
       expect(error).toBeInstanceOf(OperationError);
-      expect(error.message).toBe("Collection 'invalid/name' does not exist and auto-create is disabled");
+      expect(error.message).toBe(
+        "Collection 'invalid/name' does not exist and auto-create is disabled"
+      );
     }
   });
 

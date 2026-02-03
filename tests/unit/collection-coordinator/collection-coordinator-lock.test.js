@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Lock Tests
- * 
+ *
  * Tests for CollectionCoordinator.acquireOperationLock.
  */
 
@@ -25,12 +25,13 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
    * @param {Object} config - Optional coordinator configuration overrides.
    * @returns {CollectionCoordinator} Configured coordinator instance.
    */
-  const createCoordinator = (config = {}) => createTestCoordinator(collection, env.masterIndex, config);
+  const createCoordinator = (config = {}) =>
+    createTestCoordinator(collection, env.masterIndex, config);
 
   describe('Retry Success', () => {
     it('should successfully acquire lock with default configuration', () => {
       const coordinator = createCoordinator();
-      
+
       expect(() => {
         coordinator.acquireOperationLock('test-op-id');
       }).not.toThrow();
@@ -40,13 +41,13 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
   describe('Retry Failure', () => {
     it('should throw LOCK_ACQUISITION_FAILURE when lock already held', () => {
       env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 30000);
-      
+
       const coordinator = createCoordinator({
         lockTimeout: 500,
         retryAttempts: 2,
         retryDelayMs: 50
       });
-      
+
       expect(() => {
         coordinator.acquireOperationLock('test-op-id-2');
       }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);

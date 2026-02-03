@@ -97,17 +97,23 @@ class FieldPathUtils {
    */
   _normalisePath(fieldPath, operation) {
     if (Array.isArray(fieldPath)) {
-      const cloned = fieldPath.map(segment => this._coerceSegment(segment, fieldPath, operation));
+      const cloned = fieldPath.map((segment) => this._coerceSegment(segment, fieldPath, operation));
       this._validateSegments(cloned, operation);
       return Object.freeze(cloned.slice());
     }
 
     if (typeof fieldPath !== 'string' || fieldPath.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('fieldPath', fieldPath, `${operation} requires a non-empty string path`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'fieldPath',
+        fieldPath,
+        `${operation} requires a non-empty string path`
+      );
     }
 
     if (!this._cache.has(fieldPath)) {
-      const rawSegments = fieldPath.split('.').map(segment => this._coerceSegment(segment, fieldPath, operation));
+      const rawSegments = fieldPath
+        .split('.')
+        .map((segment) => this._coerceSegment(segment, fieldPath, operation));
       this._validateSegments(rawSegments, operation);
       this._cache.set(fieldPath, Object.freeze(rawSegments.slice()));
     }
@@ -122,7 +128,7 @@ class FieldPathUtils {
    * @param {string} operation - Operation name for error reporting
    */
   _validateSegments(segments, operation) {
-    segments.forEach(segment => this._validateSegment(segment, segments, operation));
+    segments.forEach((segment) => this._validateSegment(segment, segments, operation));
   }
 
   /**
@@ -134,11 +140,19 @@ class FieldPathUtils {
    */
   _validateSegment(segment, segments, operation) {
     if (this._isSegmentMissing(segment)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('fieldPath', segments.join('.'), `${operation} cannot operate on empty path segments`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'fieldPath',
+        segments.join('.'),
+        `${operation} cannot operate on empty path segments`
+      );
     }
 
     if (this._isPrototypeSegment(segment)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('fieldPath', segments.join('.'), `${operation} cannot target prototype mutation segment "${segment}"`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'fieldPath',
+        segments.join('.'),
+        `${operation} cannot target prototype mutation segment "${segment}"`
+      );
     }
   }
 
@@ -159,7 +173,11 @@ class FieldPathUtils {
       return String(segment);
     }
 
-    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('fieldPath', originalPath, `${operation} requires string segments or non-negative integers`);
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+      'fieldPath',
+      originalPath,
+      `${operation} requires string segments or non-negative integers`
+    );
   }
 
   /**
@@ -169,7 +187,11 @@ class FieldPathUtils {
    */
   _assertTraversableTarget(target) {
     if (!this._isTraversable(target)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('target', target, 'Target must be an object when setting field values');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'target',
+        target,
+        'Target must be an object when setting field values'
+      );
     }
   }
 
@@ -181,7 +203,11 @@ class FieldPathUtils {
    */
   _assertNonEmptySegments(segments, fieldPath) {
     if (segments.length === 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('fieldPath', fieldPath, 'Field path must contain at least one segment');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'fieldPath',
+        fieldPath,
+        'Field path must contain at least one segment'
+      );
     }
   }
 

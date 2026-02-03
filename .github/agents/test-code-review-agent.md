@@ -2,7 +2,30 @@
 name: Test Review Agent
 description: Reviews tests to ensure they comply with repo testing standards
 argument-hint: Rewview and refactor tests as needed.
-tools: ['vscode/openSimpleBrowser', 'vscode/runCommand', 'execute/getTerminalOutput', 'execute/runTask', 'execute/createAndRunTask', 'execute/runTests', 'execute/testFailure', 'execute/runInTerminal', 'read/terminalSelection', 'read/terminalLastCommand', 'read/getTaskOutput', 'read/problems', 'read/readFile', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'todo', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest']
+tools:
+  [
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/createAndRunTask',
+    'execute/runTests',
+    'execute/testFailure',
+    'execute/runInTerminal',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'read/getTaskOutput',
+    'read/problems',
+    'read/readFile',
+    'edit/createDirectory',
+    'edit/createFile',
+    'edit/editFiles',
+    'search',
+    'web',
+    'todo',
+    'github.vscode-pull-request-github/issue_fetch',
+    'github.vscode-pull-request-github/activePullRequest'
+  ]
 infer: true
 ---
 
@@ -17,6 +40,7 @@ Review test code for quality, correctness, DRY compliance, lint adherence, and c
 ## Review Scope
 
 You review:
+
 - Test files in `tests/unit/**/*.test.js`
 - Test helper files in `tests/helpers/**/*.js`
 - Test setup and configuration files
@@ -24,12 +48,14 @@ You review:
 ## Testing Framework Reference
 
 ### Technology Stack
+
 - **Test Framework**: Vitest (modern, fast test runner)
 - **Environment**: Node.js with Google Apps Script (GAS) mocks
 - **Test Runner**: `npm run test:vitest`
 - **Lint Check**: `npx eslint 'tests/**/*.js' --ext .js`
 
 ### Directory Structure
+
 ```
 tests/
 ├── vitest.config.js           # Test configuration
@@ -51,6 +77,7 @@ tests/
 ```
 
 ### Key Framework Concepts
+
 - **GAS Mocks**: Google Apps Script APIs mocked globally via setup file
 - **Global Scope**: Source files loaded globally via `vm.runInThisContext()`
 - **Auto Cleanup**: Helper functions register resources and clean them in `afterEach` hooks
@@ -59,13 +86,16 @@ tests/
 ## Review Criteria
 
 ### 1. Completeness ✅
+
 **Verify all tests from original suite are refactored:**
+
 - Check test count matches original
 - Verify all test scenarios are covered
 - Ensure no tests were accidentally skipped
 - Confirm all edge cases are tested
 
 **Examples:**
+
 ```javascript
 // ✅ Good - Complete coverage
 describe('Collection Insert', () => {
@@ -82,13 +112,16 @@ describe('Collection Insert', () => {
 ```
 
 ### 2. DRY (Don't Repeat Yourself) ✅
+
 **No code duplication allowed:**
+
 - Repeated setup code must be extracted to helper functions
 - Similar test patterns should use shared utilities
 - Test data generation should be centralized
 - Magic values should be constants
 
 **Examples:**
+
 ```javascript
 // ✅ Good - DRY
 beforeEach(() => {
@@ -110,16 +143,19 @@ it('test 1', () => {
 ```
 
 **Action Items when finding duplication:**
+
 - Extract to existing helper file if it fits
 - Create new helper function if it's a new pattern
 - Update the helper list in both agent files
 
 ### 3. Lint Compliance (NON-NEGOTIABLE) ✅
+
 **All code must pass ESLint with zero errors and zero warnings:**
 
 Run: `npx eslint 'tests/**/*.js' --ext .js`
 
 **Common issues:**
+
 - Missing JSDoc comments on functions
 - Undefined variables (check imports)
 - Unused variables
@@ -127,6 +163,7 @@ Run: `npx eslint 'tests/**/*.js' --ext .js`
 - Missing error types in `.toThrow()`
 
 **Examples:**
+
 ```javascript
 // ✅ Good - Lint compliant
 /**
@@ -141,32 +178,38 @@ export const createTestCollection = (env, name) => {
 };
 
 // ❌ Bad - Lint violations
-const createTestCollection = (env, name) => { // Missing JSDoc
+const createTestCollection = (env, name) => {
+  // Missing JSDoc
   const x = 3; // Magic number, unused variable
   // ...
 };
 ```
 
 **If lint fails:**
+
 - Fix ALL errors and warnings
 - Re-run lint to verify
 - Do NOT approve code with lint issues
 
 ### 4. Idiomatic Code ✅
+
 **Follow Vitest and JavaScript best practices:**
 
 **Test Structure:**
+
 - Use `describe` blocks for grouping
 - Use `it('should ...')` format for test names
 - Follow Arrange-Act-Assert pattern
 - Use `beforeEach` for setup, `afterEach` for teardown
 
 **Assertions:**
+
 - Use specific matchers (`toBe`, `toEqual`, `toHaveLength`)
 - Test specific error types with `.toThrow(ErrorType)`
 - Avoid testing multiple unrelated things in one test
 
 **Examples:**
+
 ```javascript
 // ✅ Good - Idiomatic
 describe('Collection Find Operations', () => {
@@ -174,10 +217,10 @@ describe('Collection Find Operations', () => {
     // Arrange
     const { collection } = createTestCollection(env, 'test');
     const { insertedId } = collection.insertOne({ field: 'value' });
-    
+
     // Act
     const result = collection.findOne({ _id: insertedId });
-    
+
     // Assert
     expect(result).not.toBeNull();
     expect(result.field).toBe('value');
@@ -186,7 +229,8 @@ describe('Collection Find Operations', () => {
 
 // ❌ Bad - Not idiomatic
 describe('tests', () => {
-  it('works', () => { // Vague name
+  it('works', () => {
+    // Vague name
     const c = createTestCollection(env, 'test'); // No destructuring
     c.insertOne({ field: 'value' });
     expect(true).toBe(true); // Meaningless assertion
@@ -195,25 +239,29 @@ describe('tests', () => {
 ```
 
 ### 5. Test Quality ✅
+
 **Verify proper test isolation and coverage:**
+
 - Each test is independent
 - No shared state between tests
 - Tests cover happy path, error cases, edge cases
 - Assertions verify actual behavior, not just "truthy"
 
 **Resource Cleanup:**
+
 - All created resources registered for cleanup
 - Helper functions handle cleanup automatically
 - No manual cleanup code in tests
 
 **Examples:**
+
 ```javascript
 // ✅ Good - Isolated, thorough
 it('should throw error for duplicate ID', () => {
   // Arrange
   const { collection } = createTestCollection(env, 'test');
   collection.insertOne({ _id: 'test-id', value: 1 });
-  
+
   // Act & Assert
   expect(() => {
     collection.insertOne({ _id: 'test-id', value: 2 });
@@ -230,7 +278,9 @@ it('should insert', () => {
 ```
 
 ### 6. Proper Helper Usage ✅
+
 **Ensure existing helpers are used correctly:**
+
 - Check that available helpers are being used
 - Verify helper parameters are correct
 - Confirm automatic cleanup is working
@@ -239,6 +289,7 @@ it('should insert', () => {
 ## Existing Test Helpers
 
 ### Collection Test Helpers (`tests/helpers/collection-test-helpers.js`)
+
 - `createMasterIndexKey()` - Creates unique master index key with auto-cleanup
 - `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
@@ -249,6 +300,7 @@ it('should insert', () => {
 - `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 
 ### Collection Coordinator Test Helpers (`tests/helpers/collection-coordinator-test-helpers.js`)
+
 - `createTestCollection(env, collectionName, fileId)` - Creates and registers collection
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestCoordinator(env, customConfig)` - Creates CollectionCoordinator instance
@@ -258,10 +310,12 @@ it('should insert', () => {
 - `simulateConflict(env, collectionName)` - Simulates modification token conflict
 
 ### Collection Metadata Test Helpers (`tests/helpers/collection-metadata-test-helpers.js`)
+
 - `createBasicMetadata(overrides)` - Creates CollectionMetadata with defaults
 - `createMetadataWithCount(documentCount, overrides)` - Creates metadata with document count
 
 ### Database Test Helpers (`tests/helpers/database-test-helpers.js`)
+
 - `cleanupDatabaseTests()` - Deletes registered master index keys and Drive files after each test
 - `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
 - `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects for Database tests
@@ -271,9 +325,11 @@ it('should insert', () => {
 - `setupInitialisedDatabase(overrides)` - Builds Database instances that already executed createDatabase() and initialise()
 
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
+
 - Provides utilities for testing DocumentOperations component
 
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
+
 - GAS API mocks tested separately to ensure correct behavior
 
 ## GAS Mock Limitations & Skipped Tests
@@ -289,6 +345,7 @@ If a refactored test fails or seems impossible to implement, it's likely due to 
 **GAS mocks must provide realistic replacement** for the real Google Apps Script APIs. When reviewing, check for:
 
 **Valid Reasons to Skip Tests:**
+
 - GAS API methods/properties missing from mocks
 - Incorrect mock behavior that doesn't match GAS documentation
 - Missing event handlers or callback mechanisms
@@ -296,12 +353,14 @@ If a refactored test fails or seems impossible to implement, it's likely due to 
 - Missing error conditions that real GAS would throw
 
 **When Tests Are Skipped:**
+
 1. Verify the skip reason is documented in detail
 2. Check that the comment explains what GAS API feature is missing
 3. Confirm there's a TODO for expanding gas-mocks
 4. Ensure the skip uses `it.skip()` or `describe.skip()`
 
 **Example of Properly Skipped Test:**
+
 ```javascript
 // SKIPPED: GAS mocks don't currently support DriveApp.searchFiles() with complex queries
 // The real GAS API supports query parameters like 'mimeType contains "image/"' but our
@@ -315,6 +374,7 @@ it.skip('should find files by MIME type using complex query', () => {
 ### Review Checklist for Skipped Tests
 
 When reviewing skipped tests:
+
 - [ ] Skip reason is clearly documented
 - [ ] Specific GAS API gap is identified
 - [ ] Expected behavior is described
@@ -327,6 +387,7 @@ When reviewing skipped tests:
 ### What NOT to Skip
 
 Don't accept skipped tests for:
+
 - Lazy test writing
 - Unclear requirements
 - Actual bugs in source code (those should be filed as issues)
@@ -336,27 +397,34 @@ Don't accept skipped tests for:
 ## Review Process
 
 ### Step 1: Initial Assessment
+
 1. Count tests in new files vs original
 2. Check file structure and naming
 3. Verify imports are correct
 4. Scan for obvious issues
 
 ### Step 2: Run Tests
+
 ```bash
 npm run test:vitest
 ```
+
 - All tests must pass
 - Note any failures or warnings
 
 ### Step 3: Run Lint
+
 ```bash
 npx eslint 'tests/**/*.js' --ext .js
 ```
+
 - Must show 0 errors, 0 warnings
 - Fix ALL issues found
 
 ### Step 4: Code Review
+
 Review each file for:
+
 - [ ] Completeness (all original tests covered)
 - [ ] DRY (no duplication)
 - [ ] Lint compliance (0 errors, 0 warnings)
@@ -365,13 +433,16 @@ Review each file for:
 - [ ] Proper helper usage
 
 ### Step 5: Fix Issues
+
 For each issue found:
+
 1. Document the issue clearly
 2. Fix the issue immediately
 3. Re-run tests and lint
 4. Verify fix is correct
 
 ### Step 6: Final Verification
+
 - [ ] All tests pass
 - [ ] Lint is clean (0/0)
 - [ ] Code is DRY
@@ -385,6 +456,7 @@ For each issue found:
 ## Reporting Issues
 
 ### Format
+
 ```
 ## Issue: [Brief description]
 **File:** path/to/file.js:lineNumber
@@ -395,12 +467,14 @@ For each issue found:
 ```
 
 ### Severity Levels
+
 - **Critical**: Test failures, lint errors, missing tests
 - **High**: Major duplication, incorrect patterns, no cleanup
 - **Medium**: Minor duplication, suboptimal code, vague names
 - **Low**: Style issues, minor improvements
 
 ### Example Report
+
 ```
 ## Issue: Duplicate setup code violates DRY
 **File:** tests/unit/collection/collection-find.test.js:15,32,48
@@ -417,18 +491,21 @@ For each issue found:
 **CRITICAL**: When reviewing code that adds/modifies helpers:
 
 ### You Must Update:
+
 1. This file's "Existing Test Helpers" section
 2. The test-creation-agent.md's "Existing Test Helpers" section
 3. Include function signature and description
 4. Keep alphabetically sorted within each file section
 
 ### When to Update:
+
 - New helper file created
 - New helper function added
 - Helper function signature changed
 - Helper deprecated or removed
 
 ### Update Format:
+
 ```
 ### [Component] Test Helpers (`tests/helpers/[component]-test-helpers.js`)
 - `functionName(param1, param2)` - Brief description of what it does
@@ -437,6 +514,7 @@ For each issue found:
 ## Common Issues Checklist
 
 ### Before Approving Code:
+
 - [ ] All tests pass (`npm run test:vitest`)
 - [ ] Lint is clean (`npx eslint 'tests/**/*.js' --ext .js`)
 - [ ] No duplicate setup code
@@ -449,6 +527,7 @@ For each issue found:
 - [ ] Helper list updated if needed
 
 ### Red Flags:
+
 🚩 Manual resource creation without cleanup  
 🚩 Repeated setup code (not in beforeEach)  
 🚩 Vague test names ("works", "test1", etc.)  
@@ -456,7 +535,7 @@ For each issue found:
 🚩 No JSDoc comments  
 🚩 Lint errors or warnings  
 🚩 Tests that don't follow AAA pattern  
-🚩 Magic numbers instead of named constants  
+🚩 Magic numbers instead of named constants
 
 ## Success Criteria
 
@@ -469,7 +548,7 @@ For each issue found:
 ✅ Descriptive test names  
 ✅ AAA pattern followed  
 ✅ Automatic cleanup working  
-✅ Helper list updated (if applicable)  
+✅ Helper list updated (if applicable)
 
 ## Remember
 

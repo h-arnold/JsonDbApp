@@ -24,9 +24,9 @@ export default defineConfig([
       jsdoc
     },
     rules: {
-      'complexity': ['warn', 6],
-      'curly': ['warn', 'all'],
-      'eqeqeq': ['warn', 'always'],
+      complexity: ['warn', 6],
+      curly: ['warn', 'all'],
+      eqeqeq: ['warn', 'always'],
       'jsdoc/require-description': [
         'error',
         {
@@ -87,13 +87,7 @@ export default defineConfig([
     }
   },
   {
-    ignores: [
-      'eslint.config.js',  
-      'node_modules/',
-      'tests/data/',
-      '*.log',
-      '*.pid'
-    ]
+    ignores: ['eslint.config.js', 'node_modules/', 'tests/data/', '*.log', '*.pid']
   },
   prettierConfig
 ]);

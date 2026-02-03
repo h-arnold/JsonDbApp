@@ -11,7 +11,6 @@ A document database implemented in Google Apps Script using the Google Drive API
   - [Roadmap - priorities and next steps](#roadmap---priorities-and-next-steps)
   - [Docs](#docs)
 
-
 ## Who is this for?
 
 - You want a database with no external dependencies.
@@ -19,7 +18,6 @@ A document database implemented in Google Apps Script using the Google Drive API
 - You don't want to be endlessly debugging issues with transforming data structures to fit into a spreadsheet.
 - Your datasets are relatively small (collections no larger than 2GB so as not to exceed the GAS memory limits)
 - Traffic for your app is relatively low.
-
 
 ## But whhhyyyy?
 
@@ -32,11 +30,10 @@ Lots of reasons! Some of them good, some of them less so. The main ones are:
 
 ## Getting started
 
-[Make a copy of this project](https://drive.google.com/drive/u/0/folders/15YylpMppIdidm_G1kWN2D0ha6YAOWyom) in your Google Drive. 
+[Make a copy of this project](https://drive.google.com/drive/u/0/folders/15YylpMppIdidm_G1kWN2D0ha6YAOWyom) in your Google Drive.
 
- - If you plan on doing development work, use the version **with tests**.
- - If you just plan on using the library, use the version **without tests**. This makes the file much smaller and faster to load.
-
+- If you plan on doing development work, use the version **with tests**.
+- If you just plan on using the library, use the version **without tests**. This makes the file much smaller and faster to load.
 
 Connect this project as a Library in your Apps Script project (Resources > Libraries...).
 
@@ -60,7 +57,7 @@ function setupDb() {
 // Load existing database
 function getDb() {
   const config = {
-    masterIndexKey: 'myMasterIndex',
+    masterIndexKey: 'myMasterIndex'
     // rootFolderId: 'your-folder-id', // optional; where new files/backups are created
     // lockTimeout: 5000,              // optional; override defaults as needed
     // logLevel: 'INFO'                // optional
@@ -81,6 +78,7 @@ function demo() {
 ```
 
 Notes:
+
 - Use `masterIndexKey` (not `masterIndexName`).
 - Avoid `JSON.stringify(db)`; inspect specific values instead (e.g. `db.listCollections()`).
 - Write operations are in-memory until you call `collection.save()`. Batch multiple writes, then `save()` once to persist to Drive.
@@ -93,11 +91,13 @@ Current query support focuses on a small, fast subset:
 - Logical: $and, $or
 
 Notes:
+
 - Multiple top-level fields are implicitly ANDed (e.g. { a: 1, b: 2 }).
 - Nested fields are supported via dot notation (e.g. "profile.department").
 - Equality against arrays treats a scalar as a membership test (Mongo-style).
 
 See also:
+
 - Query details: [docs/developers/QueryEngine.md#supported-query-operators](docs/developers/QueryEngine.md#supported-query-operators)
 - Validation overview: [docs/developers/QueryEngine.md#query-validation-system](docs/developers/QueryEngine.md#query-validation-system)
 
@@ -110,6 +110,7 @@ Implemented MongoDB-style update operators:
 - Array: $push, $pull, $addToSet
 
 Notes:
+
 - Dot notation is supported for nested fields (e.g. "profile.name").
 - $push and $addToSet support the $each modifier for multiple values.
 - $addToSet enforces uniqueness; creates the array if missing; errors if target exists and isn’t an array.
@@ -117,6 +118,7 @@ Notes:
 - $pull removes matching elements; non-array or missing targets are a no-op. Object criteria support simple field predicates and basic comparison operators.
 
 See also:
+
 - Update API: [docs/developers/UpdateEngine.md#applyoperatorsdocument-updateops](docs/developers/UpdateEngine.md#applyoperatorsdocument-updateops)
 - Operator handlers: [docs/developers/UpdateEngine.md#private-operator-handlers](docs/developers/UpdateEngine.md#private-operator-handlers)
 - $each modifier: [docs/developers/UpdateEngine.md#each-modifier-in-array-operators](docs/developers/UpdateEngine.md#each-modifier-in-array-operators)
@@ -126,7 +128,7 @@ See also:
 ## Roadmap - priorities and next steps
 
 1. **Refactoring** - code isn't as tidy as I would like it to be, some classes are too large and the testing framework was made up as a I went along so could do with some work.
-2. **Implement file caching** using the GAS `CacheService` to speed up read and write operations. 
+2. **Implement file caching** using the GAS `CacheService` to speed up read and write operations.
 3. **Implement collection indexing** to speed up query operations, especially across collections.
 4. **Implement schema creation** and validation. For now, you can store any object with a `fromJSON` and a `toJSON` method, but it would be good to be able to define and enforce a schema.
 5. **Expand query and update operator support** to cover a larger subset of MongoDB syntax.
@@ -137,5 +139,3 @@ See also:
 
 - [Developer Documentation](docs/developers/README.md)
 - [TODO: User guide with advice on deployment, best practices etc.](TODO)
-
-

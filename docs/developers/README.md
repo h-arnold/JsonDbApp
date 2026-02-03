@@ -22,6 +22,7 @@ Use the top-level library functions instead of constructing classes directly:
 - `JsonDbApp.loadDatabase(config)` – load existing DB
 
 Within this repo (`old_tests/`), you can still use `new Database(config)` then call `createDatabase()`/`initialise()` explicitly.
+
 - [**clasp-watch.sh Documentation**](./clasp-watch.sh.md) - Continuous deployment script for automatic file watching and pushing to Google Apps Script
 - [**Collection Components**](./Collection_Components.md) - Detailed explanation of Collection, CollectionMetadata, and DocumentOperations classes for MongoDB-compatible document operations
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex

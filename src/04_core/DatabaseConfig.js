@@ -1,9 +1,9 @@
 /**
  * Database Configuration Class
- * 
+ *
  * Manages database configuration settings with validation and defaults.
  * Provides standardised configuration object for Database instances.
- * 
+ *
  * @class DatabaseConfig
  */
 /* exported DatabaseConfig */
@@ -19,10 +19,9 @@ const MIN_LOCK_TIMEOUT_MS = 500;
  * validation before use across the persistence layer.
  */
 class DatabaseConfig {
-  
   /**
    * Creates a new DatabaseConfig instance
-   * 
+   *
    * @param {Object} config - Configuration options
    * @param {string} [config.rootFolderId] - Root folder ID for database files
    * @param {boolean} [config.autoCreateCollections=true] - Auto-create collections when accessed
@@ -45,14 +44,15 @@ class DatabaseConfig {
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
     this.backupOnInitialise = config.backupOnInitialise ?? false;
-    this.stripDisallowedCollectionNameCharacters = config.stripDisallowedCollectionNameCharacters ?? false;
+    this.stripDisallowedCollectionNameCharacters =
+      config.stripDisallowedCollectionNameCharacters ?? false;
     // Validate configuration
     this._validateConfig();
   }
-  
+
   /**
    * Gets the default root folder ID
-   * 
+   *
    * @returns {string} Default root folder ID
    * @private
    */
@@ -64,46 +64,49 @@ class DatabaseConfig {
       throw new Error('Failed to get default root folder: ' + error.message);
     }
   }
-  
+
   /**
    * Validates the configuration parameters
-   * 
+   *
    * @throws {Error} When validation fails
    * @private
    */
   _validateConfig() {
-  // Use shared validation helpers for consistent error types
-  // lockTimeout must be a number and at least 500ms
-  Validate.number(this.lockTimeout, 'lockTimeout');
-  Validate.range(this.lockTimeout, MIN_LOCK_TIMEOUT_MS, Number.MAX_SAFE_INTEGER, 'lockTimeout');
+    // Use shared validation helpers for consistent error types
+    // lockTimeout must be a number and at least 500ms
+    Validate.number(this.lockTimeout, 'lockTimeout');
+    Validate.range(this.lockTimeout, MIN_LOCK_TIMEOUT_MS, Number.MAX_SAFE_INTEGER, 'lockTimeout');
 
-  // retryAttempts must be a positive integer
-  Validate.integer(this.retryAttempts, 'retryAttempts');
-  Validate.positiveNumber(this.retryAttempts, 'retryAttempts');
+    // retryAttempts must be a positive integer
+    Validate.integer(this.retryAttempts, 'retryAttempts');
+    Validate.positiveNumber(this.retryAttempts, 'retryAttempts');
 
-  // retryDelayMs must be a non-negative number
-  Validate.nonNegativeNumber(this.retryDelayMs, 'retryDelayMs');
+    // retryDelayMs must be a non-negative number
+    Validate.nonNegativeNumber(this.retryDelayMs, 'retryDelayMs');
 
-  // Validate log level against allowed values
-  const validLogLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
-  Validate.enum(this.logLevel, validLogLevels, 'logLevel');
+    // Validate log level against allowed values
+    const validLogLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
+    Validate.enum(this.logLevel, validLogLevels, 'logLevel');
 
-  // Optional string: rootFolderId
-  Validate.optional(this.rootFolderId, Validate.string, 'rootFolderId');
+    // Optional string: rootFolderId
+    Validate.optional(this.rootFolderId, Validate.string, 'rootFolderId');
 
-  // Boolean flags
-  Validate.boolean(this.autoCreateCollections, 'autoCreateCollections');
-  Validate.boolean(this.cacheEnabled, 'cacheEnabled');
-  Validate.boolean(this.backupOnInitialise, 'backupOnInitialise');
-  Validate.boolean(this.stripDisallowedCollectionNameCharacters, 'stripDisallowedCollectionNameCharacters');
+    // Boolean flags
+    Validate.boolean(this.autoCreateCollections, 'autoCreateCollections');
+    Validate.boolean(this.cacheEnabled, 'cacheEnabled');
+    Validate.boolean(this.backupOnInitialise, 'backupOnInitialise');
+    Validate.boolean(
+      this.stripDisallowedCollectionNameCharacters,
+      'stripDisallowedCollectionNameCharacters'
+    );
 
-  // Optional string: masterIndexKey
-  Validate.optional(this.masterIndexKey, Validate.string, 'masterIndexKey');
+    // Optional string: masterIndexKey
+    Validate.optional(this.masterIndexKey, Validate.string, 'masterIndexKey');
   }
-  
+
   /**
    * Creates a copy of this configuration
-   * 
+   *
    * @returns {DatabaseConfig} New configuration instance
    */
   clone() {
@@ -120,7 +123,7 @@ class DatabaseConfig {
       stripDisallowedCollectionNameCharacters: this.stripDisallowedCollectionNameCharacters
     });
   }
-  
+
   /**
    * toJSON hook for JSON.stringify
    * @returns {Object} Plain object with configuration and __type tag

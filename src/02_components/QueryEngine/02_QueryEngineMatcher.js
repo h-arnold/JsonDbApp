@@ -38,9 +38,9 @@ function evaluateLessThan(documentValue, operand) {
  * @type {Object<string, function(*, *): boolean>}
  */
 const COMPARISON_EVALUATORS = {
-  '$eq': evaluateEquality,
-  '$gt': evaluateGreaterThan,
-  '$lt': evaluateLessThan
+  $eq: evaluateEquality,
+  $gt: evaluateGreaterThan,
+  $lt: evaluateLessThan
 };
 
 /**
@@ -63,7 +63,7 @@ class QueryEngineMatcher {
    * @returns {Array<Object>} Matching documents.
    */
   filterDocuments(documents, query) {
-    return documents.filter(document => this._matchDocument(document, query));
+    return documents.filter((document) => this._matchDocument(document, query));
   }
 
   /**
@@ -119,7 +119,7 @@ class QueryEngineMatcher {
       return true;
     }
 
-    return clauses.every(condition => this._matchDocument(document, condition));
+    return clauses.every((condition) => this._matchDocument(document, condition));
   }
 
   /**
@@ -139,7 +139,7 @@ class QueryEngineMatcher {
       return false;
     }
 
-    return clauses.some(condition => this._matchDocument(document, condition));
+    return clauses.some((condition) => this._matchDocument(document, condition));
   }
 
   /**
@@ -178,7 +178,9 @@ class QueryEngineMatcher {
    * @private
    */
   _matchOperators(documentValue, operators) {
-    return Object.keys(operators).every(operator => this._evaluateOperator(documentValue, operator, operators[operator]));
+    return Object.keys(operators).every((operator) =>
+      this._evaluateOperator(documentValue, operator, operators[operator])
+    );
   }
 
   /**

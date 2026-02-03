@@ -25,12 +25,13 @@ const NEGATIVE_ONE = -1;
  * update components, including equality, ordering, and operator evaluation.
  */
 class ComparisonUtils {
-
   /**
    * Provide the list of supported comparison operators.
    * @returns {string[]} Supported operator names
    */
-  static get SUPPORTED_OPERATORS() { return ['$eq', '$gt', '$lt']; }
+  static get SUPPORTED_OPERATORS() {
+    return ['$eq', '$gt', '$lt'];
+  }
 
   /**
    * Determine deep / semantic equality between two values.
@@ -112,7 +113,9 @@ class ComparisonUtils {
     const { arrayContainsScalarForEq = true } = options;
     if (!ComparisonUtils.isOperatorObject(operatorObject)) {
       // Not an operator object -> treat as implicit $eq comparison
-      return ComparisonUtils.equals(actual, operatorObject, { arrayContainsScalar: arrayContainsScalarForEq });
+      return ComparisonUtils.equals(actual, operatorObject, {
+        arrayContainsScalar: arrayContainsScalarForEq
+      });
     }
 
     for (const op of Object.keys(operatorObject)) {
@@ -122,16 +125,23 @@ class ComparisonUtils {
       const expected = operatorObject[op];
       switch (op) {
         case '$eq':
-          if (!ComparisonUtils.equals(actual, expected, { arrayContainsScalar: arrayContainsScalarForEq })) return false;
+          if (
+            !ComparisonUtils.equals(actual, expected, {
+              arrayContainsScalar: arrayContainsScalarForEq
+            })
+          )
+            return false;
           break;
         case '$gt': {
           const cmp = ComparisonUtils.compareOrdering(actual, expected);
-            if (!(cmp > 0)) return false;
-          break; }
+          if (!(cmp > 0)) return false;
+          break;
+        }
         case '$lt': {
           const cmp = ComparisonUtils.compareOrdering(actual, expected);
-            if (!(cmp < 0)) return false;
-          break; }
+          if (!(cmp < 0)) return false;
+          break;
+        }
         default:
           // Exhaustive safeguard
           throw new InvalidQueryError(`Unsupported operator: ${op}`);
@@ -149,7 +159,7 @@ class ComparisonUtils {
     if (!Validate.isPlainObject(obj)) return false;
     const keys = Object.keys(obj);
     if (keys.length === 0) return false;
-    return keys.every(k => k.startsWith('$'));
+    return keys.every((k) => k.startsWith('$'));
   }
 
   /**

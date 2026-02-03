@@ -15,26 +15,45 @@ describe('ErrorHandler ErrorTypes', () => {
 
 describe('ErrorHandler createError', () => {
   it('should create DocumentNotFoundError', () => {
-    const error = ErrorHandler.createError('DOCUMENT_NOT_FOUND', { id: 'test123' }, 'testCollection');
+    const error = ErrorHandler.createError(
+      'DOCUMENT_NOT_FOUND',
+      { id: 'test123' },
+      'testCollection'
+    );
     expect(error).toBeInstanceOf(Error);
     expect(error.name).toBe('DocumentNotFoundError');
     expect(error.code).toBe('DOCUMENT_NOT_FOUND');
   });
 
   it('should create LockAcquisitionFailureError', () => {
-    const lockFail = ErrorHandler.createError('LOCK_ACQUISITION_FAILURE', 'resourceA', 'test reason');
+    const lockFail = ErrorHandler.createError(
+      'LOCK_ACQUISITION_FAILURE',
+      'resourceA',
+      'test reason'
+    );
     expect(lockFail.name).toBe('LockAcquisitionFailureError');
     expect(lockFail.code).toBe('LOCK_ACQUISITION_FAILURE');
   });
 
   it('should create ModificationConflictError', () => {
-    const modConflict = ErrorHandler.createError('MODIFICATION_CONFLICT', 'resourceB', 'token1', 'token2', 'conflict reason');
+    const modConflict = ErrorHandler.createError(
+      'MODIFICATION_CONFLICT',
+      'resourceB',
+      'token1',
+      'token2',
+      'conflict reason'
+    );
     expect(modConflict.name).toBe('ModificationConflictError');
     expect(modConflict.code).toBe('MODIFICATION_CONFLICT');
   });
 
   it('should create CoordinationTimeoutError', () => {
-    const coordTimeout = ErrorHandler.createError('COORDINATION_TIMEOUT', 'operationX', 1234, 'timeout reason');
+    const coordTimeout = ErrorHandler.createError(
+      'COORDINATION_TIMEOUT',
+      'operationX',
+      1234,
+      'timeout reason'
+    );
     expect(coordTimeout.name).toBe('CoordinationTimeoutError');
     expect(coordTimeout.code).toBe('COORDINATION_TIMEOUT');
   });
@@ -52,7 +71,12 @@ describe('ErrorHandler createError', () => {
     expect(lockTimeout.name).toBe('LockTimeoutError');
     expect(lockTimeout.code).toBe('LOCK_TIMEOUT');
 
-    const fileIO = ErrorHandler.createError('FILE_IO_ERROR', 'read', 'fileId123', new Error('fail'));
+    const fileIO = ErrorHandler.createError(
+      'FILE_IO_ERROR',
+      'read',
+      'fileId123',
+      new Error('fail')
+    );
     expect(fileIO.name).toBe('FileIOError');
     expect(fileIO.code).toBe('FILE_IO_ERROR');
 
@@ -68,7 +92,12 @@ describe('ErrorHandler createError', () => {
     expect(collNotFound.name).toBe('CollectionNotFoundError');
     expect(collNotFound.code).toBe('COLLECTION_NOT_FOUND');
 
-    const configErr = ErrorHandler.createError('CONFIGURATION_ERROR', 'settingA', 'bad', 'bad config');
+    const configErr = ErrorHandler.createError(
+      'CONFIGURATION_ERROR',
+      'settingA',
+      'bad',
+      'bad config'
+    );
     expect(configErr.name).toBe('ConfigurationError');
     expect(configErr.code).toBe('CONFIGURATION_ERROR');
 
@@ -84,7 +113,12 @@ describe('ErrorHandler createError', () => {
     expect(quota.name).toBe('QuotaExceededError');
     expect(quota.code).toBe('QUOTA_EXCEEDED');
 
-    const fileFmt = ErrorHandler.createError('INVALID_FILE_FORMAT', 'fileId777', 'json', 'bad format');
+    const fileFmt = ErrorHandler.createError(
+      'INVALID_FILE_FORMAT',
+      'fileId777',
+      'json',
+      'bad format'
+    );
     expect(fileFmt.name).toBe('InvalidFileFormatError');
     expect(fileFmt.code).toBe('INVALID_FILE_FORMAT');
 

@@ -71,8 +71,12 @@ class MasterIndexMetadataNormaliser {
    */
   _normaliseFromObject(name, metadata) {
     const created = this._coerceDate(metadata.created, this._masterIndex._getCurrentTimestamp());
-    const lastUpdatedSource = metadata.lastUpdated !== undefined ? metadata.lastUpdated : metadata.lastModified;
-    const lastUpdated = this._coerceDate(lastUpdatedSource, this._masterIndex._getCurrentTimestamp());
+    const lastUpdatedSource =
+      metadata.lastUpdated !== undefined ? metadata.lastUpdated : metadata.lastModified;
+    const lastUpdated = this._coerceDate(
+      lastUpdatedSource,
+      this._masterIndex._getCurrentTimestamp()
+    );
     const modificationToken = this._normaliseModificationToken(metadata.modificationToken);
 
     return new CollectionMetadata(name, metadata.fileId || null, {

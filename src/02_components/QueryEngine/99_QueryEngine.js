@@ -155,7 +155,11 @@ class QueryEngine {
    */
   _assertConfigShape(config) {
     if (config !== null && config !== undefined && typeof config !== 'object') {
-      throw new InvalidArgumentError('config', config, 'QueryEngine configuration must be an object or undefined');
+      throw new InvalidArgumentError(
+        'config',
+        config,
+        'QueryEngine configuration must be an object or undefined'
+      );
     }
   }
 
@@ -166,13 +170,18 @@ class QueryEngine {
    * @private
    */
   _normaliseSupportedOperators(providedOperators) {
-    const operators = Array.isArray(providedOperators) && providedOperators.length > 0
-      ? providedOperators.slice()
-      : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+    const operators =
+      Array.isArray(providedOperators) && providedOperators.length > 0
+        ? providedOperators.slice()
+        : Array.from(DEFAULT_SUPPORTED_OPERATORS);
 
-    operators.forEach(operator => {
+    operators.forEach((operator) => {
       if (typeof operator !== 'string' || operator.trim() === '') {
-        throw new InvalidArgumentError('supportedOperators', operator, 'Operator names must be non-empty strings');
+        throw new InvalidArgumentError(
+          'supportedOperators',
+          operator,
+          'Operator names must be non-empty strings'
+        );
       }
     });
 
@@ -201,10 +210,12 @@ class QueryEngine {
    */
   _initialiseFieldPathResources(config) {
     const candidateConfig = config || {};
-    this._fieldPathCache = candidateConfig.fieldPathCache instanceof Map ? candidateConfig.fieldPathCache : new Map();
-    this._fieldPathUtils = candidateConfig.fieldPathUtils instanceof FieldPathUtils
-      ? candidateConfig.fieldPathUtils
-      : new FieldPathUtils({ cache: this._fieldPathCache });
+    this._fieldPathCache =
+      candidateConfig.fieldPathCache instanceof Map ? candidateConfig.fieldPathCache : new Map();
+    this._fieldPathUtils =
+      candidateConfig.fieldPathUtils instanceof FieldPathUtils
+        ? candidateConfig.fieldPathUtils
+        : new FieldPathUtils({ cache: this._fieldPathCache });
   }
 
   /**
@@ -251,7 +262,7 @@ class QueryEngine {
 
     this._supportedOperators = new Set(currentOperators);
     this._logicalOperators = new Set(
-      LOGICAL_OPERATORS.filter(operator => this._supportedOperators.has(operator))
+      LOGICAL_OPERATORS.filter((operator) => this._supportedOperators.has(operator))
     );
     this._supportedOperatorsSnapshot = currentOperators.slice();
   }
