@@ -87,11 +87,11 @@ Applies a set of MongoDB-style update operators to a given document. This is the
 
 ```javascript
 const updateEngine = new UpdateEngine();
-let doc = { name: "Test Document", count: 10, tags: ["a", "b"] };
+let doc = { name: 'Test Document', count: 10, tags: ['a', 'b'] };
 const operations = {
-  $set: { name: "Updated Document", status: "active" },
+  $set: { name: 'Updated Document', status: 'active' },
   $inc: { count: 5 },
-  $push: { tags: "c" }
+  $push: { tags: 'c' }
 };
 
 doc = updateEngine.applyOperators(doc, operations);
@@ -120,7 +120,7 @@ Sets the value of specified fields. If the field does not exist, it creates the 
 
 ```javascript
 // Assuming doc = { name: "Test" }
-updateEngine._applySet(doc, { name: "New Name", "details.host": "server1" });
+updateEngine._applySet(doc, { name: 'New Name', 'details.host': 'server1' });
 // doc is now: { name: "New Name", details: { host: "server1" } }
 ```
 
@@ -145,7 +145,7 @@ Increments the value of specified numeric fields by a given amount.
 
 ```javascript
 // Assuming doc = { views: 100 }
-updateEngine._applyInc(doc, { views: 10, "metrics.downloads": 1 });
+updateEngine._applyInc(doc, { views: 10, 'metrics.downloads': 1 });
 // doc is now: { views: 110, metrics: { downloads: 1 } }
 ```
 
@@ -241,7 +241,7 @@ Removes specified fields from a document.
 
 ```javascript
 // Assuming doc = { name: "Test", temporary: true, "config.old": 1 }
-updateEngine._applyUnset(doc, { temporary: "", "config.old": true });
+updateEngine._applyUnset(doc, { temporary: '', 'config.old': true });
 // doc is now: { name: "Test", config: {} }
 ```
 
@@ -266,10 +266,10 @@ Appends a value to an array field. If the field does not exist, it creates an ar
 
 ```javascript
 // Assuming doc = { tags: ["alpha"] }
-updateEngine._applyPush(doc, { tags: "beta" });
+updateEngine._applyPush(doc, { tags: 'beta' });
 // doc is now: { tags: ["alpha", "beta"] }
 
-updateEngine._applyPush(doc, { tags: { $each: ["gamma", "delta"] } });
+updateEngine._applyPush(doc, { tags: { $each: ['gamma', 'delta'] } });
 // doc is now: { tags: ["alpha", "beta", "gamma", "delta"] }
 ```
 
@@ -319,13 +319,13 @@ Adds values to an array field only if they are not already present. Supports the
 
 ```javascript
 // Assuming doc = { categories: ["news"] }
-updateEngine._applyAddToSet(doc, { categories: "tech" });
+updateEngine._applyAddToSet(doc, { categories: 'tech' });
 // doc is now: { categories: ["news", "tech"] }
 
-updateEngine._applyAddToSet(doc, { categories: "news" }); // no change
+updateEngine._applyAddToSet(doc, { categories: 'news' }); // no change
 // doc is still: { categories: ["news", "tech"] }
 
-updateEngine._applyAddToSet(doc, { categories: { $each: ["sports", "tech"] } });
+updateEngine._applyAddToSet(doc, { categories: { $each: ['sports', 'tech'] } });
 // doc is now: { categories: ["news", "tech", "sports"] }
 ```
 
@@ -362,9 +362,9 @@ Retrieves a value from a document using a dot-notation path.
 **Example:**
 
 ```javascript
-const doc = { user: { name: "John", address: { city: "New York" } } };
-const cityName = updateEngine._getFieldValue(doc, "user.address.city"); // "New York"
-const zipCode = updateEngine._getFieldValue(doc, "user.address.zip"); // undefined
+const doc = { user: { name: 'John', address: { city: 'New York' } } };
+const cityName = updateEngine._getFieldValue(doc, 'user.address.city'); // "New York"
+const zipCode = updateEngine._getFieldValue(doc, 'user.address.zip'); // undefined
 ```
 
 #### `_setFieldValue(document, fieldPath, value)`
@@ -375,17 +375,17 @@ Sets a value in a document using a dot-notation path. Creates nested objects as 
 
 - `document` (Object): The document to modify.
 - `fieldPath` (String): The dot-notation path to the field.
-- `value` (*): The value to set at the specified path.
+- `value` (\*): The value to set at the specified path.
 
 **Example:**
 
 ```javascript
-let doc = { user: { name: "Jane" } };
-updateEngine._setFieldValue(doc, "user.contact.email", "jane@example.com");
+let doc = { user: { name: 'Jane' } };
+updateEngine._setFieldValue(doc, 'user.contact.email', 'jane@example.com');
 // doc is now:
 // { user: { name: "Jane", contact: { email: "jane@example.com" } } }
 
-updateEngine._setFieldValue(doc, "user.age", 30);
+updateEngine._setFieldValue(doc, 'user.age', 30);
 // doc is now:
 // { user: { name: "Jane", age: 30, contact: { email: "jane@example.com" } } }
 ```
@@ -402,13 +402,13 @@ Removes a field or array element at a given dot-notation path.
 **Example:**
 
 ```javascript
-let doc = { user: { name: "Jane", age: 30, temp: "delete me" } };
-updateEngine._unsetFieldValue(doc, "user.temp");
+let doc = { user: { name: 'Jane', age: 30, temp: 'delete me' } };
+updateEngine._unsetFieldValue(doc, 'user.temp');
 // doc is now: { user: { name: "Jane", age: 30 } }
 
 // For arrays
-let doc2 = { items: ["a", "b", "c"] };
-updateEngine._unsetFieldValue(doc2, "items.1");
+let doc2 = { items: ['a', 'b', 'c'] };
+updateEngine._unsetFieldValue(doc2, 'items.1');
 // doc2 is now: { items: ["a", undefined, "c"] } // preserves array length
 ```
 
@@ -421,19 +421,19 @@ The `UpdateEngine` can apply several operators in a single `applyOperators` call
 ```javascript
 const updateEngine = new UpdateEngine();
 let product = {
-  name: "Laptop",
+  name: 'Laptop',
   price: 1200,
   stock: 10,
-  features: ["SSD", "16GB RAM"],
+  features: ['SSD', '16GB RAM'],
   ratings: []
 };
 
 const updates = {
-  $set: { status: "available", "details.manufacturer": "TechCorp" },
+  $set: { status: 'available', 'details.manufacturer': 'TechCorp' },
   $inc: { stock: -1, views: 100 }, // 'views' will be created
   $mul: { price: 0.9 }, // 10% discount
-  $push: { features: "Backlit Keyboard" },
-  $addToSet: { tags: { $each: ["electronics", "computer"] } }
+  $push: { features: 'Backlit Keyboard' },
+  $addToSet: { tags: { $each: ['electronics', 'computer'] } }
 };
 
 product = updateEngine.applyOperators(product, updates);
@@ -462,14 +462,14 @@ const updateEngine = new UpdateEngine();
 let user = {
   id: 1,
   profile: {
-    name: "Alice",
-    preferences: { theme: "dark", notifications: true }
+    name: 'Alice',
+    preferences: { theme: 'dark', notifications: true }
   }
 };
 
 const profileUpdates = {
-  $set: { "profile.name": "Alicia", "profile.preferences.language": "en" },
-  $unset: { "profile.preferences.notifications": "" }
+  $set: { 'profile.name': 'Alicia', 'profile.preferences.language': 'en' },
+  $unset: { 'profile.preferences.notifications': '' }
 };
 
 user = updateEngine.applyOperators(user, profileUpdates);
@@ -492,20 +492,20 @@ Demonstrating various array operators.
 ```javascript
 const updateEngine = new UpdateEngine();
 let article = {
-  title: "GAS DB Guide",
-  authors: ["John"],
+  title: 'GAS DB Guide',
+  authors: ['John'],
   comments: [
-    { user: "UserA", text: "Great!" },
-    { user: "UserB", text: "Helpful." }
+    { user: 'UserA', text: 'Great!' },
+    { user: 'UserB', text: 'Helpful.' }
   ],
-  tags: ["database", "apps script"],
+  tags: ['database', 'apps script'],
   scores: [10, 20, 30, 20, 40]
 };
 
 const arrayUpdates = {
-  $push: { authors: "Jane" },
+  $push: { authors: 'Jane' },
   $pull: { scores: 20 }, // Removes all instances of 20
-  $addToSet: { tags: "guide" }
+  $addToSet: { tags: 'guide' }
 };
 
 article = updateEngine.applyOperators(article, arrayUpdates);
@@ -577,25 +577,30 @@ Careful use of dot notation is recommended to avoid unexpected behaviour, especi
 The `$pull` operator implementation has been extended beyond strict deep equality to align more closely with MongoDB behaviour:
 
 ### Matching Rules
+
 - **Primitive / Array Criterion**: If the criterion is a primitive (string/number/boolean/null/Date) or an array, all array elements strictly equal (deep equality for arrays) to the criterion are removed.
-- **Object Criterion (Field Predicate)**: If the criterion is a plain object whose keys do not all start with `$`, it is treated as a *subset predicate*. An array element that is an object matches if it contains all specified fields with matching values (deep equality per field). Extra fields on the element do not prevent a match.
+- **Object Criterion (Field Predicate)**: If the criterion is a plain object whose keys do not all start with `$`, it is treated as a _subset predicate_. An array element that is an object matches if it contains all specified fields with matching values (deep equality per field). Extra fields on the element do not prevent a match.
 - **Field-Level Operator Objects**: Within an object criterion, a field value may itself be an operator object (all keys start with `$`). Supported operators: `$eq`, `$gt`, `$lt`. All operators inside that object must succeed. Example: `{ items: { price: { $lt: 10 }, sku: 'A1' } }` removes all objects whose `price < 10` AND `sku === 'A1'`.
 - **Top-Level Operator Object**: A criterion whose keys all start with `$` (e.g. `{ $gt: 5 }`) applies only to primitive (or Date) elements. If the array elements are objects, this criterion does not match (intentional simplification documented here).
 
 ### Non-Matching / No-Op Cases
+
 - Target field missing or not an array: Silent no-op (no error, `modifiedCount` = 0).
 - Object criterion referencing fields absent on the element: Non-match (element retained).
 - Operator predicates on incomparable types (e.g. `$gt` between string and number) return false (element retained).
 
 ### Date Handling
+
 Dates are compared using their millisecond timestamps. `$gt` / `$lt` comparisons on Dates work when both sides are Dates. Field-level equality uses deep time equality.
 
 ### Null Handling
+
 `null` criterion matches only `null` elements (or object field values equal to `null` in subset predicates). Undefined values do not match `null`.
 
 ### Examples
 
 Remove subset by key:
+
 ```javascript
 // items: [{ sku:'A', qty:1, price:5 }, { sku:'A', qty:2, price:5 }, { sku:'B', qty:1, price:9 }]
 updateEngine._applyPull(doc, { items: { sku: 'A' } });
@@ -603,30 +608,37 @@ updateEngine._applyPull(doc, { items: { sku: 'A' } });
 ```
 
 Mixed field + operator:
+
 ```javascript
 updateEngine._applyPull(doc, { items: { sku: 'A', price: { $lt: 6 } } });
 ```
 
 Primitive operator on numeric array:
+
 ```javascript
 updateEngine._applyPull(doc, { scores: { $gt: 90 } });
 ```
 
 Top-level operator against object elements (no removal):
+
 ```javascript
 updateEngine._applyPull(doc, { items: { $gt: 5 } }); // items are objects -> no match
 ```
 
 ### Limitations / Deferred Features
+
 - Unsupported operators within `$pull` field-level predicates: `$in`, `$nin`, `$ne`, logical operators (`$and`, `$or`). These are candidates for future enhancement.
 - No nested logical composition inside a single field predicate (e.g. `{ price: { $gt: 5, $lt: 10 } }` works, but `{ $or: [...] }` at field level inside object predicate is not yet supported).
 - Top-level logical operators inside `$pull` criterion not yet supported.
 
 ### Rationale
+
 The subset + operator approach balances fidelity with simplicity, deferring more complex logical parsing until query/operator evaluation logic is centralised (see planned shared comparator utility).
 
 ### Testing Strategy Summary
+
 Validation tests cover:
+
 - Subset removal
 - Mixed field + operator
 - Exact object removal regression

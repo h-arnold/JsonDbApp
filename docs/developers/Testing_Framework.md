@@ -104,10 +104,10 @@ describe('Component Feature', () => {
   it('should perform expected behaviour', () => {
     // Arrange
     const input = { value: 42 };
-    
+
     // Act
     const result = component.process(input);
-    
+
     // Assert
     expect(result.value).toBe(42);
     expect(result.processed).toBe(true);
@@ -166,7 +166,7 @@ describe('IdGenerator', () => {
     const generator = new IdGenerator();
     const id1 = generator.generateId();
     const id2 = generator.generateId();
-    
+
     expect(id1).toBeDefined();
     expect(id2).toBeDefined();
     expect(id1).not.toBe(id2);
@@ -198,7 +198,7 @@ describe('MasterIndex Persistence', () => {
   it('should persist to ScriptProperties', () => {
     const key = registerKey(`TEST_KEY_${Date.now()}`);
     const masterIndex = new MasterIndex({ masterIndexKey: key });
-    
+
     const stored = scriptProperties.getProperty(key);
     expect(stored).toBeDefined();
     expect(typeof stored).toBe('string');
@@ -220,10 +220,10 @@ describe('Database Collection Management', () => {
   it('should create a new collection', () => {
     const { database } = setupInitialisedDatabase();
     const name = generateUniqueName('testCollection');
-    
+
     const collection = database.createCollection(name);
     registerDatabaseFile(collection.driveFileId);
-    
+
     expect(collection.name).toBe(name);
     expect(database.listCollections()).toContain(name);
   });
@@ -237,9 +237,8 @@ describe('Error Handling', () => {
   it('should throw InvalidArgumentError for invalid input', () => {
     const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
     const missingName = generateUniqueName('missing');
-    
-    expect(() => database.collection(missingName))
-      .toThrowError(/auto-create is disabled/);
+
+    expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);
   });
 });
 ```
@@ -298,8 +297,8 @@ The GAS mocks ([tools/gas-mocks/gas-mocks.cjs](../../tools/gas-mocks/gas-mocks.c
 
 ```javascript
 const mocks = createGasMocks({
-  driveRoot: '/tmp/gasdb-drive',           // Where Drive files are stored
-  propertiesFile: '/tmp/gasdb-props.json'  // Where ScriptProperties are persisted
+  driveRoot: '/tmp/gasdb-drive', // Where Drive files are stored
+  propertiesFile: '/tmp/gasdb-props.json' // Where ScriptProperties are persisted
 });
 ```
 
@@ -336,6 +335,12 @@ Test helpers provide reusable setup and cleanup utilities:
 
 ```bash
 npm run test
+```
+
+### Run All Tests (Verbose Output)
+
+```bash
+npm run test:verbose
 ```
 
 ### Watch Mode

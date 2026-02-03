@@ -71,8 +71,8 @@ class MasterIndex {
 
   /**
    * Bulk add multiple collections under a single lock
-  * @param {Object<string, Object|CollectionMetadata>} collectionsMap - Map of name to metadata
-  * @returns {Array<CollectionMetadata>} Array of serialised metadata instances
+   * @param {Object<string, Object|CollectionMetadata>} collectionsMap - Map of name to metadata
+   * @returns {Array<CollectionMetadata>} Array of serialised metadata instances
    * @throws {InvalidArgumentError} When collectionsMap is invalid
    */
   addCollections(collectionsMap) {
@@ -96,9 +96,10 @@ class MasterIndex {
   save(dataOverride, timestamp = this._getCurrentTimestamp()) {
     try {
       const dataToSave = dataOverride || this._data;
-      const effectiveTimestamp = timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
-        ? new Date(timestamp.getTime())
-        : this._getCurrentTimestamp();
+      const effectiveTimestamp =
+        timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
+          ? new Date(timestamp.getTime())
+          : this._getCurrentTimestamp();
       dataToSave.lastUpdated = effectiveTimestamp;
       const dataString = ObjectUtils.serialise(dataToSave);
       PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
@@ -113,7 +114,9 @@ class MasterIndex {
    */
   load() {
     try {
-      const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
+      const dataString = PropertiesService.getScriptProperties().getProperty(
+        this._config.masterIndexKey
+      );
       const data = dataString ? ObjectUtils.deserialise(dataString) : null;
       this._data = data;
       if (this._data) {
@@ -151,9 +154,8 @@ class MasterIndex {
       return null;
     }
 
-    const collectionMetadata = rawData instanceof CollectionMetadata
-      ? rawData
-      : new CollectionMetadata(rawData);
+    const collectionMetadata =
+      rawData instanceof CollectionMetadata ? rawData : new CollectionMetadata(rawData);
 
     return collectionMetadata;
   }
@@ -209,7 +211,11 @@ class MasterIndex {
     if (key === 'lastUpdated') {
       const date = value instanceof Date ? value : new Date(value);
       if (isNaN(date.getTime())) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lastUpdated', value, 'lastUpdated must be a valid date');
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+          'lastUpdated',
+          value,
+          'lastUpdated must be a valid date'
+        );
       }
       collection.lastUpdated = date;
       return;
@@ -291,7 +297,10 @@ class MasterIndex {
       if (lockStatus && lockStatus.isLocked) {
         const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
         if (now < expiry) {
-          this._logger.warn('Failed to acquire lock; collection is already locked.', { collectionName, operationId });
+          this._logger.warn('Failed to acquire lock; collection is already locked.', {
+            collectionName,
+            operationId
+          });
           return false;
         }
       }
@@ -343,7 +352,12 @@ class MasterIndex {
         return false;
       }
 
-      collection.setLockStatus({ isLocked: false, lockedBy: null, lockedAt: null, lockTimeout: null });
+      collection.setLockStatus({
+        isLocked: false,
+        lockedBy: null,
+        lockedAt: null,
+        lockTimeout: null
+      });
       this.updateCollectionMetadata(collectionName, {
         lockStatus: collection.getLockStatus()
       });
@@ -454,13 +468,14 @@ class MasterIndex {
         throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
       }
 
-      const collectionMetadata = collectionData instanceof CollectionMetadata
-        ? collectionData
-        : new CollectionMetadata(collectionData);
+      const collectionMetadata =
+        collectionData instanceof CollectionMetadata
+          ? collectionData
+          : new CollectionMetadata(collectionData);
 
       switch (strategy) {
         case 'LAST_WRITE_WINS':
-          Object.keys(newData).forEach(key => {
+          Object.keys(newData).forEach((key) => {
             switch (key) {
               case 'documentCount':
                 collectionMetadata.setDocumentCount(newData[key]);
@@ -485,7 +500,9 @@ class MasterIndex {
           return { success: true, data: collectionMetadata, strategy };
 
         default:
-          throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(`Unknown conflict resolution strategy: ${strategy}`);
+          throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
+            `Unknown conflict resolution strategy: ${strategy}`
+          );
       }
     });
   }
@@ -545,7 +562,9 @@ class MasterIndex {
    */
   _loadFromScriptProperties() {
     try {
-      const dataString = PropertiesService.getScriptProperties().getProperty(this._config.masterIndexKey);
+      const dataString = PropertiesService.getScriptProperties().getProperty(
+        this._config.masterIndexKey
+      );
       if (dataString) {
         this._data = ObjectUtils.deserialise(dataString);
         this._ensureStateShape();
@@ -553,7 +572,9 @@ class MasterIndex {
         this._data = null;
       }
     } catch (error) {
-      this._logger.error('Failed to load master index from ScriptProperties', { error: error.message });
+      this._logger.error('Failed to load master index from ScriptProperties', {
+        error: error.message
+      });
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
     }
   }
@@ -597,9 +618,10 @@ class MasterIndex {
     Validate.nonEmptyString(name, 'name');
     Validate.required(metadata, 'metadata');
 
-    const effectiveTimestamp = timestamp instanceof Date && !isNaN(timestamp.getTime())
-      ? new Date(timestamp.getTime())
-      : this._getCurrentTimestamp();
+    const effectiveTimestamp =
+      timestamp instanceof Date && !isNaN(timestamp.getTime())
+        ? new Date(timestamp.getTime())
+        : this._getCurrentTimestamp();
 
     this._data.collections[name] = metadata;
     this._touchIndex(effectiveTimestamp);
@@ -624,9 +646,10 @@ class MasterIndex {
     if (!this._data) {
       return;
     }
-    const effectiveTimestamp = timestamp instanceof Date && !isNaN(timestamp.getTime())
-      ? new Date(timestamp.getTime())
-      : this._getCurrentTimestamp();
+    const effectiveTimestamp =
+      timestamp instanceof Date && !isNaN(timestamp.getTime())
+        ? new Date(timestamp.getTime())
+        : this._getCurrentTimestamp();
     this._data.lastUpdated = effectiveTimestamp;
   }
 

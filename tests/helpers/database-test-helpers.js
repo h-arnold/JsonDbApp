@@ -42,7 +42,11 @@ export const registerDatabaseFile = (fileId) => {
  * @param {string} [fileName='database_backup.json'] - Optional backup filename.
  * @returns {string} Created backup file identifier.
  */
-export const createBackupIndexFile = (rootFolderId, backupData, fileName = 'database_backup.json') => {
+export const createBackupIndexFile = (
+  rootFolderId,
+  backupData,
+  fileName = 'database_backup.json'
+) => {
   const logger = JDbLogger.createComponentLogger('Database-Test-Helpers');
   const fileOps = new FileOperations(logger);
   const fileService = new FileService(fileOps, logger);
@@ -137,7 +141,8 @@ export const cleanupDatabaseTests = () => {
  * @param {string} prefix - Human-friendly descriptor prefix.
  * @returns {string} Unique name combining prefix, timestamp, and random suffix.
  */
-export const generateUniqueName = (prefix) => `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+export const generateUniqueName = (prefix) =>
+  `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
 
 afterEach(() => {
   cleanupDatabaseTests();

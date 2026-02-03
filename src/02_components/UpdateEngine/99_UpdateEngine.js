@@ -24,15 +24,15 @@ class UpdateEngine {
     this._arrayOps = new UpdateEngineArrayOperators(this);
 
     this._operatorHandlers = {
-      '$set': this._fieldOps.applySet.bind(this._fieldOps),
-      '$inc': this._fieldOps.applyInc.bind(this._fieldOps),
-      '$mul': this._fieldOps.applyMul.bind(this._fieldOps),
-      '$min': this._fieldOps.applyMin.bind(this._fieldOps),
-      '$max': this._fieldOps.applyMax.bind(this._fieldOps),
-      '$unset': this._fieldOps.applyUnset.bind(this._fieldOps),
-      '$push': this._arrayOps.applyPush.bind(this._arrayOps),
-      '$pull': this._arrayOps.applyPull.bind(this._arrayOps),
-      '$addToSet': this._arrayOps.applyAddToSet.bind(this._arrayOps)
+      $set: this._fieldOps.applySet.bind(this._fieldOps),
+      $inc: this._fieldOps.applyInc.bind(this._fieldOps),
+      $mul: this._fieldOps.applyMul.bind(this._fieldOps),
+      $min: this._fieldOps.applyMin.bind(this._fieldOps),
+      $max: this._fieldOps.applyMax.bind(this._fieldOps),
+      $unset: this._fieldOps.applyUnset.bind(this._fieldOps),
+      $push: this._arrayOps.applyPush.bind(this._arrayOps),
+      $pull: this._arrayOps.applyPull.bind(this._arrayOps),
+      $addToSet: this._arrayOps.applyAddToSet.bind(this._arrayOps)
     };
   }
 
@@ -51,14 +51,20 @@ class UpdateEngine {
     for (const operator in updateOps) {
       const handler = this._operatorHandlers[operator];
       if (!handler) {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY('operator', operator, `Unsupported update operator: ${operator}`);
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+          'operator',
+          operator,
+          `Unsupported update operator: ${operator}`
+        );
       }
 
       if (workingDocument === null) {
         workingDocument = ObjectUtils.deepClone(document);
       }
 
-      this._logger.debug(`Applying operator ${operator}`, { fields: Object.keys(updateOps[operator] || {}) });
+      this._logger.debug(`Applying operator ${operator}`, {
+        fields: Object.keys(updateOps[operator] || {})
+      });
       workingDocument = handler(workingDocument, updateOps[operator]);
     }
 

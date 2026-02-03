@@ -1,6 +1,6 @@
 /**
  * DbLockService Script Lock Tests
- * 
+ *
  * Tests for script-level lock acquire and release operations.
  */
 
@@ -10,10 +10,10 @@ describe('DbLockService Script Lock Operations', () => {
   describe('Acquire and Release', () => {
     it('should acquire and release script lock without error', () => {
       const svc = new DbLockService();
-      
+
       svc.acquireScriptLock(1000);
       expect(svc._scriptLock).toBeDefined();
-      
+
       svc.releaseScriptLock();
       expect(svc._scriptLock).toBeNull();
     });

@@ -9,11 +9,13 @@ This directory contains specialized agents for working with the JsonDbApp test s
 **Purpose**: Creates high-quality Vitest tests following project conventions.
 
 **Use when**:
+
 - Creating new test files
 - Refactoring tests from old framework to Vitest
 - Adding test coverage for new features
 
 **Key features**:
+
 - Knows the Vitest framework and GAS mocks setup
 - Enforces DRY principles and lint compliance
 - Maintains helper function registry
@@ -21,6 +23,7 @@ This directory contains specialized agents for working with the JsonDbApp test s
 
 **Usage**:
 Delegate test creation tasks to this agent with instructions like:
+
 ```
 Create tests for [component] that cover [scenarios].
 Use the test-creation-agent instructions.
@@ -31,11 +34,13 @@ Use the test-creation-agent instructions.
 **Purpose**: Reviews test code for quality, correctness, and compliance.
 
 **Use when**:
+
 - Reviewing newly created tests
 - Verifying refactored tests
 - Quality checking before merge
 
 **Key features**:
+
 - Checks completeness (all tests covered)
 - Enforces DRY (no code duplication)
 - Verifies lint compliance (0 errors, 0 warnings)
@@ -44,6 +49,7 @@ Use the test-creation-agent instructions.
 
 **Usage**:
 Delegate code review tasks to this agent with instructions like:
+
 ```
 Review the test files in [directory] for quality and compliance.
 Use the test-code-review-agent instructions.
@@ -52,6 +58,7 @@ Use the test-code-review-agent instructions.
 ## Agent Responsibilities
 
 Both agents are responsible for:
+
 - **Maintaining helper lists**: When helpers are added/modified, both agent instruction files must be updated
 - **Lint enforcement**: All code must pass `npx eslint 'tests/**/*.js' --ext .js` with 0 errors, 0 warnings
 - **DRY compliance**: No code duplication - extract to helpers

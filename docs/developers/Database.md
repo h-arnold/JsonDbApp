@@ -53,7 +53,7 @@ The `Database` class is the main entry point for GAS DB operations, providing hi
 **Key Responsibilities:**
 
 - Database creation, initialization, and recovery
-- Collection creation, access, and deletion  
+- Collection creation, access, and deletion
 - MasterIndex as single source of truth for metadata
 - Drive index file backup operations
 - High-level database operations and error handling
@@ -147,8 +147,8 @@ db.initialise();
 
 ```javascript
 const db = new Database(config);
-db.recoverDatabase(backupFileId);  // Restores from backup to MasterIndex
-db.initialise();                   // Loads from restored MasterIndex
+db.recoverDatabase(backupFileId); // Restores from backup to MasterIndex
+db.initialise(); // Loads from restored MasterIndex
 ```
 
 ### Benefits of New Workflow
@@ -161,7 +161,7 @@ db.initialise();                   // Loads from restored MasterIndex
 ## Constructor
 
 ```javascript
-constructor(config = {})
+constructor((config = {}));
 ```
 
 **Parameters:**
@@ -517,7 +517,7 @@ try {
 
 ```javascript
 // Collection Creation Flow
-db.createCollection('users')
+db.createCollection('users');
 // 1. Validate name
 // 2. Create Drive file
 // 3. Add to MasterIndex (primary)
@@ -537,11 +537,14 @@ The Database class maintains consistency between data sources:
 
 ```javascript
 // Periodic backup pattern
-setInterval(() => {
-  if (db.backupIndexToDrive()) {
-    console.log('Periodic backup completed');
-  }
-}, 30 * 60 * 1000); // Every 30 minutes
+setInterval(
+  () => {
+    if (db.backupIndexToDrive()) {
+      console.log('Periodic backup completed');
+    }
+  },
+  30 * 60 * 1000
+); // Every 30 minutes
 ```
 
 ## Error Types

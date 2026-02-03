@@ -1,6 +1,6 @@
 /**
  * DbLockService Constructor Tests
- * 
+ *
  * Tests for DbLockService constructor validation and initialization.
  */
 

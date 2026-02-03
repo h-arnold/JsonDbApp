@@ -46,7 +46,7 @@
 - **Constants**: UPPER_SNAKE_CASE
 - **Private properties**: `this._underscore`
 - **Files**: Match class name
-- **Multi-file classes**: For large classes (e.g. Collection), use numbered file prefixes (01_, 02_, 99_) to control load order; `99_*.js` composes/exports the class
+- **Multi-file classes**: For large classes (e.g. Collection), use numbered file prefixes (01*, 02*, 99*) to control load order; `99*\*.js` composes/exports the class
 - **Tests**: `ClassNameTest.js`
 - **Test functions**: `testClassNameScenario`
 - **Errors**: End with `Error`
@@ -58,7 +58,7 @@
 /**
  * Description
  * @param {Type} param - Description
- * @returns {Type} Description  
+ * @returns {Type} Description
  * @throws {ErrorType} When thrown
  * @remarks *optional*: Additional notes explaining nuances, reasoning behind design choices or explaining the logic flow of complex methods.
  */
@@ -84,6 +84,7 @@ methodName(param) {
 - **Serialisation**: Use `ObjectUtils.serialise()`/`deserialise()`. Classes needing serialisation: implement `toJSON()`, static `fromJSON()`, register in `ObjectUtils._classRegistry`.
 - **Validation**: Use `Validate` class; class-specific validation as private method.
 - **TDD**: Always follow Red-Green-Refactor.
+- **Linting**: `no-magic-numbers` is an error for source code. Tests may use numeric literals for clarity because the rule is disabled for `tests/**/*.js`.
 
 ## Calling Sub-Agents
 
@@ -179,17 +180,19 @@ When you need to review code, call the appropriate agent:
 ```javascript
 // For source code review
 runSubagent({
-  prompt: "Please review the new UpdateEngine class for lint compliance, DRY, SOLID, and proper documentation.",
-  description: "Code review for UpdateEngine",
-  agentName: "Code Review Agent"
-})
+  prompt:
+    'Please review the new UpdateEngine class for lint compliance, DRY, SOLID, and proper documentation.',
+  description: 'Code review for UpdateEngine',
+  agentName: 'Code Review Agent'
+});
 
 // For test review
 runSubagent({
-  prompt: "Please review the CollectionReadOperations tests for completeness, DRY, and lint compliance.",
-  description: "Test review for CollectionReadOperations",
-  agentName: "Test Review Agent"
-})
+  prompt:
+    'Please review the CollectionReadOperations tests for completeness, DRY, and lint compliance.',
+  description: 'Test review for CollectionReadOperations',
+  agentName: 'Test Review Agent'
+});
 ```
 
 ### Review Agent Workflow

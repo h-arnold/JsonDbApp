@@ -71,7 +71,7 @@ class DbLockService {
 
   /**
    * Private: Validate timeout argument for script lock.
-   * @param {number} timeout
+   * @param {number} timeout - Timeout duration in milliseconds
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT}
    */
   _validateTimeout(timeout) {
@@ -96,7 +96,7 @@ class DbLockService {
 
   /**
    * Private: Wait for the script lock, or throw LOCK_TIMEOUT on failure.
-   * @param {number} timeout
+   * @param {number} timeout - Timeout duration in milliseconds
    */
   _waitForScriptLock(timeout) {
     // Attempts to acquire the lock within the timeout; throws LOCK_TIMEOUT if not acquired

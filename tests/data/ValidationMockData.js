@@ -1,6 +1,6 @@
 /**
  * ValidationMockData.js - Generates dataset for validation tests including nested structures
- * 
+ *
  * This module provides mock data for testing query and update operators.
  * It's a port of the old_tests/data/ValidationMockData.js for the new Vitest framework.
  */
@@ -22,8 +22,8 @@ export const ValidationMockData = {
         balance: 1250.75,
         isActive: true,
         lastLogin: new Date('2025-06-20T10:30:00Z'),
-        preferences: { 
-          newsletter: true, 
+        preferences: {
+          newsletter: true,
           tags: ['sports', 'music'],
           settings: {
             theme: 'dark',
@@ -44,8 +44,8 @@ export const ValidationMockData = {
         balance: 0,
         isActive: false,
         lastLogin: null,
-        preferences: { 
-          newsletter: false, 
+        preferences: {
+          newsletter: false,
           tags: [],
           settings: {
             theme: 'light',
@@ -66,8 +66,8 @@ export const ValidationMockData = {
         balance: -150.25,
         isActive: true,
         lastLogin: new Date('2025-06-15T14:22:00Z'),
-        preferences: { 
-          newsletter: true, 
+        preferences: {
+          newsletter: true,
           tags: ['news', 'alerts', 'sports'],
           settings: {
             theme: 'auto',
@@ -85,7 +85,7 @@ export const ValidationMockData = {
         contact: { email: 'diana.prince@example.com', phones: ['777-888-9999', '000-111-2222'] },
         age: 38,
         score: 78.1,
-        balance: 3500.00,
+        balance: 3500.0,
         isActive: true,
         lastLogin: new Date('2025-06-25T09:15:00Z'),
         preferences: {
@@ -107,7 +107,7 @@ export const ValidationMockData = {
         contact: { email: 'ethan.hunt@example.com', phones: ['333-444-5555'] },
         age: 50,
         score: 95.8,
-        balance: 750.50,
+        balance: 750.5,
         isActive: false,
         lastLogin: new Date('2025-06-01T16:45:00Z'),
         preferences: {
@@ -239,19 +239,17 @@ export const ValidationMockData = {
         _id: 'order4',
         userId: 'person4',
         orderNumber: 1004,
-        items: [
-          { sku: 'prod4', quantity: 10, price: 5.50, category: 'office' }
-        ],
+        items: [{ sku: 'prod4', quantity: 10, price: 5.5, category: 'office' }],
         status: 'returned',
         priority: 1,
-        totalAmount: 55.00,
+        totalAmount: 55.0,
         discountPercent: 0,
         createdAt: new Date('2025-06-22T09:00:00Z'),
         updatedAt: new Date('2025-06-25T14:20:00Z'),
         isRush: false,
         tags: ['return', 'defective'],
         customerNotes: null,
-        shipping: { 
+        shipping: {
           address: null,
           carrier: { name: 'StandardPost', tracking: null },
           cost: 0
@@ -271,7 +269,7 @@ export const ValidationMockData = {
         orderNumber: 1005,
         items: [
           { sku: 'prod5', quantity: 1, price: 199.99, category: 'electronics' },
-          { sku: 'prod6', quantity: 3, price: 45.00, category: 'accessories' }
+          { sku: 'prod6', quantity: 3, price: 45.0, category: 'accessories' }
         ],
         status: 'delivered',
         priority: 1,
@@ -385,11 +383,11 @@ export const ValidationMockData = {
           location: 'North',
           capacity: 2000,
           zone: 'C',
-          manager: { 
-            name: 'John Doe', 
-            contact: { 
-              email: 'j.doe@warehouse.com', 
-              phone: '999-999-9999' 
+          manager: {
+            name: 'John Doe',
+            contact: {
+              email: 'j.doe@warehouse.com',
+              phone: '999-999-9999'
             },
             shifts: ['morning', 'evening']
           }
@@ -452,9 +450,7 @@ export const ValidationMockData = {
         tags: ['new-facility', 'premium'],
         categories: ['premium', 'luxury'],
         managers: ['sarah.connor'],
-        alerts: [
-          { type: 'new-stock', product: 'prod7', date: new Date('2025-06-18T00:00:00Z') }
-        ],
+        alerts: [{ type: 'new-stock', product: 'prod7', date: new Date('2025-06-18T00:00:00Z') }],
         receipts: [
           { date: new Date('2025-06-18T00:00:00Z'), quantity: 200, supplier: 'PremiumSupplier' }
         ],

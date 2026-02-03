@@ -21,11 +21,19 @@ class UpdateEngineValidation {
    */
   validateApplyOperatorsInputs(document, updateOps) {
     if (!document || typeof document !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('document', document, 'Document must be an object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'document',
+        document,
+        'Document must be an object'
+      );
     }
 
     if (!updateOps || typeof updateOps !== 'object') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('updateOps', updateOps, 'Update operations must be an object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'updateOps',
+        updateOps,
+        'Update operations must be an object'
+      );
     }
   }
 
@@ -36,7 +44,11 @@ class UpdateEngineValidation {
    */
   validateOperationsNotEmpty(ops, operatorName) {
     if (!ops || typeof ops !== 'object' || Object.keys(ops).length === 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY('operations', ops, `${operatorName} operator requires at least one field operation`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        'operations',
+        ops,
+        `${operatorName} operator requires at least one field operation`
+      );
     }
   }
 
@@ -47,7 +59,11 @@ class UpdateEngineValidation {
   validateUpdateOperationsNotEmpty(updateOps) {
     const operators = Object.keys(updateOps);
     if (operators.length === 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY('updateOps', updateOps, 'Update operations must contain at least one operator');
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        'updateOps',
+        updateOps,
+        'Update operations must contain at least one operator'
+      );
     }
   }
 
@@ -59,7 +75,11 @@ class UpdateEngineValidation {
    */
   validateNumericValue(value, fieldPath, operation) {
     if (typeof value !== 'number') {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, value, `${operation} operation requires a numeric value`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        value,
+        `${operation} operation requires a numeric value`
+      );
     }
   }
 
@@ -71,7 +91,11 @@ class UpdateEngineValidation {
    */
   validateArrayValue(value, fieldPath, operation) {
     if (!Array.isArray(value)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, value, `${operation} operation requires an array value`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        value,
+        `${operation} operation requires an array value`
+      );
     }
   }
 
@@ -83,7 +107,11 @@ class UpdateEngineValidation {
    */
   validateCurrentFieldNumeric(value, fieldPath, operation) {
     if (typeof value !== 'number') {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, value, `${operation} operation requires current field value to be numeric`);
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        value,
+        `${operation} operation requires current field value to be numeric`
+      );
     }
   }
 
@@ -118,7 +146,11 @@ class UpdateEngineValidation {
         );
       }
 
-      if (currentComparableType !== null && newComparableType !== null && currentComparableType !== newComparableType) {
+      if (
+        currentComparableType !== null &&
+        newComparableType !== null &&
+        currentComparableType !== newComparableType
+      ) {
         throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
           fieldPath,
           { currentValue, newValue },

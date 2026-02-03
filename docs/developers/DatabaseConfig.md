@@ -49,26 +49,26 @@ The `DatabaseConfig` class manages database configuration settings with validati
 
 ### Core Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `rootFolderId` | String | Drive root folder | Root Drive folder for database files |
+| Property         | Type   | Default              | Description                           |
+| ---------------- | ------ | -------------------- | ------------------------------------- |
+| `rootFolderId`   | String | Drive root folder    | Root Drive folder for database files  |
 | `masterIndexKey` | String | 'GASDB_MASTER_INDEX' | ScriptProperties key for master index |
 
 ### Optional Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `autoCreateCollections` | Boolean | `true` | Auto-create collections when accessed |
-| `lockTimeout` | Number | `30000` | Lock timeout in milliseconds |
-| `cacheEnabled` | Boolean | `true` | Enable file caching |
-| `logLevel` | String | 'INFO' | Log level (DEBUG, INFO, WARN, ERROR) |
-| `backupOnInitialise` | Boolean | `false` | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
-| `stripDisallowedCollectionNameCharacters` | Boolean | `false` | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks. |
+| Property                                  | Type    | Default | Description                                                                                                                                                                                                                                        |
+| ----------------------------------------- | ------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoCreateCollections`                   | Boolean | `true`  | Auto-create collections when accessed                                                                                                                                                                                                              |
+| `lockTimeout`                             | Number  | `30000` | Lock timeout in milliseconds                                                                                                                                                                                                                       |
+| `cacheEnabled`                            | Boolean | `true`  | Enable file caching                                                                                                                                                                                                                                |
+| `logLevel`                                | String  | 'INFO'  | Log level (DEBUG, INFO, WARN, ERROR)                                                                                                                                                                                                               |
+| `backupOnInitialise`                      | Boolean | `false` | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
+| `stripDisallowedCollectionNameCharacters` | Boolean | `false` | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks.                                             |
 
 ## Constructor
 
 ```javascript
-constructor(config = {})
+constructor((config = {}));
 ```
 
 **Parameters:**
@@ -184,13 +184,13 @@ Validates all configuration properties according to rules.
 
 Common validation errors and their meanings:
 
-| Error Message | Cause | Solution |
-|---------------|-------|----------|
-| "Lock timeout must be a non-negative number" | Invalid timeout value | Use positive number or zero |
-| "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level | Use exact string match |
-| "Auto create collections must be a boolean" | Non-boolean value | Use true or false explicitly |
-| "Failed to get default root folder" | Drive access issue | Check permissions and authentication |
-| "Collection sanitisation flag must be a boolean" | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly |
+| Error Message                                        | Cause                                                           | Solution                             |
+| ---------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| "Lock timeout must be a non-negative number"         | Invalid timeout value                                           | Use positive number or zero          |
+| "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level                                               | Use exact string match               |
+| "Auto create collections must be a boolean"          | Non-boolean value                                               | Use true or false explicitly         |
+| "Failed to get default root folder"                  | Drive access issue                                              | Check permissions and authentication |
+| "Collection sanitisation flag must be a boolean"     | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
 
 ## Usage Examples
 
@@ -280,9 +280,11 @@ The DatabaseConfig class integrates seamlessly with the Database class. For Apps
 
 ```javascript
 // First-time setup
-const db1 = JsonDbApp.createAndInitialiseDatabase(new DatabaseConfig({
-  masterIndexKey: 'myMasterIndex'
-}));
+const db1 = JsonDbApp.createAndInitialiseDatabase(
+  new DatabaseConfig({
+    masterIndexKey: 'myMasterIndex'
+  })
+);
 
 // Load existing database
 const db2 = JsonDbApp.loadDatabase({
@@ -311,7 +313,7 @@ The QueryEngine accepts its own configuration object independently of DatabaseCo
 ```javascript
 // QueryEngine has its own configuration
 const queryEngine = new QueryEngine({
-  maxNestedDepth: 15  // Override default of 10
+  maxNestedDepth: 15 // Override default of 10
 });
 
 // DatabaseConfig and QueryEngine configurations are separate

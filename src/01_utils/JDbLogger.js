@@ -1,12 +1,11 @@
 /**
  * GASDBLogger - Provides standardized logging functionality for GAS DB
- * 
+ *
  * This class provides different log levels and formats messages consistently
  * across the entire library. Designed to work with Google Apps Script's
  * console logging capabilities.
  */
 class JDbLogger {
-  
   /**
    * Set the current logging level
    * @param {number} level - The log level from LOG_LEVELS
@@ -18,7 +17,7 @@ class JDbLogger {
       throw new Error(`Invalid log level: ${level}`);
     }
   }
-  
+
   /**
    * Set the current logging level by name
    * @param {string} levelName - The log level name (ERROR, WARN, INFO, DEBUG)
@@ -31,7 +30,7 @@ class JDbLogger {
       throw new Error(`Invalid log level name: ${levelName}`);
     }
   }
-  
+
   /**
    * Get the current logging level
    * @returns {number} The current log level
@@ -39,7 +38,7 @@ class JDbLogger {
   static getLevel() {
     return JDbLogger.currentLevel;
   }
-  
+
   /**
    * Get the current logging level name
    * @returns {string} The current log level name
@@ -52,7 +51,7 @@ class JDbLogger {
     }
     return 'UNKNOWN';
   }
-  
+
   /**
    * Format a log message with timestamp and level
    * @param {string} level - The log level name
@@ -63,14 +62,14 @@ class JDbLogger {
   static formatMessage(level, message, context = null) {
     const timestamp = new Date().toISOString();
     let formatted = `[${timestamp}] [${level}] ${message}`;
-    
+
     if (context) {
       formatted += ` | Context: ${JSON.stringify(context)}`;
     }
-    
+
     return formatted;
   }
-  
+
   /**
    * Log an error message
    * @param {string} message - The error message
@@ -82,7 +81,7 @@ class JDbLogger {
       console.error(formatted);
     }
   }
-  
+
   /**
    * Log a warning message
    * @param {string} message - The warning message
@@ -94,7 +93,7 @@ class JDbLogger {
       console.warn(formatted);
     }
   }
-  
+
   /**
    * Log an info message
    * @param {string} message - The info message
@@ -106,7 +105,7 @@ class JDbLogger {
       console.log(formatted);
     }
   }
-  
+
   /**
    * Log a debug message
    * @param {string} message - The debug message
@@ -118,7 +117,7 @@ class JDbLogger {
       console.log(formatted);
     }
   }
-  
+
   /**
    * Log a message with custom level (for internal use)
    * @param {string} level - The log level name
@@ -129,7 +128,7 @@ class JDbLogger {
     const levelValue = JDbLogger.LOG_LEVELS[level.toUpperCase()];
     if (levelValue !== undefined && JDbLogger.currentLevel >= levelValue) {
       const formatted = JDbLogger.formatMessage(level.toUpperCase(), message, context);
-      
+
       // Use appropriate console method based on level
       switch (level.toUpperCase()) {
         case 'ERROR':
@@ -143,7 +142,7 @@ class JDbLogger {
       }
     }
   }
-  
+
   /**
    * Create a logger instance for a specific component
    * @param {string} component - The component name
@@ -185,7 +184,7 @@ class JDbLogger {
       }
     };
   }
-  
+
   /**
    * Log an operation start
    * @param {string} operation - The operation name
@@ -194,7 +193,7 @@ class JDbLogger {
   static startOperation(operation, context = null) {
     JDbLogger.debug(`Starting operation: ${operation}`, context);
   }
-  
+
   /**
    * Log an operation completion
    * @param {string} operation - The operation name
@@ -208,7 +207,7 @@ class JDbLogger {
     }
     JDbLogger.debug(message, context);
   }
-  
+
   /**
    * Time an operation and log its duration
    * @param {string} operation - The operation name
@@ -219,7 +218,7 @@ class JDbLogger {
   static timeOperation(operation, fn, context = null) {
     const startTime = Date.now();
     JDbLogger.startOperation(operation, context);
-    
+
     try {
       const result = fn();
       const duration = Date.now() - startTime;

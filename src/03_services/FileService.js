@@ -1,10 +1,10 @@
 /**
  * FileService - Optimised file operations interface
- * 
+ *
  * This class provides a high-level interface for file operations,
  * including batch operations, intelligent caching, and optimised
  * Drive API usage patterns. Built on top of FileOperations.
- * 
+ *
  * NOTE: For now, caching is not implemented but will be at a later stage.
  */
 
@@ -29,19 +29,19 @@ class FileService {
     if (!logger) {
       throw new ConfigurationError('logger', null, 'Logger is required for FileService');
     }
-    
+
     this._fileOps = fileOps;
     this._logger = logger;
     this._cache = new Map();
     this._maxCacheSize = 50;
     this._cacheEnabled = true;
-    
+
     this._logger.debug('FileService initialised', {
       maxCacheSize: this._maxCacheSize,
       cacheEnabled: this._cacheEnabled
     });
   }
-  
+
   /**
    * Read file content through optimised interface
    * @param {string} fileId - Drive file ID to read
@@ -54,26 +54,26 @@ class FileService {
     if (!fileId) {
       throw new InvalidArgumentError('fileId is required');
     }
-    
+
     this._logger.debug('Reading file through FileService', { fileId });
-    
+
     // Check cache first if enabled
     if (this._cacheEnabled && this._cache.has(fileId)) {
       this._logger.debug('File content retrieved from cache', { fileId });
       // Return a deep copy to preserve Date objects and avoid reference issues
       return ObjectUtils.deepClone(this._cache.get(fileId));
     }
-    
+
     const content = this._fileOps.readFile(fileId);
-    
+
     // Add to cache if enabled
     if (this._cacheEnabled) {
       this._addToCache(fileId, content);
     }
-    
+
     return content;
   }
-  
+
   /**
    * Write data to existing Drive file through optimised interface
    * @param {string} fileId - Drive file ID to write to
@@ -88,18 +88,18 @@ class FileService {
     if (data === null || data === undefined) {
       throw new InvalidArgumentError('data is required');
     }
-    
+
     this._logger.debug('Writing file through FileService', { fileId });
-    
+
     this._fileOps.writeFile(fileId, data);
-    
+
     // Update cache if enabled
     if (this._cacheEnabled && this._cache.has(fileId)) {
       this._cache.set(fileId, data);
       this._logger.debug('Cache updated after write', { fileId });
     }
   }
-  
+
   /**
    * Create new file through optimised interface
    * @param {string} fileName - Name for the new file
@@ -115,11 +115,11 @@ class FileService {
     if (data === null || data === undefined) {
       throw new InvalidArgumentError('data is required');
     }
-    
+
     this._logger.debug('Creating file through FileService', { fileName, folderId });
-    
+
     const newFileId = this._fileOps.createFile(fileName, data, folderId);
-    
+
     // Add to cache if enabled - cache the data as it would be returned by readFile()
     // This ensures cache consistency between write and read operations
     if (this._cacheEnabled) {
@@ -129,10 +129,10 @@ class FileService {
       const deserialisedData = ObjectUtils.deserialise(serialised);
       this._addToCache(newFileId, deserialisedData);
     }
-    
+
     return newFileId;
   }
-  
+
   /**
    * Delete file from Drive through optimised interface
    * @param {string} fileId - Drive file ID to delete
@@ -144,20 +144,20 @@ class FileService {
     if (!fileId) {
       throw new InvalidArgumentError('fileId is required');
     }
-    
+
     this._logger.debug('Deleting file through FileService', { fileId });
-    
+
     const result = this._fileOps.deleteFile(fileId);
-    
+
     // Remove from cache if present
     if (this._cacheEnabled && this._cache.has(fileId)) {
       this._cache.delete(fileId);
       this._logger.debug('File removed from cache', { fileId });
     }
-    
+
     return result;
   }
-  
+
   /**
    * Check if file exists through optimised interface
    * @param {string} fileId - Drive file ID to check
@@ -167,18 +167,18 @@ class FileService {
     if (!fileId) {
       throw new InvalidArgumentError('fileId is required');
     }
-    
+
     this._logger.debug('Checking file existence through FileService', { fileId });
-    
+
     // If file is in cache, it likely exists
     if (this._cacheEnabled && this._cache.has(fileId)) {
       this._logger.debug('File existence confirmed via cache', { fileId });
       return true;
     }
-    
+
     return this._fileOps.fileExists(fileId);
   }
-  
+
   /**
    * Get file metadata through optimised interface
    * @param {string} fileId - Drive file ID to get metadata for
@@ -190,12 +190,12 @@ class FileService {
     if (!fileId) {
       throw new InvalidArgumentError('fileId is required');
     }
-    
+
     this._logger.debug('Getting file metadata through FileService', { fileId });
-    
+
     return this._fileOps.getFileMetadata(fileId);
   }
-  
+
   /**
    * Batch read multiple files for improved efficiency
    * @param {Array<string>} fileIds - Array of Drive file IDs to read
@@ -205,12 +205,12 @@ class FileService {
     if (!Array.isArray(fileIds)) {
       throw new InvalidArgumentError('fileIds must be an array');
     }
-    
+
     this._logger.debug('Batch reading files', { fileCount: fileIds.length });
-    
+
     const results = [];
     const errors = [];
-    
+
     for (const fileId of fileIds) {
       try {
         const content = this.readFile(fileId);
@@ -224,16 +224,16 @@ class FileService {
         errors.push({ fileId, error: error.message });
       }
     }
-    
+
     this._logger.debug('Batch read completed', {
       totalFiles: fileIds.length,
-      successCount: results.filter(r => r !== null).length,
+      successCount: results.filter((r) => r !== null).length,
       errorCount: errors.length
     });
-    
+
     return results;
   }
-  
+
   /**
    * Batch get metadata for multiple files
    * @param {Array<string>} fileIds - Array of Drive file IDs
@@ -243,12 +243,12 @@ class FileService {
     if (!Array.isArray(fileIds)) {
       throw new InvalidArgumentError('fileIds must be an array');
     }
-    
+
     this._logger.debug('Batch getting metadata', { fileCount: fileIds.length });
-    
+
     const results = [];
     const errors = [];
-    
+
     for (const fileId of fileIds) {
       try {
         const metadata = this.getFileMetadata(fileId);
@@ -262,16 +262,16 @@ class FileService {
         errors.push({ fileId, error: error.message });
       }
     }
-    
+
     this._logger.debug('Batch metadata retrieval completed', {
       totalFiles: fileIds.length,
-      successCount: results.filter(r => r !== null).length,
+      successCount: results.filter((r) => r !== null).length,
       errorCount: errors.length
     });
-    
+
     return results;
   }
-  
+
   /**
    * Clear the file content cache
    */
@@ -280,7 +280,7 @@ class FileService {
     this._cache.clear();
     this._logger.debug('Cache cleared', { previousSize: cacheSize });
   }
-  
+
   /**
    * Get cache statistics
    * @returns {Object} Cache statistics
@@ -292,7 +292,7 @@ class FileService {
       enabled: this._cacheEnabled
     };
   }
-  
+
   /**
    * Enable or disable caching
    * @param {boolean} enabled - Whether to enable caching
@@ -304,7 +304,7 @@ class FileService {
     }
     this._logger.debug('Cache enabled status changed', { enabled });
   }
-  
+
   /**
    * Add content to cache with size management
    * @private
@@ -318,13 +318,13 @@ class FileService {
       this._cache.delete(oldestKey);
       this._logger.debug('Removed oldest cache entry', { removedKey: oldestKey });
     }
-    
+
     // Store a deep copy to preserve Date objects and avoid reference issues
     const cachedContent = ObjectUtils.deepClone(content);
     this._cache.set(fileId, cachedContent);
-    this._logger.debug('Content added to cache', { 
-      fileId, 
-      cacheSize: this._cache.size 
+    this._logger.debug('Content added to cache', {
+      fileId,
+      cacheSize: this._cache.size
     });
   }
 }

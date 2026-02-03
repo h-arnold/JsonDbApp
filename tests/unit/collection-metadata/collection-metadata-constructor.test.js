@@ -13,7 +13,7 @@ describe('CollectionMetadata Constructor', () => {
   describe('Default Values', () => {
     it('should create metadata with default values when no input provided', () => {
       const metadata = new CollectionMetadata('testCollection', 'testFileId');
-      
+
       expect(metadata.name).toBe('testCollection');
       expect(metadata.fileId).toBe('testFileId');
       expect(metadata).toHaveProperty('created');
@@ -30,9 +30,9 @@ describe('CollectionMetadata Constructor', () => {
       const initialMetadata = createTestMetadata({
         documentCount: 5
       });
-      
+
       const metadata = new CollectionMetadata(initialMetadata);
-      
+
       expect(metadata.name).toBe('testCollection');
       expect(metadata.fileId).toBe('testFileId');
       expect(metadata.created.getTime()).toBe(initialMetadata.created.getTime());
@@ -48,9 +48,9 @@ describe('CollectionMetadata Constructor', () => {
         lastUpdated: new Date('2024-01-02T00:00:00Z'),
         documentCount: 5
       };
-      
+
       const metadata = new CollectionMetadata(name, fileId, initialMetadata);
-      
+
       expect(metadata.name).toBe(name);
       expect(metadata.fileId).toBe(fileId);
       expect(metadata.created.getTime()).toBe(initialMetadata.created.getTime());

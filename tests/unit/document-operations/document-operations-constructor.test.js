@@ -1,6 +1,6 @@
 /**
  * DocumentOperations Constructor Tests
- * 
+ *
  * Tests for DocumentOperations constructor validation.
  */
 
@@ -16,7 +16,7 @@ describe('DocumentOperations Constructor', () => {
 
   it('should create DocumentOperations with valid collection reference', () => {
     const docOps = new DocumentOperations(env.collection);
-    
+
     expect(docOps).toBeDefined();
     expect(typeof docOps.insertDocument).toBe('function');
     expect(typeof docOps.findDocumentById).toBe('function');

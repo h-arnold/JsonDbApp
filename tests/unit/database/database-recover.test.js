@@ -21,8 +21,14 @@ describe('Database recoverDatabase()', () => {
     registerMasterIndexKey(masterIndexKey);
     const folder = DriveApp.getFolderById(rootFolderId);
 
-    const collectionOneFile = folder.createFile('recoveredCollection1.json', JSON.stringify({ documents: {}, metadata: {} }));
-    const collectionTwoFile = folder.createFile('recoveredCollection2.json', JSON.stringify({ documents: {}, metadata: {} }));
+    const collectionOneFile = folder.createFile(
+      'recoveredCollection1.json',
+      JSON.stringify({ documents: {}, metadata: {} })
+    );
+    const collectionTwoFile = folder.createFile(
+      'recoveredCollection2.json',
+      JSON.stringify({ documents: {}, metadata: {} })
+    );
     registerDatabaseFile(collectionOneFile.getId());
     registerDatabaseFile(collectionTwoFile.getId());
 
@@ -50,19 +56,27 @@ describe('Database recoverDatabase()', () => {
     const recoveredCollections = database.recoverDatabase(backupFileId);
 
     // Assert - MasterIndex should now contain the recovered collections
-    expect(recoveredCollections).toEqual(expect.arrayContaining(['recoveredCollection1', 'recoveredCollection2']));
+    expect(recoveredCollections).toEqual(
+      expect.arrayContaining(['recoveredCollection1', 'recoveredCollection2'])
+    );
     expect(recoveredCollections).toHaveLength(2);
 
     const masterIndex = new MasterIndex({ masterIndexKey });
     const collections = masterIndex.getCollections();
-    expect(Object.keys(collections)).toEqual(expect.arrayContaining(['recoveredCollection1', 'recoveredCollection2']));
+    expect(Object.keys(collections)).toEqual(
+      expect.arrayContaining(['recoveredCollection1', 'recoveredCollection2'])
+    );
   });
 
   it('should throw when backup file structure is invalid', () => {
     // Arrange - Create malformed backup content missing the collections object
     const { config, masterIndexKey, rootFolderId } = createDatabaseTestConfig();
     registerMasterIndexKey(masterIndexKey);
-    const invalidBackupId = createBackupIndexFile(rootFolderId, { invalid: 'data' }, 'invalid_backup.json');
+    const invalidBackupId = createBackupIndexFile(
+      rootFolderId,
+      { invalid: 'data' },
+      'invalid_backup.json'
+    );
     const database = new Database(config);
 
     // Act & Assert - Recovery should reject invalid structures

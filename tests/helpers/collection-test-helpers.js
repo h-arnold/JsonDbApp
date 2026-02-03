@@ -1,6 +1,6 @@
 /**
  * Collection Test Helpers for Vitest
- * 
+ *
  * Provides utilities for setting up and tearing down Collection tests in the Vitest environment.
  */
 
@@ -52,7 +52,7 @@ export const createTestFolder = () => {
 export const createTestCollectionFile = (folderId, collectionName) => {
   const folder = DriveApp.getFolderById(folderId);
   const fileName = `${collectionName}.json`;
-  
+
   const testData = {
     documents: {},
     metadata: {
@@ -65,7 +65,7 @@ export const createTestCollectionFile = (folderId, collectionName) => {
   const file = folder.createFile(fileName, JSON.stringify(testData, null, 2));
   const fileId = file.getId();
   testResources.fileIds.add(fileId);
-  
+
   return fileId;
 };
 
@@ -91,23 +91,23 @@ export const createTestFileWithContent = (folderId, fileName, content) => {
 export const setupCollectionTestEnvironment = () => {
   const masterIndexKey = createMasterIndexKey();
   const folderId = createTestFolder();
-  
+
   // Create logger
-  const logger = JDbLogger.createComponentLogger("Collection-Test");
-  
+  const logger = JDbLogger.createComponentLogger('Collection-Test');
+
   // Create FileService dependencies
   const fileOps = new FileOperations(logger);
   const fileService = new FileService(fileOps, logger);
-  
+
   // Create MasterIndex
   const masterIndex = new MasterIndex({ masterIndexKey, version: 1 });
-  
+
   // Create DatabaseConfig
   const dbConfig = new DatabaseConfig({
     name: 'testDB',
     rootFolderId: folderId
   });
-  
+
   // Create mock database object
   const database = {
     name: 'testDB',
@@ -123,9 +123,11 @@ export const setupCollectionTestEnvironment = () => {
     /**
      * Marks the database as dirty (mock implementation)
      */
-    _markDirty: () => { /* mock implementation */ }
+    _markDirty: () => {
+      /* mock implementation */
+    }
   };
-  
+
   return {
     masterIndexKey,
     folderId,
@@ -145,7 +147,7 @@ export const setupCollectionTestEnvironment = () => {
  */
 export const createTestCollection = (env, collectionName) => {
   const fileId = createTestCollectionFile(env.folderId, collectionName);
-  
+
   // Register collection in master index
   const metadataData = {
     name: collectionName,
@@ -156,18 +158,13 @@ export const createTestCollection = (env, collectionName) => {
     modificationToken: `token-${generateTimestamp()}`,
     lockStatus: null
   };
-  
+
   const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
   env.masterIndex.addCollection(collectionName, collectionMetadata);
-  
+
   // Create Collection instance
-  const collection = new Collection(
-    collectionName,
-    fileId,
-    env.database,
-    env.fileService
-  );
-  
+  const collection = new Collection(collectionName, fileId, env.database, env.fileService);
+
   return { collection, fileId };
 };
 
@@ -190,18 +187,13 @@ export const registerAndCreateCollection = (env, collectionName, fileId, documen
     modificationToken: `token-${Date.now()}`,
     lockStatus: null
   };
-  
+
   const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
   env.masterIndex.addCollection(collectionName, collectionMetadata);
-  
+
   // Create Collection instance
-  const collection = new Collection(
-    collectionName,
-    fileId,
-    env.database,
-    env.fileService
-  );
-  
+  const collection = new Collection(collectionName, fileId, env.database, env.fileService);
+
   return collection;
 };
 
@@ -221,12 +213,12 @@ export const createIsolatedTestCollection = (collectionName) => {
  */
 export const cleanupCollectionTests = () => {
   const scriptProperties = PropertiesService.getScriptProperties();
-  
+
   // Clean up master index keys
   for (const key of testResources.masterIndexKeys) {
     scriptProperties.deleteProperty(key);
   }
-  
+
   // Clean up files
   for (const fileId of testResources.fileIds) {
     try {
@@ -236,7 +228,7 @@ export const cleanupCollectionTests = () => {
       // File may already be deleted, ignore
     }
   }
-  
+
   // Clean up folders
   for (const folderId of testResources.folderIds) {
     try {
@@ -246,7 +238,7 @@ export const cleanupCollectionTests = () => {
       // Folder may already be deleted, ignore
     }
   }
-  
+
   // Clear tracking sets
   testResources.masterIndexKeys.clear();
   testResources.fileIds.clear();

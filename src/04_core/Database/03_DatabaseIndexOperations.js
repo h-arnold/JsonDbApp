@@ -44,8 +44,8 @@ class DatabaseIndexOperations {
   /**
    * Load index file data and normalise the structure.
    * @returns {Object} Normalised index payload
-    * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When the index payload is invalid
-    * @throws {ErrorHandler.ErrorTypes.FILE_IO_ERROR} When file reads fail
+   * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When the index payload is invalid
+   * @throws {ErrorHandler.ErrorTypes.FILE_IO_ERROR} When file reads fail
    */
   loadIndex() {
     this.ensureIndexFile();
@@ -241,11 +241,13 @@ class DatabaseIndexOperations {
    * @private
    */
   _isJsonParseError(errorMessage) {
-    return errorMessage.includes('JSON') ||
+    return (
+      errorMessage.includes('JSON') ||
       errorMessage.includes('Invalid file format') ||
       errorMessage.includes('parse') ||
       errorMessage.includes('Unexpected token') ||
-      errorMessage.includes('SyntaxError');
+      errorMessage.includes('SyntaxError')
+    );
   }
 
   /**
@@ -340,7 +342,7 @@ class DatabaseIndexOperations {
    * Normalise the Drive index payload before use.
    * @param {Object} indexData - Raw index payload
    * @returns {Object} Normalised index payload
-    * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When payload fails validation
+   * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When payload fails validation
    * @private
    */
   _normaliseIndexData(indexData) {
@@ -353,7 +355,7 @@ class DatabaseIndexOperations {
   /**
    * Validate that the index payload is an object structure.
    * @param {Object} indexData - Raw index payload
-    * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When payload is null or not an object
+   * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When payload is null or not an object
    * @private
    */
   _assertIndexObject(indexData) {
@@ -371,7 +373,7 @@ class DatabaseIndexOperations {
   /**
    * Ensure the collections property exists and is an object.
    * @param {Object} indexData - Raw index payload
-    * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When collections property exists but is not an object
+   * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When collections property exists but is not an object
    * @private
    */
   _ensureCollectionsMap(indexData) {

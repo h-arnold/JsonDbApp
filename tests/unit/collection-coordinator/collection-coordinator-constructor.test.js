@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Constructor Tests
- * 
+ *
  * Tests for CollectionCoordinator constructor validation and configuration.
  */
 
@@ -38,7 +38,7 @@ describe('CollectionCoordinator Constructor', () => {
       expect(() => {
         coordinator = createTestCoordinator(collection, env.masterIndex);
       }).not.toThrow();
-      
+
       expect(coordinator).toBeDefined();
     });
   });
@@ -52,7 +52,7 @@ describe('CollectionCoordinator Constructor', () => {
 
     it('should use default configuration values', () => {
       const coordinator = createTestCoordinator(collection, env.masterIndex);
-      
+
       expect(coordinator._config.lockTimeout).toBe(30000);
       expect(coordinator._config.retryAttempts).toBe(3);
       expect(coordinator._config.retryDelayMs).toBe(1000);
@@ -64,9 +64,9 @@ describe('CollectionCoordinator Constructor', () => {
         retryAttempts: 7,
         retryDelayMs: 2222
       };
-      
+
       const coordinator = createTestCoordinator(collection, env.masterIndex, customConfig);
-      
+
       expect(coordinator._config.lockTimeout).toBe(12345);
       expect(coordinator._config.retryAttempts).toBe(7);
       expect(coordinator._config.retryDelayMs).toBe(2222);

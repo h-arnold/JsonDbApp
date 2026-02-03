@@ -1,4 +1,5 @@
 \
+
 # 1. GAS DB Infrastructure Components
 
 - [1. JsonDbApp Infrastructure Components](#1-jsondbapp-infrastructure-components)
@@ -62,16 +63,16 @@ A comprehensive logging utility providing structured logging with multiple level
 
 ### 1.2.0.2. Core Methods
 
-| Method | Description |
-|--------|-------------|
-| `setLevel(level)` | Set log level by number (0-3) |
-| `setLevelByName(name)` | Set log level by name (ERROR/WARN/INFO/DEBUG) |
-| `error(message, context)` | Log error message with optional context |
-| `warn(message, context)` | Log warning message with optional context |
-| `info(message, context)` | Log info message with optional context |
-| `debug(message, context)` | Log debug message with optional context |
-| `createComponentLogger(component)` | Create component-specific logger |
-| `timeOperation(name, fn, context)` | Time and log operation execution |
+| Method                             | Description                                   |
+| ---------------------------------- | --------------------------------------------- |
+| `setLevel(level)`                  | Set log level by number (0-3)                 |
+| `setLevelByName(name)`             | Set log level by name (ERROR/WARN/INFO/DEBUG) |
+| `error(message, context)`          | Log error message with optional context       |
+| `warn(message, context)`           | Log warning message with optional context     |
+| `info(message, context)`           | Log info message with optional context        |
+| `debug(message, context)`          | Log debug message with optional context       |
+| `createComponentLogger(component)` | Create component-specific logger              |
+| `timeOperation(name, fn, context)` | Time and log operation execution              |
 
 ### 1.2.0.3. Usage Examples
 
@@ -89,9 +90,13 @@ const dbLogger = GASDBLogger.createComponentLogger('Database');
 dbLogger.info('Collection created', { name: 'users' });
 
 // Operation timing
-const result = GASDBLogger.timeOperation('loadCollection', () => {
-  return loadCollectionFromDrive(collectionId);
-}, { collectionId });
+const result = GASDBLogger.timeOperation(
+  'loadCollection',
+  () => {
+    return loadCollectionFromDrive(collectionId);
+  },
+  { collectionId }
+);
 ```
 
 ### 1.2.0.4. Best Practices
@@ -135,33 +140,33 @@ All errors extend the base `GASDBError` class and include:
 - Context object for debugging information
 - Timestamp for error tracking
 
-| Error Class             | Code                    | Usage                                                                 |
-|-------------------------|-------------------------|-----------------------------------------------------------------------|
-| `DocumentNotFoundError` | `DOCUMENT_NOT_FOUND`    | Document queries that return no results                               |
-| `DuplicateKeyError`     | `DUPLICATE_KEY`         | Unique constraint violations                                          |
-| `InvalidQueryError`     | `INVALID_QUERY`         | Malformed query syntax                                                |
-| `LockTimeoutError`      | `LOCK_TIMEOUT`          | Lock acquisition failures                                             |
-| `FileIOError`           | `FILE_IO_ERROR`         | Drive API operation failures                                          |
-| `ConflictError`         | `CONFLICT_ERROR`        | Modification token mismatches                                         |
-| `MasterIndexError`      | `MASTER_INDEX_ERROR`    | ScriptProperties access failures                                      |
-| `CollectionNotFoundError`| `COLLECTION_NOT_FOUND` | Missing collection references                                         |
-| `ConfigurationError`    | `CONFIGURATION_ERROR`   | Invalid configuration values                                          |
-| `FileNotFoundError`     | `FILE_NOT_FOUND`        | Specific file not found on Drive                                      |
-| `PermissionDeniedError` | `PERMISSION_DENIED`     | Lack of permission for a file operation                             |
-| `QuotaExceededError`    | `QUOTA_EXCEEDED`        | Google Drive API quota limits reached                                 |
-| `InvalidFileFormatError`| `INVALID_FILE_FORMAT`   | File content does not match expected format (e.g., not valid JSON)    |
-| `InvalidArgumentError`  | `INVALID_ARGUMENT`      | Incorrect or missing function arguments (also used by Validate class) |
-| `OperationError`        | `OPERATION_ERROR`       | General failure during an operation not covered by other error types  |
+| Error Class               | Code                   | Usage                                                                 |
+| ------------------------- | ---------------------- | --------------------------------------------------------------------- |
+| `DocumentNotFoundError`   | `DOCUMENT_NOT_FOUND`   | Document queries that return no results                               |
+| `DuplicateKeyError`       | `DUPLICATE_KEY`        | Unique constraint violations                                          |
+| `InvalidQueryError`       | `INVALID_QUERY`        | Malformed query syntax                                                |
+| `LockTimeoutError`        | `LOCK_TIMEOUT`         | Lock acquisition failures                                             |
+| `FileIOError`             | `FILE_IO_ERROR`        | Drive API operation failures                                          |
+| `ConflictError`           | `CONFLICT_ERROR`       | Modification token mismatches                                         |
+| `MasterIndexError`        | `MASTER_INDEX_ERROR`   | ScriptProperties access failures                                      |
+| `CollectionNotFoundError` | `COLLECTION_NOT_FOUND` | Missing collection references                                         |
+| `ConfigurationError`      | `CONFIGURATION_ERROR`  | Invalid configuration values                                          |
+| `FileNotFoundError`       | `FILE_NOT_FOUND`       | Specific file not found on Drive                                      |
+| `PermissionDeniedError`   | `PERMISSION_DENIED`    | Lack of permission for a file operation                               |
+| `QuotaExceededError`      | `QUOTA_EXCEEDED`       | Google Drive API quota limits reached                                 |
+| `InvalidFileFormatError`  | `INVALID_FILE_FORMAT`  | File content does not match expected format (e.g., not valid JSON)    |
+| `InvalidArgumentError`    | `INVALID_ARGUMENT`     | Incorrect or missing function arguments (also used by Validate class) |
+| `OperationError`          | `OPERATION_ERROR`      | General failure during an operation not covered by other error types  |
 
 #### 1.2.1.2. Error Management Methods
 
-| Method                          | Description                                                                 |
-|---------------------------------|-----------------------------------------------------------------------------|
-| `createError(errorType, ...args)` | Create new error of specified type                                          |
-| `handleError(error, context, rethrow)` | Handle error with logging and optional re-throw                             |
-| `wrapFunction(fn, context)`     | Wrap function with error handling                                           |
-| `isErrorType(error, errorType)` | Check if error is of specific type                                          |
-| `extractErrorInfo(error)`       | Extract error information for logging                                       |
+| Method                                           | Description                                                             |
+| ------------------------------------------------ | ----------------------------------------------------------------------- |
+| `createError(errorType, ...args)`                | Create new error of specified type                                      |
+| `handleError(error, context, rethrow)`           | Handle error with logging and optional re-throw                         |
+| `wrapFunction(fn, context)`                      | Wrap function with error handling                                       |
+| `isErrorType(error, errorType)`                  | Check if error is of specific type                                      |
+| `extractErrorInfo(error)`                        | Extract error information for logging                                   |
 | `detectDoubleParsing(data, parseError, context)` | Detects and throws a specific error if data is already a parsed object. |
 
 #### 1.2.1.3. Usage Examples
@@ -205,22 +210,22 @@ Provides multiple strategies for generating unique identifiers suitable for diff
 
 #### 1.2.2.1. ID Generation Strategies
 
-| Method | Output Example | Use Case |
-|--------|----------------|----------|
-| `generateUUID()` | `f47ac10b-58cc-4372-a567-0e02b2c3d479` | Default document IDs |
-| `generateTimestampId(prefix)` | `token_1640995200000_123` | Time-ordered IDs, modification tokens |
-| `generateShortId(length)` | `a1b2c3d4` | Compact identifiers |
-| `generateAlphanumericId(length)` | `A1b2C3d4E5f6` | General purpose IDs |
-| `generateNumericId(length)` | `1234567890` | Numeric-only IDs |
-| `generateObjectId()` | `507f1f77bcf86cd799439011` | MongoDB compatibility |
-| `generateSequentialId(prefix)` | `seq_1640995200000_000001` | Ordered sequences |
-| `generateReadableId()` | `quick-cat-123` | Human-friendly IDs |
+| Method                           | Output Example                         | Use Case                              |
+| -------------------------------- | -------------------------------------- | ------------------------------------- |
+| `generateUUID()`                 | `f47ac10b-58cc-4372-a567-0e02b2c3d479` | Default document IDs                  |
+| `generateTimestampId(prefix)`    | `token_1640995200000_123`              | Time-ordered IDs, modification tokens |
+| `generateShortId(length)`        | `a1b2c3d4`                             | Compact identifiers                   |
+| `generateAlphanumericId(length)` | `A1b2C3d4E5f6`                         | General purpose IDs                   |
+| `generateNumericId(length)`      | `1234567890`                           | Numeric-only IDs                      |
+| `generateObjectId()`             | `507f1f77bcf86cd799439011`             | MongoDB compatibility                 |
+| `generateSequentialId(prefix)`   | `seq_1640995200000_000001`             | Ordered sequences                     |
+| `generateReadableId()`           | `quick-cat-123`                        | Human-friendly IDs                    |
 
 #### 1.2.2.2. Validation Methods
 
-| Method | Description |
-|--------|-------------|
-| `isValidUUID(id)` | Check if string is valid UUID format |
+| Method                | Description                              |
+| --------------------- | ---------------------------------------- |
+| `isValidUUID(id)`     | Check if string is valid UUID format     |
 | `isValidObjectId(id)` | Check if string is valid ObjectId format |
 
 #### 1.2.2.3. Custom Generator Creation
@@ -290,10 +295,10 @@ Provides utilities for object manipulation with Date preservation, essential for
 
 #### 1.2.3.1. Core Methods
 
-| Method | Description |
-|--------|-------------|
-| `deepClone(obj)` | Create deep copy preserving Date instances and object structure |
-| `convertDateStringsToObjects(obj)` | Convert ISO date strings to Date objects recursively |
+| Method                             | Description                                                     |
+| ---------------------------------- | --------------------------------------------------------------- |
+| `deepClone(obj)`                   | Create deep copy preserving Date instances and object structure |
+| `convertDateStringsToObjects(obj)` | Convert ISO date strings to Date objects recursively            |
 
 #### 1.2.3.2. Deep Cloning
 
@@ -310,7 +315,6 @@ The `deepClone` method creates independent copies of complex objects while prese
 - Complex Types: `Date`, `Array`, `Object`
 - Nested Structures: Unlimited depth for objects and arrays
 
-
 #### 1.2.3.3. Date String Conversion
 
 The `convertDateStringsToObjects` method provides intelligent conversion of ISO date strings:
@@ -326,7 +330,6 @@ The `convertDateStringsToObjects` method provides intelligent conversion of ISO 
 - Timezone indicator: Must end with `Z`
 - Optional milliseconds: Supports both `.sssZ` and `Z` endings
 - Valid date values: Validates month, day, hour, minute, second ranges
-
 
 #### 1.2.3.4. Usage Examples
 
@@ -352,11 +355,11 @@ const clonedDoc = ObjectUtils.deepClone(originalDoc);
 const jsonData = {
   event: {
     startTime: '2023-06-15T10:30:00.000Z', // Will be converted to Date
-    endTime: '2023-06-15 12:30:00',        // Will remain string (invalid ISO)
+    endTime: '2023-06-15 12:30:00', // Will remain string (invalid ISO)
     participants: [
       {
         joined: '2023-06-15T10:35:00.000Z', // Will be converted to Date
-        name: 'Alice'                       // Will remain string
+        name: 'Alice' // Will remain string
       }
     ]
   }
@@ -421,7 +424,7 @@ const loadedData = fileOps.readFile(fileId);
    ```javascript
    // Clone only when necessary for independence
    const backup = ObjectUtils.deepClone(criticalData);
-   
+
    // Use direct references for read-only operations
    const readOnlyView = criticalData; // No cloning needed
    ```
@@ -436,30 +439,30 @@ Provides a collection of static methods for common data validation tasks, ensuri
 
 #### 1.2.4.1. Core Methods
 
-| Method | Description |
-|--------|-------------|
-| `required(value, paramName)` | Ensures `value` is not `null` or `undefined`. |
-| `type(value, expectedType, paramName)` | Validates that `value` is of the `expectedType` (e.g., 'string', 'number', 'object'). |
-| `nonEmptyString(value, paramName)` | Checks if `value` is a string and is not empty or composed only of whitespace. |
-| `string(value, paramName)` | Checks if `value` is a string. Allows empty strings. |
-| `object(value, paramName, allowEmpty = true)` | Validates if `value` is an object (and not an array or `null`). If `allowEmpty` is `false`, an empty object will also fail validation. |
-| `boolean(value, paramName)` | Ensures `value` is a boolean (`true` or `false`). |
-| `array(value, paramName)` | Validates if `value` is an array. |
-| `nonEmptyArray(value, paramName)` | Ensures `value` is an array containing at least one element. |
-| `number(value, paramName)` | Checks if `value` is a number (and not `NaN`). |
-| `integer(value, paramName)` | Validates if `value` is an integer. |
-| `positiveNumber(value, paramName)` | Ensures `value` is a number strictly greater than zero. |
-| `nonNegativeNumber(value, paramName)` | Ensures `value` is a number greater than or equal to zero. |
-| `range(value, min, max, paramName)` | Checks if a numeric `value` falls within the inclusive range defined by `min` and `max`. |
-| `func(value, paramName)` | Validates if `value` is a function. |
-| `enum(value, allowedValues, paramName)` | Ensures `value` is present in the `allowedValues` array. |
-| `objectProperties(obj, requiredProps, paramName)` | Checks if the object `obj` possesses all property names listed in the `requiredProps` array. |
-| `pattern(value, pattern, paramName, description)` | Validates if a string `value` matches the provided `RegExp` `pattern`. The `description` is used in the error message. |
-| `optional(value, validationFn, paramName)` | If `value` is not `null` or `undefined`, applies the `validationFn` to it. Otherwise, passes. |
-| `all(validators, value, paramName)` | Ensures `value` successfully passes all validation functions provided in the `validators` array. Each function in `validators` should accept `(value, paramName)`. |
-| `any(validators, value, paramName)` | Ensures `value` successfully passes at least one validation function from the `validators` array. Each function in `validators` should accept `(value, paramName)`. |
-| `validateObject(value, paramName)` | Validates if `value` is a "plain" object (i.e., created by `{}` or `new Object()`, not an array, `null`, or an instance of `Date`). |
-| `isPlainObject(value)` | A helper method that returns `true` if `value` is a plain object, `false` otherwise. Not typically used for direct validation throwing errors but can be used for conditional logic. |
+| Method                                                  | Description                                                                                                                                                                                                            |
+| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `required(value, paramName)`                            | Ensures `value` is not `null` or `undefined`.                                                                                                                                                                          |
+| `type(value, expectedType, paramName)`                  | Validates that `value` is of the `expectedType` (e.g., 'string', 'number', 'object').                                                                                                                                  |
+| `nonEmptyString(value, paramName)`                      | Checks if `value` is a string and is not empty or composed only of whitespace.                                                                                                                                         |
+| `string(value, paramName)`                              | Checks if `value` is a string. Allows empty strings.                                                                                                                                                                   |
+| `object(value, paramName, allowEmpty = true)`           | Validates if `value` is an object (and not an array or `null`). If `allowEmpty` is `false`, an empty object will also fail validation.                                                                                 |
+| `boolean(value, paramName)`                             | Ensures `value` is a boolean (`true` or `false`).                                                                                                                                                                      |
+| `array(value, paramName)`                               | Validates if `value` is an array.                                                                                                                                                                                      |
+| `nonEmptyArray(value, paramName)`                       | Ensures `value` is an array containing at least one element.                                                                                                                                                           |
+| `number(value, paramName)`                              | Checks if `value` is a number (and not `NaN`).                                                                                                                                                                         |
+| `integer(value, paramName)`                             | Validates if `value` is an integer.                                                                                                                                                                                    |
+| `positiveNumber(value, paramName)`                      | Ensures `value` is a number strictly greater than zero.                                                                                                                                                                |
+| `nonNegativeNumber(value, paramName)`                   | Ensures `value` is a number greater than or equal to zero.                                                                                                                                                             |
+| `range(value, min, max, paramName)`                     | Checks if a numeric `value` falls within the inclusive range defined by `min` and `max`.                                                                                                                               |
+| `func(value, paramName)`                                | Validates if `value` is a function.                                                                                                                                                                                    |
+| `enum(value, allowedValues, paramName)`                 | Ensures `value` is present in the `allowedValues` array.                                                                                                                                                               |
+| `objectProperties(obj, requiredProps, paramName)`       | Checks if the object `obj` possesses all property names listed in the `requiredProps` array.                                                                                                                           |
+| `pattern(value, pattern, paramName, description)`       | Validates if a string `value` matches the provided `RegExp` `pattern`. The `description` is used in the error message.                                                                                                 |
+| `optional(value, validationFn, paramName)`              | If `value` is not `null` or `undefined`, applies the `validationFn` to it. Otherwise, passes.                                                                                                                          |
+| `all(validators, value, paramName)`                     | Ensures `value` successfully passes all validation functions provided in the `validators` array. Each function in `validators` should accept `(value, paramName)`.                                                     |
+| `any(validators, value, paramName)`                     | Ensures `value` successfully passes at least one validation function from the `validators` array. Each function in `validators` should accept `(value, paramName)`.                                                    |
+| `validateObject(value, paramName)`                      | Validates if `value` is a "plain" object (i.e., created by `{}` or `new Object()`, not an array, `null`, or an instance of `Date`).                                                                                    |
+| `isPlainObject(value)`                                  | A helper method that returns `true` if `value` is a plain object, `false` otherwise. Not typically used for direct validation throwing errors but can be used for conditional logic.                                   |
 | `validateUpdateObject(update, paramName, options = {})` | Validates the structure of a MongoDB-style update object. `options` can include: `allowMixed` (boolean, default `false`), `requireOperators` (boolean, default `false`), `forbidOperators` (boolean, default `false`). |
 
 #### 1.2.4.2. Usage Examples
@@ -493,11 +496,21 @@ Validate.pattern(email, /\\S+@\\S+\\.\\S+/, 'email', 'a valid email address form
 Validate.optional(description, Validate.string, 'description');
 
 // Combining multiple validations for a single field
-Validate.all([
-  (val, name) => Validate.string(val, name), // Must be a string
-  (val, name) => Validate.nonEmptyString(val, name), // Must not be empty
-  (val, name) => Validate.pattern(val, /^[a-zA-Z0-9_]{3,16}$/, name, '3-16 alphanumeric characters or underscores') // Must match pattern
-], username, 'username');
+Validate.all(
+  [
+    (val, name) => Validate.string(val, name), // Must be a string
+    (val, name) => Validate.nonEmptyString(val, name), // Must not be empty
+    (val, name) =>
+      Validate.pattern(
+        val,
+        /^[a-zA-Z0-9_]{3,16}$/,
+        name,
+        '3-16 alphanumeric characters or underscores'
+      ) // Must match pattern
+  ],
+  username,
+  'username'
+);
 
 // Validating update objects (e.g., for database operations)
 try {
@@ -505,7 +518,9 @@ try {
 } catch (e) {
   // console.error(e.message); // "updatePayload cannot mix update operators with document fields"
 }
-Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload', { allowMixed: true }); // Passes
+Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload', {
+  allowMixed: true
+}); // Passes
 Validate.validateUpdateObject({ name: 'New Name' }, 'updatePayload', { forbidOperators: true }); // Passes
 Validate.validateUpdateObject({ $inc: { score: 1 } }, 'updatePayload', { requireOperators: true }); // Passes
 ```
@@ -535,30 +550,34 @@ class Database {
     // Validate configuration
     ValidationUtils.validateRequired(config, 'config');
     ValidationUtils.validateType(config.rootFolderId, 'string', 'rootFolderId');
-    
+
     // Set up logging
     this.logger = GASDBLogger.createComponentLogger('Database');
     this.logger.info('Initializing database', { config });
-    
+
     // Generate instance ID
     this.instanceId = IdGenerator.generateUUID();
   }
-  
+
   performOperation(operationName, operationFn) {
-    return GASDBLogger.timeOperation(operationName, () => {
-      try {
-        return operationFn();
-      } catch (error) {
-        ErrorHandler.handleError(error, `Database.${operationName}`, true);
-      }
-    }, { instanceId: this.instanceId });
+    return GASDBLogger.timeOperation(
+      operationName,
+      () => {
+        try {
+          return operationFn();
+        } catch (error) {
+          ErrorHandler.handleError(error, `Database.${operationName}`, true);
+        }
+      },
+      { instanceId: this.instanceId }
+    );
   }
-  
+
   cloneDocumentSafely(document) {
     // Use ObjectUtils for safe document cloning with Date preservation
     return ObjectUtils.deepClone(document);
   }
-  
+
   processFileData(fileData) {
     // Convert ISO date strings from JSON to Date objects
     ObjectUtils.convertDateStringsToObjects(fileData);
@@ -576,15 +595,14 @@ class Collection {
     try {
       ValidationUtils.validateRequired(query, 'query');
       ValidationUtils.validateType(query, 'object', 'query');
-      
+
       const result = this._performFind(query);
-      
+
       if (!result) {
         throw new DocumentNotFoundError(query, this.name);
       }
-      
+
       return result;
-      
     } catch (error) {
       ErrorHandler.handleError(error, 'Collection.findOne', true);
     }
@@ -599,7 +617,7 @@ class Collection {
 ```javascript
 // Set global log level
 GASDBLogger.setLevelByName('DEBUG'); // Development
-GASDBLogger.setLevelByName('INFO');  // Production
+GASDBLogger.setLevelByName('INFO'); // Production
 
 // Component-specific configuration
 const dbLogger = GASDBLogger.createComponentLogger('Database');
@@ -644,12 +662,12 @@ class FileOperations {
   readFile(fileId) {
     const rawData = this._readFromDrive(fileId);
     const parsedData = JSON.parse(rawData);
-    
+
     // Automatically convert ISO date strings to Date objects
     ObjectUtils.convertDateStringsToObjects(parsedData);
     return parsedData;
   }
-  
+
   writeFile(fileId, data) {
     // Create independent copy to avoid modifying original
     const dataToWrite = ObjectUtils.deepClone(data);
@@ -692,4 +710,4 @@ These components can be extended for future functionality:
 
 ---
 
-*This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (GASDBLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability.*
+_This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (GASDBLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability._

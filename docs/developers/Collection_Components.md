@@ -112,7 +112,7 @@ Key responsibilities:
 ### Constructor
 
 ```js
-new Collection(name, driveFileId, database, fileService)
+new Collection(name, driveFileId, database, fileService);
 ```
 
 - **name**: Collection name (non-empty string)
@@ -235,7 +235,7 @@ Find multiple documents matching the filter.
 const allDocs = collection.find({});
 console.log('Total documents:', allDocs.length);
 
-allDocs.forEach(doc => {
+allDocs.forEach((doc) => {
   console.log('Document ID:', doc._id);
 });
 
@@ -279,18 +279,11 @@ const updateResult = collection.updateOne(
 console.log('Modified count (replacement):', updateResult.modifiedCount); // 1
 
 // Update by field using $set operator
-const setResult = collection.updateOne(
-  { email: 'robert@example.com' },
-  { $set: { age: 32 } }
-);
+const setResult = collection.updateOne({ email: 'robert@example.com' }, { $set: { age: 32 } });
 console.log('Modified count ($set):', setResult.modifiedCount); // 1
 
-
 // Non-existent document
-const noMatch = collection.updateOne(
-  { _id: 'nonexistent' },
-  { name: 'Nobody' }
-);
+const noMatch = collection.updateOne({ _id: 'nonexistent' }, { name: 'Nobody' });
 console.log('No match:', noMatch.modifiedCount); // 0
 
 // Unsupported update operators (throws error)
@@ -318,6 +311,7 @@ Update multiple documents matching a filter.
   - `OperationError` if update operators are invalid or an error occurs
 
 **Example:**
+
 ```javascript
 // Add a 'status' field to all documents
 const updateManyResult = collection.updateMany(
@@ -347,6 +341,7 @@ Replace a single document matching the filter.
   - `InvalidArgumentError` for invalid parameters or if replacement contains update operators.
 
 **Example:**
+
 ```javascript
 // Replace document by ID
 const replaceResult = collection.replaceOne(
@@ -357,10 +352,7 @@ console.log('Replaced count:', replaceResult.modifiedCount); // 1
 
 // Attempt to replace with update operators (will throw error)
 try {
-  collection.replaceOne(
-    { _id: 'user123' },
-    { $set: { name: 'Not Allowed' } }
-  );
+  collection.replaceOne({ _id: 'user123' }, { $set: { name: 'Not Allowed' } });
 } catch (error) {
   console.error('Error:', error.message); // Should indicate $set is not allowed
 }
@@ -390,7 +382,6 @@ console.log('Deleted count by ID:', deleteResult.deletedCount); // 1
 // Delete by field
 const deleteByEmailResult = collection.deleteOne({ email: 'alice@example.com' });
 console.log('Deleted count by email:', deleteByEmailResult.deletedCount); // 1
-
 
 // Non-existent document
 const noDelete = collection.deleteOne({ _id: 'nonexistent' });
@@ -512,7 +503,9 @@ const docs = collection.find({}); // Already loaded, no Drive access
 ```javascript
 new CollectionMetadata(name: string, fileId: string, initialMetadata?: Object)
 ```
+
 or (legacy support)
+
 ```javascript
 new CollectionMetadata(initialMetadata: Object)
 ```
@@ -693,7 +686,12 @@ Returns the current `lockStatus` object or `null` if no lock information is set.
 The `lockStatus` object has the shape: `{ isLocked: boolean, lockedBy: string|null, lockedAt: number|null, lockTimeout: number|null }`.
 
 ```javascript
-const lockInfo = { isLocked: true, lockedBy: 'process-1', lockedAt: Date.now(), lockTimeout: 30000 };
+const lockInfo = {
+  isLocked: true,
+  lockedBy: 'process-1',
+  lockedAt: Date.now(),
+  lockTimeout: 30000
+};
 const metadata = new CollectionMetadata('jobs', 'jobsFileId', { lockStatus: lockInfo });
 console.log(metadata.getLockStatus()); // { isLocked: true, ... }
 ```
@@ -708,7 +706,12 @@ Sets the `lockStatus`.
 
 ```javascript
 const metadata = new CollectionMetadata('queue', 'queueFileId');
-const newLock = { isLocked: true, lockedBy: 'worker-bee', lockedAt: Date.now(), lockTimeout: 60000 };
+const newLock = {
+  isLocked: true,
+  lockedBy: 'worker-bee',
+  lockedAt: Date.now(),
+  lockTimeout: 60000
+};
 metadata.setLockStatus(newLock);
 console.log(metadata.getLockStatus()); // { isLocked: true, lockedBy: 'worker-bee', ... }
 
@@ -753,7 +756,10 @@ console.log('Plain object:', obj);
 // Dates are independent copies
 const originalCreationYear = metadata.created.getFullYear();
 obj.created.setFullYear(2000);
-console.log('Original created year unchanged:', metadata.created.getFullYear() === originalCreationYear); // true
+console.log(
+  'Original created year unchanged:',
+  metadata.created.getFullYear() === originalCreationYear
+); // true
 ```
 
 #### `clone(): CollectionMetadata`
@@ -844,7 +850,7 @@ It works in conjunction with:
 ### Constructor
 
 ```javascript
-new DocumentOperations(collection)
+new DocumentOperations(collection);
 ```
 
 - **collection**: A reference to the `Collection` instance. This provides `DocumentOperations` access to the actual documents array (`collection._documents`) and methods to update metadata (`collection._updateMetadata()`) and mark the collection as dirty (`collection._markDirty()`).
@@ -1039,7 +1045,7 @@ Finds all documents that match the given query. Delegates to `QueryEngine`.
 
 ```javascript
 const admins = docOps.findMultipleByQuery({ role: 'admin' });
-admins.forEach(admin => console.log(admin.name));
+admins.forEach((admin) => console.log(admin.name));
 ```
 
 #### countByQuery(query: Object): number
@@ -1078,7 +1084,10 @@ Updates a single document identified by `id` using MongoDB-style update operator
 **Example:**
 
 ```javascript
-const result = docOps.updateDocumentWithOperators('some-unique-id', { $set: { status: 'inactive' }, $inc: { loginAttempts: 1 } });
+const result = docOps.updateDocumentWithOperators('some-unique-id', {
+  $set: { status: 'inactive' },
+  $inc: { loginAttempts: 1 }
+});
 if (result.modifiedCount > 0) {
   console.log('Document updated with operators.');
 }
@@ -1096,12 +1105,15 @@ Updates all documents matching the `query` using MongoDB-style update operators.
 - **Throws**
   - `ErrorHandler.ErrorTypes.INVALID_ARGUMENT`: If `query` or `updateOps` are invalid.
   - `ErrorHandler.ErrorTypes.INVALID_QUERY`: If `updateOps` are invalid.
-  (Note: `DOCUMENT_NOT_FOUND` is listed in JSDoc but typically results in 0 modified documents rather than an error for "update many" type operations).
+    (Note: `DOCUMENT_NOT_FOUND` is listed in JSDoc but typically results in 0 modified documents rather than an error for "update many" type operations).
 
 **Example:**
 
 ```javascript
-const updatedCount = docOps.updateDocumentByQuery({ department: 'Sales' }, { $set: { onQuota: true } });
+const updatedCount = docOps.updateDocumentByQuery(
+  { department: 'Sales' },
+  { $set: { onQuota: true } }
+);
 console.log(`${updatedCount} sales documents updated.`);
 ```
 
@@ -1142,7 +1154,10 @@ Replaces the first document matching the `query` with the new `doc`. Note: Mongo
 **Example:**
 
 ```javascript
-const replacedCount = docOps.replaceDocumentByQuery({ status: 'pending' }, { status: 'approved', approvedBy: 'admin' });
+const replacedCount = docOps.replaceDocumentByQuery(
+  { status: 'pending' },
+  { status: 'approved', approvedBy: 'admin' }
+);
 console.log(`${replacedCount} document(s) replaced.`);
 ```
 

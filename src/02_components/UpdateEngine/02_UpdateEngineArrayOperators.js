@@ -29,7 +29,7 @@ class UpdateEngineArrayOperators {
   applyPush(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$push');
 
-    Object.keys(ops).forEach(fieldPath => {
+    Object.keys(ops).forEach((fieldPath) => {
       this._applyPushForField(document, fieldPath, ops[fieldPath]);
     });
 
@@ -54,11 +54,13 @@ class UpdateEngineArrayOperators {
       const criterion = ops[fieldPath];
       const originalLength = current.length;
 
-      const filtered = current.filter(item => {
+      const filtered = current.filter((item) => {
         try {
           return !this._pullMatches(item, criterion);
         } catch (error) {
-          this._logger.debug('Pull match evaluation error – element retained', { error: error.message });
+          this._logger.debug('Pull match evaluation error – element retained', {
+            error: error.message
+          });
           return true;
         }
       });
@@ -80,7 +82,7 @@ class UpdateEngineArrayOperators {
   applyAddToSet(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$addToSet');
 
-    Object.keys(ops).forEach(fieldPath => {
+    Object.keys(ops).forEach((fieldPath) => {
       const current = this._fieldPaths.getValue(document, fieldPath);
       const valueOrModifier = ops[fieldPath];
       const comparator = this._createEqualityComparator(fieldPath);
@@ -104,7 +106,12 @@ class UpdateEngineArrayOperators {
    * @returns {boolean} true if element should be removed
    */
   _pullMatches(element, criterion) {
-    if (criterion === null || typeof criterion !== 'object' || Array.isArray(criterion) || (criterion instanceof Date)) {
+    if (
+      criterion === null ||
+      typeof criterion !== 'object' ||
+      Array.isArray(criterion) ||
+      criterion instanceof Date
+    ) {
       return ComparisonUtils.equals(element, criterion, { arrayContainsScalar: false });
     }
 
@@ -144,7 +151,7 @@ class UpdateEngineArrayOperators {
     }
 
     this._validation.validateArrayValue(current, fieldPath, '$push');
-    items.forEach(item => current.push(item));
+    items.forEach((item) => current.push(item));
   }
 
   /**
@@ -190,9 +197,13 @@ class UpdateEngineArrayOperators {
 
     if (current === undefined) {
       const uniqueValues = [];
-      items.forEach(item => {
-        const existsInBatch = uniqueValues.some(entry => comparator(entry, item));
-        this._logger.debug('AddToSet $each batch check', { fieldPath, existsInBatch, candidate: item });
+      items.forEach((item) => {
+        const existsInBatch = uniqueValues.some((entry) => comparator(entry, item));
+        this._logger.debug('AddToSet $each batch check', {
+          fieldPath,
+          existsInBatch,
+          candidate: item
+        });
         if (!existsInBatch) {
           uniqueValues.push(item);
         }
@@ -202,7 +213,7 @@ class UpdateEngineArrayOperators {
     }
 
     this._validation.validateArrayValue(current, fieldPath, '$addToSet');
-    items.forEach(item => this._addUniqueValue(current, fieldPath, comparator, item));
+    items.forEach((item) => this._addUniqueValue(current, fieldPath, comparator, item));
   }
 
   /**
@@ -266,7 +277,10 @@ class UpdateEngineArrayOperators {
     try {
       return ComparisonUtils.equals(a, b, { arrayContainsScalar: false });
     } catch (error) {
-      this._logger.debug('AddToSet comparator fallback triggered', { fieldPath, error: error.message });
+      this._logger.debug('AddToSet comparator fallback triggered', {
+        fieldPath,
+        error: error.message
+      });
       return false;
     }
   }
@@ -279,7 +293,14 @@ class UpdateEngineArrayOperators {
    * @returns {boolean} True when both values are plain objects suitable for deep comparison
    */
   _shouldUseDeepEqual(a, b) {
-    return Boolean(a) && Boolean(b) && typeof a === 'object' && typeof b === 'object' && !(a instanceof Date) && !(b instanceof Date);
+    return (
+      Boolean(a) &&
+      Boolean(b) &&
+      typeof a === 'object' &&
+      typeof b === 'object' &&
+      !(a instanceof Date) &&
+      !(b instanceof Date)
+    );
   }
 
   /**
@@ -312,11 +333,19 @@ class UpdateEngineArrayOperators {
       return;
     }
 
-    const comparisons = targetArray.map((item, idx) => ({ idx, equals: comparator(item, candidate), item }));
-    const exists = comparisons.some(entry => entry.equals);
+    const comparisons = targetArray.map((item, idx) => ({
+      idx,
+      equals: comparator(item, candidate),
+      item
+    }));
+    const exists = comparisons.some((entry) => entry.equals);
     const snapshot = targetArray.slice(0, ADD_TO_SET_LOG_SAMPLE_SIZE);
 
-    this._logger.debug('AddToSet duplicate check', { fieldPath, exists, currentLength: targetArray.length });
+    this._logger.debug('AddToSet duplicate check', {
+      fieldPath,
+      exists,
+      currentLength: targetArray.length
+    });
     this._logger.debug('AddToSet compare details', { candidate, sample: snapshot, comparisons });
 
     if (exists) {

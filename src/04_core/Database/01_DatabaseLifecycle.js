@@ -22,8 +22,8 @@ class DatabaseLifecycle {
 
   /**
    * Create a new database by initialising the MasterIndex.
-    * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When MasterIndex already exists
-    * @throws {ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR} When MasterIndex creation fails
+   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When MasterIndex already exists
+   * @throws {ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR} When MasterIndex creation fails
    */
   createDatabase() {
     const db = this._database;
@@ -38,7 +38,8 @@ class DatabaseLifecycle {
           db.config.masterIndexKey,
           'Existing MasterIndex data detected'
         );
-        configurationError.message = 'Database already exists. Use recoverDatabase() if you need to restore from backup.';
+        configurationError.message =
+          'Database already exists. Use recoverDatabase() if you need to restore from backup.';
         throw configurationError;
       }
 
@@ -52,7 +53,10 @@ class DatabaseLifecycle {
       if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
         throw error;
       }
-      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('createDatabase', error.message);
+      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
+        'createDatabase',
+        error.message
+      );
       masterIndexError.message = 'Database creation failed: ' + error.message;
       throw masterIndexError;
     }
@@ -60,7 +64,7 @@ class DatabaseLifecycle {
 
   /**
    * Initialise the database by loading from the MasterIndex.
-    * @throws {ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR} When MasterIndex is missing or initialisation fails
+   * @throws {ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR} When MasterIndex is missing or initialisation fails
    */
   initialise() {
     const db = this._database;
@@ -81,7 +85,10 @@ class DatabaseLifecycle {
       if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
         throw error;
       }
-      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('initialise', error.message);
+      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
+        'initialise',
+        error.message
+      );
       masterIndexError.message = 'Database initialisation failed: ' + error.message;
       throw masterIndexError;
     }
@@ -91,9 +98,9 @@ class DatabaseLifecycle {
    * Recover database from a backup index file.
    * @param {string} backupFileId - Drive file ID of the backup index file
    * @returns {Array<string>} List of recovered collection names
-    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When backup identifier is invalid
-    * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When backup payload is invalid
-    * @throws {ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR} When recovery orchestration fails
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When backup identifier is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT} When backup payload is invalid
+   * @throws {ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR} When recovery orchestration fails
    */
   recoverDatabase(backupFileId) {
     const db = this._database;
@@ -117,7 +124,10 @@ class DatabaseLifecycle {
       if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
         throw error;
       }
-      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('recoverDatabase', error.message);
+      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
+        'recoverDatabase',
+        error.message
+      );
       masterIndexError.message = 'Database recovery failed: ' + error.message;
       throw masterIndexError;
     }
@@ -136,7 +146,8 @@ class DatabaseLifecycle {
         'initialise',
         'MasterIndex not found in ScriptProperties'
       );
-      masterIndexError.message = 'MasterIndex not found. Use createDatabase() for first-time setup or recoverDatabase() for recovery.';
+      masterIndexError.message =
+        'MasterIndex not found. Use createDatabase() for first-time setup or recoverDatabase() for recovery.';
       throw masterIndexError;
     }
   }

@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
+import {
+  setupTestEnvironment,
+  resetCollection
+} from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Find Operations', () => {
   let env, docOps;
@@ -17,9 +20,9 @@ describe('DocumentOperations Find Operations', () => {
   it('should find document by valid ID', () => {
     const testDoc = { name: 'Findable User', email: 'findable@example.com' };
     const insertedDoc = docOps.insertDocument(testDoc);
-    
+
     const foundDoc = docOps.findDocumentById(insertedDoc._id);
-    
+
     expect(foundDoc).toBeDefined();
     expect(foundDoc._id).toBe(insertedDoc._id);
     expect(foundDoc.name).toBe(testDoc.name);
@@ -41,14 +44,14 @@ describe('DocumentOperations Find Operations', () => {
     docOps.insertDocument({ name: 'User One', email: 'one@example.com' });
     docOps.insertDocument({ name: 'User Two', email: 'two@example.com' });
     docOps.insertDocument({ name: 'User Three', email: 'three@example.com' });
-    
+
     const allDocs = docOps.findAllDocuments();
-    
+
     expect(allDocs).toBeDefined();
     expect(Array.isArray(allDocs)).toBe(true);
     expect(allDocs.length).toBe(3);
-    
-    const names = allDocs.map(doc => doc.name);
+
+    const names = allDocs.map((doc) => doc.name);
     expect(names).toContain('User One');
     expect(names).toContain('User Two');
     expect(names).toContain('User Three');
@@ -56,7 +59,7 @@ describe('DocumentOperations Find Operations', () => {
 
   it('should return empty array when finding all documents in empty collection', () => {
     const allDocs = docOps.findAllDocuments();
-    
+
     expect(allDocs).toBeDefined();
     expect(Array.isArray(allDocs)).toBe(true);
     expect(allDocs.length).toBe(0);

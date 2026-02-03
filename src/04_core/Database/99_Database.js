@@ -204,7 +204,7 @@ class Database {
    * Validate (and optionally sanitise) collection names.
    * @param {string} name - Collection name to validate
    * @returns {string} Validated (and potentially sanitised) collection name
-  * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection name is invalid
+   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When collection name is invalid
    * @private
    */
   _validateCollectionName(name) {
@@ -254,7 +254,7 @@ class Database {
    */
   _sanitizeCollectionName(name) {
     const invalidPattern = new RegExp('[\\/\\\\:*?"<>|]', 'g');
-      const sanitised = name.replace(invalidPattern, '');
+    const sanitised = name.replace(invalidPattern, '');
     if (sanitised !== name) {
       this._logger.info('Collection name sanitised', {
         originalName: name,

@@ -22,6 +22,7 @@ Use the top-level library functions instead of constructing classes directly:
 - `JsonDbApp.loadDatabase(config)` – load existing DB
 
 Within this repo (`old_tests/`), you can still use `new Database(config)` then call `createDatabase()`/`initialise()` explicitly.
+
 - [**clasp-watch.sh Documentation**](./clasp-watch.sh.md) - Continuous deployment script for automatic file watching and pushing to Google Apps Script
 - [**Collection Components**](./Collection_Components.md) - Detailed explanation of Collection, CollectionMetadata, and DocumentOperations classes for MongoDB-compatible document operations
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex
@@ -32,6 +33,11 @@ Within this repo (`old_tests/`), you can still use `new Database(config)` then c
 - [**test-runner.sh Documentation**](./test-runner.sh.md) - Automated testing script for streamlined development workflow
 - [**Testing Framework**](./Testing_Framework.md) - Comprehensive guide to the GAS DB testing infrastructure, including AssertionUtilities and TestRunner classes
 - [**UpdateEngine**](./UpdateEngine.md) - Engine for applying MongoDB-style update operators to documents
+
+## Coding Standards
+
+- **Linting**: `no-magic-numbers` is enforced as an error for source files to keep configuration and algorithmic values explicit. Tests allow numeric literals for readability because the rule is disabled for `tests/**/*.js`.
+- **Documentation**: JSDoc completeness is enforced as errors; ensure descriptions, param types, and return details are present.
 
 ## Documentation Structure
 

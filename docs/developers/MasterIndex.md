@@ -112,7 +112,7 @@ Prevents concurrent modifications across script instances:
 ## Constructor
 
 ```javascript
-constructor(config = {})
+constructor((config = {}));
 ```
 
 **Parameters:**
@@ -248,8 +248,7 @@ if (masterIndex.acquireLock('users', operationId)) {
 const expectedToken = 'previously-read-token';
 
 if (masterIndex.hasConflict('users', expectedToken)) {
-  const resolution = masterIndex.resolveConflict('users', 
-    newData, 'LAST_WRITE_WINS');
+  const resolution = masterIndex.resolveConflict('users', newData, 'LAST_WRITE_WINS');
 } else {
   masterIndex.updateCollectionMetadata('users', newData);
 }

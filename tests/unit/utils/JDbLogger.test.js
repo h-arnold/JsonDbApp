@@ -14,13 +14,13 @@ describe('JDbLogger basic functionality', () => {
 describe('JDbLogger levels', () => {
   it('should set and get log levels', () => {
     const originalLevel = JDbLogger.getLevel();
-    
+
     JDbLogger.setLevel(JDbLogger.LOG_LEVELS.ERROR);
     expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.ERROR);
-    
+
     JDbLogger.setLevelByName('DEBUG');
     expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.DEBUG);
-    
+
     JDbLogger.setLevel(originalLevel);
   });
 });

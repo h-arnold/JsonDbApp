@@ -33,7 +33,11 @@ class QueryEngineValidation {
    */
   validateQueryInputs(documents, query) {
     if (!Array.isArray(documents)) {
-      throw new InvalidArgumentError('documents', documents, 'Documents parameter must be an array');
+      throw new InvalidArgumentError(
+        'documents',
+        documents,
+        'Documents parameter must be an array'
+      );
     }
 
     this._assertValidQueryRoot(query);
@@ -91,7 +95,7 @@ class QueryEngineValidation {
     }
 
     if (Array.isArray(node)) {
-      node.forEach(element => {
+      node.forEach((element) => {
         if (Validate.isPlainObject(element) || Array.isArray(element)) {
           this._validateNode(element, depth + 1);
         }
@@ -103,7 +107,7 @@ class QueryEngineValidation {
       return;
     }
 
-    Object.keys(node).forEach(key => {
+    Object.keys(node).forEach((key) => {
       const value = node[key];
 
       if (this.isOperatorKey(key)) {
@@ -123,7 +127,7 @@ class QueryEngineValidation {
       }
 
       if (Array.isArray(value)) {
-        value.forEach(element => {
+        value.forEach((element) => {
           if (Validate.isPlainObject(element) || Array.isArray(element)) {
             this._validateNode(element, depth + 1);
           }
@@ -145,7 +149,7 @@ class QueryEngineValidation {
       throw new InvalidQueryError(`${operator} operator requires an array of conditions`);
     }
 
-    value.forEach(condition => {
+    value.forEach((condition) => {
       if (!Validate.isPlainObject(condition)) {
         throw new InvalidQueryError(`${operator} operator requires condition objects`);
       }
@@ -166,7 +170,7 @@ class QueryEngineValidation {
     }
 
     if (Array.isArray(value)) {
-      value.forEach(element => {
+      value.forEach((element) => {
         if (Validate.isPlainObject(element) || Array.isArray(element)) {
           this._validateNode(element, depth + 1);
         }

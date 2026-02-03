@@ -7,7 +7,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createTestMetadata, createTestLockStatus, waitForTimestamp } from '../../helpers/collection-metadata-test-helpers.js';
+import {
+  createTestMetadata,
+  createTestLockStatus,
+  waitForTimestamp
+} from '../../helpers/collection-metadata-test-helpers.js';
 
 describe('CollectionMetadata Serialization', () => {
   describe('Object Conversion', () => {
@@ -26,7 +30,7 @@ describe('CollectionMetadata Serialization', () => {
       const fileId = 'file123';
       const modificationToken = 'mod-token-12345';
       const lockStatus = createTestLockStatus();
-      
+
       const metadata = new CollectionMetadata(name, fileId);
       metadata.setModificationToken(modificationToken);
       metadata.setLockStatus(lockStatus);
@@ -52,30 +56,30 @@ describe('CollectionMetadata Serialization', () => {
       const fileId = 'file123';
       const modificationToken = 'mod-token-12345';
       const lockStatus = createTestLockStatus();
-      
+
       const original = new CollectionMetadata(name, fileId);
       original.setModificationToken(modificationToken);
       original.setLockStatus(lockStatus);
-      
+
       const cloned = original.clone();
-      
+
       expect(cloned.name).toBe(original.name);
       expect(cloned.fileId).toBe(original.fileId);
       expect(cloned.getModificationToken()).toBe(original.getModificationToken());
-      
+
       original.setModificationToken('different-token');
       expect(cloned.getModificationToken()).not.toBe(original.getModificationToken());
     });
 
     it('should clone with independent timestamps', async () => {
       const original = new CollectionMetadata('testCollection', 'file123');
-      
+
       const cloned = original.clone();
-      
+
       await waitForTimestamp();
-      
+
       original.updateLastModified();
-      
+
       expect(cloned.lastUpdated.getTime()).not.toBe(original.lastUpdated.getTime());
     });
   });
@@ -92,16 +96,16 @@ describe('CollectionMetadata Serialization', () => {
           lockTimeout: 300000
         }
       });
-      
+
       const metadata = new CollectionMetadata(sourceObject);
-      
+
       expect(metadata.name).toBe(sourceObject.name);
       expect(metadata.fileId).toBe(sourceObject.fileId);
       expect(metadata.created.getTime()).toBe(sourceObject.created.getTime());
       expect(metadata.lastUpdated.getTime()).toBe(sourceObject.lastUpdated.getTime());
       expect(metadata.documentCount).toBe(sourceObject.documentCount);
       expect(metadata.getModificationToken()).toBe(sourceObject.modificationToken);
-      
+
       const lockStatus = metadata.getLockStatus();
       expect(lockStatus.isLocked).toBe(sourceObject.lockStatus.isLocked);
       expect(lockStatus.lockedBy).toBe(sourceObject.lockStatus.lockedBy);
@@ -112,9 +116,9 @@ describe('CollectionMetadata Serialization', () => {
     it('should create instance using create factory method', () => {
       const name = 'testCollection';
       const fileId = 'file123';
-      
+
       const metadata = CollectionMetadata.create(name, fileId);
-      
+
       expect(metadata.name).toBe(name);
       expect(metadata.fileId).toBe(fileId);
       expect(metadata.documentCount).toBe(0);
@@ -130,7 +134,7 @@ describe('CollectionMetadata Serialization', () => {
       expect(() => {
         new CollectionMetadata('validName', 'validFileId', []);
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         new CollectionMetadata('validName', 'validFileId', 'invalid-metadata');
       }).toThrow(InvalidArgumentError);
@@ -144,21 +148,21 @@ describe('CollectionMetadata Serialization', () => {
           documentCount: 5
         });
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         new CollectionMetadata({
           name: 'validName',
           created: new Date()
         });
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         new CollectionMetadata({
           fileId: 'validFileId',
           created: new Date()
         });
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         new CollectionMetadata({
           name: 'validName',
@@ -166,10 +170,10 @@ describe('CollectionMetadata Serialization', () => {
           created: 'invalid-date'
         });
       }).toThrow(InvalidArgumentError);
-      
+
       expect(() => {
         new CollectionMetadata({
-          name: 'validName', 
+          name: 'validName',
           fileId: 'validFileId',
           documentCount: 'invalid-count'
         });
@@ -181,9 +185,9 @@ describe('CollectionMetadata Serialization', () => {
     it('should handle very large document counts', () => {
       const metadata = new CollectionMetadata('testCollection', 'testFileId');
       const largeCount = Number.MAX_SAFE_INTEGER;
-      
+
       metadata.setDocumentCount(largeCount);
-      
+
       expect(metadata.documentCount).toBe(largeCount);
     });
 
@@ -193,7 +197,7 @@ describe('CollectionMetadata Serialization', () => {
         fileId: 'testFileId',
         documentCount: 3
       };
-      
+
       const metadata = new CollectionMetadata(partialMetadata);
       const metadataSnapshot = metadata.toJSON();
 
@@ -210,7 +214,7 @@ describe('CollectionMetadata Serialization', () => {
         lastUpdated: new Date(),
         documentCount: 0
       };
-      
+
       expect(() => {
         new CollectionMetadata(invalidMetadata);
       }).toThrow(InvalidArgumentError);
@@ -218,10 +222,10 @@ describe('CollectionMetadata Serialization', () => {
 
     it('should handle zero document count operations', () => {
       const metadata = new CollectionMetadata('testCollection', 'testFileId');
-      
+
       metadata.setDocumentCount(0);
       expect(metadata.documentCount).toBe(0);
-      
+
       expect(() => {
         metadata.decrementDocumentCount();
       }).toThrow(InvalidArgumentError);

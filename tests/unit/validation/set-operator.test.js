@@ -1,6 +1,6 @@
 /**
  * $set (Field Update) Operator Validation Tests
- * 
+ *
  * Tests MongoDB-compatible $set operator against ValidationMockData.
  * Covers:
  * - Basic field setting (all types: string, number, boolean, array, object)
@@ -10,7 +10,10 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupValidationTestEnvironment, cleanupValidationTests } from '../../helpers/validation-test-helpers.js';
+import {
+  setupValidationTestEnvironment,
+  cleanupValidationTests
+} from '../../helpers/validation-test-helpers.js';
 
 let testEnv;
 
@@ -27,13 +30,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should overwrite existing string values', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { 'name.first': 'Alexandra' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -44,13 +47,10 @@ describe('$set Field Update Operator Tests', () => {
     it('should overwrite existing numeric values', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'person1' },
-        { $set: { age: 35, score: 92.7 } }
-      );
-      
+      const result = collection.updateOne({ _id: 'person1' }, { $set: { age: 35, score: 92.7 } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -61,13 +61,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should overwrite existing boolean values', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { isActive: false, 'preferences.newsletter': false } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -79,13 +79,13 @@ describe('$set Field Update Operator Tests', () => {
       // Arrange
       const collection = testEnv.collections.persons;
       const newTags = ['updated', 'test', 'values'];
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { 'preferences.tags': newTags } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -96,13 +96,10 @@ describe('$set Field Update Operator Tests', () => {
       // Arrange
       const collection = testEnv.collections.persons;
       const newContact = { email: 'new.email@example.com', phones: ['999-111-2222'] };
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'person1' },
-        { $set: { contact: newContact } }
-      );
-      
+      const result = collection.updateOne({ _id: 'person1' }, { $set: { contact: newContact } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -114,13 +111,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should create new top-level fields', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { newField: 'new value', anotherField: 42 } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -131,13 +128,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should set nested fields using dot notation', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { 'preferences.settings.theme': 'auto' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -148,13 +145,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should set deeply nested fields', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { 'preferences.settings.notifications.email.frequency': 'daily' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -168,13 +165,10 @@ describe('$set Field Update Operator Tests', () => {
       // Arrange
       const collection = testEnv.collections.orders;
       collection.updateOne({ _id: 'order1' }, { $set: { stringField: 'text123' } });
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'order1' },
-        { $set: { stringField: 456 } }
-      );
-      
+      const result = collection.updateOne({ _id: 'order1' }, { $set: { stringField: 456 } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'order1' });
@@ -186,13 +180,10 @@ describe('$set Field Update Operator Tests', () => {
       // Arrange
       const collection = testEnv.collections.orders;
       const newArray = [1, 2, 3, 'mixed', true];
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'order1' },
-        { $set: { priority: newArray } }
-      );
-      
+      const result = collection.updateOne({ _id: 'order1' }, { $set: { priority: newArray } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'order1' });
@@ -203,13 +194,10 @@ describe('$set Field Update Operator Tests', () => {
     it('should change object field to primitive', () => {
       // Arrange
       const collection = testEnv.collections.orders;
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'order1' },
-        { $set: { metrics: 'simplified' } }
-      );
-      
+      const result = collection.updateOne({ _id: 'order1' }, { $set: { metrics: 'simplified' } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'order1' });
@@ -220,13 +208,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should change null field to non-null value', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person2' },
         { $set: { lastLogin: new Date('2025-06-28T12:00:00Z') } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person2' });
@@ -239,13 +227,18 @@ describe('$set Field Update Operator Tests', () => {
     it('should create nested object structure via dot notation', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
-        { $set: { 'profile.bio.summary': 'Software developer', 'profile.bio.skills': ['JavaScript', 'MongoDB'] } }
+        {
+          $set: {
+            'profile.bio.summary': 'Software developer',
+            'profile.bio.skills': ['JavaScript', 'MongoDB']
+          }
+        }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -256,13 +249,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should perform partial object updates', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { 'preferences.settings.language': 'en-GB' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -274,19 +267,19 @@ describe('$set Field Update Operator Tests', () => {
     it('should handle mixed existing and new nested fields', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
-        { 
-          $set: { 
-            'preferences.settings.theme': 'system',  // existing
-            'preferences.settings.timezone': 'GMT',  // new
-            'preferences.newCategory.option1': true  // completely new branch
-          } 
+        {
+          $set: {
+            'preferences.settings.theme': 'system', // existing
+            'preferences.settings.timezone': 'GMT', // new
+            'preferences.newCategory.option1': true // completely new branch
+          }
         }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -305,10 +298,7 @@ describe('$set Field Update Operator Tests', () => {
       expect(original._id).toBe('person1');
 
       // Act
-      const result = collection.updateOne(
-        { _id: 'person1' },
-        { $set: { _id: 'newId' } }
-      );
+      const result = collection.updateOne({ _id: 'person1' }, { $set: { _id: 'newId' } });
 
       // Assert
       // Attempting to change _id should not move or re-key the document.
@@ -325,13 +315,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should handle undefined vs null assignment', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { nullField: null, undefinedField: undefined } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -343,13 +333,13 @@ describe('$set Field Update Operator Tests', () => {
     it('should distinguish empty string from null assignment', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $set: { emptyStringField: '', nullField: null } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });

@@ -3,7 +3,10 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import { setupTestEnvironment, resetCollection } from '../../helpers/document-operations-test-helpers.js';
+import {
+  setupTestEnvironment,
+  resetCollection
+} from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Delete Operations', () => {
   let env, docOps;
@@ -17,16 +20,16 @@ describe('DocumentOperations Delete Operations', () => {
   it('should delete existing document by ID', () => {
     const testDoc = { name: 'Deletable User', email: 'deletable@example.com' };
     const insertedDoc = docOps.insertDocument(testDoc);
-    
+
     const result = docOps.deleteDocument(insertedDoc._id);
-    
+
     expect(result).toBeDefined();
     expect(result.acknowledged).toBe(true);
     expect(result.deletedCount).toBe(1);
-    
+
     const foundDoc = docOps.findDocumentById(insertedDoc._id);
     expect(foundDoc).toBeNull();
-    
+
     env.collection._loadData();
     const savedDoc = env.collection._documents[insertedDoc._id];
     expect(savedDoc).toBeUndefined();
@@ -34,7 +37,7 @@ describe('DocumentOperations Delete Operations', () => {
 
   it('should return error result when deleting non-existent document', () => {
     const result = docOps.deleteDocument('non-existent-id-789');
-    
+
     expect(result).toBeDefined();
     expect(result.acknowledged).toBe(true);
     expect(result.deletedCount).toBe(0);

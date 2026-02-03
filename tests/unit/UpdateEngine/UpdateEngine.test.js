@@ -22,7 +22,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { name: 'Alice' };
     const update = { $set: { name: 'Bob' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.name).toBe('Bob');
     expect(doc.name).toBe('Alice');
   });
@@ -31,7 +31,7 @@ describe('UpdateEngine Tests', () => {
     const doc = {};
     const update = { $set: { 'a.b.c': 5 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.a.b.c).toBe(5);
   });
 
@@ -39,7 +39,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { count: 1 };
     const update = { $inc: { count: 2 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.count).toBe(3);
   });
 
@@ -47,7 +47,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { count: 5 };
     const update = { $inc: { count: -2 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.count).toBe(3);
   });
 
@@ -55,7 +55,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { count: 2 };
     const update = { $mul: { count: 3 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.count).toBe(6);
   });
 
@@ -63,7 +63,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { value: 10 };
     const update = { $min: { value: 5 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.value).toBe(5);
   });
 
@@ -71,7 +71,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { value: 10 };
     const update = { $max: { value: 15 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.value).toBe(15);
   });
 
@@ -93,7 +93,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { a: { b: 2, c: 3 } };
     const update = { $unset: { 'a.b': '' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.a.b).toBeUndefined();
     expect(result.a.c).toBe(3);
   });
@@ -102,20 +102,22 @@ describe('UpdateEngine Tests', () => {
     const doc = { arr: [1, 2] };
     const update = { $addToSet: { arr: 2 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.arr).toEqual([1, 2]);
   });
 
   it('should throw for invalid operator', () => {
     const doc = { a: 1 };
     const update = { $foo: { a: 2 } };
-    
+
     expect(() => engine.applyOperators(doc, update)).toThrow();
   });
 
   it('should set various data types', () => {
     const originalDoc = { a: 1 };
-    const update = { $set: { str: 'text', num: 123, bool: true, arr: [1, 2], obj: { k: 'v' }, n: null } };
+    const update = {
+      $set: { str: 'text', num: 123, bool: true, arr: [1, 2], obj: { k: 'v' }, n: null }
+    };
     const result = engine.applyOperators(originalDoc, update);
 
     expect(result.str).toBe('text');
@@ -242,7 +244,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { val: 5 };
     const update = { $min: { val: 5 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.val).toBe(5);
   });
 
@@ -250,21 +252,21 @@ describe('UpdateEngine Tests', () => {
     const doc = { val: 10 };
     const update = { $max: { val: 10 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.val).toBe(10);
   });
 
   it('should throw for empty update object', () => {
     const doc = { a: 1 };
     const update = {};
-    
+
     expect(() => engine.applyOperators(doc, update)).toThrow();
   });
 
   it('should throw for update with no dollar operators', () => {
     const doc = { a: 1 };
     const update = { a: 2, b: 3 };
-    
+
     expect(() => engine.applyOperators(doc, update)).toThrow();
   });
 
@@ -272,7 +274,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { name: 'Alice', age: 30, city: 'London' };
     const update = { $unset: { age: '' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.name).toBe('Alice');
     expect(result.city).toBe('London');
     expect(result.age).toBeUndefined();
@@ -313,7 +315,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { a: 1, b: 2 };
     const update = { $unset: { nonExistent: '', 'nested.field': '' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.a).toBe(1);
     expect(result.b).toBe(2);
     expect(result.nonExistent).toBeUndefined();
@@ -350,7 +352,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { items: ['apple', 'banana', 'cherry'], count: 3 };
     const update = { $unset: { 'items.1': '' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.items[0]).toBe('apple');
     expect(result.items[1]).toBeUndefined();
     expect(result.items[2]).toBe('cherry');
@@ -362,7 +364,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { tags: ['javascript', 'mongodb'] };
     const update = { $push: { tags: 'database' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.tags).toEqual(['javascript', 'mongodb', 'database']);
     expect(doc.tags).toEqual(['javascript', 'mongodb']);
   });
@@ -371,7 +373,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { scores: [10, 20] };
     const update = { $push: { scores: { $each: [30, 40, 50] } } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.scores).toEqual([10, 20, 30, 40, 50]);
     expect(doc.scores).toEqual([10, 20]);
   });
@@ -380,7 +382,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { numbers: [1, 2, 3, 2, 4, 2] };
     const update = { $pull: { numbers: 2 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.numbers).toEqual([1, 3, 4]);
     expect(doc.numbers).toEqual([1, 2, 3, 2, 4, 2]);
   });
@@ -389,7 +391,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { categories: ['tech', 'news'] };
     const update = { $addToSet: { categories: 'sports' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.categories).toEqual(['tech', 'news', 'sports']);
     expect(doc.categories).toEqual(['tech', 'news']);
   });
@@ -398,7 +400,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { tags: ['red', 'blue'] };
     const update = { $addToSet: { tags: { $each: ['green', 'yellow', 'purple'] } } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.tags).toEqual(['red', 'blue', 'green', 'yellow', 'purple']);
     expect(doc.tags).toEqual(['red', 'blue']);
   });
@@ -407,20 +409,25 @@ describe('UpdateEngine Tests', () => {
     const doc = { items: ['apple', 'banana', 'cherry'] };
     const update1 = { $addToSet: { items: 'banana' } };
     const result1 = engine.applyOperators(doc, update1);
-    
+
     expect(result1.items).toEqual(['apple', 'banana', 'cherry']);
-    
+
     const update2 = { $addToSet: { items: { $each: ['apple', 'date', 'banana', 'elderberry'] } } };
     const result2 = engine.applyOperators(doc, update2);
-    
+
     expect(result2.items).toEqual(['apple', 'banana', 'cherry', 'date', 'elderberry']);
   });
 
   it('should push nested array as single element', () => {
-    const doc = { matrix: [[1, 2], [3, 4]] };
+    const doc = {
+      matrix: [
+        [1, 2],
+        [3, 4]
+      ]
+    };
     const update = { $push: { matrix: [5, 6] } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.matrix.length).toBe(3);
     expect(result.matrix[0]).toEqual([1, 2]);
     expect(result.matrix[1]).toEqual([3, 4]);
@@ -428,17 +435,17 @@ describe('UpdateEngine Tests', () => {
   });
 
   it('should pull matching nested objects', () => {
-    const doc = { 
+    const doc = {
       coordinates: [
-        { x: 1, y: 2 }, 
-        { x: 3, y: 4 }, 
-        { x: 1, y: 2 }, 
+        { x: 1, y: 2 },
+        { x: 3, y: 4 },
+        { x: 1, y: 2 },
         { x: 5, y: 6 }
-      ] 
+      ]
     };
     const update = { $pull: { coordinates: { x: 1, y: 2 } } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.coordinates.length).toBe(2);
     expect(result.coordinates[0].x).toBe(3);
     expect(result.coordinates[0].y).toBe(4);
@@ -450,7 +457,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { items: ['first', 'second', 'third'] };
     const update = { $set: { 'items.1': 'modified' } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.items[0]).toBe('first');
     expect(result.items[1]).toBe('modified');
     expect(result.items[2]).toBe('third');
@@ -460,7 +467,7 @@ describe('UpdateEngine Tests', () => {
   it('should throw when $push on non-array field', () => {
     const doc = { field: 'not an array' };
     const update = { $push: { field: 'value' } };
-    
+
     expect(() => engine.applyOperators(doc, update)).toThrow();
   });
 
@@ -468,7 +475,7 @@ describe('UpdateEngine Tests', () => {
     const doc = { field: 42 };
     const update = { $pull: { field: 42 } };
     const result = engine.applyOperators(doc, update);
-    
+
     expect(result.field).toBe(42);
     expect(doc.field).toBe(42);
   });
@@ -476,7 +483,7 @@ describe('UpdateEngine Tests', () => {
   it('should throw when $addToSet on non-array field', () => {
     const doc = { field: { key: 'value' } };
     const update = { $addToSet: { field: 'new value' } };
-    
+
     expect(() => engine.applyOperators(doc, update)).toThrow();
   });
 });
