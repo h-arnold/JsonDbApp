@@ -110,7 +110,7 @@ class UpdateEngineValidation {
       const currentComparableType = this._resolveComparableObjectType(currentValue);
       const newComparableType = this._resolveComparableObjectType(newValue);
 
-      if (currentComparableType !== newComparableType) {
+      if (currentComparableType === 'plain' || newComparableType === 'plain') {
         throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
           fieldPath,
           { currentValue, newValue },
@@ -118,7 +118,7 @@ class UpdateEngineValidation {
         );
       }
 
-      if (currentComparableType === 'plain') {
+      if (currentComparableType !== null && newComparableType !== null && currentComparableType !== newComparableType) {
         throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
           fieldPath,
           { currentValue, newValue },
