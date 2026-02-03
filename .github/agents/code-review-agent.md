@@ -92,6 +92,53 @@ insertOne(doc) {  // Missing JSDoc
 - Similar patterns across methods → Template method or strategy pattern
 - Copy-pasted code blocks → Extract to private helper method
 
+**Shared Helper Identification Strategy:**
+
+When reviewing code, systematically identify refactoring opportunities:
+
+1. **Pattern Detection**
+   - Look for 2+ identical or nearly-identical code blocks
+   - Check if multiple methods perform similar transformations
+   - Identify recurring validation patterns
+   - Note operations on specific data structures that repeat
+
+2. **Helper Extraction Candidates**
+   - **Private methods**: Shared within a single class (low extraction cost)
+   - **Utility classes**: Shared across multiple components (e.g., ObjectUtils, ComparisonUtils)
+   - **Validation helpers**: Group related validations (already using Validation class)
+   - **Operation handlers**: For multi-file classes using Collection pattern
+
+3. **When to Abstract Into Shared Helpers**
+   - Code appears 2+ times in same class → Private method
+   - Code appears in 3+ methods across same class → Private method or operation handler
+   - Code needed across multiple classes → Utility class or service
+   - Complex operation with reusable logic → Dedicated helper class
+   - Repeated field operations (get, set, unset) → Utility functions
+   - Operator implementations (MongoDB-style) → Operation handler classes
+
+4. **Questions to Ask**
+   - "Does this logic solve a general problem?" → Candidate for utility class
+   - "Would other classes benefit from this?" → Consider extracting to shared location
+   - "Is this tightly coupled to current class?" → Keep as private method
+   - "Does this represent a coherent operation?" → Operation handler pattern
+
+**Examples of Shared Helpers in Project:**
+
+```javascript
+// ✅ Already extracted and reused across classes
+ObjectUtils.deepClone(obj)           // Util method
+ComparisonUtils.equals(a, b)         // Util method
+Validation.nonEmptyString(val, name) // Validation helper
+
+// ✅ Operation handlers for operator implementations
+UpdateEngineFieldOperators           // $set, $inc, $mul handlers
+UpdateEngineArrayOperators           // $push, $pull handlers
+
+// ✅ Private methods for class-specific reuse
+Collection._ensureLoaded()           // Used by multiple read operations
+Collection._markDirty()              // Used by multiple write operations
+```
+
 **Examples:**
 ```javascript
 // ✅ Good - DRY
@@ -437,6 +484,30 @@ throw new Error('Operation failed');
 - Include relevant values (sanitized)
 - Explain what went wrong and why
 
+## Identifying Refactoring Opportunities
+
+### When Recommending Helper Extraction
+
+If your review identifies candidates for helper extraction, document them clearly:
+
+```
+## Refactoring Opportunity: Extract shared validation logic
+**Files:** [DocumentOperations.js](src/02_components/DocumentOperations.js), [CollectionCoordinator.js](src/02_components/CollectionCoordinator.js)
+**Issue:** Both classes validate documents identically (check null, check object type, check for fields)
+**Recommendation:** 
+- Extract to private helper method if used in same class only
+- Extract to utility function if used across multiple classes
+- Add to Validation utility class for reusability
+**Expected Benefit:** Reduce duplication, ensure consistency, improve maintainability
+```
+
+During code review, if you identify:
+- **2+ instances of identical code** in same class → Request private method extraction
+- **Similar patterns** across different methods → Request operation handler (for large classes)
+- **Utility-grade logic** needed elsewhere → Request extraction to appropriate utility class
+
+**Do NOT approve code that contains extractable duplication without noting the opportunity.**
+
 ## Review Process
 
 ### Step 1: Initial Assessment
@@ -444,6 +515,7 @@ throw new Error('Operation failed');
 2. Verify naming conventions
 3. Scan for obvious issues (missing JSDoc, etc.)
 4. Check multi-file structure if applicable
+5. **Identify potential shared helpers** or extractable patterns
 
 ### Step 2: Run Lint
 ```bash

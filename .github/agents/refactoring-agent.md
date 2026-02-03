@@ -107,24 +107,75 @@ class CollectionReadOperations {
 
 ## Refactoring Guidelines
 
+### 0. Pre-Refactoring: DRY Analysis
+
+Before splitting a class into multi-file structure, examine it for refactoring opportunities related to shared helpers:
+
+**Step 1: Identify Extractable Patterns**
+- [ ] Look for validation logic that repeats (extract to private method or Validation class)
+- [ ] Find object transformation patterns that recur (extract to utility functions)
+- [ ] Identify field operations that repeat (get, set, unset on nested paths)
+- [ ] Note error handling patterns that duplicate
+- [ ] Check for repeated data structure queries
+
+**Step 2: Plan Helper Extraction**
+- **Class-specific helpers** (used only in this class): Extract to private methods in 99_ facade
+- **Cross-class helpers** (used in 3+ classes): Extract to Utility class
+- **Operator handlers** (MongoDB-style operations): Create operation handler classes (01_*.js, 02_*.js)
+- **Validation patterns**: Consolidate into Validation class or dedicated validator
+
+**Step 3: Document Before Refactoring**
+```
+Shared Helpers to Extract:
+1. _validateDocument() - Extracted from 3 methods, move to private helper
+2. _getFieldValue()/_setFieldValue() - FieldPathUtils operation handler
+3. validateOperationInputs() - Already in Validation class, ensure reuse
+```
+
+**Step 4: Implement During Refactoring**
+- Extract helpers in same refactoring session
+- Operation handlers created as 01_*.js, 02_*.js files
+- Private helpers consolidated in 99_*.js facade
+- Utility-grade helpers added to appropriate Utility class
+
 ### 1. Analyze the Target Class
 
 Before refactoring, identify:
 
 - **Total lines of code** (classes >500 lines are good candidates)
 - **Logical operation groups** (read vs write, field operations vs array operations, etc.)
-- **Shared private helpers** (these stay in 99_ facade)
+- **Shared private helpers** (these stay in 99_ facade or become operation handlers)
+- **Extractable patterns** (candidates for utility classes or helper methods)
 - **Dependencies injected via constructor** (these stay in 99_ facade)
 - **Public API methods** (these become delegators in 99_ facade)
 
-### 2. Identify Operation Groups
+### 2. Identify Operation Groups and Shared Helpers
+
+For each operation group, also identify helpers that could be extracted:
 
 For UpdateEngine example:
 
 - **Field Update Operators**: `$set`, `$inc`, `$mul`, `$min`, `$max`, `$unset`
+  - Shared helper: `_validateNumericValue()` (used by $inc, $mul, $min, $max)
+  - Shared helper: `_getFieldValue()`, `_setFieldValue()` (used by all)
+
 - **Array Update Operators**: `$push`, `$pull`, `$addToSet`
+  - Shared helper: `_ensureArrayField()` (used by all three)
+  - Shared helper: `_validateArrayOperation()` (used by all)
+
 - **Field Path Utilities**: `_getFieldValue`, `_setFieldValue`, `_unsetFieldValue`
+  - Extract to operation handler class: `UpdateEngineFieldPathUtils`
+  - These are general utilities that could be reused by other operators
+
 - **Validation Methods**: All `_validate*` methods
+  - Extract common validation patterns to private methods
+  - Extract generic field validation to Validation utility class
+
+**DRY Check**: Before creating operation handlers, scan for:
+- Identical validation logic across handlers → Extract to private method in facade
+- Repeated field operations → Create dedicated FieldPathUtils handler
+- Common error handling patterns → Create error wrapper in facade
+- Repeated data structure access patterns → Create utility methods
 
 For Database example:
 
@@ -134,9 +185,45 @@ For Database example:
 - **Master Index Operations**: `_addCollectionToMasterIndex`, `_removeCollectionFromMasterIndex`
 - **Index File Operations**: `_addCollectionToIndex`, `_removeCollectionFromIndex`
 
-### 3. Create Handler Classes
+### 3. Create Shared Helpers First
 
-For each operation group, create a handler class:
+Before creating operation handlers, extract any reusable helpers that multiple handlers will need:
+
+**Private Methods in Facade (99_*.js):**
+```javascript
+class UpdateEngine {
+  constructor() {
+    // ... initialization
+  }
+  
+  // Shared helpers used by multiple handlers
+  _validateNumericValue(value, fieldPath, operation) { /* ... */ }
+  _validateArrayField(field, fieldPath, operation) { /* ... */ }
+  _ensureArrayField(document, fieldPath) { /* ... */ }
+  _validateUpdateOperationsNotEmpty(ops) { /* ... */ }
+}
+```
+
+**Field Path Utility Handler (01_UpdateEngineFieldPathUtils.js):**
+Extract field operations that both read and write operators need:
+```javascript
+class UpdateEngineFieldPathUtils {
+  constructor(engine) { this._engine = engine; }
+  
+  getFieldValue(doc, path) { /* ... */ }
+  setFieldValue(doc, path, value) { /* ... */ }
+  unsetFieldValue(doc, path) { /* ... */ }
+}
+```
+
+**Check Each Handler:**
+- Do multiple handlers call the same private method from facade? → Good pattern
+- Do multiple handlers manipulate fields? → Should use FieldPathUtils handler
+- Can any handler logic be shared? → Extract to utility function
+
+### 4. Create Handler Classes
+
+For each operation group, create a handler class that may use shared helpers:
 
 ```javascript
 /**
@@ -168,7 +255,7 @@ class UpdateEngineFieldOperators {
 }
 ```
 
-### 4. Refactor the Main Class (99_ File)
+### 5. Refactor the Main Class (99_ File)
 
 Transform the monolithic class into a facade:
 
@@ -224,7 +311,7 @@ class UpdateEngine {
 }
 ```
 
-### 5. Update Exports
+### 6. Update Exports
 
 Each file should include proper exports for both GAS and Node.js:
 
@@ -240,7 +327,7 @@ if (typeof module !== 'undefined' && module.exports) {
 }
 ```
 
-### 6. Maintain Test Compatibility
+### 7. Maintain Test Compatibility
 
 **CRITICAL**: The refactored class must maintain **100% API compatibility** with existing tests.
 
