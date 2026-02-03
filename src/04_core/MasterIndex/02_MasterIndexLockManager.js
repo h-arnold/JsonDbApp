@@ -9,6 +9,7 @@
 
 /**
  * Manages collection-level virtual locks for MasterIndex.
+ * @remarks This is a companion to MasterIndex and intentionally uses internal helpers.
  */
 class MasterIndexLockManager {
   /**
@@ -122,11 +123,11 @@ class MasterIndexLockManager {
    * Check if a collection is currently locked.
    * @param {string} collectionName - The name of the collection.
    * @returns {boolean} True if the collection is locked, false otherwise.
+   * @remarks Assumes the master index state is current; call load() on MasterIndex to refresh.
    */
   isCollectionLocked(collectionName) {
     Validate.nonEmptyString(collectionName, 'collectionName');
 
-    this._masterIndex._loadFromScriptProperties();
     const collection = this._masterIndex.getCollection(collectionName);
 
     if (!collection) {
@@ -153,22 +154,21 @@ class MasterIndexLockManager {
       const collections = this._masterIndex.getCollections();
       const now = Date.now();
 
-      for (const name in collections) {
-        if (collections.hasOwnProperty(name)) {
-          const collection = collections[name];
-          const lockStatus = collection.getLockStatus();
+      const collectionNames = Object.keys(collections);
+      for (const name of collectionNames) {
+        const collection = collections[name];
+        const lockStatus = collection.getLockStatus();
 
-          if (lockStatus && lockStatus.isLocked) {
-            const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
-            if (now >= expiry) {
-              this._masterIndex._logger.info('Cleaning up expired lock.', {
-                collectionName: name
-              });
-              collection.setLockStatus(null);
-              this._masterIndex._updateCollectionMetadataInternalNoLock(name, {
-                lockStatus: null
-              });
-            }
+        if (lockStatus && lockStatus.isLocked) {
+          const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
+          if (now >= expiry) {
+            this._masterIndex._logger.info('Cleaning up expired lock.', {
+              collectionName: name
+            });
+            collection.setLockStatus(null);
+            this._masterIndex._updateCollectionMetadataInternalNoLock(name, {
+              lockStatus: null
+            });
           }
         }
       }

@@ -175,13 +175,13 @@ class MasterIndex {
   }
 
   /**
-   * Internal collection metadata update logic executed under a ScriptLock.
+   * Internal collection metadata update logic that assumes ScriptLock ownership.
    * @param {string} name - Collection name
    * @param {Object} updates - Metadata updates
    * @returns {CollectionMetadata} Updated collection metadata
    * @private
    */
-  _updateCollectionMetadataInternal(name, updates) {
+  _updateCollectionMetadataInternalNoLock(name, updates) {
     const collection = this.getCollection(name);
     if (!collection) {
       throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
@@ -198,17 +198,6 @@ class MasterIndex {
     this.save(undefined, timestamp);
     this._logger.info('Collection metadata updated.', { collection: name, updates });
     return collection;
-  }
-
-  /**
-   * Update collection metadata without ScriptLock acquisition.
-   * @param {string} name - Collection name
-   * @param {Object} updates - Metadata updates
-   * @returns {CollectionMetadata} Updated collection metadata
-   * @private
-   */
-  _updateCollectionMetadataInternalNoLock(name, updates) {
-    return this._updateCollectionMetadataInternal(name, updates);
   }
 
   /**
