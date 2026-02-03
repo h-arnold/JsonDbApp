@@ -171,7 +171,7 @@ class MasterIndex {
     Validate.nonEmptyString(name, 'name');
     Validate.object(updates, 'updates');
 
-    return this._withScriptLock(() => this._updateCollectionMetadataInternalNoLock(name, updates));
+    return this._withScriptLock(() => this._updateCollectionMetadataInternal(name, updates));
   }
 
   /**
@@ -181,7 +181,7 @@ class MasterIndex {
    * @returns {CollectionMetadata} Updated collection metadata
    * @private
    */
-  _updateCollectionMetadataInternalNoLock(name, updates) {
+  _updateCollectionMetadataInternal(name, updates) {
     const collection = this.getCollection(name);
     if (!collection) {
       throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);

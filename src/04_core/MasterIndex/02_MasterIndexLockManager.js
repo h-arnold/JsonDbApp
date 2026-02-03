@@ -61,7 +61,7 @@ class MasterIndexLockManager {
         lockTimeout: timeout
       };
       collection.setLockStatus(newLockStatus);
-      this._masterIndex._updateCollectionMetadataInternalNoLock(collectionName, {
+      this._masterIndex._updateCollectionMetadataInternal(collectionName, {
         lockStatus: collection.getLockStatus()
       });
 
@@ -110,7 +110,7 @@ class MasterIndexLockManager {
         lockedAt: null,
         lockTimeout: null
       });
-      this._masterIndex._updateCollectionMetadataInternalNoLock(collectionName, {
+      this._masterIndex._updateCollectionMetadataInternal(collectionName, {
         lockStatus: collection.getLockStatus()
       });
 
@@ -166,7 +166,7 @@ class MasterIndexLockManager {
               collectionName: name
             });
             collection.setLockStatus(null);
-            this._masterIndex._updateCollectionMetadataInternalNoLock(name, {
+            this._masterIndex._updateCollectionMetadataInternal(name, {
               lockStatus: null
             });
           }
