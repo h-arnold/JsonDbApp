@@ -28,7 +28,6 @@ const legacyScripts = [
   'src/02_components/CollectionMetadata.js',
   'src/04_core/MasterIndex.js',
   'src/04_core/MasterIndex/01_MasterIndexMetadataNormaliser.js',
-  'src/04_core/MasterIndex/02_MasterIndexHistoryManager.js',
   'src/04_core/MasterIndex/99_MasterIndex.js',
   'src/02_components/FileOperations.js',
   'src/03_services/FileService.js',

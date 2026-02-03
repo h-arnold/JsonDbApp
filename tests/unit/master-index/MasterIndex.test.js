@@ -1,4 +1,4 @@
-/* global MasterIndex, CollectionMetadata, ErrorHandler, PropertiesService, DEFAULT_MODIFICATION_HISTORY_LIMIT */
+/* global MasterIndex, CollectionMetadata, ErrorHandler, PropertiesService */
 
 import { afterEach, describe, expect, it } from 'vitest';
 import {
@@ -63,8 +63,7 @@ describe('MasterIndex Functionality', () => {
     const seededData = {
       version: 1,
       lastUpdated: new Date(),
-      collections: { existing: seededMetadata },
-      modificationHistory: {}
+      collections: { existing: seededMetadata }
     };
     seedMasterIndex(key, seededData);
 
@@ -280,33 +279,6 @@ describe('Conflict Detection and Resolution', () => {
     expect(resolution.data.getModificationToken()).not.toBe(originalToken);
   });
 
-  it('should track modification history for debugging', () => {
-    const { masterIndex } = createTestMasterIndex();
-    addTestCollection(masterIndex, 'historyTest');
-    masterIndex.updateCollectionMetadata('historyTest', { documentCount: 1 });
-    masterIndex.updateCollectionMetadata('historyTest', { documentCount: 2 });
-
-    const history = masterIndex.getModificationHistory('historyTest');
-
-    expect(Array.isArray(history)).toBe(true);
-    expect(history.length).toBeGreaterThanOrEqual(3);
-    expect(history.at(-1).operation).toBe('UPDATE_METADATA');
-  });
-
-  it('should respect configurable modification history limits', () => {
-    const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 2 });
-    addTestCollection(masterIndex, 'historyLimit');
-    masterIndex.updateCollectionMetadata('historyLimit', { documentCount: 1 });
-    masterIndex.updateCollectionMetadata('historyLimit', { documentCount: 2 });
-    masterIndex.updateCollectionMetadata('historyLimit', { documentCount: 3 });
-
-    const history = masterIndex.getModificationHistory('historyLimit');
-
-    expect(history).toHaveLength(2);
-    expect(history[0].operation).toBe('UPDATE_METADATA');
-    expect(history[1].data.documentCount).toBe(3);
-  });
-
   it('should validate modification token format', () => {
     const { masterIndex } = createTestMasterIndex();
 
@@ -315,57 +287,6 @@ describe('Conflict Detection and Resolution', () => {
     expect(masterIndex.validateModificationToken(validToken)).toBe(true);
     expect(masterIndex.validateModificationToken('invalid token')).toBe(false);
     expect(masterIndex.validateModificationToken(null)).toBe(false);
-  });
-});
-
-describe('MasterIndex Helper Behaviour', () => {
-  it('should normalise history entries and enforce default capping', () => {
-    // Arrange - create collection and configure default history fallback
-    const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 0 });
-    addTestCollection(masterIndex, 'helperHistory');
-    const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-    const updatesToApply = DEFAULT_MODIFICATION_HISTORY_LIMIT + 5;
-
-    // Act - issue enough updates to trigger history capping via public APIs
-    for (let i = 0; i < updatesToApply; i += 1) {
-      masterIndex.updateCollectionMetadata('helperHistory', { documentCount: i });
-    }
-    const history = masterIndex.getModificationHistory('helperHistory');
-
-    // Assert - verify capped length, timestamp normalisation, and retained payload data
-    expect(history).toHaveLength(DEFAULT_MODIFICATION_HISTORY_LIMIT);
-    const firstEntry = history[0];
-    const lastEntry = history.at(-1);
-    expect(firstEntry.operation).toBe('UPDATE_METADATA');
-    expect(lastEntry.operation).toBe('UPDATE_METADATA');
-    expect(isoPattern.test(firstEntry.timestamp)).toBe(true);
-    expect(isoPattern.test(lastEntry.timestamp)).toBe(true);
-    expect(firstEntry.data.documentCount).toBe(updatesToApply - DEFAULT_MODIFICATION_HISTORY_LIMIT);
-    expect(lastEntry.data.documentCount).toBe(updatesToApply - 1);
-  });
-
-  it('should preserve addCollection history snapshots after metadata mutations', () => {
-    // Arrange - capture initial addCollection history entry
-    const { masterIndex } = createTestMasterIndex();
-    const initialMetadata = new CollectionMetadata('historySnapshot', 'history-file-id', {
-      documentCount: 2,
-      modificationToken: 'token-history'
-    });
-    masterIndex.addCollection('historySnapshot', initialMetadata);
-    const historyBeforeUpdate = masterIndex.getModificationHistory('historySnapshot');
-    const initialEntry = historyBeforeUpdate[0];
-
-    // Act - mutate metadata via public update API
-    masterIndex.updateCollectionMetadata('historySnapshot', { documentCount: 5 });
-    const updatedCollection = masterIndex.getCollection('historySnapshot');
-
-    // Assert - ensure history snapshot remains immutable after updates
-    expect(historyBeforeUpdate).toHaveLength(1);
-    expect(initialEntry.data).toBeInstanceOf(CollectionMetadata);
-    expect(initialEntry.data.documentCount).toBe(2);
-    expect(updatedCollection.documentCount).toBe(5);
-    expect(initialEntry.data.documentCount).toBe(2);
-    expect(initialEntry.data).not.toBe(updatedCollection);
   });
 });
 
