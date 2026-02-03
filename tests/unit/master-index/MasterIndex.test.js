@@ -298,6 +298,57 @@ describe('Conflict Detection and Resolution', () => {
   });
 });
 
+describe('MasterIndex Helper Behaviour', () => {
+  it('should normalise history entries and enforce default capping', () => {
+    // Arrange - create collection and configure default history fallback
+    const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 0 });
+    addTestCollection(masterIndex, 'helperHistory');
+    const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+    const updatesToApply = DEFAULT_MODIFICATION_HISTORY_LIMIT + 5;
+
+    // Act - issue enough updates to trigger history capping via public APIs
+    for (let i = 0; i < updatesToApply; i += 1) {
+      masterIndex.updateCollectionMetadata('helperHistory', { documentCount: i });
+    }
+    const history = masterIndex.getModificationHistory('helperHistory');
+
+    // Assert - verify capped length, timestamp normalisation, and retained payload data
+    expect(history).toHaveLength(DEFAULT_MODIFICATION_HISTORY_LIMIT);
+    const firstEntry = history[0];
+    const lastEntry = history.at(-1);
+    expect(firstEntry.operation).toBe('UPDATE_METADATA');
+    expect(lastEntry.operation).toBe('UPDATE_METADATA');
+    expect(isoPattern.test(firstEntry.timestamp)).toBe(true);
+    expect(isoPattern.test(lastEntry.timestamp)).toBe(true);
+    expect(firstEntry.data.documentCount).toBe(updatesToApply - DEFAULT_MODIFICATION_HISTORY_LIMIT);
+    expect(lastEntry.data.documentCount).toBe(updatesToApply - 1);
+  });
+
+  it('should preserve addCollection history snapshots after metadata mutations', () => {
+    // Arrange - capture initial addCollection history entry
+    const { masterIndex } = createTestMasterIndex();
+    const initialMetadata = new CollectionMetadata('historySnapshot', 'history-file-id', {
+      documentCount: 2,
+      modificationToken: 'token-history'
+    });
+    masterIndex.addCollection('historySnapshot', initialMetadata);
+    const historyBeforeUpdate = masterIndex.getModificationHistory('historySnapshot').slice();
+    const initialEntry = historyBeforeUpdate[0];
+
+    // Act - mutate metadata via public update API
+    masterIndex.updateCollectionMetadata('historySnapshot', { documentCount: 5 });
+    const updatedCollection = masterIndex.getCollection('historySnapshot');
+
+    // Assert - ensure history snapshot remains immutable after updates
+    expect(historyBeforeUpdate).toHaveLength(1);
+    expect(initialEntry.data).toBeInstanceOf(CollectionMetadata);
+    expect(initialEntry.data.documentCount).toBe(2);
+    expect(updatedCollection.documentCount).toBe(5);
+    expect(initialEntry.data.documentCount).toBe(2);
+    expect(initialEntry.data).not.toBe(updatedCollection);
+  });
+});
+
 describe('MasterIndex Integration', () => {
   it('should coordinate locking and conflict detection', () => {
     const { masterIndex } = createTestMasterIndex({ lockTimeout: 200 });

@@ -323,11 +323,29 @@ Test helpers provide reusable setup and cleanup utilities:
 
 ### MasterIndex Helpers
 
+([tests/helpers/master-index-test-helpers.js](../../tests/helpers/master-index-test-helpers.js))
+
 - `createMasterIndexKey()`: Generates and registers a unique ScriptProperties key for tests
 - `registerMasterIndexKey(key)`: Adds an existing key to the tracked cleanup set
-- `createTestMasterIndex(config)`: Builds an isolated MasterIndex with automatic key tracking
-- `seedMasterIndex(key, data)`: Serialises and stores master index payloads for fixtures
+- `createTestMasterIndex(config)`: Builds an isolated MasterIndex with automatic key tracking; accepts overrides such as `modificationHistoryLimit` so history trimming can be exercised deterministically
+- `seedMasterIndex(key, data)`: Serialises and stores master index payloads for fixtures; pair with CollectionMetadata instances when validating the metadata normaliser
 - `cleanupMasterIndexTests()`: Deletes all registered ScriptProperties keys after each test
+
+When writing MasterIndex suites, prefer the public API so the internal helpers (MasterIndexMetadataNormaliser and MasterIndexHistoryManager) are exercised end to end. This ensures metadata cloning, timestamp coercion, and modification history capping mirror production behaviour. For example:
+
+```javascript
+const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 5 });
+masterIndex.addCollection('users', { fileId: 'users-file' });
+
+for (let i = 0; i < 10; i += 1) {
+  masterIndex.updateCollectionMetadata('users', { documentCount: i });
+}
+
+const history = masterIndex.getModificationHistory('users');
+expect(history).toHaveLength(5);
+```
+
+`DEFAULT_MODIFICATION_HISTORY_LIMIT` is exported alongside the MasterIndex facade; use it when you need to assert the fallback cap without overriding configuration.
 
 ## Running Tests
 

@@ -2,6 +2,9 @@
 
 - [MasterIndex Developer Documentation](#masterindex-developer-documentation)
   - [Overview](#overview)
+  - [Internal Helper Components](#internal-helper-components)
+    - [MasterIndexMetadataNormaliser](#masterindexmetadatanormaliser)
+    - [MasterIndexHistoryManager](#masterindexhistorymanager)
   - [Core Workflow](#core-workflow)
     - [Collection Access Protocol](#collection-access-protocol)
     - [Virtual Locking](#virtual-locking)
@@ -24,6 +27,8 @@
       - [`resolveConflict(collectionName, newData, strategy)`](#resolveconflictcollectionname-newdata-strategy)
       - [`generateModificationToken()`](#generatemodificationtoken)
       - [`validateModificationToken(token)`](#validatemodificationtokentoken)
+    - [History Methods](#history-methods)
+      - [`getModificationHistory(name)`](#getmodificationhistoryname)
   - [Usage Examples](#usage-examples)
     - [Basic Operations](#basic-operations)
     - [Locking Pattern](#locking-pattern)
@@ -55,6 +60,20 @@ The `Database` class delegates collection operations to `MasterIndex`:
 - Collection creation, access, and deletion
 - Collection listing and metadata retrieval
 - Backup synchronisation to Drive-based index files
+
+## Internal Helper Components
+
+### MasterIndexMetadataNormaliser
+
+**Location:** [src/04_core/MasterIndex/01_MasterIndexMetadataNormaliser.js](../../src/04_core/MasterIndex/01_MasterIndexMetadataNormaliser.js)
+
+Encapsulates the transformation of incoming metadata into `CollectionMetadata` instances. The normaliser clamps timestamps, clones lock status payloads, and ensures modification tokens are generated when missing. This keeps `_addCollectionInternal` and bulk operations lean while guaranteeing consistent metadata regardless of input type (plain object or existing `CollectionMetadata`).
+
+### MasterIndexHistoryManager
+
+**Location:** [src/04_core/MasterIndex/02_MasterIndexHistoryManager.js](../../src/04_core/MasterIndex/02_MasterIndexHistoryManager.js)
+
+Owns modification history creation and retention. The manager records each significant operation (additions, updates, conflict resolutions) through `_addToModificationHistory`, normalises payloads, and trims arrays according to `config.modificationHistoryLimit`. When no limit is supplied, it falls back to the exported `DEFAULT_MODIFICATION_HISTORY_LIMIT`, guaranteeing deterministic capping across environments.
 
 ## Core Workflow
 
@@ -108,6 +127,8 @@ Prevents concurrent modifications across script instances:
   }
 }
 ```
+
+`modificationHistory` arrays are pruned by the history manager using either `config.modificationHistoryLimit` or `DEFAULT_MODIFICATION_HISTORY_LIMIT`, so the in-memory state never grows without bound during high-churn update cycles.
 
 ## Constructor
 
@@ -203,6 +224,12 @@ Creates unique modification token.
 #### `validateModificationToken(token)`
 
 Validates token format (timestamp-randomstring).
+
+### History Methods
+
+#### `getModificationHistory(name)`
+
+Returns a chronological array of history entries for the requested collection. Each entry contains the operation name, an ISO timestamp, and the normalised payload captured by `MasterIndexHistoryManager`. History length is governed by `config.modificationHistoryLimit` with a fallback to `DEFAULT_MODIFICATION_HISTORY_LIMIT`, enabling deterministic auditing in both production and tests.
 
 ## Usage Examples
 
