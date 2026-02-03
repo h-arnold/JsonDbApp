@@ -112,7 +112,6 @@ class UpdateEngineFieldOperators {
 
       if (currentValue !== undefined) {
         this._validation.validateComparableValues(currentValue, minValue, fieldPath, '$min');
-        this._validation.validateComparableValues(minValue, currentValue, fieldPath, '$min');
       }
 
       if (currentValue === undefined || minValue < currentValue) {
@@ -140,7 +139,6 @@ class UpdateEngineFieldOperators {
 
       if (currentValue !== undefined) {
         this._validation.validateComparableValues(currentValue, maxValue, fieldPath, '$max');
-        this._validation.validateComparableValues(maxValue, currentValue, fieldPath, '$max');
       }
 
       if (currentValue === undefined || maxValue > currentValue) {

@@ -88,7 +88,7 @@ class UpdateEngineValidation {
   }
 
   /**
-   * Validate that two values can be compared (same type or both numeric)
+   * Validate that two values can be compared (same primitive type or both Dates)
    * @param {*} currentValue - Current field value
    * @param {*} newValue - New value to compare
    * @param {string} fieldPath - Field path for error reporting
@@ -106,9 +106,52 @@ class UpdateEngineValidation {
       );
     }
 
-    if (currentType === 'object' && currentValue !== null && !(currentValue instanceof Date)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, currentValue, `${operation} operation cannot compare objects or arrays`);
+    if (currentType === 'object') {
+      const currentComparableType = this._resolveComparableObjectType(currentValue);
+      const newComparableType = this._resolveComparableObjectType(newValue);
+
+      if (currentComparableType !== newComparableType) {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+          fieldPath,
+          { currentValue, newValue },
+          `${operation} operation cannot compare objects or arrays`
+        );
+      }
+
+      if (currentComparableType === 'plain') {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+          fieldPath,
+          { currentValue, newValue },
+          `${operation} operation cannot compare objects or arrays`
+        );
+      }
     }
+  }
+
+  /**
+   * Identify whether an object value is comparable (Date) or a plain/array object.
+   * @private
+   * @param {*} value - Value to classify
+   * @returns {'date'|'plain'|null} Comparable category or null for nullish values
+   */
+  _resolveComparableObjectType(value) {
+    if (value === null || value === undefined) {
+      return null;
+    }
+
+    if (value instanceof Date) {
+      return 'date';
+    }
+
+    if (Array.isArray(value)) {
+      return 'plain';
+    }
+
+    if (typeof value === 'object') {
+      return 'plain';
+    }
+
+    return null;
   }
 
   /**

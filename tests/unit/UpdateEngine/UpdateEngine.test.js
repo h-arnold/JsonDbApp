@@ -79,14 +79,14 @@ describe('UpdateEngine Tests', () => {
     const doc = { timestamp: new Date('2024-01-01T00:00:00Z') };
     const update = { $min: { timestamp: { foo: 'bar' } } };
 
-    expect(() => engine.applyOperators(doc, update)).toThrow();
+    expect(() => engine.applyOperators(doc, update)).toThrow(ErrorHandler.ErrorTypes.INVALID_QUERY);
   });
 
   it('should throw $max when Date field compared with non-Date value', () => {
     const doc = { timestamp: new Date('2024-01-01T00:00:00Z') };
     const update = { $max: { timestamp: { foo: 'bar' } } };
 
-    expect(() => engine.applyOperators(doc, update)).toThrow();
+    expect(() => engine.applyOperators(doc, update)).toThrow(ErrorHandler.ErrorTypes.INVALID_QUERY);
   });
 
   it('should unset nested field', () => {
