@@ -416,6 +416,23 @@ describe('QueryEngine Error Handling', () => {
     }).toThrow();
   });
 
+  it('should respect supported operator pruning after construction', () => {
+    const config = queryEngine.getConfig();
+    const eqIndex = config.supportedOperators.indexOf('$eq');
+
+    expect(eqIndex).toBeGreaterThan(-1);
+
+    config.supportedOperators.splice(eqIndex, 1);
+
+    expect(queryEngine.isOperatorSupported('$eq')).toBe(false);
+
+    const queryUsingEq = { age: { $eq: 30 } };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryUsingEq);
+    }).toThrow();
+  });
+
   it('should reject unsupported operators nested within logical arrays', () => {
     const queryWithNestedUnsupported = {
       $and: [

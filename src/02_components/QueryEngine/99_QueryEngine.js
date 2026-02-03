@@ -26,9 +26,10 @@ class QueryEngine {
   constructor(config = {}) {
     this._logger = JDbLogger.createComponentLogger('QueryEngine');
     this._config = this._buildConfig(config);
-
-    this._supportedOperators = new Set(this._config.supportedOperators);
-    this._logicalOperators = new Set(LOGICAL_OPERATORS.filter(operator => this._supportedOperators.has(operator)));
+    this._supportedOperatorsSnapshot = [];
+    this._supportedOperators = new Set();
+    this._logicalOperators = new Set();
+    this._refreshOperatorCaches();
 
     this._initialiseFieldPathResources(config);
 
@@ -87,6 +88,7 @@ class QueryEngine {
    * @returns {boolean} True when operator is an enabled logical operator.
    */
   isLogicalOperator(operator) {
+    this._ensureOperatorCachesCurrent();
     return this._logicalOperators.has(operator);
   }
 
@@ -96,6 +98,7 @@ class QueryEngine {
    * @returns {boolean} True when the operator is supported.
    */
   isOperatorSupported(operator) {
+    this._ensureOperatorCachesCurrent();
     return this._supportedOperators.has(operator);
   }
 
@@ -202,6 +205,55 @@ class QueryEngine {
     this._fieldPathUtils = candidateConfig.fieldPathUtils instanceof FieldPathUtils
       ? candidateConfig.fieldPathUtils
       : new FieldPathUtils({ cache: this._fieldPathCache });
+  }
+
+  /**
+   * Ensure cached operator lookups reflect the latest configuration state.
+   * @private
+   */
+  _ensureOperatorCachesCurrent() {
+    if (this._shouldRefreshOperatorCaches()) {
+      this._refreshOperatorCaches();
+    }
+  }
+
+  /**
+   * Determine whether the operator caches need refreshing.
+   * @returns {boolean} True when the cache snapshot differs from config.
+   * @private
+   */
+  _shouldRefreshOperatorCaches() {
+    const currentOperators = Array.isArray(this._config.supportedOperators)
+      ? this._config.supportedOperators
+      : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+
+    if (this._supportedOperatorsSnapshot.length !== currentOperators.length) {
+      return true;
+    }
+
+    for (let index = 0; index < currentOperators.length; index += 1) {
+      if (currentOperators[index] !== this._supportedOperatorsSnapshot[index]) {
+        return true;
+      }
+    }
+
+    return false;
+  }
+
+  /**
+   * Rebuild operator caches from the current configuration state.
+   * @private
+   */
+  _refreshOperatorCaches() {
+    const currentOperators = Array.isArray(this._config.supportedOperators)
+      ? this._config.supportedOperators
+      : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+
+    this._supportedOperators = new Set(currentOperators);
+    this._logicalOperators = new Set(
+      LOGICAL_OPERATORS.filter(operator => this._supportedOperators.has(operator))
+    );
+    this._supportedOperatorsSnapshot = currentOperators.slice();
   }
 }
 
