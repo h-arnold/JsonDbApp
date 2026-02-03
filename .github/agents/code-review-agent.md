@@ -542,6 +542,7 @@ Review each file for:
 - [ ] SOLID principles followed
 - [ ] Idiomatic JavaScript/GAS code
 - [ ] Architecture compliance (patterns, dependencies)
+- [ ] Use of shared helpers - are they using `Validate` instead of repeating the same type or presence check over and over again?
 - [ ] Complete JSDoc documentation
 - [ ] Proper error handling with specific error types
 - [ ] Clear, descriptive error messages
