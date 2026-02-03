@@ -105,9 +105,6 @@ Prevents concurrent modifications across script instances:
   },
   locks: {
     [collectionName]: { lockedBy: String, lockedAt: String, expiresAt: String }
-  },
-  modificationHistory: {
-    [collectionName]: Array<{ operation: String, timestamp: String, data: Object }>
   }
 }
 ```

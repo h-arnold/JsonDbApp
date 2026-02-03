@@ -280,19 +280,6 @@ describe('Conflict Detection and Resolution', () => {
     expect(resolution.data.modificationToken).not.toBe(originalToken);
   });
 
-  it('should track modification history for debugging', () => {
-    const collectionName = 'historyTest';
-    
-    masterIndex.addCollection(collectionName, { name: collectionName, fileId: 'history-file-id' });
-    masterIndex.updateCollectionMetadata(collectionName, { documentCount: 1 });
-    masterIndex.updateCollectionMetadata(collectionName, { documentCount: 2 });
-    
-    const history = masterIndex.getModificationHistory(collectionName);
-    
-    expect(Array.isArray(history)).toBe(true);
-    expect(history.length).toBeGreaterThanOrEqual(2);
-  });
-
   it('should validate modification token format', () => {
     const validToken = masterIndex.generateModificationToken();
     const isValid = masterIndex.validateModificationToken(validToken);
