@@ -1,9 +1,0 @@
-{
-  "__type": "DatabaseConfig",
-  "rootFolderId": "1srjQKsKGALNUIhzqdmQDGa5l9kRSXd6M",
-  "autoCreateCollections": true,
-  "lockTimeout": 30000,
-  "cacheEnabled": true,
-  "logLevel": "INFO",
-  "masterIndexKey": "GASDB_MASTER_INDEX"
-}
