@@ -43,15 +43,27 @@ export const setupValidationTestEnvironment = () => {
     rootFolderId: folderId
   });
   
-  // Create mock database object
+    /**
+     * Retrieves the master index bound to the database mock
+     * @returns {MasterIndex} Master index instance configured for the test environment
+     */
+    const getMasterIndex = () => masterIndex;
+
+    /**
+     * No-op dirty marker to satisfy database interface requirements
+     * @returns {void} Nothing
+     */
+    const markDirty = () => { /* mock implementation */ };
+
+    // Create mock database object
   const database = {
     name: 'validationTestDB',
     config: dbConfig,
     _masterIndex: masterIndex,
     _fileOps: fileOps,
     _fileService: fileService,
-    getMasterIndex: () => masterIndex,
-    _markDirty: () => { /* mock implementation */ }
+      getMasterIndex,
+      _markDirty: markDirty
   };
   
   // Prepare mock data

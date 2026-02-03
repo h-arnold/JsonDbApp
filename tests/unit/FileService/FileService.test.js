@@ -9,6 +9,11 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+/**
+ * Creates a FileService instance with stubbed dependencies for unit testing.
+ * @param {Object} overrides - Optional replacements for logger or FileOperations mocks.
+ * @returns {Object} Collection of FileService, mockFileOps, and mockLogger handles.
+ */
 const createFileServiceTestContext = (overrides = {}) => {
   const mockLogger = {
     debug: vi.fn(),
@@ -257,6 +262,28 @@ describe('FileService Caching', () => {
     fileService.clearCache();
 
     expect(fileService.getCacheStats().size).toBe(0);
+  });
+
+  it('should cache data immediately after createFile', () => {
+    const fileId = 'cached-create-file';
+    const testData = {
+      created: new Date('2024-01-01T00:00:00.000Z'),
+      documents: [{ _id: 'doc-create', value: 7 }]
+    };
+
+    mockFileOps.createFile.mockReturnValue(fileId);
+    mockFileOps.readFile.mockImplementation(() => {
+      throw new Error('readFile should not be called when cache primed');
+    });
+
+    const createdFileId = fileService.createFile('created-file.json', testData, 'folder-id');
+    const cachedResult = fileService.readFile(createdFileId);
+
+    expect(createdFileId).toBe(fileId);
+    expect(cachedResult.created instanceof Date).toBe(true);
+    expect(cachedResult.documents[0].value).toBe(7);
+    expect(mockFileOps.readFile).not.toHaveBeenCalled();
+    expect(fileService.getCacheStats().size).toBe(1);
   });
 });
 

@@ -13,6 +13,15 @@ import { setupValidationTestEnvironment, cleanupValidationTests } from '../../he
 
 let testEnv;
 
+/**
+ * Determines whether a value is null or undefined
+ * @param {*} value - Candidate value
+ * @returns {boolean} True when value is nullish
+ */
+function isNullish(value) {
+  return value === null || value === undefined;
+}
+
 describe('$max Maximum Operator Tests', () => {
   beforeAll(() => {
     testEnv = setupValidationTestEnvironment();
@@ -37,7 +46,7 @@ describe('$max Maximum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original < 35) ? 35 : original;
+      const expected = (isNullish(original) || original < 35) ? 35 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.age).toBe(expected);
@@ -56,7 +65,7 @@ describe('$max Maximum Operator Tests', () => {
       );
       
       // Assert
-      const expected = (originalAge == null || originalAge < 60) ? 60 : originalAge;
+      const expected = (isNullish(originalAge) || originalAge < 60) ? 60 : originalAge;
       const changed = expected !== originalAge;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       const updated = collection.findOne({ _id: 'person6' });
@@ -97,7 +106,7 @@ describe('$max Maximum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person2' });
-      const expected = (original == null || original < 5) ? 5 : original;
+      const expected = (isNullish(original) || original < 5) ? 5 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.score).toBe(expected);
@@ -119,7 +128,7 @@ describe('$max Maximum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original < 200) ? 200 : original;
+      const expected = (isNullish(original) || original < 200) ? 200 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.newMaxField).toBe(expected);
@@ -141,7 +150,7 @@ describe('$max Maximum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original < Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : original;
+      const expected = (isNullish(original) || original < Number.MAX_SAFE_INTEGER) ? Number.MAX_SAFE_INTEGER : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.age).toBe(expected);
@@ -163,7 +172,7 @@ describe('$max Maximum Operator Tests', () => {
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
       const originalTime = original instanceof Date ? original.getTime() : (original ? new Date(original).getTime() : null);
-      const expectedTime = (originalTime == null || originalTime < futureDate.getTime()) ? futureDate.getTime() : originalTime;
+      const expectedTime = (isNullish(originalTime) || originalTime < futureDate.getTime()) ? futureDate.getTime() : originalTime;
       const changed = expectedTime !== originalTime;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.lastLogin.getTime()).toBe(expectedTime);

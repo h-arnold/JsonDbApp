@@ -126,6 +126,7 @@ describe('$pull Array Remove Operator Tests', () => {
       );
       
       // Assert
+      expect(pullResult.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person4' });
       expect(updated.numbers).toEqual([10]);
     });
@@ -141,6 +142,7 @@ describe('$pull Array Remove Operator Tests', () => {
       );
       
       // Assert
+      expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'order1' });
       const remainingSkus = updated.items.map(i => i.sku);
       expect(remainingSkus.includes('prod2')).toBe(false);
@@ -162,6 +164,7 @@ describe('$pull Array Remove Operator Tests', () => {
       );
       
       // Assert
+      expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'inv1' });
       expect(updated.alerts.length).toBe(before.alerts.length - 1);
       expect(updated.alerts.some(a => a.type === 'low-stock')).toBe(false);

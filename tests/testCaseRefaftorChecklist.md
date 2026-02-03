@@ -315,309 +315,309 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should maintain backwards compatibility with existing ID-based methods
     - [x] should validate queries and propagate errors properly
 
-- [x] **old_tests/unit/FileOperationsTest.js**
+- [x] **old_tests/unit/FileOperationsTest.js** ✅ Verified _(rechecked 2026-02-02)_
   - [x] _Suite: FileOperations Setup - Create Test Files_
-    - [ ] should create test folder in Drive root
-    - [ ] should create initial test file with JSON content
-    - [ ] should verify test file can be accessed
-  - [ ] _Suite: FileOperations Functionality_
-    - [ ] should read file content from Drive using real file ID
-    - [ ] should write data to existing Drive file
-    - [ ] should create new file in test folder
-    - [ ] should check if file exists in Drive
-    - [ ] should delete file from Drive
-    - [ ] should retrieve file metadata from Drive
-  - [ ] _Suite: FileOperations Error Handling_
-    - [ ] should handle Drive API quota exceeded error with retry
-    - [ ] should handle Drive API permission denied error
-    - [ ] should handle Drive API file not found error
-    - [ ] should retry operations on transient failures
-    - [ ] should handle malformed JSON in file content
-    - [ ] should handle corrupted files with partial JSON and date strings
-    - [ ] should handle files with invalid JSON that could trigger double-parsing detection
-    - [ ] should handle empty files gracefully without date processing
-  - [ ] _Suite: FileOperations Edge Cases_
-    - [ ] should handle very large file content gracefully
-    - [ ] should handle special characters in file names and content
-    - [ ] should handle empty files and null data appropriately
-  - [ ] _Suite: FileOperations Cleanup - Remove Test Files_
-    - [ ] should delete all created test files
-    - [ ] should delete all created test folders
-    - [ ] should reset test data globals
-  - [ ] _Suite: FileOperations Date Handling_
-    - [ ] should preserve Date objects through write-read cycle
-    - [ ] should store Date objects as ISO strings in actual file content
-    - [ ] should handle arrays with multiple Date objects
-    - [ ] should handle deeply nested Date objects
-    - [ ] should handle mixed Date objects and ISO strings correctly
-    - [ ] should handle edge cases with invalid date-like strings
-    - [ ] should handle Date objects with various time zones and precision
+    - [x] should create test folder in Drive root
+    - [x] should create initial test file with JSON content
+    - [x] should verify test file can be accessed
+  - [x] _Suite: FileOperations Functionality_
+    - [x] should read file content from Drive using real file ID
+    - [x] should write data to existing Drive file
+    - [x] should create new file in test folder
+    - [x] should check if file exists in Drive
+    - [x] should delete file from Drive
+    - [x] should retrieve file metadata from Drive
+  - [x] _Suite: FileOperations Error Handling_
+    - [x] should handle Drive API quota exceeded error with retry
+    - [x] should handle Drive API permission denied error
+    - [x] should handle Drive API file not found error
+    - [x] should retry operations on transient failures
+    - [x] should handle malformed JSON in file content
+    - [x] should handle corrupted files with partial JSON and date strings
+    - [x] should handle files with invalid JSON that could trigger double-parsing detection
+    - [x] should handle empty files gracefully without date processing
+  - [x] _Suite: FileOperations Edge Cases_
+    - [x] should handle very large file content gracefully
+    - [x] should handle special characters in file names and content
+    - [x] should handle empty files and null data appropriately
+  - [x] _Suite: FileOperations Cleanup - Remove Test Files_
+    - [x] should delete all created test files
+    - [x] should delete all created test folders
+    - [x] should reset test data globals
+  - [x] _Suite: FileOperations Date Handling_
+    - [x] should preserve Date objects through write-read cycle
+    - [x] should store Date objects as ISO strings in actual file content
+    - [x] should handle arrays with multiple Date objects
+    - [x] should handle deeply nested Date objects
+    - [x] should handle mixed Date objects and ISO strings correctly
+    - [x] should handle edge cases with invalid date-like strings
+    - [x] should handle Date objects with various time zones and precision
 
-- [x] **old_tests/unit/FileServiceTest.js**
+- [x] **old_tests/unit/FileServiceTest.js** ✅ Verified _(rechecked 2026-02-02)_
   - [x] _Suite: FileService Setup - Create Test Resources_
-    - [ ] should create test folder in Drive root
-    - [ ] should create initial test file with JSON content
-    - [ ] should initialise mock FileOperations for dependency injection
-  - [ ] _Suite: FileService Functionality_
-    - [ ] should initialise with FileOperations dependency
-    - [ ] should read file through optimised interface
-    - [ ] should write file through optimised interface
-    - [ ] should create file through optimised interface
-    - [ ] should check file existence through optimised interface
-    - [ ] should get file metadata through optimised interface
-  - [ ] _Suite: FileService Optimisation_
-    - [ ] should batch multiple read operations when possible
-    - [ ] should optimise metadata retrieval for multiple files
-    - [ ] should handle mixed success and failure in batch operations
-    - [ ] should implement intelligent caching for frequently accessed files
-  - [ ] _Suite: FileService Error Recovery_
-    - [ ] should implement exponential backoff for quota limits
-    - [ ] should gracefully degrade batch operations on partial failures
-    - [ ] should implement circuit breaker pattern for failing operations
-  - [ ] _Suite: FileService Integration_
-    - [ ] should coordinate operations between FileOperations and FileService
-    - [ ] should minimise Drive API calls through intelligent coordination
-    - [ ] should maintain consistency during concurrent file operations
-  - [ ] _Suite: FileService Cleanup - Remove Test Files_
-    - [ ] should delete all created test files
-    - [ ] should delete all created test folders
-    - [ ] should reset test data globals
+    - [x] should create test folder in Drive root
+    - [x] should create initial test file with JSON content
+    - [x] should initialise mock FileOperations for dependency injection
+  - [x] _Suite: FileService Functionality_
+    - [x] should initialise with FileOperations dependency
+    - [x] should read file through optimised interface
+    - [x] should write file through optimised interface
+    - [x] should create file through optimised interface
+    - [x] should check file existence through optimised interface
+    - [x] should get file metadata through optimised interface
+  - [x] _Suite: FileService Optimisation_
+    - [x] should batch multiple read operations when possible
+    - [x] should optimise metadata retrieval for multiple files
+    - [x] should handle mixed success and failure in batch operations
+    - [x] should implement intelligent caching for frequently accessed files
+  - [x] _Suite: FileService Error Recovery_
+    - [x] should implement exponential backoff for quota limits
+    - [x] should gracefully degrade batch operations on partial failures
+    - [x] should implement circuit breaker pattern for failing operations
+  - [x] _Suite: FileService Integration_
+    - [x] should coordinate operations between FileOperations and FileService
+    - [x] should minimise Drive API calls through intelligent coordination
+    - [x] should maintain consistency during concurrent file operations
+  - [x] _Suite: FileService Cleanup - Remove Test Files_
+    - [x] should delete all created test files
+    - [x] should delete all created test folders
+    - [x] should reset test data globals
 
-- [x] **old_tests/unit/MasterIndexTest.js**
+- [x] **old_tests/unit/MasterIndexTest.js** ✅ Verified
   - [x] _Suite: MasterIndex Functionality_
-    - [ ] should initialise master index with default configuration
-    - [ ] should persist master index to ScriptProperties
-    - [ ] should load existing master index from ScriptProperties
-    - [ ] should update collection metadata correctly
-    - [ ] should remove a collection and persist the removal
-    - [ ] should return CollectionMetadata instance from getCollection
-    - [ ] should accept CollectionMetadata instance in addCollection
-    - [ ] should return CollectionMetadata instances from getCollections
-    - [ ] should preserve CollectionMetadata properties through persistence
-    - [ ] should update CollectionMetadata instance properties correctly
-    - [ ] should throw error if MasterIndex is corrupted
-  - [ ] _Suite: Conflict Detection and Resolution_
-    - [ ] should generate unique modification tokens
-    - [ ] should detect conflicts using modification tokens
-    - [ ] should resolve conflicts with last-write-wins strategy
-    - [ ] should track modification history for debugging
-    - [ ] should validate modification token format
-  - [ ] _Suite: MasterIndex Integration_
-    - [ ] should coordinate locking and conflict detection
-    - [ ] should handle complete operation lifecycle
-    - [ ] should maintain CollectionMetadata integrity during conflict resolution
-    - [ ] should handle CollectionMetadata in complete operation lifecycle with persistence
+    - [x] should initialise master index with default configuration
+    - [x] should persist master index to ScriptProperties
+    - [x] should load existing master index from ScriptProperties
+    - [x] should update collection metadata correctly
+    - [x] should remove a collection and persist the removal
+    - [x] should return CollectionMetadata instance from getCollection
+    - [x] should accept CollectionMetadata instance in addCollection
+    - [x] should return CollectionMetadata instances from getCollections
+    - [x] should preserve CollectionMetadata properties through persistence
+    - [x] should update CollectionMetadata instance properties correctly
+    - [x] should throw error if MasterIndex is corrupted
+  - [x] _Suite: Conflict Detection and Resolution_
+    - [x] should generate unique modification tokens
+    - [x] should detect conflicts using modification tokens
+    - [x] should resolve conflicts with last-write-wins strategy
+    - [x] should track modification history for debugging
+    - [x] should validate modification token format
+  - [x] _Suite: MasterIndex Integration_
+    - [x] should coordinate locking and conflict detection
+    - [x] should handle complete operation lifecycle
+    - [x] should maintain CollectionMetadata integrity during conflict resolution
+    - [x] should handle CollectionMetadata in complete operation lifecycle with persistence
 
-- [x] **old_tests/unit/QueryEngineTest.js**
+- [x] **old_tests/unit/QueryEngineTest.js** ✅ Verified
   - [x] _Suite: QueryEngine Basic Functionality_
-    - [ ] should have QueryEngine class available
-    - [ ] should create QueryEngine instance
-    - [ ] should have executeQuery method
-    - [ ] should match all documents with empty query
-    - [ ] should match documents by simple field equality
-    - [ ] should match documents by numeric field equality
-    - [ ] should match documents by boolean field equality
-    - [ ] should match documents by nested field access
-    - [ ] should match documents by deeply nested field access
-    - [ ] should return empty array for non-matching query
-    - [ ] should handle null and undefined field values
-    - [ ] should handle documents with missing fields
-  - [ ] _Suite: QueryEngine Comparison Operators_
-    - [ ] should support explicit $eq operator with strings
-    - [ ] should support explicit $eq operator with numbers
-    - [ ] should support explicit $eq operator with booleans
-    - [ ] should support $gt operator with numbers
-    - [ ] should support $lt operator with numbers
-    - [ ] should support $gt operator with dates
-    - [ ] should support $lt operator with dates
-    - [ ] should support comparison operators with nested fields
-    - [ ] should handle comparison operators with non-matching values
-  - [ ] _Suite: QueryEngine Logical Operators_
-    - [ ] should support explicit $and operator
-    - [ ] should support $or operator
-    - [ ] should support implicit AND with multiple fields
-    - [ ] should support nested logical operators
-    - [ ] should support $or with comparison operators
-    - [ ] should handle empty $and conditions
-    - [ ] should handle empty $or conditions
-    - [ ] should support complex multi-field implicit AND
-  - [ ] _Suite: QueryEngine Error Handling_
-    - [ ] should throw InvalidQueryError for invalid query structure
-    - [ ] should throw InvalidQueryError for unsupported operators
-    - [ ] should throw error for null or undefined documents array
-    - [ ] should handle malformed logical operators gracefully
-    - [ ] should provide clear error messages for query validation failures
-  - [ ] _Suite: QueryEngine Edge Cases_
-    - [ ] should handle empty documents array
-    - [ ] should handle documents with null values
-    - [ ] should handle documents with deeply nested null values
-    - [ ] should handle very deeply nested field access
-    - [ ] should handle numeric field names and special characters
-    - [ ] should handle large number of documents efficiently
+    - [x] should have QueryEngine class available
+    - [x] should create QueryEngine instance
+    - [x] should have executeQuery method
+    - [x] should match all documents with empty query
+    - [x] should match documents by simple field equality
+    - [x] should match documents by numeric field equality
+    - [x] should match documents by boolean field equality
+    - [x] should match documents by nested field access
+    - [x] should match documents by deeply nested field access
+    - [x] should return empty array for non-matching query
+    - [x] should handle null and undefined field values
+    - [x] should handle documents with missing fields
+  - [x] _Suite: QueryEngine Comparison Operators_
+    - [x] should support explicit $eq operator with strings
+    - [x] should support explicit $eq operator with numbers
+    - [x] should support explicit $eq operator with booleans
+    - [x] should support $gt operator with numbers
+    - [x] should support $lt operator with numbers
+    - [x] should support $gt operator with dates
+    - [x] should support $lt operator with dates
+    - [x] should support comparison operators with nested fields
+    - [x] should handle comparison operators with non-matching values
+  - [x] _Suite: QueryEngine Logical Operators_
+    - [x] should support explicit $and operator
+    - [x] should support $or operator
+    - [x] should support implicit AND with multiple fields
+    - [x] should support nested logical operators
+    - [x] should support $or with comparison operators
+    - [x] should handle empty $and conditions
+    - [x] should handle empty $or conditions
+    - [x] should support complex multi-field implicit AND
+  - [x] _Suite: QueryEngine Error Handling_
+    - [x] should throw InvalidQueryError for invalid query structure
+    - [x] should throw InvalidQueryError for unsupported operators
+    - [x] should throw error for null or undefined documents array
+    - [x] should handle malformed logical operators gracefully
+    - [x] should provide clear error messages for query validation failures
+  - [x] _Suite: QueryEngine Edge Cases_
+    - [x] should handle empty documents array
+    - [x] should handle documents with null values
+    - [x] should handle documents with deeply nested null values
+    - [x] should handle very deeply nested field access
+    - [x] should handle numeric field names and special characters
+    - [x] should handle large number of documents efficiently
 
-- [x] **old_tests/unit/TestFrameworkTest.js**
+- [x] **old_tests/unit/TestFrameworkTest.js** ✅ Verified
   - [x] _Suite: TestFramework Tests_
-    - [ ] testAssertionUtilities
-    - [ ] testAssertionThrows
-    - [ ] testTestSuiteFunctionality
-  - [ ] _Suite: TestSuite_
-    - [ ] dummyTest
+    - [x] testAssertionUtilities
+    - [x] testAssertionThrows
+    - [x] testTestSuiteFunctionality
+  - [x] _Suite: TestSuite_
+    - [x] dummyTest
 
-- [x] **old_tests/unit/UpdateEngineTest.js**
+- [x] **old_tests/unit/UpdateEngineTest.js** ✅ Verified
   - [x] _Suite: UpdateEngine Tests_
-    - [ ] testUpdateEngineSetStringField
-    - [ ] testUpdateEngineSetCreatesDeepPath
-    - [ ] testUpdateEngineIncPositive
-    - [ ] testUpdateEngineIncNegative
-    - [ ] testUpdateEngineMulNumber
-    - [ ] testUpdateEngineMinNumeric
-    - [ ] testUpdateEngineMaxValue
-    - [ ] testUpdateEngineUnsetSimpleField
-    - [ ] testUpdateEngineUnsetNestedField
-    - [ ] testUpdateEnginePushArrayValue
-    - [ ] testUpdateEnginePullArrayValue
-    - [ ] testUpdateEngineAddToSetUnique
-    - [ ] testUpdateEngineInvalidOperatorThrows
-    - [ ] testSetVariousDataTypes
-    - [ ] testSetOnNonExistentTopLevelField
-    - [ ] testIncOnNonNumericThrows
-    - [ ] testMulOnNonNumericThrows
-    - [ ] testMinOnNonComparableThrows
-    - [ ] testMaxOnNonComparableThrows
-    - [ ] testMultipleOperatorsInSingleUpdate
-    - [ ] testSetCanChangeFieldType
-    - [ ] testNumericOperatorsPreserveNumericType
-    - [ ] testSetNullAndUndefinedBehaviour
-    - [ ] testIncExtremeValues
-    - [ ] testMinOnEqualValueNoChange
-    - [ ] testMaxOnEqualValueNoChange
-    - [ ] testEmptyUpdateObjectThrows
-    - [ ] testUpdateObjectWithNoDollarOperatorsThrows
-    - [ ] testUnsetSimpleField
-    - [ ] testUnsetNestedField
-    - [ ] testUnsetNonExistentFieldNoError
-    - [ ] testUnsetArrayElementByIndex
-    - [ ] testUnsetDeepNestedPath
-    - [ ] testDocumentStructureAfterUnset
-    - [ ] testPushSingleValue
-    - [ ] testPushMultipleValues
-    - [ ] testPullByValueEquality
-    - [ ] testAddToSetUniqueOnly
-    - [ ] testAddToSetMultipleUnique
-    - [ ] testAddToSetDuplicatesIgnored
-    - [ ] testPushNestedArray
-    - [ ] testPullNestedArray
-    - [ ] testArrayPositionSpecifier
-    - [ ] testPushOnNonArrayThrows
-    - [ ] testPullOnNonArrayThrows
-    - [ ] testAddToSetOnNonArrayThrows
+    - [x] testUpdateEngineSetStringField
+    - [x] testUpdateEngineSetCreatesDeepPath
+    - [x] testUpdateEngineIncPositive
+    - [x] testUpdateEngineIncNegative
+    - [x] testUpdateEngineMulNumber
+    - [x] testUpdateEngineMinNumeric
+    - [x] testUpdateEngineMaxValue
+    - [x] testUpdateEngineUnsetSimpleField
+    - [x] testUpdateEngineUnsetNestedField
+    - [x] testUpdateEnginePushArrayValue
+    - [x] testUpdateEnginePullArrayValue
+    - [x] testUpdateEngineAddToSetUnique
+    - [x] testUpdateEngineInvalidOperatorThrows
+    - [x] testSetVariousDataTypes
+    - [x] testSetOnNonExistentTopLevelField
+    - [x] testIncOnNonNumericThrows
+    - [x] testMulOnNonNumericThrows
+    - [x] testMinOnNonComparableThrows
+    - [x] testMaxOnNonComparableThrows
+    - [x] testMultipleOperatorsInSingleUpdate
+    - [x] testSetCanChangeFieldType
+    - [x] testNumericOperatorsPreserveNumericType
+    - [x] testSetNullAndUndefinedBehaviour
+    - [x] testIncExtremeValues
+    - [x] testMinOnEqualValueNoChange
+    - [x] testMaxOnEqualValueNoChange
+    - [x] testEmptyUpdateObjectThrows
+    - [x] testUpdateObjectWithNoDollarOperatorsThrows
+    - [x] testUnsetSimpleField
+    - [x] testUnsetNestedField
+    - [x] testUnsetNonExistentFieldNoError
+    - [x] testUnsetArrayElementByIndex
+    - [x] testUnsetDeepNestedPath
+    - [x] testDocumentStructureAfterUnset
+    - [x] testPushSingleValue
+    - [x] testPushMultipleValues
+    - [x] testPullByValueEquality
+    - [x] testAddToSetUniqueOnly
+    - [x] testAddToSetMultipleUnique
+    - [x] testAddToSetDuplicatesIgnored
+    - [x] testPushNestedArray
+    - [x] testPullNestedArray
+    - [x] testArrayPositionSpecifier
+    - [x] testPushOnNonArrayThrows
+    - [x] testPullOnNonArrayThrows
+    - [x] testAddToSetOnNonArrayThrows
 
-- [x] **old_tests/unit/UtilityTests/ComparisonUtilsTest.js**
+- [x] **old_tests/unit/UtilityTests/ComparisonUtilsTest.js** ✅ Verified
   - [x] _Suite: ComparisonUtils Tests_
-    - [ ] testEqualsPrimitivesAndStrict
-    - [ ] testEqualsDates
-    - [ ] testEqualsDeepObjectsAndArrays
-    - [ ] testEqualsArrayContainsScalarToggle
-    - [ ] testCompareOrderingNumbers
-    - [ ] testCompareOrderingStrings
-    - [ ] testCompareOrderingDates
-    - [ ] testCompareOrderingNonComparable
-    - [ ] testApplyOperatorsSingle
-    - [ ] testApplyOperatorsMultipleAndUnsupported
-    - [ ] testIsOperatorObject
-    - [ ] testSubsetMatchPlainFields
-    - [ ] testSubsetMatchWithOperators
-    - [ ] testSubsetMatchMixed
-    - [ ] testSubsetMatchOperatorObjectDirect
+    - [x] testEqualsPrimitivesAndStrict
+    - [x] testEqualsDates
+    - [x] testEqualsDeepObjectsAndArrays
+    - [x] testEqualsArrayContainsScalarToggle
+    - [x] testCompareOrderingNumbers
+    - [x] testCompareOrderingStrings
+    - [x] testCompareOrderingDates
+    - [x] testCompareOrderingNonComparable
+    - [x] testApplyOperatorsSingle
+    - [x] testApplyOperatorsMultipleAndUnsupported
+    - [x] testIsOperatorObject
+    - [x] testSubsetMatchPlainFields
+    - [x] testSubsetMatchWithOperators
+    - [x] testSubsetMatchMixed
+    - [x] testSubsetMatchOperatorObjectDirect
 
-- [x] **old_tests/unit/UtilityTests/EnvironmentTest.js**
+- [x] **old_tests/unit/UtilityTests/EnvironmentTest.js** ✅ Verified
   - [x] _Suite: Environment Tests_
-    - [ ] testClaspConfiguration
-    - [ ] testDriveAccess
+    - [x] testClaspConfiguration (legacy TestFramework assertion retired; Vitest harness does not expose TestFramework)
+    - [x] testDriveAccess
 
-- [x] **old_tests/unit/UtilityTests/ErrorHandlerTest.js**
+- [x] **old_tests/unit/UtilityTests/ErrorHandlerTest.js** ✅ Verified
   - [x] _Suite: ErrorHandler Tests_
-    - [ ] testErrorHandlerErrorTypes
-    - [ ] testErrorCreation
-    - [ ] testErrorValidation
-    - [ ] testAllErrorTypesCreation
+    - [x] testErrorHandlerErrorTypes
+    - [x] testErrorCreation
+    - [x] testErrorValidation
+    - [x] testAllErrorTypesCreation
 
-- [x] **old_tests/unit/UtilityTests/GASDBLoggerTest.js**
+- [x] **old_tests/unit/UtilityTests/GASDBLoggerTest.js** ✅ Verified
   - [x] _Suite: GASDBLogger Tests_
-    - [ ] testLoggerBasicFunctionality
-    - [ ] testLoggerLevels
-    - [ ] testLoggerComponentLogger
+    - [x] testLoggerBasicFunctionality
+    - [x] testLoggerLevels
+    - [x] testLoggerComponentLogger
 
-- [x] **old_tests/unit/UtilityTests/IdGeneratorTest.js**
+- [x] **old_tests/unit/UtilityTests/IdGeneratorTest.js** ✅ Verified
   - [x] _Suite: IdGenerator Tests_
-    - [ ] testIdGeneratorBasicFunctionality
-    - [ ] testIdGeneratorUniqueness
-    - [ ] testIdGeneratorFormats
-    - [ ] testIdGeneratorCustomGenerator
+    - [x] testIdGeneratorBasicFunctionality
+    - [x] testIdGeneratorUniqueness
+    - [x] testIdGeneratorFormats
+    - [x] testIdGeneratorCustomGenerator
 
-- [x] **old_tests/unit/UtilityTests/ObjectUtilsTest.js**
+- [x] **old_tests/unit/UtilityTests/ObjectUtilsTest.js** ✅ Verified
   - [x] _Suite: ObjectUtils Tests_
-    - [ ] testObjectUtilsDeepClonePrimitives
-    - [ ] testObjectUtilsDeepCloneDateObjects
-    - [ ] testObjectUtilsDeepCloneArrays
-    - [ ] testObjectUtilsDeepCloneNestedArrays
-    - [ ] testObjectUtilsDeepCloneObjects
-    - [ ] testObjectUtilsDeepCloneComplexNestedStructures
-    - [ ] testObjectUtilsConvertDateStringsPrimitives
-    - [ ] testObjectUtilsConvertDateStringsISOStrings
-    - [ ] testObjectUtilsConvertDateStringsNonISOStrings
-    - [ ] testObjectUtilsConvertDateStringsExistingDates
-    - [ ] testObjectUtilsConvertDateStringsArrays
-    - [ ] testObjectUtilsConvertDateStringsObjects
-    - [ ] testObjectUtilsConvertDateStringsNestedStructures
-    - [ ] testObjectUtilsIsISODateStringValidation
-    - [ ] testObjectUtilsSerialiseSimpleObjects
-    - [ ] testObjectUtilsSerialiseWithDates
-    - [ ] testObjectUtilsSerialiseArraysWithDates
-    - [ ] testObjectUtilsSerialiseNullUndefined
-    - [ ] testObjectUtilsDeserialiseJsonString
-    - [ ] testObjectUtilsDeserialiseWithDateRestoration
-    - [ ] testObjectUtilsDeserialiseArraysWithDates
-    - [ ] testObjectUtilsDeserialiseInvalidJson
-    - [ ] testObjectUtilsDeserialiseNonStringInput
-    - [ ] testObjectUtilsDeserialiseClassInstances
-    - [ ] testObjectUtilsRoundTripDatabaseConfigSanitisationFlag
-    - [ ] testObjectUtilsRoundTripSerialisation
-    - [ ] testObjectUtilsRoundTripComplexStructures
-    - [ ] testObjectUtilsRoundTripWithNaNAndInfinity
-    - [ ] testObjectUtilsEdgeCases
-    - [ ] testObjectUtilsSpecialObjectTypes
+    - [x] testObjectUtilsDeepClonePrimitives
+    - [x] testObjectUtilsDeepCloneDateObjects
+    - [x] testObjectUtilsDeepCloneArrays
+    - [x] testObjectUtilsDeepCloneNestedArrays
+    - [x] testObjectUtilsDeepCloneObjects
+    - [x] testObjectUtilsDeepCloneComplexNestedStructures
+    - [x] testObjectUtilsConvertDateStringsPrimitives
+    - [x] testObjectUtilsConvertDateStringsISOStrings
+    - [x] testObjectUtilsConvertDateStringsNonISOStrings
+    - [x] testObjectUtilsConvertDateStringsExistingDates
+    - [x] testObjectUtilsConvertDateStringsArrays
+    - [x] testObjectUtilsConvertDateStringsObjects
+    - [x] testObjectUtilsConvertDateStringsNestedStructures
+    - [x] testObjectUtilsIsISODateStringValidation
+    - [x] testObjectUtilsSerialiseSimpleObjects
+    - [x] testObjectUtilsSerialiseWithDates
+    - [x] testObjectUtilsSerialiseArraysWithDates
+    - [x] testObjectUtilsSerialiseNullUndefined
+    - [x] testObjectUtilsDeserialiseJsonString
+    - [x] testObjectUtilsDeserialiseWithDateRestoration
+    - [x] testObjectUtilsDeserialiseArraysWithDates
+    - [x] testObjectUtilsDeserialiseInvalidJson
+    - [x] testObjectUtilsDeserialiseNonStringInput
+    - [x] testObjectUtilsDeserialiseClassInstances
+    - [x] testObjectUtilsRoundTripDatabaseConfigSanitisationFlag
+    - [x] testObjectUtilsRoundTripSerialisation
+    - [x] testObjectUtilsRoundTripComplexStructures
+    - [x] testObjectUtilsRoundTripWithNaNAndInfinity
+    - [x] testObjectUtilsEdgeCases
+    - [x] testObjectUtilsSpecialObjectTypes
 
-- [x] **old_tests/unit/UtilityTests/ValidationUtilsTest.js**
+- [x] **old_tests/unit/UtilityTests/ValidationUtilsTest.js** ✅ Verified
   - [x] _Suite: ValidationUtils Tests_
-    - [ ] testValidationUtilsValidateRequired
-    - [ ] testValidationUtilsValidateType
-    - [ ] testValidationUtilsValidateNonEmptyString
-    - [ ] testValidationUtilsValidateString
-    - [ ] testValidationUtilsValidateObject
-    - [ ] testValidationUtilsValidateBoolean
-    - [ ] testValidationUtilsValidateArray
-    - [ ] testValidationUtilsValidateNonEmptyArray
-    - [ ] testValidationUtilsValidateNumber
-    - [ ] testValidationUtilsValidateInteger
-    - [ ] testValidationUtilsValidatePositiveNumber
-    - [ ] testValidationUtilsValidateNonNegativeNumber
-    - [ ] testValidationUtilsValidateRange
-    - [ ] testValidationUtilsValidateFunction
-    - [ ] testValidationUtilsValidateEnum
-    - [ ] testValidationUtilsValidateObjectProperties
-    - [ ] testValidationUtilsValidatePattern
-    - [ ] testValidationUtilsValidateOptional
-    - [ ] testValidationUtilsValidateAll
-    - [ ] testValidationUtilsValidateAny
-    - [ ] testValidateErrorMessages
-    - [ ] testValidationUtilsValidatePlainObject
-    - [ ] testValidationUtilsIsPlainObject
-    - [ ] testValidationUtilsValidateUpdateObject
+    - [x] testValidationUtilsValidateRequired
+    - [x] testValidationUtilsValidateType
+    - [x] testValidationUtilsValidateNonEmptyString
+    - [x] testValidationUtilsValidateString
+    - [x] testValidationUtilsValidateObject
+    - [x] testValidationUtilsValidateBoolean
+    - [x] testValidationUtilsValidateArray
+    - [x] testValidationUtilsValidateNonEmptyArray
+    - [x] testValidationUtilsValidateNumber
+    - [x] testValidationUtilsValidateInteger
+    - [x] testValidationUtilsValidatePositiveNumber
+    - [x] testValidationUtilsValidateNonNegativeNumber
+    - [x] testValidationUtilsValidateRange
+    - [x] testValidationUtilsValidateFunction
+    - [x] testValidationUtilsValidateEnum
+    - [x] testValidationUtilsValidateObjectProperties
+    - [x] testValidationUtilsValidatePattern
+    - [x] testValidationUtilsValidateOptional
+    - [x] testValidationUtilsValidateAll
+    - [x] testValidationUtilsValidateAny
+    - [x] testValidateErrorMessages
+    - [x] testValidationUtilsValidatePlainObject
+    - [x] testValidationUtilsIsPlainObject
+    - [x] testValidationUtilsValidateUpdateObject
 
 ## Validation tests
 
-- [x] **old_tests/validation/00_ComparisonOperators.js** → Refactored to tests/unit/validation/eq-operator.test.js, gt-operator.test.js, lt-operator.test.js
+- [x] **old_tests/validation/00_ComparisonOperators.js** ✅ Verified → Refactored to tests/unit/validation/eq-operator.test.js, gt-operator.test.js, lt-operator.test.js
   - [x] _Suite: $eq Equality Operator Tests_
     - [x] should match string values exactly
     - [x] should match numeric values exactly
@@ -656,7 +656,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should handle null in less than comparison
     - [x] should handle missing fields correctly
 
-- [x] **old_tests/validation/01_LogicalOperators.js** → Refactored to tests/unit/validation/and-operator.test.js, or-operator.test.js, combined-logical-operators.test.js
+- [x] **old_tests/validation/01_LogicalOperators.js** ✅ Verified → Refactored to tests/unit/validation/and-operator.test.js, or-operator.test.js, combined-logical-operators.test.js
   - [x] _Suite: $and Logical AND Operator Tests_
     - [x] should match documents satisfying both field conditions
     - [x] should match documents satisfying multiple field conditions
@@ -684,7 +684,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should throw error for invalid $and structure
     - [x] should throw error for invalid $or structure
 
-- [x] **old_tests/validation/02_FieldUpdateOperators.js** → Refactored to tests/unit/validation/set-operator.test.js, unset-operator.test.js
+- [x] **old_tests/validation/02_FieldUpdateOperators.js** ✅ Verified → Refactored to tests/unit/validation/set-operator.test.js, unset-operator.test.js
   - [x] _Suite: $set Basic Field Setting Tests_
     - [x] should overwrite existing string values
     - [x] should overwrite existing numeric values
@@ -721,7 +721,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should handle _id field unset appropriately
     - [x] should handle unsetting field in non-existent parent object
 
-- [x] **old_tests/validation/03_NumericUpdateOperators.js** → Refactored to tests/unit/validation/inc-operator.test.js, mul-operator.test.js, min-operator.test.js, max-operator.test.js
+- [x] **old_tests/validation/03_NumericUpdateOperators.js** ✅ Verified → Refactored to tests/unit/validation/inc-operator.test.js, mul-operator.test.js, min-operator.test.js, max-operator.test.js
   - [x] _Suite: $inc Basic Incrementation Tests_
     - [x] should increment positive integer values
     - [x] should increment positive decimal values
@@ -779,7 +779,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should handle maximum safe integer values
     - [x] should handle date range maximums
 
-- [x] **old_tests/validation/04_ArrayUpdateOperators.js** → Refactored to tests/unit/validation/push-operator.test.js, pull-operator.test.js
+- [x] **old_tests/validation/04_ArrayUpdateOperators.js** ✅ Verified → Refactored to tests/unit/validation/push-operator.test.js, pull-operator.test.js
   - [x] _Suite: $push Operator Tests_
     - [x] should append a single value to an existing array
     - [x] should append an object value to an array
@@ -806,7 +806,7 @@ REMEMBER TO COMMIT AND PUSH YOUR CHANGES ONE A FILE HAS BEEN REFACTORED!
     - [x] should report no modification when pulling from non-existent array field
     - [x] should report no modification when operator predicate matches nothing
 
-- [x] **old_tests/validation/05_ArrayAddToSetValidation.js** → Refactored to tests/unit/validation/addtoset-operator.test.js
+- [x] **old_tests/validation/05_ArrayAddToSetValidation.js** ✅ Verified → Refactored to tests/unit/validation/addtoset-operator.test.js
   - [x] _Suite: $addToSet Operator Tests_
     - [x] should add a value to a set if it is not already present
     - [x] should not add a value to a set if it is already present

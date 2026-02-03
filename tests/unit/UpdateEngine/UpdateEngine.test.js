@@ -1,3 +1,10 @@
+/**
+ * UpdateEngine Operator Tests
+ *
+ * Refactored from old_tests/unit/UpdateEngineTest.js
+ * to verify MongoDB-style update operator behaviour.
+ */
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import '../../setup/gas-mocks.setup.js';
 
@@ -68,15 +75,6 @@ describe('UpdateEngine Tests', () => {
     expect(result.value).toBe(15);
   });
 
-  it('should unset simple field', () => {
-    const doc = { a: 1, b: 2 };
-    const update = { $unset: { a: '' } };
-    const result = engine.applyOperators(doc, update);
-    
-    expect(result.a).toBeUndefined();
-    expect(result.b).toBe(2);
-  });
-
   it('should unset nested field', () => {
     const doc = { a: { b: 2, c: 3 } };
     const update = { $unset: { 'a.b': '' } };
@@ -84,22 +82,6 @@ describe('UpdateEngine Tests', () => {
     
     expect(result.a.b).toBeUndefined();
     expect(result.a.c).toBe(3);
-  });
-
-  it('should push value into array', () => {
-    const doc = { arr: [1, 2] };
-    const update = { $push: { arr: 3 } };
-    const result = engine.applyOperators(doc, update);
-    
-    expect(result.arr).toEqual([1, 2, 3]);
-  });
-
-  it('should pull all matching values from array', () => {
-    const doc = { arr: [1, 2, 3, 2] };
-    const update = { $pull: { arr: 2 } };
-    const result = engine.applyOperators(doc, update);
-    
-    expect(result.arr).toEqual([1, 3]);
   });
 
   it('should not add duplicate to set with $addToSet', () => {
@@ -284,22 +266,33 @@ describe('UpdateEngine Tests', () => {
     expect(doc.age).toBe(30);
   });
 
-  it('should unset deeply nested field', () => {
-    const doc = { 
-      user: { 
-        profile: { name: 'Bob', email: 'bob@example.com' },
-        settings: { theme: 'dark' }
+  it('should remove deep nested path', () => {
+    const doc = {
+      level1: {
+        level2: {
+          level3: {
+            level4: {
+              target: 'remove me',
+              keep: 'preserve me'
+            },
+            otherLevel4: 'should remain'
+          },
+          otherLevel3: 'should remain'
+        },
+        otherLevel2: 'should remain'
       },
-      status: 'active'
+      topLevel: 'should remain'
     };
-    const update = { $unset: { 'user.profile.email': '' } };
+    const update = { $unset: { 'level1.level2.level3.level4.target': '' } };
     const result = engine.applyOperators(doc, update);
-    
-    expect(result.user.profile.name).toBe('Bob');
-    expect(result.user.settings.theme).toBe('dark');
-    expect(result.status).toBe('active');
-    expect(result.user.profile.email).toBeUndefined();
-    expect(Object.prototype.hasOwnProperty.call(result.user.profile, 'email')).toBe(false);
+
+    expect(result.level1.level2.level3.level4.keep).toBe('preserve me');
+    expect(result.level1.level2.level3.otherLevel4).toBe('should remain');
+    expect(result.level1.level2.otherLevel3).toBe('should remain');
+    expect(result.level1.otherLevel2).toBe('should remain');
+    expect(result.topLevel).toBe('should remain');
+    expect(result.level1.level2.level3.level4.target).toBeUndefined();
+    expect(Object.prototype.hasOwnProperty.call(result.level1.level2.level3.level4, 'target')).toBe(false);
   });
 
   it('should not error when unsetting non-existent field', () => {
@@ -311,6 +304,32 @@ describe('UpdateEngine Tests', () => {
     expect(result.b).toBe(2);
     expect(result.nonExistent).toBeUndefined();
     expect(result.nested).toBeUndefined();
+  });
+
+  it('should preserve structure when unsetting multiple paths', () => {
+    const doc = {
+      a: 1,
+      b: { x: 10, y: 20 },
+      c: [1, 2, 3],
+      d: 'text'
+    };
+    const update = { $unset: { 'b.x': '', 'c.1': '', d: '' } };
+    const result = engine.applyOperators(doc, update);
+
+    expect(result.a).toBe(1);
+    expect(typeof result.b).toBe('object');
+    expect(Array.isArray(result.c)).toBe(true);
+    expect(result.d).toBeUndefined();
+    expect(result.b.x).toBeUndefined();
+    expect(result.b.y).toBe(20);
+    expect(Object.keys(result.b).length).toBe(1);
+    expect(result.c[0]).toBe(1);
+    expect(result.c[1]).toBeUndefined();
+    expect(result.c[2]).toBe(3);
+    expect(result.c.length).toBe(3);
+    expect(doc.b.x).toBe(10);
+    expect(doc.c[1]).toBe(2);
+    expect(doc.d).toBe('text');
   });
 
   it('should unset array element by index', () => {

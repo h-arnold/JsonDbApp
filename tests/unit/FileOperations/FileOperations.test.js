@@ -12,6 +12,10 @@
 
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 
+/**
+ * Builds baseline JSON payload used by FileOperations tests.
+ * @returns {Object} Default document structure for Drive file payloads.
+ */
 const createTestData = () => ({
   test: 'testDataFromSetup',
   collection: 'test',
@@ -26,6 +30,11 @@ const createTestData = () => ({
   ]
 });
 
+/**
+ * Creates a fully mocked DriveApp context for exercising FileOperations.
+ * @param {Object} overrides - Optional overrides for test identifiers and content.
+ * @returns {Object} Harness exposing FileOperations instance and mock controls.
+ */
 const createFileOperationsTestContext = (overrides = {}) => {
   const initialData = overrides.initialData ? ObjectUtils.deepClone(overrides.initialData) : createTestData();
   const testFileId = overrides.testFileId || 'test-file-id-123';
@@ -62,7 +71,12 @@ const createFileOperationsTestContext = (overrides = {}) => {
   const mockDriveApp = {
     getFileById: vi.fn(() => mockFile),
     getFolderById: vi.fn(() => mockFolder),
-    createFolder: vi.fn(() => mockFolder)
+    createFolder: vi.fn(() => mockFolder),
+    createFile: vi.fn((name, content) => {
+      storedContent = content;
+      mockFile.getName = vi.fn(() => name);
+      return mockFile;
+    })
   };
 
   const originalDriveApp = global.DriveApp;
@@ -76,6 +90,36 @@ const createFileOperationsTestContext = (overrides = {}) => {
 
   const fileOps = new FileOperations();
 
+  /**
+   * Serialises provided content and stores it for subsequent read operations.
+   * @param {Object} content - Data to persist via the mock file.
+   */
+  const setFileContent = (content) => {
+    storedContent = JSON.stringify(content);
+  };
+
+  /**
+   * Stores raw string content without serialisation for error-path testing.
+   * @param {string} content - Raw file contents to stage.
+   */
+  const setRawFileContent = (content) => {
+    storedContent = content;
+  };
+
+  /**
+   * Retrieves current string content held by the mock file.
+   * @returns {string} The staged Drive file payload.
+   */
+  const getStoredContent = () => storedContent;
+
+  /**
+   * Restores global DriveApp and Utilities references after each test.
+   */
+  const restoreGlobals = () => {
+    global.DriveApp = originalDriveApp;
+    global.Utilities = originalUtilities;
+  };
+
   return {
     fileOps,
     mockDriveApp,
@@ -83,17 +127,10 @@ const createFileOperationsTestContext = (overrides = {}) => {
     mockFolder,
     testFileId,
     testFolderId,
-    setFileContent: (content) => {
-      storedContent = JSON.stringify(content);
-    },
-    setRawFileContent: (content) => {
-      storedContent = content;
-    },
-    getStoredContent: () => storedContent,
-    restoreGlobals: () => {
-      global.DriveApp = originalDriveApp;
-      global.Utilities = originalUtilities;
-    }
+    setFileContent,
+    setRawFileContent,
+    getStoredContent,
+    restoreGlobals
   };
 };
 
@@ -158,6 +195,23 @@ describe('FileOperations Functionality', () => {
 
     expect(mockDriveApp.getFolderById).toHaveBeenCalledWith(testFolderId);
     expect(mockFolder.createFile).toHaveBeenCalledWith(
+      fileName,
+      expect.stringContaining('"metadata"'),
+      'application/json'
+    );
+    expect(createdFileId).toBe(newFileId);
+  });
+
+  it('should create new file in Drive root when folderId not provided', () => {
+    const fileName = 'root-level-test.json';
+    const newTestData = { documents: [], metadata: { created: new Date().toISOString() } };
+    const newFileId = 'root-file-id-456';
+
+    mockFile.getId = vi.fn(() => newFileId);
+
+    const createdFileId = fileOps.createFile(fileName, newTestData);
+
+    expect(mockDriveApp.createFile).toHaveBeenCalledWith(
       fileName,
       expect.stringContaining('"metadata"'),
       'application/json'

@@ -27,7 +27,7 @@ describe('$unset Field Removal Operator Tests', () => {
       // Arrange
       const collection = testEnv.collections.persons;
       collection.updateOne({ _id: 'person1' }, { $set: { tempField: 'temporary' } });
-      let doc = collection.findOne({ _id: 'person1' });
+      const doc = collection.findOne({ _id: 'person1' });
       expect(doc.tempField).toBe('temporary');
       
       // Act

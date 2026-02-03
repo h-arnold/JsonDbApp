@@ -13,6 +13,13 @@ import { setupValidationTestEnvironment, cleanupValidationTests } from '../../he
 
 let testEnv;
 
+/**
+ * Determines whether two numeric values are within a tolerance range
+ * @param {number} a - First value
+ * @param {number} b - Second value
+ * @param {number} [tolerance=0.01] - Maximum acceptable difference
+ * @returns {boolean} True when values are within tolerance
+ */
 function areNumbersClose(a, b, tolerance = 0.01) {
   if (typeof a !== 'number' || typeof b !== 'number') return false;
   return Math.abs(a - b) <= tolerance;

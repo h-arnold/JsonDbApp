@@ -14,6 +14,15 @@ import { setupValidationTestEnvironment, cleanupValidationTests } from '../../he
 
 let testEnv;
 
+/**
+ * Determines whether a value is null or undefined
+ * @param {*} value - Candidate value
+ * @returns {boolean} True when value is nullish
+ */
+function isNullish(value) {
+  return value === null || value === undefined;
+}
+
 describe('$min Minimum Operator Tests', () => {
   beforeAll(() => {
     testEnv = setupValidationTestEnvironment();
@@ -38,7 +47,7 @@ describe('$min Minimum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original > 25) ? 25 : original;
+      const expected = (isNullish(original) || original > 25) ? 25 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.age).toBe(expected);
@@ -57,7 +66,7 @@ describe('$min Minimum Operator Tests', () => {
       );
       
       // Assert
-      const expected = (originalAge == null || originalAge > 35) ? 35 : originalAge;
+      const expected = (isNullish(originalAge) || originalAge > 35) ? 35 : originalAge;
       const changed = expected !== originalAge;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       const updated = collection.findOne({ _id: 'person1' });
@@ -98,7 +107,7 @@ describe('$min Minimum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original > 80) ? 80 : original;
+      const expected = (isNullish(original) || original > 80) ? 80 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.score).toBe(expected);
@@ -120,7 +129,7 @@ describe('$min Minimum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original > 100) ? 100 : original;
+      const expected = (isNullish(original) || original > 100) ? 100 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.newMinField).toBe(expected);
@@ -144,7 +153,7 @@ describe('$min Minimum Operator Tests', () => {
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
       const originalTime = original instanceof Date ? original.getTime() : (original ? new Date(original).getTime() : null);
-      const expectedTime = (originalTime == null || originalTime > earlierDate.getTime()) ? earlierDate.getTime() : originalTime;
+      const expectedTime = (isNullish(originalTime) || originalTime > earlierDate.getTime()) ? earlierDate.getTime() : originalTime;
       const changed = expectedTime !== originalTime;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.lastLogin.getTime()).toBe(expectedTime);
@@ -164,7 +173,7 @@ describe('$min Minimum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original > 'Aaron') ? 'Aaron' : original;
+      const expected = (isNullish(original) || original > 'Aaron') ? 'Aaron' : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.name.first).toBe(expected);
@@ -200,7 +209,7 @@ describe('$min Minimum Operator Tests', () => {
       // Assert
       const originalTime = original instanceof Date ? original.getTime() : (original ? new Date(original).getTime() : null);
       const compTime = new Date('2025-06-01T00:00:00Z').getTime();
-      const expectedTime = (originalTime == null || originalTime < compTime) ? originalTime : compTime;
+      const expectedTime = (isNullish(originalTime) || originalTime < compTime) ? originalTime : compTime;
       const changed = expectedTime !== originalTime;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       const updated = collection.findOne({ _id: 'person2' });
@@ -221,7 +230,7 @@ describe('$min Minimum Operator Tests', () => {
       
       // Assert
       const updated = collection.findOne({ _id: 'person1' });
-      const expected = (original == null || original > 50) ? 50 : original;
+      const expected = (isNullish(original) || original > 50) ? 50 : original;
       const changed = expected !== original;
       expect(result.modifiedCount).toBe(changed ? 1 : 0);
       expect(updated.undefinedField).toBe(expected);
