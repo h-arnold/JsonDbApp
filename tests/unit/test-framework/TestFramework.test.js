@@ -17,11 +17,11 @@ const __dirname = path.dirname(__filename);
 const repoRoot = path.resolve(__dirname, '../../..');
 
 const legacyFrameworkScripts = [
-  'old_tests/framework/01_AssertionUtilities.js',
-  'old_tests/framework/02_TestResult.js',
-  'old_tests/framework/03_TestRunner.js',
-  'old_tests/framework/04_TestSuite.js',
-  'old_tests/framework/05_TestFramework.js'
+  'tests/framework/01_AssertionUtilities.js',
+  'tests/framework/02_TestResult.js',
+  'tests/framework/03_TestRunner.js',
+  'tests/framework/04_TestSuite.js',
+  'tests/framework/05_TestFramework.js'
 ];
 
 /**
