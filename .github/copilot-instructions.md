@@ -1,12 +1,14 @@
 # JsonDbApp Code Generation Guidelines
 
 ## Overview
+
 - Synchronous document DB for Google Apps Script (GAS), MongoDB-like syntax.
 - CRUD on named collections (JSON files in Google Drive).
 - Access via authenticated Apps Script libraries.
 - Consistency via ScriptProperties-based master index.
 
 ## Core Principles
+
 - **TDD**: Red-Green-Refactor. Write failing tests first, minimal passing code, then refactor.
 - **Component Separation**: Single responsibility, dependency injection via constructor.
 - **SOLID**: Follow SOLID principles.
@@ -26,16 +28,17 @@
 - `tests/data/`: MockQueryData.js (and other mock data)
 - `tests/framework/`: 01_AssertionUtilities.js, 02_TestResult.js, 03_TestRunner.js, 04_TestSuite.js, 05_TestFramework.js
 - `tests/unit/`: Unit test suites by class/component:
-    - Collection/ (multiple test suites)
-    - CollectionCoordinator/ (multiple test suites)
-    - DbLockService/
-    - DocumentOperations/
-    - UtilityTests/
-    - ...
+  - Collection/ (multiple test suites)
+  - CollectionCoordinator/ (multiple test suites)
+  - DbLockService/
+  - DocumentOperations/
+  - UtilityTests/
+  - ...
 - `tests/validation/`: Operator validation suites and orchestrator
 - `README.md`, `LICENSE`, `package.json`, `appsscript.json`: Project config and metadata
 
 ## Naming Conventions
+
 - **Classes**: PascalCase (e.g. `DocumentOperations`)
 - **Methods**: camelCase (`insertDocument`)
 - **Private methods**: `_underscore` prefix
@@ -50,6 +53,7 @@
 - **Config**: `config` or `componentConfig`
 
 ## Method Template
+
 ```javascript
 /**
  * Description
@@ -66,6 +70,7 @@ methodName(param) {
 ```
 
 ## Error Standards
+
 - **Base**: `GASDBError`
 - **Common**: `DocumentNotFoundError`, `DuplicateKeyError`, `InvalidQueryError`, `LockTimeoutError`, `FileIOError`, `ConflictError`, `InvalidArgumentError`
 - **Additional in project**: `MasterIndexError`, `CollectionNotFoundError`, `ConfigurationError`, `FileNotFoundError`, `PermissionDeniedError`, `QuotaExceededError`, `InvalidFileFormatError`, `OperationError`, `LockAcquisitionFailureError`, `ModificationConflictError`, `CoordinationTimeoutError`
@@ -73,6 +78,7 @@ methodName(param) {
 - **Message**: `"Operation failed: specific reason"`
 
 ## Implementation Requirements
+
 - **Classes**: Constructor validates inputs, JSDoc on all methods, naming/error patterns.
 - **Tests**: Descriptive, Arrange-Act-Assert, independent, per-class folder, per-suite file, orchestrator for all tests.
 - **Serialisation**: Use `ObjectUtils.serialise()`/`deserialise()`. Classes needing serialisation: implement `toJSON()`, static `fromJSON()`, register in `ObjectUtils._classRegistry`.
@@ -87,7 +93,7 @@ MANDATORY: Every #runSubagent call must include the agent name. Calls that omit 
 
 The following specialized agents are available (names are case-sensitive):
 
-1. **code-review-agent** - Reviews source code for:
+1. **Code Review Agent** - Reviews source code for:
    - Lint compliance (0 errors, 0 warnings - NON-NEGOTIABLE)
    - DRY principles (no code duplication)
    - SOLID principles
@@ -96,7 +102,7 @@ The following specialized agents are available (names are case-sensitive):
    - Complete JSDoc documentation
    - Proper error handling
 
-2. **test-code-review-agent** - Reviews test code for:
+2. **Test Review Agent** - Reviews test code for:
    - Lint compliance (0 errors, 0 warnings - NON-NEGOTIABLE)
    - Test framework compliance (Vitest patterns)
    - DRY principles (no duplication)
@@ -104,42 +110,61 @@ The following specialized agents are available (names are case-sensitive):
    - Complete test coverage
    - Proper cleanup and isolation
 
-3. **test-creation-agent** - Creates new Vitest tests:
+3. **Test Creation Agent** - Creates new Vitest tests:
    - Follows project testing conventions
    - Uses existing test helpers
    - Maintains DRY principles
    - Ensures lint compliance
    - Documents GAS mock limitations
 
-4. **refactoring-agent** - Refactors large classes:
+4. **Refactoring Agent** - Refactors large classes:
    - Splits into multi-file structure (Collection pattern)
    - Maintains test compatibility
    - Ensures SOLID compliance
    - Preserves all functionality
+
+5. **docs-review-agent** - Reviews and updates documentation:
+   - Ensures docs match code changes
+   - Updates developer documentation
+   - Updates agent instructions
+   - Verifies code examples are current
+   - Maintains cross-references
 
 ### Mandatory Code Review Process
 
 **NON-NEGOTIABLE REQUIREMENT**: All non-trivial code changes MUST be verified by the appropriate review agent before a task can be considered complete.
 
 **Source Code Changes:**
+
 - New classes or significant modifications → `code-review-agent`
 - Refactoring existing classes → `refactoring-agent` followed by `code-review-agent`
 - Must pass lint with 0 errors, 0 warnings
 - Must pass all tests
 
 **Test Code Changes:**
+
 - New tests → `test-creation-agent` followed by `test-code-review-agent`
 - Modified tests → `test-code-review-agent`
 - Must pass lint with 0 errors, 0 warnings
 - Must maintain or improve coverage
 
+**Documentation Review (Final Step):**
+
+- After code review passes → `docs-review-agent`
+- Updates developer docs to match code changes
+- Updates agent instructions with new patterns/helpers
+- Verifies all code examples are current
+- Required for all non-trivial changes
+
 **What Counts as Trivial:**
+
 - Single-line documentation fixes
 - Typo corrections in comments
 - Whitespace/formatting only changes
 - Version number updates
 
 **What Requires Review:**
+
 - Any logic changes
 - New methods or classes
 - Refactoring
@@ -156,23 +181,25 @@ When you need to review code, call the appropriate agent:
 runSubagent({
   prompt: "Please review the new UpdateEngine class for lint compliance, DRY, SOLID, and proper documentation.",
   description: "Code review for UpdateEngine",
-  agentName: "code-review-agent"
+  agentName: "Code Review Agent"
 })
 
 // For test review
 runSubagent({
   prompt: "Please review the CollectionReadOperations tests for completeness, DRY, and lint compliance.",
   description: "Test review for CollectionReadOperations",
-  agentName: "test-code-review-agent"
+  agentName: "Test Review Agent"
 })
 ```
 
 ### Review Agent Workflow
 
 1. **Make Changes**: Implement the requested functionality
-2. **Call Review Agent**: Pass to appropriate review agent
-3. **Address Feedback**: Fix any issues identified
-4. **Final Verification**: Confirm 0 lint errors/warnings and all tests pass
-5. **Complete Task**: Only mark complete after review approval
+2. **Self-Check**: Run lint and tests locally
+3. **Call Review Agent**: Pass to appropriate review agent (code or test review)
+4. **Address Feedback**: Fix any issues identified by review agent
+5. **Final Verification**: Confirm 0 lint errors/warnings and all tests pass
+6. **Documentation Review**: Pass to `Documentation Review Agent` to update docs
+7. **Complete Task**: Only mark complete after all reviews approved
 
 **Always write concisely in British English.**
