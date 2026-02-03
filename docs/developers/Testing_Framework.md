@@ -324,9 +324,11 @@ Test helpers provide reusable setup and cleanup utilities:
 
 ### MasterIndex Helpers
 
-- `createTestMasterIndex(config)`: Creates isolated MasterIndex with unique key
-- `seedMasterIndex(key, data)`: Pre-populates MasterIndex state
-- `registerKey(key)`: Tracks ScriptProperties keys for cleanup
+- `createMasterIndexKey()`: Generates and registers a unique ScriptProperties key for tests
+- `registerMasterIndexKey(key)`: Adds an existing key to the tracked cleanup set
+- `createTestMasterIndex(config)`: Builds an isolated MasterIndex with automatic key tracking
+- `seedMasterIndex(key, data)`: Serialises and stores master index payloads for fixtures
+- `cleanupMasterIndexTests()`: Deletes all registered ScriptProperties keys after each test
 
 ## Running Tests
 

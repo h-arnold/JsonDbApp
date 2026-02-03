@@ -1,70 +1,43 @@
+/* global MasterIndex, CollectionMetadata, ErrorHandler, PropertiesService, DEFAULT_MODIFICATION_HISTORY_LIMIT */
+
 import { afterEach, describe, expect, it } from 'vitest';
+import {
+  cleanupMasterIndexTests,
+  createMasterIndexKey,
+  createTestMasterIndex,
+  seedMasterIndex
+} from '../../helpers/master-index-test-helpers.js';
 
 const scriptProperties = PropertiesService.getScriptProperties();
-const trackedMasterIndexKeys = new Set();
 
 /**
- * Create a unique master index key for test isolation.
- * @returns {string} Generated key
- */
-const createKey = () => `VIITEST_MASTER_INDEX_${Date.now()}_${Math.random().toString(36).slice(2)}`;
-
-/**
- * Register a key for cleanup upon test completion.
- * @param {string} key - Master index key slated for deletion
- * @returns {string} Registered key
- */
-const registerKey = (key) => {
-  trackedMasterIndexKeys.add(key);
-  return key;
-};
-
-/**
- * Create a MasterIndex instance wired to an isolated ScriptProperties key.
- * @param {Object} [config] - Optional configuration overrides
- * @returns {{ key: string, masterIndex: MasterIndex }} Test harness artefacts
- */
-const createTestMasterIndex = (config = {}) => {
-  const masterIndexKey = registerKey(config.masterIndexKey ?? createKey());
-  const masterIndex = new MasterIndex({ ...config, masterIndexKey });
-  return { key: masterIndexKey, masterIndex };
-};
-
-/**
- * Seed ScriptProperties with predefined master index data.
- * @param {string} key - Target master index key
- * @param {Object} data - Serialised master index payload
- */
-const seedMasterIndex = (key, data) => {
-  registerKey(key);
-  scriptProperties.setProperty(key, ObjectUtils.serialise(data));
-};
-
-/**
- * Add a collection with sensible defaults for repeated scenarios.
- * @param {MasterIndex} masterIndex - Current MasterIndex under test
- * @param {string} name - Collection identifier
- * @param {Object} [overrides] - Metadata overrides for the collection
- * @returns {CollectionMetadata} Persisted metadata instance
+ * Add a collection using consistent defaults for repeated scenarios.
+ * @param {MasterIndex} masterIndex - MasterIndex under test.
+ * @param {string} name - Collection identifier.
+ * @param {Object} [overrides] - Optional metadata overrides.
+ * @returns {CollectionMetadata} Persisted collection metadata.
  */
 const addTestCollection = (masterIndex, name, overrides = {}) => {
-  const metadata = {
-    name,
-    fileId: overrides.fileId ?? `${name}-file`,
-    documentCount: overrides.documentCount ?? 0,
-    modificationToken: overrides.modificationToken ?? masterIndex.generateModificationToken(),
-    lastModified: overrides.lastModified ?? new Date('2024-01-01T00:00:00Z'),
-    lockStatus: overrides.lockStatus ?? null
+  const baseMetadata = {
+    fileId: `${name}-file`,
+    documentCount: 0,
+    modificationToken: masterIndex.generateModificationToken(),
+    lastModified: new Date('2024-01-01T00:00:00Z'),
+    lockStatus: null
   };
+
+  const metadata = {
+    ...baseMetadata,
+    ...overrides,
+    name
+  };
+
   masterIndex.addCollection(name, metadata);
   return masterIndex.getCollection(name);
 };
 
 afterEach(() => {
-  for (const key of trackedMasterIndexKeys) {
-    scriptProperties.deleteProperty(key);
-  }
-  trackedMasterIndexKeys.clear();
+  cleanupMasterIndexTests();
 });
 
 describe('MasterIndex Functionality', () => {
@@ -85,7 +58,7 @@ describe('MasterIndex Functionality', () => {
   });
 
   it('should load existing master index from ScriptProperties', () => {
-    const key = registerKey(createKey());
+    const key = createMasterIndexKey();
     const seededMetadata = new CollectionMetadata('existing', 'existing-file-id', { documentCount: 3 });
     const seededData = {
       version: 1,
@@ -152,6 +125,55 @@ describe('MasterIndex Functionality', () => {
     expect(retrieved.modificationToken).toBe('token-456');
   });
 
+  it('should normalise CollectionMetadata instances when provided name differs', () => {
+    const { masterIndex } = createTestMasterIndex();
+    const metadata = new CollectionMetadata('mismatchedName', 'normalise-file-id', {
+      documentCount: 4,
+      modificationToken: 'normalise-token'
+    });
+
+    masterIndex.addCollection('expectedName', metadata);
+    const stored = masterIndex.getCollection('expectedName');
+
+    expect(stored).toBeInstanceOf(CollectionMetadata);
+    expect(stored.name).toBe('expectedName');
+    expect(stored.fileId).toBe('normalise-file-id');
+    expect(stored.documentCount).toBe(4);
+    expect(stored.modificationToken).toBe('normalise-token');
+  });
+
+  it('should normalise raw metadata payloads including timestamps and lock status', () => {
+    const { masterIndex } = createTestMasterIndex();
+    const createdInput = '2024-05-05T08:30:00Z';
+    const lastUpdatedInput = Date.parse('2024-05-06T09:15:00Z');
+    const lockStatus = {
+      isLocked: true,
+      lockedBy: 'raw-owner',
+      lockedAt: 1714986900000,
+      lockTimeout: 12345
+    };
+    const metadata = {
+      fileId: 'raw-metadata-file',
+      created: createdInput,
+      lastUpdated: lastUpdatedInput,
+      documentCount: 9,
+      modificationToken: 'raw-token-1',
+      lockStatus: { ...lockStatus }
+    };
+
+    const stored = masterIndex.addCollection('rawNormalisation', metadata);
+
+    expect(stored).toBeInstanceOf(CollectionMetadata);
+    expect(stored.created.toISOString()).toBe(new Date(createdInput).toISOString());
+    expect(stored.lastUpdated.toISOString()).toBe(new Date(lastUpdatedInput).toISOString());
+    expect(stored.documentCount).toBe(9);
+    expect(stored.getModificationToken()).toBe('raw-token-1');
+    expect(stored.getLockStatus()).toEqual(lockStatus);
+
+    metadata.lockStatus.lockedBy = 'mutated-owner';
+    expect(stored.getLockStatus().lockedBy).toBe('raw-owner');
+  });
+
   it('should return CollectionMetadata instances from getCollections', () => {
     const { masterIndex } = createTestMasterIndex();
     addTestCollection(masterIndex, 'collectionOne');
@@ -212,7 +234,7 @@ describe('MasterIndex Functionality', () => {
   });
 
   it('should throw error if MasterIndex is corrupted', () => {
-    const key = registerKey(createKey());
+    const key = createMasterIndexKey();
     scriptProperties.setProperty(key, '{corruptJson');
 
     expect(() => new MasterIndex({ masterIndexKey: key })).toThrow(ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR);
@@ -271,6 +293,20 @@ describe('Conflict Detection and Resolution', () => {
     expect(history.at(-1).operation).toBe('UPDATE_METADATA');
   });
 
+  it('should respect configurable modification history limits', () => {
+    const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 2 });
+    addTestCollection(masterIndex, 'historyLimit');
+    masterIndex.updateCollectionMetadata('historyLimit', { documentCount: 1 });
+    masterIndex.updateCollectionMetadata('historyLimit', { documentCount: 2 });
+    masterIndex.updateCollectionMetadata('historyLimit', { documentCount: 3 });
+
+    const history = masterIndex.getModificationHistory('historyLimit');
+
+    expect(history).toHaveLength(2);
+    expect(history[0].operation).toBe('UPDATE_METADATA');
+    expect(history[1].data.documentCount).toBe(3);
+  });
+
   it('should validate modification token format', () => {
     const { masterIndex } = createTestMasterIndex();
 
@@ -279,6 +315,57 @@ describe('Conflict Detection and Resolution', () => {
     expect(masterIndex.validateModificationToken(validToken)).toBe(true);
     expect(masterIndex.validateModificationToken('invalid token')).toBe(false);
     expect(masterIndex.validateModificationToken(null)).toBe(false);
+  });
+});
+
+describe('MasterIndex Helper Behaviour', () => {
+  it('should normalise history entries and enforce default capping', () => {
+    // Arrange - create collection and configure default history fallback
+    const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 0 });
+    addTestCollection(masterIndex, 'helperHistory');
+    const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
+    const updatesToApply = DEFAULT_MODIFICATION_HISTORY_LIMIT + 5;
+
+    // Act - issue enough updates to trigger history capping via public APIs
+    for (let i = 0; i < updatesToApply; i += 1) {
+      masterIndex.updateCollectionMetadata('helperHistory', { documentCount: i });
+    }
+    const history = masterIndex.getModificationHistory('helperHistory');
+
+    // Assert - verify capped length, timestamp normalisation, and retained payload data
+    expect(history).toHaveLength(DEFAULT_MODIFICATION_HISTORY_LIMIT);
+    const firstEntry = history[0];
+    const lastEntry = history.at(-1);
+    expect(firstEntry.operation).toBe('UPDATE_METADATA');
+    expect(lastEntry.operation).toBe('UPDATE_METADATA');
+    expect(isoPattern.test(firstEntry.timestamp)).toBe(true);
+    expect(isoPattern.test(lastEntry.timestamp)).toBe(true);
+    expect(firstEntry.data.documentCount).toBe(updatesToApply - DEFAULT_MODIFICATION_HISTORY_LIMIT);
+    expect(lastEntry.data.documentCount).toBe(updatesToApply - 1);
+  });
+
+  it('should preserve addCollection history snapshots after metadata mutations', () => {
+    // Arrange - capture initial addCollection history entry
+    const { masterIndex } = createTestMasterIndex();
+    const initialMetadata = new CollectionMetadata('historySnapshot', 'history-file-id', {
+      documentCount: 2,
+      modificationToken: 'token-history'
+    });
+    masterIndex.addCollection('historySnapshot', initialMetadata);
+    const historyBeforeUpdate = masterIndex.getModificationHistory('historySnapshot');
+    const initialEntry = historyBeforeUpdate[0];
+
+    // Act - mutate metadata via public update API
+    masterIndex.updateCollectionMetadata('historySnapshot', { documentCount: 5 });
+    const updatedCollection = masterIndex.getCollection('historySnapshot');
+
+    // Assert - ensure history snapshot remains immutable after updates
+    expect(historyBeforeUpdate).toHaveLength(1);
+    expect(initialEntry.data).toBeInstanceOf(CollectionMetadata);
+    expect(initialEntry.data.documentCount).toBe(2);
+    expect(updatedCollection.documentCount).toBe(5);
+    expect(initialEntry.data.documentCount).toBe(2);
+    expect(initialEntry.data).not.toBe(updatedCollection);
   });
 });
 
