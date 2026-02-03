@@ -7,6 +7,13 @@
  * handling operator validation, dot-notation traversal, and logical
  * composition.
  */
+const DEFAULT_MAX_NESTED_DEPTH = 10;
+const DEFAULT_SUPPORTED_OPERATORS = Object.freeze(['$eq', '$gt', '$lt', '$and', '$or']);
+const LOGICAL_OPERATORS = Object.freeze(['$and', '$or']);
+
+/**
+ * Query engine facade orchestrating validation and matching helpers.
+ */
 class QueryEngine {
   /**
    * Create a new QueryEngine instance.
@@ -17,39 +24,13 @@ class QueryEngine {
    * @param {FieldPathUtils} [config.fieldPathUtils] - Shared FieldPathUtils instance.
    */
   constructor(config = {}) {
-    if (config !== null && config !== undefined && typeof config !== 'object') {
-      throw new InvalidArgumentError('config', config, 'QueryEngine configuration must be an object or undefined');
-    }
-
-    const defaultOperators = ['$eq', '$gt', '$lt', '$and', '$or'];
-    const supportedOperators = Array.isArray(config.supportedOperators) && config.supportedOperators.length > 0
-      ? config.supportedOperators.slice()
-      : defaultOperators;
-
-    supportedOperators.forEach(operator => {
-      if (typeof operator !== 'string' || operator.trim() === '') {
-        throw new InvalidArgumentError('supportedOperators', operator, 'Operator names must be non-empty strings');
-      }
-    });
-
-    const maxNestedDepth = config.maxNestedDepth === undefined ? 10 : config.maxNestedDepth;
-    Validate.integer(maxNestedDepth, 'config.maxNestedDepth');
-    if (maxNestedDepth < 0) {
-      throw new InvalidArgumentError('config.maxNestedDepth', maxNestedDepth, 'must be zero or greater');
-    }
-
     this._logger = JDbLogger.createComponentLogger('QueryEngine');
-    this._config = {
-      supportedOperators,
-      maxNestedDepth
-    };
+    this._config = this._buildConfig(config);
 
     this._supportedOperators = new Set(this._config.supportedOperators);
-    this._logicalOperators = new Set(['$and', '$or'].filter(operator => this._supportedOperators.has(operator)));
-    this._fieldPathCache = config.fieldPathCache instanceof Map ? config.fieldPathCache : new Map();
-    this._fieldPathUtils = config.fieldPathUtils instanceof FieldPathUtils
-      ? config.fieldPathUtils
-      : new FieldPathUtils({ cache: this._fieldPathCache });
+    this._logicalOperators = new Set(LOGICAL_OPERATORS.filter(operator => this._supportedOperators.has(operator)));
+
+    this._initialiseFieldPathResources(config);
 
     this._validation = new QueryEngineValidation(this);
     this._matcher = new QueryEngineMatcher(this);
@@ -146,6 +127,81 @@ class QueryEngine {
     }
 
     return this._fieldPathUtils.getValue(document, fieldPath);
+  }
+
+  /**
+   * Build validated configuration object from raw input.
+   * @param {Object} rawConfig - Raw configuration input.
+   * @returns {{supportedOperators: string[], maxNestedDepth: number}} Normalised configuration.
+   * @private
+   */
+  _buildConfig(rawConfig) {
+    this._assertConfigShape(rawConfig);
+    const config = rawConfig || {};
+
+    const supportedOperators = this._normaliseSupportedOperators(config.supportedOperators);
+    const maxNestedDepth = this._normaliseMaxNestedDepth(config.maxNestedDepth);
+
+    return { supportedOperators, maxNestedDepth };
+  }
+
+  /**
+   * Ensure configuration argument is an object when provided.
+   * @param {*} config - Configuration candidate.
+   * @private
+   */
+  _assertConfigShape(config) {
+    if (config !== null && config !== undefined && typeof config !== 'object') {
+      throw new InvalidArgumentError('config', config, 'QueryEngine configuration must be an object or undefined');
+    }
+  }
+
+  /**
+   * Normalise supported operator declarations.
+   * @param {string[]} [providedOperators] - Optional custom operator list.
+   * @returns {string[]} Validated operator list.
+   * @private
+   */
+  _normaliseSupportedOperators(providedOperators) {
+    const operators = Array.isArray(providedOperators) && providedOperators.length > 0
+      ? providedOperators.slice()
+      : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+
+    operators.forEach(operator => {
+      if (typeof operator !== 'string' || operator.trim() === '') {
+        throw new InvalidArgumentError('supportedOperators', operator, 'Operator names must be non-empty strings');
+      }
+    });
+
+    return operators;
+  }
+
+  /**
+   * Normalise maximum nesting depth.
+   * @param {number} providedDepth - Optional depth override.
+   * @returns {number} Sanitised maximum depth.
+   * @private
+   */
+  _normaliseMaxNestedDepth(providedDepth) {
+    const depth = providedDepth === undefined ? DEFAULT_MAX_NESTED_DEPTH : providedDepth;
+    Validate.integer(depth, 'config.maxNestedDepth');
+    if (depth < 0) {
+      throw new InvalidArgumentError('config.maxNestedDepth', depth, 'must be zero or greater');
+    }
+    return depth;
+  }
+
+  /**
+   * Prepare field-path utilities and cache resources.
+   * @param {Object} config - User configuration input.
+   * @private
+   */
+  _initialiseFieldPathResources(config) {
+    const candidateConfig = config || {};
+    this._fieldPathCache = candidateConfig.fieldPathCache instanceof Map ? candidateConfig.fieldPathCache : new Map();
+    this._fieldPathUtils = candidateConfig.fieldPathUtils instanceof FieldPathUtils
+      ? candidateConfig.fieldPathUtils
+      : new FieldPathUtils({ cache: this._fieldPathCache });
   }
 }
 

@@ -36,6 +36,15 @@ class QueryEngineValidation {
       throw new InvalidArgumentError('documents', documents, 'Documents parameter must be an array');
     }
 
+    this._assertValidQueryRoot(query);
+  }
+
+  /**
+   * Ensure the query root is a non-array object with allowed types.
+   * @param {*} query - Query root candidate.
+   * @private
+   */
+  _assertValidQueryRoot(query) {
     if (query === null) {
       throw new InvalidArgumentError('query', query, 'Query cannot be null');
     }
@@ -44,7 +53,8 @@ class QueryEngineValidation {
       throw new InvalidArgumentError('query', query, 'Query cannot be undefined');
     }
 
-    if (typeof query === 'string') {
+    const queryType = typeof query;
+    if (queryType === 'string') {
       throw new InvalidArgumentError('query', query, 'Query cannot be a string');
     }
 
@@ -52,7 +62,7 @@ class QueryEngineValidation {
       throw new InvalidArgumentError('query', query, 'Query cannot be an array');
     }
 
-    if (typeof query !== 'object') {
+    if (queryType !== 'object') {
       throw new InvalidArgumentError('query', query, 'Query must be a valid object');
     }
   }
