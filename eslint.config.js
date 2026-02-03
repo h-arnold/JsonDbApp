@@ -24,7 +24,7 @@ export default defineConfig([
       jsdoc
     },
     rules: {
-      'complexity': ['warn', 8],
+      'complexity': ['warn', 6],
       'curly': ['warn', 'all'],
       'eqeqeq': ['warn', 'always'],
       'jsdoc/require-description': [
