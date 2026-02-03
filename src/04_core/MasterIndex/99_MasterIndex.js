@@ -29,6 +29,7 @@ class MasterIndex {
     this._logger = JDbLogger.createComponentLogger('MasterIndex');
     this._dbLockService = new DbLockService({ defaultTimeout: this._config.lockTimeout });
     this._metadataNormaliser = new MasterIndexMetadataNormaliser(this);
+    this._simpleUpdateHandlers = this._buildSimpleUpdateHandlers();
     this._loadFromScriptProperties();
     this._initialiseDataState();
   }
@@ -205,16 +206,18 @@ class MasterIndex {
    * @private
    */
   _applyCollectionUpdate(collection, key, value) {
-    const handlers = {
-      documentCount: this._applyDocumentCountUpdate,
-      modificationToken: this._applyModificationTokenUpdate,
-      lockStatus: this._applyLockStatusUpdate,
-      lastUpdated: this._applyLastUpdatedUpdate
-    };
+    if (key === 'lastUpdated') {
+      const date = value instanceof Date ? value : new Date(value);
+      if (isNaN(date.getTime())) {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lastUpdated', value, 'lastUpdated must be a valid date');
+      }
+      collection.lastUpdated = date;
+      return;
+    }
 
-    const handler = handlers[key];
-    if (handler) {
-      handler.call(this, collection, value);
+    const methodName = this._simpleUpdateHandlers[key];
+    if (methodName) {
+      collection[methodName](value);
       return;
     }
 
@@ -222,51 +225,16 @@ class MasterIndex {
   }
 
   /**
-   * Apply a document count update to a collection.
-   * @param {CollectionMetadata} collection - Target collection metadata
-   * @param {*} value - Document count input
-   * @returns {void}
+   * Build method map for simple collection metadata updates.
+   * @returns {Object<string, string>} Map of update fields to method names
    * @private
    */
-  _applyDocumentCountUpdate(collection, value) {
-    collection.setDocumentCount(value);
-  }
-
-  /**
-   * Apply a modification token update to a collection.
-   * @param {CollectionMetadata} collection - Target collection metadata
-   * @param {*} value - Modification token input
-   * @returns {void}
-   * @private
-   */
-  _applyModificationTokenUpdate(collection, value) {
-    collection.setModificationToken(value);
-  }
-
-  /**
-   * Apply a lock status update to a collection.
-   * @param {CollectionMetadata} collection - Target collection metadata
-   * @param {*} value - Lock status input
-   * @returns {void}
-   * @private
-   */
-  _applyLockStatusUpdate(collection, value) {
-    collection.setLockStatus(value);
-  }
-
-  /**
-   * Apply a lastUpdated update to a collection.
-   * @param {CollectionMetadata} collection - Target collection metadata
-   * @param {*} value - Date input
-   * @returns {void}
-   * @private
-   */
-  _applyLastUpdatedUpdate(collection, value) {
-    const date = value instanceof Date ? value : new Date(value);
-    if (isNaN(date.getTime())) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lastUpdated', value, 'lastUpdated must be a valid date');
-    }
-    collection.lastUpdated = date;
+  _buildSimpleUpdateHandlers() {
+    return {
+      documentCount: 'setDocumentCount',
+      modificationToken: 'setModificationToken',
+      lockStatus: 'setLockStatus'
+    };
   }
 
   /**
@@ -682,7 +650,22 @@ class MasterIndex {
 
     if (this._data.modificationHistory) {
       delete this._data.modificationHistory;
+      this.save(undefined, this._resolveExistingTimestamp(this._data.lastUpdated));
     }
+  }
+
+  /**
+   * Resolve a safe timestamp for persistence updates.
+   * @param {*} candidate - Candidate timestamp input
+   * @returns {Date} Resolved timestamp
+   * @private
+   */
+  _resolveExistingTimestamp(candidate) {
+    const resolved = candidate instanceof Date ? candidate : new Date(candidate);
+    if (!isNaN(resolved.getTime())) {
+      return new Date(resolved.getTime());
+    }
+    return this._getCurrentTimestamp();
   }
 }
 
