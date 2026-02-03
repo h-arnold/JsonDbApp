@@ -136,21 +136,21 @@ The following specialized agents are available (names are case-sensitive):
 
 **Source Code Changes:**
 
-- New classes or significant modifications → `code-review-agent`
-- Refactoring existing classes → `refactoring-agent` followed by `code-review-agent`
+- New classes or significant modifications → `Code Review Agent`
+- Refactoring existing classes → `Refactoring Agent` followed by `Code Review Agent`
 - Must pass lint with 0 errors, 0 warnings
 - Must pass all tests
 
 **Test Code Changes:**
 
-- New tests → `test-creation-agent` followed by `test-code-review-agent`
-- Modified tests → `test-code-review-agent`
+- New tests → `Test Creation Agent` followed by `Test Code Review Agent`
+- Modified tests → `Test Code Review Agent`
 - Must pass lint with 0 errors, 0 warnings
 - Must maintain or improve coverage
 
 **Documentation Review (Final Step):**
 
-- After code review passes → `docs-review-agent`
+- After code review passes → `Documentation Review Agent`
 - Updates developer docs to match code changes
 - Updates agent instructions with new patterns/helpers
 - Verifies all code examples are current
