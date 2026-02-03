@@ -81,21 +81,98 @@ methodName(param) {
 
 ## Calling Sub-Agents
 
-MANDATORY: Every #runSubagent call must include agentName: "{name of subagent}". Calls that omit this parameter violate the workflow contract and should be rejected/retried.
+MANDATORY: Every #runSubagent call must include the agent name. Calls that omit this parameter violate the workflow contract and should be rejected/retried.
 
-Example (exact shape requested):
+### Available Sub-Agents
 
-{
-  "type": "function_call",
-  "name": "runSubagent",
-  "arguments": "{\"prompt\":\"Please implement a dummy task: add CLI command 'foo' that scaffolds an exercise.\",\"description\":\"Create files: exercises/ex999_dummy/, notebooks/solutions/ex999_dummy.ipynb, tests/test_ex999_dummy.py. Ensure tests pass and linting is clean.\",\"agentName\":\"Implementer\"}",
-  "call_id": "call_000000000001"
-}
+The following specialized agents are available (names are case-sensitive):
 
-The sub-agents you can call are (first-line names are case-sensitive):
+1. **code-review-agent** - Reviews source code for:
+   - Lint compliance (0 errors, 0 warnings - NON-NEGOTIABLE)
+   - DRY principles (no code duplication)
+   - SOLID principles
+   - Idiomatic JavaScript/GAS patterns
+   - Architecture compliance
+   - Complete JSDoc documentation
+   - Proper error handling
 
-  - test-code-review-agent
-  - test-creation-agent
-  - refactoring-agent.md
+2. **test-code-review-agent** - Reviews test code for:
+   - Lint compliance (0 errors, 0 warnings - NON-NEGOTIABLE)
+   - Test framework compliance (Vitest patterns)
+   - DRY principles (no duplication)
+   - Proper helper usage
+   - Complete test coverage
+   - Proper cleanup and isolation
+
+3. **test-creation-agent** - Creates new Vitest tests:
+   - Follows project testing conventions
+   - Uses existing test helpers
+   - Maintains DRY principles
+   - Ensures lint compliance
+   - Documents GAS mock limitations
+
+4. **refactoring-agent** - Refactors large classes:
+   - Splits into multi-file structure (Collection pattern)
+   - Maintains test compatibility
+   - Ensures SOLID compliance
+   - Preserves all functionality
+
+### Mandatory Code Review Process
+
+**NON-NEGOTIABLE REQUIREMENT**: All non-trivial code changes MUST be verified by the appropriate review agent before a task can be considered complete.
+
+**Source Code Changes:**
+- New classes or significant modifications → `code-review-agent`
+- Refactoring existing classes → `refactoring-agent` followed by `code-review-agent`
+- Must pass lint with 0 errors, 0 warnings
+- Must pass all tests
+
+**Test Code Changes:**
+- New tests → `test-creation-agent` followed by `test-code-review-agent`
+- Modified tests → `test-code-review-agent`
+- Must pass lint with 0 errors, 0 warnings
+- Must maintain or improve coverage
+
+**What Counts as Trivial:**
+- Single-line documentation fixes
+- Typo corrections in comments
+- Whitespace/formatting only changes
+- Version number updates
+
+**What Requires Review:**
+- Any logic changes
+- New methods or classes
+- Refactoring
+- Error handling changes
+- Algorithm modifications
+- Test additions or modifications
+
+### Usage Example
+
+When you need to review code, call the appropriate agent:
+
+```javascript
+// For source code review
+runSubagent({
+  prompt: "Please review the new UpdateEngine class for lint compliance, DRY, SOLID, and proper documentation.",
+  description: "Code review for UpdateEngine",
+  agentName: "code-review-agent"
+})
+
+// For test review
+runSubagent({
+  prompt: "Please review the CollectionReadOperations tests for completeness, DRY, and lint compliance.",
+  description: "Test review for CollectionReadOperations",
+  agentName: "test-code-review-agent"
+})
+```
+
+### Review Agent Workflow
+
+1. **Make Changes**: Implement the requested functionality
+2. **Call Review Agent**: Pass to appropriate review agent
+3. **Address Feedback**: Fix any issues identified
+4. **Final Verification**: Confirm 0 lint errors/warnings and all tests pass
+5. **Complete Task**: Only mark complete after review approval
 
 **Always write concisely in British English.**

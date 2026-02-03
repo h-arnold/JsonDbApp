@@ -1,890 +1,431 @@
 # Testing Framework Developer Documentation
 
 - [Testing Framework Developer Documentation](#testing-framework-developer-documentation)
-  - [Test Suite Structure and Best Practices](#test-suite-structure-and-best-practices)
   - [Overview](#overview)
   - [Key Features](#key-features)
   - [Framework Architecture](#framework-architecture)
-  - [Basic Workflow](#basic-workflow)
-    - [1. Create a Test Suite](#1-create-a-test-suite)
-    - [2. Register and Run Tests](#2-register-and-run-tests)
-    - [3. Using Global Convenience Functions](#3-using-global-convenience-functions)
-  - [Practical Examples](#practical-examples)
-    - [Basic Component Test](#basic-component-test)
+  - [Test Suite Structure and Best Practices](#test-suite-structure-and-best-practices)
+  - [Getting Started](#getting-started)
+    - [Directory Structure](#directory-structure)
+    - [Configuration](#configuration)
+    - [GAS Mock Setup](#gas-mock-setup)
+  - [Writing Tests](#writing-tests)
+    - [Basic Test Example](#basic-test-example)
     - [Test with Setup and Cleanup](#test-with-setup-and-cleanup)
-    - [Test with Lifecycle Hooks](#test-with-lifecycle-hooks)
+    - [Test with Helper Functions](#test-with-helper-functions)
     - [Error Testing](#error-testing)
+  - [GAS Mocks](#gas-mocks)
+    - [DriveApp](#driveapp)
+    - [Folder](#folder)
+    - [File](#file)
+    - [PropertiesService](#propertiesservice)
+    - [LockService](#lockservice)
+    - [Utilities](#utilities)
+    - [Logger](#logger)
+    - [MimeType](#mimetype)
+  - [Helper Functions](#helper-functions)
+    - [Database Helpers](#database-helpers)
+    - [Collection Helpers](#collection-helpers)
+    - [MasterIndex Helpers](#masterindex-helpers)
+  - [Running Tests](#running-tests)
+    - [Run All Tests](#run-all-tests)
+    - [Watch Mode](#watch-mode)
+    - [Run Specific Test File](#run-specific-test-file)
+    - [Run Tests Matching Pattern](#run-tests-matching-pattern)
+    - [Coverage](#coverage)
   - [API Reference](#api-reference)
-    - [TestFramework Class](#testframework-class)
-      - [Constructor](#constructor)
-      - [Methods](#methods)
-        - [registerTestSuite(suite)](#registertestsuitesuite)
-        - [createTestSuite(name)](#createtestsuitename)
-        - [runAllTests()](#runalltests)
-        - [runTestSuite(name)](#runtestsuitename)
-        - [runSingleTest(suiteName, testName)](#runsingletestsuitename-testname)
-        - [listTests()](#listtests)
-        - [validateEnvironment()](#validateenvironment)
-        - [trackResourceFile(fileId)](#trackresourcefilefileid)
-        - [getTestSuites()](#gettestsuites)
-        - [hasTestSuite(name)](#hastestsuitename)
-      - [Static Assertion Methods](#static-assertion-methods)
-    - [TestSuite Class](#testsuite-class)
-      - [Constructor](#constructor-1)
-      - [Methods](#methods-1)
-        - [addTest(name, testFn)](#addtestname-testfn)
-        - [setBeforeEach(fn)](#setbeforeeachfn)
-        - [setAfterEach(fn)](#setaftereachfn)
-        - [setBeforeAll(fn)](#setbeforeallfn)
-        - [setAfterAll(fn)](#setafterallfn)
-        - [runTests()](#runtests)
-        - [runTest(name)](#runtestname)
-        - [hasTest(name)](#hastestname)
-        - [getTestNames()](#gettestnames)
-    - [AssertionUtilities Class](#assertionutilities-class)
-      - [Equality Assertions](#equality-assertions)
-        - [assertEquals(expected, actual, message)](#assertequalsexpected-actual-message)
-        - [assertNotEquals(expected, actual, message)](#assertnotequalsexpected-actual-message)
-      - [Boolean Assertions](#boolean-assertions)
-        - [assertTrue(condition, message)](#asserttruecondition-message)
-        - [assertFalse(condition, message)](#assertfalsecondition-message)
-      - [Null/Undefined Assertions](#nullundefined-assertions)
-        - [assertNull(value, message)](#assertnullvalue-message)
-        - [assertNotNull(value, message)](#assertnotnullvalue-message)
-        - [assertDefined(value, message)](#assertdefinedvalue-message)
-        - [assertUndefined(value, message)](#assertundefinedvalue-message)
-      - [Exception Assertions](#exception-assertions)
-        - [assertThrows(fn, errorType, message)](#assertthrowsfn-errortype-message)
-      - [Collection Assertions](#collection-assertions)
-        - [assertContains(array, element, message)](#assertcontainsarray-element-message)
-        - [assertMatches(string, regex, message)](#assertmatchesstring-regex-message)
-        - [assertArrayEquals(expected, actual, message)](#assertarrayequalsexpected-actual-message)
-        - [assertNoThrow(fn, message)](#assertnothrowfn-message)
-    - [TestResult Class](#testresult-class)
-      - [Constructor](#constructor-2)
-      - [Properties](#properties)
-      - [Methods](#methods-2)
-        - [toString()](#tostring)
-    - [TestResults Class](#testresults-class)
-      - [Constructor](#constructor-3)
-      - [Methods](#methods-3)
-        - [addResult(result)](#addresultresult)
-        - [finish()](#finish)
-        - [getPassed()](#getpassed)
-        - [getFailed()](#getfailed)
-        - [getPassRate()](#getpassrate)
-        - [getTotalExecutionTime()](#gettotalexecutiontime)
-        - [getSummary()](#getsummary)
-        - [getComprehensiveReport()](#getcomprehensivereport)
-        - [logComprehensiveResults(loggerFunction)](#logcomprehensiveresultsloggerfunction)
-  - [Global Convenience Functions](#global-convenience-functions)
-    - [runAllTests()](#runalltests-1)
-    - [runTestSuite(name)](#runtestsuitename-1)
-    - [runSingleTest(suiteName, testName)](#runsingletestsuitename-testname-1)
-    - [listTests()](#listtests-1)
-    - [registerTestSuite(suite)](#registertestsuitesuite-1)
-    - [createTestSuite(name)](#createtestsuitename-1)
-    - [getTestFramework()](#gettestframework)
-  - [Best Practices](#best-practices)
-    - [1. Test Organisation](#1-test-organisation)
-    - [2. Assertion Patterns](#2-assertion-patterns)
-    - [3. Resource Management](#3-resource-management)
-    - [4. TDD Workflow](#4-tdd-workflow)
-    - [5. Environment Validation](#5-environment-validation)
-  - [Troubleshooting](#troubleshooting)
-    - [Common Issues](#common-issues)
-    - [Debugging Tips](#debugging-tips)
-
-
-## Test Suite Structure and Best Practices
-
-The GAS DB project enforces a clear, modular structure for all tests, especially for complex components such as `CollectionCoordinator`. Follow these guidelines for all new and existing test suites:
-
-- **One suite per file:** Each file defines a single logical test suite for a specific method or feature, named with a numeric prefix for order and clarity (e.g. `01_CollectionCoordinatorCoordinateTestSuite.js`).
-- **Suite function:** Each file exports a function named `create<Class>TestSuite`, returning a `TestSuite` instance with multiple related tests.
-- **Orchestration:** Use an orchestrator file (e.g. `99_CollectionCoordinatorOrchestratorTestSuite.js`) to register and run all suites, handling environment setup and teardown.
-- **Environment management:** Centralise setup, teardown, and state-reset logic in dedicated environment files (e.g. `98_CollectionCoordinatorTestEnvironment.js`). Use real Google Apps Script APIs and Drive files for integration realism.
-- **Test data:** Store all test data and configuration in global objects and static JSON files for repeatability and isolation.
-- **Arrange-Act-Assert:** Each test should clearly separate setup, execution, and assertions, using the provided assertion utilities.
-- **Lifecycle hooks:** Use `beforeAll`, `afterAll`, `beforeEach`, and `afterEach` for resource management and isolation.
-
-- **Descriptive assertions:** All assertions must include clear, informative messages.
-- **No side effects:** Always clean up files, folders, and ScriptProperties, even on failure.
-- **Red-Green-Refactor:** Write failing tests first, then minimal passing code, then refactor.
-- **Coverage:** Include tests for constructor validation, configuration, happy paths, error cases, edge cases, and resource cleanup.
-
-**Example skeleton:**
-```javascript
-function createComponentTestSuite() {
-  const suite = new TestSuite('Component Feature');
-  suite.setBeforeAll(setupComponentTestEnvironment);
-  suite.setAfterAll(cleanupComponentTestEnvironment);
-
-  suite.addTest('testFeatureHappyPath', function() {
-    // Arrange
-    // Act
-    // Assert
-    TestFramework.assertNoThrow(() => { /* ... */ }, 'Should not throw');
-  });
-
-  return suite;
-}
-```
+    - [Vitest Core APIs](#vitest-core-apis)
+      - [Test Structure](#test-structure)
+      - [Assertions](#assertions)
+        - [Equality](#equality)
+        - [Truthiness](#truthiness)
+        - [Numbers](#numbers)
+        - [Strings](#strings)
+        - [Arrays/Iterables](#arraysiterables)
+        - [Objects](#objects)
+        - [Exceptions](#exceptions)
+      - [Mocking (if needed)](#mocking-if-needed)
+    - [GAS Mock APIs](#gas-mock-apis)
 
 ## Overview
 
-The GAS DB Testing Framework is a comprehensive Test-Driven Development (TDD) infrastructure designed specifically for Google Apps Script environments. It provides MongoDB-like testing patterns with automatic environment validation, resource management, and detailed reporting capabilities.
+The JsonDbApp testing framework uses **Vitest** with realistic Google Apps Script (GAS) API mocks to provide fast, reliable unit testing in a local Node.js environment. Tests run against realistic implementations of DriveApp, PropertiesService, LockService and other GAS APIs that write to disk, ensuring high-fidelity test behaviour without requiring deployment to the Apps Script platform.
 
 ## Key Features
 
-- **TDD-Ready**: Red-Green-Refactor workflow support
-- **Environment Management**: Automatic GAS API validation and resource tracking
-- **Comprehensive Assertions**: Static assertion utilities with detailed error messages
-- **Lifecycle Hooks**: beforeAll, afterAll, beforeEach, afterEach support
-- **Resource Cleanup**: Automatic tracking and cleanup of test files
-- **Detailed Reporting**: Suite-based reporting with execution times and comprehensive output
+- **Vitest-based**: Modern, fast test runner with excellent DX
+- **Realistic GAS Mocks**: Local implementations of DriveApp, PropertiesService, LockService, Utilities that persist to disk
+- **TDD-Ready**: Red-Green-Refactor workflow with watch mode support
+- **Isolated Test Environment**: Each test uses isolated ScriptProperties keys and Drive folders
+- **Comprehensive Assertions**: Vitest's built-in matchers plus custom helpers
+- **Lifecycle Hooks**: `beforeEach`, `afterEach`, `beforeAll`, `afterAll` for setup and teardown
+- **Resource Cleanup**: Automatic tracking and cleanup of test artefacts
 
 ## Framework Architecture
 
-The testing framework consists of several key components:
+The testing framework consists of several layers:
 
-- **TestFramework**: Main orchestrator for test execution and environment management
-- **TestSuite**: Collection of related tests with lifecycle hooks
-- **AssertionUtilities**: Static assertion methods for test validation
-- **TestResult/TestResults**: Result data structures with comprehensive reporting
-- **TestRunner**: Global convenience functions for easy access
+- **Vitest**: Test runner and assertion library
+- **GAS Mocks** ([tools/gas-mocks/](../../tools/gas-mocks/)): Node.js implementations of Google Apps Script APIs
+- **Setup Files** ([tests/setup/](../../tests/setup/)): Bootstrap GAS mocks and load legacy source files
+- **Test Helpers** ([tests/helpers/](../../tests/helpers/)): Reusable setup, teardown, and utility functions
+- **Test Suites** ([tests/unit/](../../tests/unit/)): Organised test files by component
 
-## Basic Workflow
+## Test Suite Structure and Best Practices
 
-### 1. Create a Test Suite
+All tests follow a consistent, modular structure:
+
+- **One feature per file**: Each test file focuses on a specific component or feature (e.g., [MasterIndex.test.js](../../tests/unit/master-index/MasterIndex.test.js), [database-collection-management.test.js](../../tests/unit/database/database-collection-management.test.js))
+- **Descriptive test names**: Use `describe()` blocks to group related tests and `it()` for individual test cases
+- **Arrange-Act-Assert**: Each test should clearly separate setup, execution, and assertions
+- **Lifecycle hooks**: Use `beforeEach` and `afterEach` for resource management and isolation
+- **Descriptive assertions**: Use Vitest's `expect()` with clear matcher names
+- **No side effects**: Always clean up files, folders, and ScriptProperties, even on failure
+- **Red-Green-Refactor**: Write failing tests first, then minimal passing code, then refactor
+- **Coverage**: Include tests for constructor validation, configuration, happy paths, error cases, edge cases, and resource cleanup
+
+**Example test structure:**
 
 ```javascript
-// Create a new test suite
-const suite = new TestSuite('MyComponent Tests');
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { setupComponent, cleanupComponent } from '../helpers/component-test-helpers.js';
 
-// Add tests to the suite
-suite.addTest('should create component correctly', function() {
-  // Arrange
-  const config = { setting: 'value' };
-  
-  // Act
-  const component = new MyComponent(config);
-  
-  // Assert
-  TestFramework.assertNotNull(component, 'Component should be created');
-  TestFramework.assertEquals(config.setting, component.config.setting, 'Config should match');
+describe('Component Feature', () => {
+  let component;
+
+  beforeEach(() => {
+    component = setupComponent();
+  });
+
+  afterEach(() => {
+    cleanupComponent(component);
+  });
+
+  it('should perform expected behaviour', () => {
+    // Arrange
+    const input = { value: 42 };
+    
+    // Act
+    const result = component.process(input);
+    
+    // Assert
+    expect(result.value).toBe(42);
+    expect(result.processed).toBe(true);
+  });
 });
 ```
 
-### 2. Register and Run Tests
+## Getting Started
 
-```javascript
-// Register the suite with the framework
-const testFramework = new TestFramework();
-testFramework.registerTestSuite(suite);
+### Directory Structure
 
-// Run all tests
-const results = testFramework.runAllTests();
-
-// Or run specific suite
-const results = testFramework.runTestSuite('MyComponent Tests');
-
-// Or run single test
-const results = testFramework.runSingleTest('MyComponent Tests', 'should create component correctly');
+```
+tests/
+├── vitest.config.js           # Vitest configuration
+├── setup/
+│   └── gas-mocks.setup.js     # Bootstraps GAS mocks and loads source files
+├── helpers/
+│   ├── database-test-helpers.js
+│   ├── collection-test-helpers.js
+│   └── ...                    # Reusable test utilities
+├── unit/
+│   ├── master-index/
+│   ├── database/
+│   ├── validation/
+│   └── ...                    # Component-specific test suites
+└── .gas-drive/                # Mock Drive storage (gitignored)
+└── .gas-script-properties.json # Mock ScriptProperties (gitignored)
 ```
 
-### 3. Using Global Convenience Functions
+### Configuration
+
+The Vitest configuration ([tests/vitest.config.js](../../tests/vitest.config.js)) sets up:
+
+- Test environment (Node.js)
+- Setup files (GAS mocks)
+- Test file patterns (`unit/**/*.test.js`, `helpers/**/*.test.js`)
+- Mock cleanup behaviour
+
+### GAS Mock Setup
+
+The setup file ([tests/setup/gas-mocks.setup.js](../../tests/setup/gas-mocks.setup.js)):
+
+1. Creates GAS mock instances with isolated storage paths
+2. Injects mocks into global scope (`DriveApp`, `PropertiesService`, etc.)
+3. Loads legacy source files into the test context using `vm.runInThisContext()`
+
+## Writing Tests
+
+### Basic Test Example
 
 ```javascript
-// Alternative approach using global functions
-registerTestSuite(suite);
-const results = runAllTests();
-```
+import { describe, it, expect } from 'vitest';
 
-## Practical Examples
-
-### Basic Component Test
-
-Here's a real example from the IdGenerator tests:
-
-```javascript
-function createIdGeneratorTestSuite() {
-  const suite = new TestSuite('IdGenerator Tests');
-  
-  // Test basic functionality
-  suite.addTest('testIdGeneratorBasicFunctionality', function() {
-    TestFramework.assertEquals('function', typeof IdGenerator.generateUUID, 'Should have generateUUID method');
-    TestFramework.assertEquals('function', typeof IdGenerator.generateTimestampId, 'Should have generateTimestampId method');
-    TestFramework.assertEquals('function', typeof IdGenerator.generateShortId, 'Should have generateShortId method');
-  });
-  
-  // Test uniqueness
-  suite.addTest('testIdGeneratorUniqueness', function() {
-    const id1 = IdGenerator.generateUUID();
-    const id2 = IdGenerator.generateUUID();
-    TestFramework.assertNotEquals(id1, id2, 'UUIDs should be unique');
+describe('IdGenerator', () => {
+  it('should generate unique IDs', () => {
+    const generator = new IdGenerator();
+    const id1 = generator.generateId();
+    const id2 = generator.generateId();
     
-    const timestampId1 = IdGenerator.generateTimestampId();
-    const timestampId2 = IdGenerator.generateTimestampId();
-    TestFramework.assertNotEquals(timestampId1, timestampId2, 'Timestamp IDs should be unique');
+    expect(id1).toBeDefined();
+    expect(id2).toBeDefined();
+    expect(id1).not.toBe(id2);
   });
-  
-  return suite;
-}
+});
 ```
 
 ### Test with Setup and Cleanup
 
-Here's an example showing proper use of lifecycle hooks for resource management:
-
 ```javascript
-// Global test data storage
-const DATABASE_TEST_DATA = {
-  testFolderId: null,
-  testFolderName: 'GASDB_Test_Database_' + new Date().getTime(),
-  createdFileIds: [],
-  createdFolderIds: []
+import { describe, it, expect, afterEach } from 'vitest';
+
+const scriptProperties = PropertiesService.getScriptProperties();
+const trackedKeys = new Set();
+
+const registerKey = (key) => {
+  trackedKeys.add(key);
+  return key;
 };
 
-/**
- * Setup database test environment
- */
-function setupDatabaseTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('Database-Setup');
-  
-  try {
-    const folder = DriveApp.createFolder(DATABASE_TEST_DATA.testFolderName);
-    DATABASE_TEST_DATA.testFolderId = folder.getId();
-    DATABASE_TEST_DATA.createdFolderIds.push(DATABASE_TEST_DATA.testFolderId);
-    
-    logger.info('Created test folder for Database', { 
-      folderId: DATABASE_TEST_DATA.testFolderId, 
-      name: DATABASE_TEST_DATA.testFolderName
-    });
-    
-  } catch (error) {
-    logger.error('Failed to create test folder for Database', { error: error.message });
-    throw error;
+afterEach(() => {
+  for (const key of trackedKeys) {
+    scriptProperties.deleteProperty(key);
   }
-}
+  trackedKeys.clear();
+});
 
-/**
- * Clean up database test environment
- */
-function cleanupDatabaseTestEnvironment() {
-  const logger = GASDBLogger.createComponentLogger('Database-Cleanup');
-  
-  // Clean up created test files and folders
-  DATABASE_TEST_DATA.createdFileIds.forEach(fileId => {
-    try {
-      const file = DriveApp.getFileById(fileId);
-      file.setTrashed(true);
-    } catch (error) {
-      logger.warn('Failed to delete file', { fileId, error: error.message });
-    }
-  });
-  
-  DATABASE_TEST_DATA.createdFolderIds.forEach(folderId => {
-    try {
-      const folder = DriveApp.getFolderById(folderId);
-      folder.setTrashed(true);
-    } catch (error) {
-      logger.warn('Failed to delete folder', { folderId, error: error.message });
-    }
-  });
-  
-  logger.info('Database test cleanup completed');
-}
-
-function createDatabaseTestSuite() {
-  const suite = new TestSuite('Database Tests');
-  
-  // Setup test environment before all tests in this suite
-  suite.setBeforeAll(function() {
-    setupDatabaseTestEnvironment();
-  });
-  
-  // Clean up after all tests in this suite
-  suite.setAfterAll(function() {
-    cleanupDatabaseTestEnvironment();
-  });
-  
-  suite.addTest('should create database correctly', function() {
-    // Arrange
-    const config = { rootFolderId: DATABASE_TEST_DATA.testFolderId };
+describe('MasterIndex Persistence', () => {
+  it('should persist to ScriptProperties', () => {
+    const key = registerKey(`TEST_KEY_${Date.now()}`);
+    const masterIndex = new MasterIndex({ masterIndexKey: key });
     
-    // Act
-    const database = new Database(config);
-    
-    // Assert
-    TestFramework.assertNotNull(database, 'Database should be created');
-    TestFramework.assertEquals(config.rootFolderId, database.config.rootFolderId, 'Config should match');
+    const stored = scriptProperties.getProperty(key);
+    expect(stored).toBeDefined();
+    expect(typeof stored).toBe('string');
   });
-  
-  return suite;
-}
+});
 ```
 
-### Test with Lifecycle Hooks
+### Test with Helper Functions
 
 ```javascript
-function createTestSuiteWithHooks() {
-  const suite = new TestSuite('Component With Lifecycle');
-  
-  let testResource;
-  
-  // Setup before all tests in the suite
-  suite.setBeforeAll(function() {
-    testResource = createSharedResource();
+import { describe, it, expect } from 'vitest';
+import {
+  setupInitialisedDatabase,
+  generateUniqueName,
+  registerDatabaseFile
+} from '../../helpers/database-test-helpers.js';
+
+describe('Database Collection Management', () => {
+  it('should create a new collection', () => {
+    const { database } = setupInitialisedDatabase();
+    const name = generateUniqueName('testCollection');
+    
+    const collection = database.createCollection(name);
+    registerDatabaseFile(collection.driveFileId);
+    
+    expect(collection.name).toBe(name);
+    expect(database.listCollections()).toContain(name);
   });
-  
-  // Setup before each test
-  suite.setBeforeEach(function() {
-    testResource.reset();
-  });
-  
-  // Cleanup after each test
-  suite.setAfterEach(function() {
-    testResource.cleanup();
-  });
-  
-  // Cleanup after all tests
-  suite.setAfterAll(function() {
-    testResource.destroy();
-  });
-  
-  suite.addTest('should use shared resource', function() {
-    TestFramework.assertNotNull(testResource, 'Shared resource should be available');
-    testResource.doSomething();
-    TestFramework.assertTrue(testResource.isValid(), 'Resource should be valid after operation');
-  });
-  
-  return suite;
-}
+});
 ```
 
 ### Error Testing
 
 ```javascript
-suite.addTest('should throw error for invalid input', function() {
-  TestFramework.assertThrows(() => {
-    new MyComponent(null); // Should throw error
-  }, Error, 'Should throw error for null config');
-  
-  // Test specific error type
-  TestFramework.assertThrows(() => {
-    new MyComponent({ invalid: true });
-  }, InvalidArgumentError, 'Should throw InvalidArgumentError for invalid config');
+describe('Error Handling', () => {
+  it('should throw InvalidArgumentError for invalid input', () => {
+    const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
+    const missingName = generateUniqueName('missing');
+    
+    expect(() => database.collection(missingName))
+      .toThrowError(/auto-create is disabled/);
+  });
 });
+```
+
+## GAS Mocks
+
+The GAS mocks ([tools/gas-mocks/gas-mocks.cjs](../../tools/gas-mocks/gas-mocks.cjs)) provide realistic implementations of:
+
+### DriveApp
+
+- `createFolder(name)`: Creates folder on disk
+- `getFolderById(id)`: Retrieves folder by ID
+- `getFileById(id)`: Retrieves file by ID
+- `getRootFolder()`: Returns singleton root folder
+
+### Folder
+
+- `createFile(name, content, mimeType)`: Writes file to disk
+- `getFiles()`: Returns FileIterator
+- `getFoldersByName(name)`: Returns FolderIterator
+- `setTrashed(trashed)`: Marks folder as deleted
+
+### File
+
+- `getName()`, `getId()`, `getMimeType()`: Metadata accessors
+- `getBlob()`: Returns Blob with `getDataAsString()`
+- `setContent(content)`: Updates file content on disk
+- `setTrashed(trashed)`: Marks file as deleted
+
+### PropertiesService
+
+- `getScriptProperties()`: Returns singleton Properties instance
+- Properties: `getProperty(key)`, `setProperty(key, value)`, `deleteProperty(key)`
+- Backed by JSON file on disk
+
+### LockService
+
+- `getScriptLock()`: Returns singleton Lock instance
+- Lock: `waitLock(timeout)`, `releaseLock()`
+- **Note**: Uses busy-wait, suitable for single-threaded sequential tests only
+
+### Utilities
+
+- `sleep(milliseconds)`: Blocking sleep
+
+### Logger
+
+- `log(data)`: Forwards to console
+
+### MimeType
+
+- `PLAIN_TEXT`: `"text/plain"`
+- `JSON`: `"application/json"`
+
+**Configuration:**
+
+```javascript
+const mocks = createGasMocks({
+  driveRoot: '/tmp/gasdb-drive',           // Where Drive files are stored
+  propertiesFile: '/tmp/gasdb-props.json'  // Where ScriptProperties are persisted
+});
+```
+
+## Helper Functions
+
+Test helpers provide reusable setup and cleanup utilities:
+
+### Database Helpers
+
+([tests/helpers/database-test-helpers.js](../../tests/helpers/database-test-helpers.js))
+
+- `setupInitialisedDatabase(config)`: Creates isolated Database instance
+- `generateUniqueName(prefix)`: Generates unique names for artefacts
+- `registerDatabaseFile(fileId)`: Tracks files for cleanup
+
+### Collection Helpers
+
+([tests/helpers/collection-test-helpers.js](../../tests/helpers/collection-test-helpers.js))
+
+- `createTestCollection(database, name, options)`: Creates and configures test collection
+- `seedCollectionData(collection, documents)`: Pre-populates collection
+
+### MasterIndex Helpers
+
+- `createTestMasterIndex(config)`: Creates isolated MasterIndex with unique key
+- `seedMasterIndex(key, data)`: Pre-populates MasterIndex state
+- `registerKey(key)`: Tracks ScriptProperties keys for cleanup
+
+## Running Tests
+
+### Run All Tests
+
+```bash
+npm run test:vitest
+```
+
+### Watch Mode
+
+```bash
+npm run test:vitest -- --watch
+```
+
+### Run Specific Test File
+
+```bash
+npm run test:vitest -- tests/unit/master-index/MasterIndex.test.js
+```
+
+### Run Tests Matching Pattern
+
+```bash
+npm run test:vitest -- -t "should persist"
+```
+
+### Coverage
+
+```bash
+npm run test:vitest -- --coverage
 ```
 
 ## API Reference
 
-### TestFramework Class
+### Vitest Core APIs
 
-The main framework orchestrator.
+#### Test Structure
 
-#### Constructor
+- `describe(name, fn)`: Groups related tests
+- `it(name, fn)` / `test(name, fn)`: Defines individual test
+- `beforeEach(fn)`: Runs before each test in scope
+- `afterEach(fn)`: Runs after each test in scope
+- `beforeAll(fn)`: Runs once before all tests in scope
+- `afterAll(fn)`: Runs once after all tests in scope
 
-```javascript
-new TestFramework()
-```
+#### Assertions
 
-Creates a new TestFramework instance, initialising collections for test suites, results, resource file tracking, and setting initial environment validation status.
+Vitest uses `expect()` with matchers:
 
-#### Methods
+##### Equality
 
-##### registerTestSuite(suite)
+- `expect(value).toBe(expected)`: Strict equality (===)
+- `expect(value).toEqual(expected)`: Deep equality
+- `expect(value).not.toBe(expected)`: Negation
 
-- **Parameters**: `suite` (TestSuite) - The test suite to register
-- **Returns**: TestFramework instance for chaining
-- **Description**: Registers a test suite with the framework
+##### Truthiness
 
-##### createTestSuite(name)
+- `expect(value).toBeTruthy()`: Truthy value
+- `expect(value).toBeFalsy()`: Falsy value
+- `expect(value).toBeDefined()`: Not undefined
+- `expect(value).toBeUndefined()`: Undefined
+- `expect(value).toBeNull()`: Null
 
-- **Parameters**: `name` (string) - Name of the test suite
-- **Returns**: TestSuite instance for chaining
-- **Description**: Creates and registers a new test suite
+##### Numbers
 
-##### runAllTests()
+- `expect(value).toBeGreaterThan(n)`
+- `expect(value).toBeLessThan(n)`
+- `expect(value).toBeCloseTo(n, precision)`
 
-- **Returns**: TestResults with comprehensive results
-- **Description**: Runs all registered test suites with environment validation and cleanup
+##### Strings
 
-##### runTestSuite(name)
+- `expect(string).toMatch(pattern)`: Regex or substring match
+- `expect(string).toContain(substring)`
 
-- **Parameters**: `name` (string) - Name of the test suite to run
-- **Returns**: TestResults for the specific suite
-- **Throws**: Error if suite not found
-- **Description**: Runs a specific test suite by name
+##### Arrays/Iterables
 
-##### runSingleTest(suiteName, testName)
+- `expect(array).toContain(item)`
+- `expect(array).toHaveLength(n)`
+- `expect(array).toEqual(expect.arrayContaining([...]))`
 
-- **Parameters**:
-  - `suiteName` (string) - Name of the test suite
-  - `testName` (string) - Name of the specific test
-- **Returns**: TestResults for the single test
-- **Throws**: Error if suite or test not found
-- **Description**: Runs a single test within a test suite
+##### Objects
 
-##### listTests()
+- `expect(obj).toHaveProperty(key, value)`
+- `expect(obj).toMatchObject(subset)`
+- `expect(obj).toBeInstanceOf(Class)`
 
-- **Returns**: Object mapping suite names to array of test names
-- **Description**: Lists all available tests organised by suite
+##### Exceptions
 
-##### validateEnvironment()
+- `expect(() => fn()).toThrow()`: Throws any error
+- `expect(() => fn()).toThrow(ErrorClass)`: Throws specific error type
+- `expect(() => fn()).toThrowError(message)`: Throws with message matching string/regex
 
-- **Throws**: Error if environment validation fails
-- **Description**: Validates that the testing environment is properly set up
+#### Mocking (if needed)
 
-##### trackResourceFile(fileId)
+- `vi.fn()`: Creates mock function
+- `vi.spyOn(object, 'method')`: Spies on method
+- `vi.mock(path)`: Mocks module
 
-- **Parameters**: `fileId` (string) - The file ID to track for cleanup
-- **Description**: Tracks a file for automatic cleanup after tests
+### GAS Mock APIs
 
-##### getTestSuites()
-
-- **Returns**: Map of test suite names to TestSuite instances
-- **Description**: Gets registered test suites (primarily for backward compatibility or internal use)
-
-##### hasTestSuite(name)
-
-- **Parameters**: `name` (string) - Name of the test suite
-- **Returns**: boolean
-- **Description**: Checks if a test suite with the given name is registered
-
-#### Static Assertion Methods
-
-All assertion methods are available as static methods on TestFramework:
-
-```javascript
-TestFramework.assertEquals(expected, actual, message)
-TestFramework.assertTrue(condition, message)
-// ... etc
-```
-
-### TestSuite Class
-
-Represents a collection of related tests with lifecycle hooks.
-
-#### Constructor
-
-```javascript
-new TestSuite(name)
-```
-
-- **Parameters**: `name` (string) - Name of the test suite
-
-#### Methods
-
-##### addTest(name, testFn)
-
-- **Parameters**:
-  - `name` (string) - Name of the test
-  - `testFn` (function) - Test function to execute
-- **Returns**: TestSuite instance for chaining
-- **Description**: Adds a test to the suite
-
-##### setBeforeEach(fn)
-
-- **Parameters**: `fn` (function) - Function to run before each test
-- **Returns**: TestSuite instance for chaining
-- **Description**: Sets function to run before each test in the suite
-
-##### setAfterEach(fn)
-
-- **Parameters**: `fn` (function) - Function to run after each test
-- **Returns**: TestSuite instance for chaining
-- **Description**: Sets function to run after each test in the suite
-
-##### setBeforeAll(fn)
-
-- **Parameters**: `fn` (function) - Function to run before all tests
-- **Returns**: TestSuite instance for chaining
-- **Description**: Sets function to run once before all tests in the suite
-
-##### setAfterAll(fn)
-
-- **Parameters**: `fn` (function) - Function to run after all tests
-- **Returns**: TestSuite instance for chaining
-- **Description**: Sets function to run once after all tests in the suite
-
-##### runTests()
-
-- **Returns**: Array of TestResult objects
-- **Description**: Runs all tests in the suite with lifecycle hooks
-
-##### runTest(name)
-
-- **Parameters**: `name` (string) - Name of the test to run
-- **Returns**: TestResult object
-- **Throws**: Error if test not found
-- **Description**: Runs a specific test by name
-
-##### hasTest(name)
-
-- **Parameters**: `name` (string) - Name of the test to check
-- **Returns**: boolean
-- **Description**: Checks if a test exists in the suite
-
-##### getTestNames()
-
-- **Returns**: Array of test names
-- **Description**: Gets all test names in the suite
-
-### AssertionUtilities Class
-
-Static assertion methods for test validation.
-
-#### Equality Assertions
-
-##### assertEquals(expected, actual, message)
-
-- **Parameters**:
-  - `expected` (any) - The expected value
-  - `actual` (any) - The actual value
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if values are not equal
-- **Description**: Asserts that two values are equal using strict equality (===)
-
-##### assertNotEquals(expected, actual, message)
-
-- **Parameters**:
-  - `expected` (any) - The value that should not match
-  - `actual` (any) - The actual value
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if values are equal
-- **Description**: Asserts that two values are not equal
-
-#### Boolean Assertions
-
-##### assertTrue(condition, message)
-
-- **Parameters**:
-  - `condition` (boolean) - The condition to test
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if condition is false
-- **Description**: Asserts that a condition is true
-
-##### assertFalse(condition, message)
-
-- **Parameters**:
-  - `condition` (boolean) - The condition to test
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if condition is true
-- **Description**: Asserts that a condition is false
-
-#### Null/Undefined Assertions
-
-##### assertNull(value, message)
-
-- **Parameters**:
-  - `value` (any) - The value to test
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if value is not null
-- **Description**: Asserts that a value is null
-
-##### assertNotNull(value, message)
-
-- **Parameters**:
-  - `value` (any) - The value to test
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if value is null
-- **Description**: Asserts that a value is not null
-
-##### assertDefined(value, message)
-
-- **Parameters**:
-  - `value` (any) - The value to test
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if value is undefined
-- **Description**: Asserts that a value is defined (not undefined)
-
-##### assertUndefined(value, message)
-
-- **Parameters**:
-  - `value` (any) - The value to test
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if value is not undefined
-- **Description**: Asserts that a value is undefined
-
-#### Exception Assertions
-
-##### assertThrows(fn, errorType, message)
-
-- **Parameters**:
-  - `fn` (function) - The function that should throw
-  - `errorType` (function, optional) - Expected error constructor
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if function doesn't throw or throws wrong type
-- **Description**: Asserts that a function throws an error, optionally of a specific type
-
-#### Collection Assertions
-
-##### assertContains(array, element, message)
-
-- **Parameters**:
-  - `array` (Array) - The array to search
-  - `element` (any) - The element to find
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if array doesn't contain element
-- **Description**: Asserts that an array contains a specific element
-
-##### assertMatches(string, regex, message)
-
-- **Parameters**:
-  - `string` (string) - The string to test
-  - `regex` (RegExp) - The regular expression to match
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if string doesn't match regex
-- **Description**: Asserts that a string matches a regular expression
-
-##### assertArrayEquals(expected, actual, message)
-
-- **Parameters**:
-  - `expected` (Array) - The expected array
-  - `actual` (Array) - The actual array
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if arrays are not equal (different lengths or elements)
-- **Description**: Asserts that two arrays are equal by comparing length and element-wise equality using strict equality (===)
-
-##### assertDeepEquals(expected, actual, message)
-
-- **Parameters**:
-  - `expected` (any) - The expected value (object or array)
-  - `actual` (any) - The actual value
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if objects or arrays are not deeply equal
-- **Description**: Asserts that two objects or arrays are deeply equal by recursively comparing their properties and values.
-
-##### assertNoThrow(fn, message)
-
-- **Parameters**:
-  - `fn` (function) - The function that should not throw
-  - `message` (string, optional) - Custom error message
-- **Throws**: Error if function throws
-- **Description**: Asserts that a function does not throw an error. Fails the test if an error is thrown.
-
-### TestResult Class
-
-Represents the result of a single test execution.
-
-#### Constructor
-
-```javascript
-new TestResult(suiteName, testName, passed, error, executionTime)
-```
-
-- **Parameters**:
-  - `suiteName` (string) - Name of the test suite
-  - `testName` (string) - Name of the test
-  - `passed` (boolean) - Whether the test passed
-  - `error` (Error, optional) - Error object if test failed
-  - `executionTime` (number) - Execution time in milliseconds
-
-#### Properties
-
-- **suiteName**: Name of the test suite
-- **testName**: Name of the test
-- **passed**: Boolean indicating if test passed
-- **error**: Error object if test failed
-- **executionTime**: Execution time in milliseconds
-- **timestamp**: Date when test was executed
-
-#### Methods
-
-##### toString()
-
-- **Returns**: String representation of the test result
-- **Description**: Formats the test result for display
-
-### TestResults Class
-
-Aggregates multiple test results with comprehensive reporting.
-
-#### Constructor
-
-```javascript
-new TestResults()
-```
-
-#### Methods
-
-##### addResult(result)
-
-- **Parameters**: `result` (TestResult) - Test result to add
-- **Description**: Adds a test result to the collection
-
-##### finish()
-
-- **Description**: Marks the test run as finished and records end time
-
-##### getPassed()
-
-- **Returns**: Array of passed TestResult objects
-- **Description**: Gets all passed test results
-
-##### getFailed()
-
-- **Returns**: Array of failed TestResult objects
-- **Description**: Gets all failed test results
-
-##### getPassRate()
-
-- **Returns**: Number (percentage)
-- **Description**: Calculates the pass rate as a percentage
-
-##### getTotalExecutionTime()
-
-- **Returns**: Number (milliseconds)
-- **Description**: Gets total execution time from start to finish
-
-##### getSummary()
-
-- **Returns**: String summary of test results
-- **Description**: Gets a brief summary of test results
-
-##### getComprehensiveReport()
-
-- **Returns**: String with detailed test report
-- **Description**: Gets a comprehensive report with all test details organised by suite
-
-##### logComprehensiveResults(loggerFunction)
-
-- **Parameters**: `loggerFunction` (function, optional) - The logger function to use (e.g., `console.log`). Defaults to `console.log`.
-- **Description**: Logs the comprehensive test results, typically to the console, handling potential truncation issues by logging in parts.
-
-## Global Convenience Functions
-
-These functions provide easy access to the global TestFramework instance:
-
-### runAllTests()
-
-- **Returns**: TestResults
-- **Description**: Runs all tests using the global framework
-
-### runTestSuite(name)
-
-- **Parameters**: `name` (string) - Suite name
-- **Returns**: TestResults
-- **Description**: Runs a specific test suite
-
-### runSingleTest(suiteName, testName)
-
-- **Parameters**:
-  - `suiteName` (string) - Suite name
-  - `testName` (string) - Test name
-- **Returns**: TestResults
-- **Description**: Runs a single test
-
-### listTests()
-
-- **Returns**: Object mapping suite names to test names
-- **Description**: Lists all available tests
-
-### registerTestSuite(suite)
-
-- **Parameters**: `suite` (TestSuite) - Suite to register
-- **Description**: Registers a test suite with global framework
-
-### createTestSuite(name)
-
-- **Parameters**: `name` (string) - Suite name
-- **Returns**: TestSuite
-- **Description**: Creates and registers a new test suite
-
-### getTestFramework()
-
-- **Returns**: TestFramework
-- **Description**: Gets the global framework instance
-
-## Best Practices
-
-### 1. Test Organisation
-
-- Create separate test files for each component (`ComponentNameTest.js`)
-- Use descriptive test function names (`testComponentInitialisation`)
-- Group related tests in test suites
-- Use setup and teardown functions for resource management
-
-### 2. Assertion Patterns
-
-```javascript
-// Use descriptive messages
-TestFramework.assertEquals(expected, actual, 'Config should match input parameters');
-
-// Test both positive and negative cases
-TestFramework.assertTrue(component.isValid(), 'Component should be valid after creation');
-TestFramework.assertFalse(component.isDestroyed(), 'Component should not be destroyed initially');
-
-// Use specific error types when testing exceptions
-TestFramework.assertThrows(() => {
-  new Component(null);
-}, InvalidArgumentError, 'Should throw InvalidArgumentError for null config');
-```
-
-### 3. Resource Management
-
-```javascript
-// Track files for automatic cleanup
-const testFile = DriveApp.createFile('test.json', '{}');
-testFramework.trackResourceFile(testFile.getId());
-
-// Use global test data objects for complex setups
-const TEST_DATA = {
-  createdFileIds: [],
-  createdFolderIds: [],
-  testConfig: null
-};
-```
-
-### 4. TDD Workflow
-
-1. **Red**: Write a failing test first
-2. **Green**: Write minimal code to make it pass
-3. **Refactor**: Improve code while keeping tests green
-
-```javascript
-// Red: Write failing test
-suite.addTest('should create component', function() {
-  const component = new MyComponent(); // This will fail initially
-  TestFramework.assertNotNull(component);
-});
-
-// Green: Implement minimal functionality
-class MyComponent {
-  constructor() {
-    // Minimal implementation
-  }
-}
-
-// Refactor: Improve implementation while tests pass
-```
-
-### 5. Environment Validation
-
-The framework automatically validates:
-
-- GAS APIs (DriveApp, PropertiesService, Logger)
-- GAS DB components (GASDBLogger, ErrorHandler, IdGenerator)
-- Basic functionality of core components
-
-This ensures tests run in a properly configured environment.
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Environment Validation Failures**: Ensure all GAS DB components are loaded before running tests
-2. **Resource Cleanup**: Use `trackResourceFile()` to avoid leaving test files in Drive
-3. **Assertion Errors**: Include descriptive messages to make failures clear
-4. **Test Isolation**: Use beforeEach/afterEach to ensure tests don't interfere with each other
-
-### Debugging Tips
-
-- Use `GASDBLogger` for detailed logging in tests
-- Run single tests to isolate issues: `runSingleTest('SuiteName', 'testName')`
-- Check the comprehensive report for detailed error information
-- Validate that dependencies are loaded before running tests
-
-This testing framework provides a robust foundation for Test-Driven Development in the GAS DB project, with comprehensive assertion capabilities, automatic resource management, and detailed reporting.
+See [GAS Mocks Plan](../../tools/gas-mocks/plan.md) for complete method signatures and data shapes.

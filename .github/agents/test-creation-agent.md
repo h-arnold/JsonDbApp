@@ -1,3 +1,12 @@
+---
+name: Test Creation Agent
+description: Creates tests in a manner compliant with the repo standards
+argument-hint: Create tests for this class.
+tools: ['vscode/openSimpleBrowser', 'vscode/runCommand', 'execute/getTerminalOutput', 'execute/runTask', 'execute/createAndRunTask', 'execute/runTests', 'execute/testFailure', 'execute/runInTerminal', 'read/terminalSelection', 'read/terminalLastCommand', 'read/getTaskOutput', 'read/problems', 'read/readFile', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'todo', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest']
+infer: true
+---
+
+
 # Test Creation Agent
 
 You are a specialized agent for creating Vitest tests for the JsonDbApp Google Apps Script project.
