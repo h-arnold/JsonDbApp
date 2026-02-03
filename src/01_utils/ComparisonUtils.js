@@ -18,6 +18,10 @@
  *    is supported; against object candidate returns false (documented simplification).
  */
 /* exported ComparisonUtils */
+/**
+ * Utility namespace encapsulating comparison logic shared across query and
+ * update components, including equality, ordering, and operator evaluation.
+ */
 class ComparisonUtils {
   /** @type {string[]} */
   static get SUPPORTED_OPERATORS() { return ['$eq', '$gt', '$lt']; }

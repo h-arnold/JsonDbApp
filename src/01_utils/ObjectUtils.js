@@ -10,6 +10,10 @@
  * ObjectUtils class providing date-preserving object operations
  */
 /* exported ObjectUtils */
+/**
+ * Static helper collection for cloning, serialising, and reviving objects
+ * while preserving Dates and registered class instances.
+ */
 class ObjectUtils {
   /**
    * Deep clone an object while preserving Date instances and other complex objects
@@ -207,7 +211,7 @@ class ObjectUtils {
       // Objects with different number of keys are not equal
       if (keysA.length !== keysB.length) return false;
 
-      for (let key of keysA) {
+      for (const key of keysA) {
         // If a key from A is not in B, they are not equal
         if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
         // Recursively compare the values of each key

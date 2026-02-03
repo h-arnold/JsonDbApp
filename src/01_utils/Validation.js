@@ -5,6 +5,10 @@
  * Throws standardised ErrorHandler.ErrorTypes.INVALID_ARGUMENT exceptions for consistency.
  */
 /* exported Validate */
+/**
+ * Centralised validation helper exposing common argument checks that throw
+ * consistent InvalidArgumentError instances across the codebase.
+ */
 class Validate {
   
   /**

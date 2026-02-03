@@ -7,6 +7,12 @@
  * @class DatabaseConfig
  */
 /* exported DatabaseConfig */
+/**
+ * Provides validated configuration state for Database instances, including
+ * lock behaviour, logging preferences, and collection creation defaults.
+ * @remarks Ensures all options fall back to sensible defaults and pass
+ * validation before use across the persistence layer.
+ */
 class DatabaseConfig {
   
   /**

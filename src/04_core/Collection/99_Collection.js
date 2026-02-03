@@ -14,6 +14,11 @@
  * - DocumentOperations: Performs low-level document manipulation.
  */
 /* exported Collection */
+/**
+ * Facade class providing a MongoDB-compatible API for collection operations.
+ * @remarks Delegates read and write responsibilities to specialised handler
+ * classes while maintaining collection state and persistence lifecycle.
+ */
 class Collection {
     /**
      * Creates a new Collection instance
@@ -260,6 +265,12 @@ class Collection {
     aggregate(pipeline) { return this._readOps.aggregate(pipeline); }
 
     // --- Core Collection Operations ---
+    /**
+     * Persist pending collection changes to Drive if the collection state is
+     * marked as dirty.
+     * @returns {{acknowledged: boolean}} Acknowledgement payload signalling
+     * whether the save coordination succeeded.
+     */
     save() {
         return this._coordinator.coordinate("save", () => {
             this._ensureLoaded();
@@ -271,13 +282,49 @@ class Collection {
     }
 
     // --- Getters ---
+    /**
+     * Return a serialisable snapshot of the collection metadata.
+     * @returns {Object} JSON-ready metadata object.
+     */
     getMetadata() { this._ensureLoaded(); return this._metadata.toJSON(); }
+    /**
+     * Get the collection name.
+     * @returns {string} Collection identifier.
+     */
     getName() { return this._name; }
+    /**
+     * Determine whether the collection has unsaved changes.
+     * @returns {boolean} True when pending persistence is required.
+     */
     isDirty() { return this._dirty; }
+    /**
+     * Get the Drive file identifier backing this collection.
+     * @returns {string} File ID used for persistence.
+     */
     getDriveFileId() { return this._driveFileId; }
+    /**
+     * Access the parent database instance.
+     * @returns {Database} Database that owns the collection.
+     */
     getDatabase() { return this._database; }
+    /**
+     * Access the FileService used for persistence operations.
+     * @returns {FileService} Shared file service instance.
+     */
     getFileService() { return this._fileService; }
+    /**
+     * Access the component logger for this collection.
+     * @returns {Object} Component logger instance.
+     */
     getLogger() { return this._logger; }
+    /**
+     * Collection name accessor.
+     * @returns {string} Collection identifier.
+     */
     get name() { return this._name; }
+    /**
+     * Drive file identifier accessor.
+     * @returns {string} Persistence file ID.
+     */
     get driveFileId() { return this._driveFileId; }
 }

@@ -522,7 +522,7 @@ When updating the script:
 The script is designed to work with the JsonDbApp project structure:
 
 - Monitors `src/` directory for core components
-- Watches `tests/` directory for test files
+- Watches `old_tests/` directory for test files
 - Includes `docs/` directory if needed
 
 ### Testing Integration

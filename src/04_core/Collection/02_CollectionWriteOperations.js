@@ -2,6 +2,12 @@
  * CollectionWriteOperations.js - Handles all write operations for a collection.
  */
 /* exported CollectionWriteOperations */
+/**
+ * Handles all write operations for a single collection instance.
+ * @class
+ * @remarks Uses the parent collection's coordinator to ensure consistent,
+ * serialised write operations across concurrent executions.
+ */
 class CollectionWriteOperations {
     /**
      * @param {Collection} collection - The parent collection instance.

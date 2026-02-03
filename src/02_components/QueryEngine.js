@@ -20,6 +20,11 @@
  * Supports MongoDB-compatible query syntax for basic operations
  */
 /* exported QueryEngine */
+/**
+ * Evaluates MongoDB-style query documents against in-memory collections,
+ * handling operator validation, dot-notation traversal, and logical
+ * composition.
+ */
 class QueryEngine {
   /**
    * Creates a new QueryEngine instance
@@ -327,6 +332,7 @@ class QueryEngine {
   /**
    * Find all operators used in query
    * @param {*} obj - Object to search
+   * @param operators
    * @returns {Array} Array of operator strings
    * @private
    */

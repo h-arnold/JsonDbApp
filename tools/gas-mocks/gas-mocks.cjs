@@ -261,7 +261,7 @@ class MockProperties {
 
 class MockLock {
   locked = false;
-  
+  recursion = 0;
 
   /**
    * Acquires the lock or throws on timeout.
@@ -274,16 +274,29 @@ class MockLock {
    */
   waitLock(timeoutInMillis) {
     const start = Date.now();
+    if (this.locked && this.recursion > 0) {
+      this.recursion += 1;
+      return;
+    }
     while (this.locked) {
       if (Date.now() - start > timeoutInMillis) {
         throw new Error('Lock wait timeout');
       }
     }
     this.locked = true;
+    this.recursion = 1;
   }
 
   releaseLock() {
-    this.locked = false;
+    if (!this.locked || this.recursion <= 0) {
+      this.locked = false;
+      this.recursion = 0;
+      return;
+    }
+    this.recursion -= 1;
+    if (this.recursion === 0) {
+      this.locked = false;
+    }
   }
 }
 

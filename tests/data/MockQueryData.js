@@ -398,3 +398,4 @@ const MockQueryData = {
     return documents;
   }
 };
+export default MockQueryData;

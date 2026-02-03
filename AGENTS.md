@@ -85,9 +85,121 @@ methodName(param) {
 - **Validation**: Use `Validate` class; class-specific validation as private method.
 - **TDD**: Always follow Red-Green-Refactor.
 
-## After Implementation
+## Calling Sub-Agents
 
-1. Run `clasp push`.
-2. Ask user to run tests and await instructions.
+MANDATORY: Every #runSubagent call must include the agent name. Calls that omit this parameter violate the workflow contract and should be rejected/retried.
+
+### Available Sub-Agents
+
+The following specialized agents are available (names are case-sensitive):
+
+1. **Code Review Agent** - Reviews source code for:
+   - Lint compliance (0 errors, 0 warnings - NON-NEGOTIABLE)
+   - DRY principles (no code duplication)
+   - SOLID principles
+   - Idiomatic JavaScript/GAS patterns
+   - Architecture compliance
+   - Complete JSDoc documentation
+   - Proper error handling
+
+2. **Test Review Agent** - Reviews test code for:
+   - Lint compliance (0 errors, 0 warnings - NON-NEGOTIABLE)
+   - Test framework compliance (Vitest patterns)
+   - DRY principles (no duplication)
+   - Proper helper usage
+   - Complete test coverage
+   - Proper cleanup and isolation
+
+3. **Test Creation Agent** - Creates new Vitest tests:
+   - Follows project testing conventions
+   - Uses existing test helpers
+   - Maintains DRY principles
+   - Ensures lint compliance
+   - Documents GAS mock limitations
+
+4. **Refactoring Agent** - Refactors large classes:
+   - Splits into multi-file structure (Collection pattern)
+   - Maintains test compatibility
+   - Ensures SOLID compliance
+   - Preserves all functionality
+
+5. **docs-review-agent** - Reviews and updates documentation:
+   - Ensures docs match code changes
+   - Updates developer documentation
+   - Updates agent instructions
+   - Verifies code examples are current
+   - Maintains cross-references
+
+### Mandatory Code Review Process
+
+**NON-NEGOTIABLE REQUIREMENT**: All non-trivial code changes MUST be verified by the appropriate review agent before a task can be considered complete.
+
+**Source Code Changes:**
+
+- New classes or significant modifications → `code-review-agent`
+- Refactoring existing classes → `refactoring-agent` followed by `code-review-agent`
+- Must pass lint with 0 errors, 0 warnings
+- Must pass all tests
+
+**Test Code Changes:**
+
+- New tests → `test-creation-agent` followed by `test-code-review-agent`
+- Modified tests → `test-code-review-agent`
+- Must pass lint with 0 errors, 0 warnings
+- Must maintain or improve coverage
+
+**Documentation Review (Final Step):**
+
+- After code review passes → `docs-review-agent`
+- Updates developer docs to match code changes
+- Updates agent instructions with new patterns/helpers
+- Verifies all code examples are current
+- Required for all non-trivial changes
+
+**What Counts as Trivial:**
+
+- Single-line documentation fixes
+- Typo corrections in comments
+- Whitespace/formatting only changes
+- Version number updates
+
+**What Requires Review:**
+
+- Any logic changes
+- New methods or classes
+- Refactoring
+- Error handling changes
+- Algorithm modifications
+- Test additions or modifications
+
+### Usage Example
+
+When you need to review code, call the appropriate agent:
+
+```javascript
+// For source code review
+runSubagent({
+  prompt: "Please review the new UpdateEngine class for lint compliance, DRY, SOLID, and proper documentation.",
+  description: "Code review for UpdateEngine",
+  agentName: "Code Review Agent"
+})
+
+// For test review
+runSubagent({
+  prompt: "Please review the CollectionReadOperations tests for completeness, DRY, and lint compliance.",
+  description: "Test review for CollectionReadOperations",
+  agentName: "Test Review Agent"
+})
+```
+
+### Review Agent Workflow
+
+1. **Make Changes**: Implement the requested functionality
+2. **Self-Check**: Run lint and tests locally
+3. **Call Review Agent**: Pass to appropriate review agent (code or test review)
+4. **Address Feedback**: Fix any issues identified by review agent
+5. **Final Verification**: Confirm 0 lint errors/warnings and all tests pass
+6. **Documentation Review**: Pass to `docs-review-agent` to update docs
+7. **Complete Task**: Only mark complete after all reviews approved
 
 **Always write concisely in British English.**

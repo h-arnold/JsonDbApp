@@ -11,6 +11,10 @@
  * - lockStatus: Lock state information
  */
 /* exported CollectionMetadata */
+/**
+ * Represents persisted metadata for a collection, providing validated access
+ * to identifiers, document counts, timestamps, and lock information.
+ */
 class CollectionMetadata {
   /**
    * Create CollectionMetadata instance
@@ -305,3 +309,8 @@ class CollectionMetadata {
 }
 
 
+
+
+if (typeof module !== "undefined" && module.exports) {
+  module.exports = { CollectionMetadata };
+}

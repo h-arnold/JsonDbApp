@@ -7,6 +7,10 @@
  * @class
  */
 /* exported CollectionCoordinator */
+/**
+ * Orchestrates coordinated collection operations by applying locking,
+ * conflict detection, and metadata synchronisation around core CRUD actions.
+ */
 class CollectionCoordinator {
   /**
    * Create a new CollectionCoordinator
@@ -14,6 +18,7 @@ class CollectionCoordinator {
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
    * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
    * @param {JDbLogger} logger - Logger for operation tracing
+   * @param _logger
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
   constructor(collection, masterIndex, config = {}, _logger = JDbLogger) {

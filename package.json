@@ -7,10 +7,7 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "echo \"Run tests using Google Apps Script editor - call testSection1() function\"",
-    "test:gas": "./test-runner.sh",
-    "test:validate": "./test-runner.sh --validate",
-    "test:logs": "./test-runner.sh --logs-only",
+    "test": "vitest run --config tests/vitest.config.js",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
@@ -37,7 +34,8 @@
     "eslint-plugin-googleappsscript": "^1.0.5",
     "eslint-plugin-jsdoc": "^62.5.0",
     "husky": "^9.1.7",
-    "prettier": "^3.8.1"
+    "prettier": "^3.8.1",
+    "vitest": "^4.0.18"
   },
   "type": "module"
 }

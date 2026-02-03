@@ -10,6 +10,10 @@
  * FileOperations class for direct Drive API interactions
  */
 /* exported FileOperations */
+/**
+ * Executes low-level Google Drive operations with retry, error translation,
+ * and logging support for higher-level services.
+ */
 class FileOperations {
   /**
    * Creates a new FileOperations instance

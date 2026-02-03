@@ -25,6 +25,10 @@
  * @throws {ErrorHandler.ErrorTypes.LOCK_TIMEOUT} If a lock cannot be acquired within the timeout.
  */
 /* exported DbLockService */
+/**
+ * Wraps Google Apps Script LockService to provide validated, logged lock
+ * acquisition and release for coordinating critical sections across executions.
+ */
 class DbLockService {
   /**
    * Constructor for DbLockService

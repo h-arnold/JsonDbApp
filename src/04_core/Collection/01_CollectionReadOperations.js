@@ -2,6 +2,11 @@
  * CollectionReadOperations.js - Handles all read operations for a collection.
  */
 /* exported CollectionReadOperations */
+/**
+ * Encapsulates all read-only operations for a {@link Collection}, providing
+ * MongoDB-like query semantics via the underlying DocumentOperations and
+ * QueryEngine.
+ */
 class CollectionReadOperations {
     /**
      * @param {Collection} collection - The parent collection instance.

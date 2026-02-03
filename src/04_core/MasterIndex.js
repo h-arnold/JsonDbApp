@@ -8,6 +8,11 @@
  * @class MasterIndex
  */
 /* exported MasterIndex */
+/**
+ * Coordinates collection metadata across script executions by persisting a
+ * master index in ScriptProperties, providing locking, conflict detection, and
+ * modification history tracking.
+ */
 class MasterIndex {
   /**
    * Create a new MasterIndex instance
@@ -589,4 +594,8 @@ class MasterIndex {
       this._data.modificationHistory[collectionName] = this._data.modificationHistory[collectionName].slice(-maxHistoryEntries);
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { MasterIndex };
 }

@@ -19,6 +19,10 @@
  * - Document counting and existence checks
  */
 /* exported DocumentOperations */
+/**
+ * Provides low-level CRUD helpers that manipulate the collection's in-memory
+ * document store, handling ID generation, validation, and dirty state updates.
+ */
 class DocumentOperations {
   /**
    * Creates a new DocumentOperations instance

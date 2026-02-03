@@ -6,3 +6,5 @@ test-execution.log
 *.pid
 node_modules
 .env
+tests/.gas-drive/
+tests/.gas-script-properties.json

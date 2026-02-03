@@ -4,6 +4,9 @@
  * Section 7: Update Engine Implementation (Green Phase)
  */
 /* exported UpdateEngine */
+/**
+ *
+ */
 class UpdateEngine {
   /**
    * Creates a new UpdateEngine instance
@@ -64,6 +67,10 @@ class UpdateEngine {
     this._validateOperationsNotEmpty(ops, '$set');
     
     for (const fieldPath in ops) {
+      if (this._isImmutableField(fieldPath)) {
+        this._logger.debug('Skipping immutable field update', { fieldPath });
+        continue;
+      }
       this._setFieldValue(document, fieldPath, ops[fieldPath]);
     }
     return document;
@@ -352,12 +359,17 @@ _isPlainObject(val) {
     this._validateOperationsNotEmpty(ops, '$addToSet');
     
     for (const fieldPath in ops) {
-     let current = this._getFieldValue(document, fieldPath);
+     const current = this._getFieldValue(document, fieldPath);
      const valueOrModifier = ops[fieldPath];
 
    // Robust equality comparator used for uniqueness checks:
    // 1) Try the centralised comparator (handles Dates, arrays, and plain objects).
    // 2) If that does not report equality, fall back to deepEqual for non-Date objects.
+     /**
+      *
+      * @param a
+      * @param b
+      */
      const eq = (a, b) => {
        try {
          if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
@@ -375,6 +387,10 @@ _isPlainObject(val) {
      };
 
    // Helper: append a value only if not present in `current` using the comparator above.
+     /**
+      *
+      * @param val
+      */
      const addOne = val => {
        const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
        const perItem = Array.isArray(current)
@@ -484,7 +500,7 @@ _isPlainObject(val) {
 
     // Final assignment: detect numeric tail for arrays
     const last = parts[parts.length - 1];
-    if (Array.isArray(current) && /^\d+$/.test(last)) {
+    if (Array.isArray(current) && /^\\d+$/.test(last)) {
       current[Number(last)] = value;
     } else {
       current[last] = value;
@@ -514,7 +530,7 @@ _isPlainObject(val) {
     }
 
     const last = parts[parts.length - 1];
-    if (Array.isArray(current) && /^\d+$/.test(last)) {
+    if (Array.isArray(current) && /^\\d+$/.test(last)) {
       // Deleting an array index leaves undefined but preserves length
       delete current[Number(last)];
     } else {
@@ -540,6 +556,19 @@ _isPlainObject(val) {
     }
     
     return false;
+  }
+
+  /**
+   * Determine whether a field path targets an immutable root field such as _id.
+   * @param {string} fieldPath - Dot notation path of the field
+   * @returns {boolean} True if the root segment is immutable
+   */
+  _isImmutableField(fieldPath) {
+    if (!fieldPath || typeof fieldPath !== 'string') {
+      return false;
+    }
+    const root = fieldPath.split('.')[0];
+    return root === '_id';
   }
 
   // Private validation methods
@@ -649,4 +678,8 @@ _isPlainObject(val) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(fieldPath, currentValue, `${operation} operation cannot compare objects or arrays`);
     }
   }
+}
+
+if (typeof module !== 'undefined' && module.exports) {
+  module.exports = { UpdateEngine };
 }
