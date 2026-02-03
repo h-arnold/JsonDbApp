@@ -75,6 +75,20 @@ describe('UpdateEngine Tests', () => {
     expect(result.value).toBe(15);
   });
 
+  it('should throw $min when Date field compared with non-Date value', () => {
+    const doc = { timestamp: new Date('2024-01-01T00:00:00Z') };
+    const update = { $min: { timestamp: { foo: 'bar' } } };
+
+    expect(() => engine.applyOperators(doc, update)).toThrow();
+  });
+
+  it('should throw $max when Date field compared with non-Date value', () => {
+    const doc = { timestamp: new Date('2024-01-01T00:00:00Z') };
+    const update = { $max: { timestamp: { foo: 'bar' } } };
+
+    expect(() => engine.applyOperators(doc, update)).toThrow();
+  });
+
   it('should unset nested field', () => {
     const doc = { a: { b: 2, c: 3 } };
     const update = { $unset: { 'a.b': '' } };
@@ -203,7 +217,7 @@ describe('UpdateEngine Tests', () => {
 
     expect(result.a).toBeNull();
     expect(result.b).toBe(2);
-    expect(Object.prototype.hasOwnProperty.call(result, 'c')).toBe(true);
+    expect(Object.hasOwn(result, 'c')).toBe(true);
     expect(result.c).toBeUndefined();
   });
 
@@ -262,7 +276,7 @@ describe('UpdateEngine Tests', () => {
     expect(result.name).toBe('Alice');
     expect(result.city).toBe('London');
     expect(result.age).toBeUndefined();
-    expect(Object.prototype.hasOwnProperty.call(result, 'age')).toBe(false);
+    expect(Object.hasOwn(result, 'age')).toBe(false);
     expect(doc.age).toBe(30);
   });
 
@@ -292,7 +306,7 @@ describe('UpdateEngine Tests', () => {
     expect(result.level1.otherLevel2).toBe('should remain');
     expect(result.topLevel).toBe('should remain');
     expect(result.level1.level2.level3.level4.target).toBeUndefined();
-    expect(Object.prototype.hasOwnProperty.call(result.level1.level2.level3.level4, 'target')).toBe(false);
+    expect(Object.hasOwn(result.level1.level2.level3.level4, 'target')).toBe(false);
   });
 
   it('should not error when unsetting non-existent field', () => {

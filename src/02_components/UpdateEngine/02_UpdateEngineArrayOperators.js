@@ -173,7 +173,7 @@ class UpdateEngineArrayOperators {
    * @returns {boolean} True when value is an object containing $each
    */
   _isEachModifier(value) {
-    return value && typeof value === 'object' && Object.prototype.hasOwnProperty.call(value, '$each');
+    return value && typeof value === 'object' && Object.hasOwn(value, '$each');
   }
 
   /**

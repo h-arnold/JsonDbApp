@@ -36,6 +36,7 @@ You review:
 **All code must pass ESLint with zero errors and zero warnings.**
 
 Run: `npx eslint 'src/**/*.js' --ext .js`
+Use your `get_error_details` tool to find VSCode specific linter errors from tools like SonarQube
 
 **Expected output:**
 ```

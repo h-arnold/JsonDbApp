@@ -110,10 +110,13 @@ class UpdateEngineFieldOperators {
       const currentValue = this._fieldPaths.getValue(document, fieldPath);
       const minValue = ops[fieldPath];
 
+      if (currentValue !== undefined) {
+        this._validation.validateComparableValues(currentValue, minValue, fieldPath, '$min');
+        this._validation.validateComparableValues(minValue, currentValue, fieldPath, '$min');
+      }
+
       if (currentValue === undefined || minValue < currentValue) {
         this._fieldPaths.setValue(document, fieldPath, minValue);
-      } else if (currentValue !== undefined) {
-        this._validation.validateComparableValues(currentValue, minValue, fieldPath, '$min');
       }
     }
 
@@ -135,10 +138,13 @@ class UpdateEngineFieldOperators {
       const currentValue = this._fieldPaths.getValue(document, fieldPath);
       const maxValue = ops[fieldPath];
 
+      if (currentValue !== undefined) {
+        this._validation.validateComparableValues(currentValue, maxValue, fieldPath, '$max');
+        this._validation.validateComparableValues(maxValue, currentValue, fieldPath, '$max');
+      }
+
       if (currentValue === undefined || maxValue > currentValue) {
         this._fieldPaths.setValue(document, fieldPath, maxValue);
-      } else if (currentValue !== undefined) {
-        this._validation.validateComparableValues(currentValue, maxValue, fieldPath, '$max');
       }
     }
 
