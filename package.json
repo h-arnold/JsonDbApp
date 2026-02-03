@@ -7,7 +7,8 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "vitest run --config tests/vitest.config.js",
+    "test": "vitest run --config tests/vitest.config.js --silent",
+    "test:verbose": "vitest run --config tests/vitest.config.js",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
@@ -36,6 +37,9 @@
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
     "vitest": "^4.0.18"
+  },
+  "overrides": {
+    "fresh": "0.5.2"
   },
   "type": "module"
 }

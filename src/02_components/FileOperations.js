@@ -10,11 +10,14 @@
  * FileOperations class for direct Drive API interactions
  */
 /* exported FileOperations */
+const RETRY_BACKOFF_BASE = 2;
+
 /**
  * Executes low-level Google Drive operations with retry, error translation,
  * and logging support for higher-level services.
  */
 class FileOperations {
+
   /**
    * Creates a new FileOperations instance
    * @param {Object} logger - Logger instance for operation tracking (optional)
@@ -96,6 +99,7 @@ class FileOperations {
    * Write data to existing Drive file
    * @param {string} fileId - Drive file ID to write to
    * @param {Object} data - Data to write as JSON
+   * @returns {void} No return value
    * @throws {FileNotFoundError} When file doesn't exist
    * @throws {PermissionDeniedError} When write access is denied
    */
@@ -319,7 +323,7 @@ class FileOperations {
         }
         
         if (attempt < this._maxRetries) {
-          const delay = this._retryDelayMs * Math.pow(2, attempt - 1);
+          const delay = this._retryDelayMs * Math.pow(RETRY_BACKOFF_BASE, attempt - 1);
           this._logger.warn(`Operation ${operationName} failed, retrying in ${delay}ms`, {
             attempt,
             maxRetries: this._maxRetries,

@@ -7,6 +7,11 @@
  * @class DatabaseConfig
  */
 /* exported DatabaseConfig */
+const DEFAULT_LOCK_TIMEOUT_MS = 30000;
+const DEFAULT_RETRY_ATTEMPTS = 3;
+const DEFAULT_RETRY_DELAY_MS = 1000;
+const MIN_LOCK_TIMEOUT_MS = 500;
+
 /**
  * Provides validated configuration state for Database instances, including
  * lock behaviour, logging preferences, and collection creation defaults.
@@ -33,9 +38,9 @@ class DatabaseConfig {
     // Set default values
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
     this.autoCreateCollections = config.autoCreateCollections ?? true;
-    this.lockTimeout = config.lockTimeout ?? 30000;
-    this.retryAttempts = config.retryAttempts ?? 3;
-    this.retryDelayMs = config.retryDelayMs ?? 1000;
+    this.lockTimeout = config.lockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS;
+    this.retryAttempts = config.retryAttempts ?? DEFAULT_RETRY_ATTEMPTS;
+    this.retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
     this.cacheEnabled = config.cacheEnabled ?? true;
     this.logLevel = config.logLevel || 'INFO';
     this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
@@ -70,7 +75,7 @@ class DatabaseConfig {
   // Use shared validation helpers for consistent error types
   // lockTimeout must be a number and at least 500ms
   Validate.number(this.lockTimeout, 'lockTimeout');
-  Validate.range(this.lockTimeout, 500, Number.MAX_SAFE_INTEGER, 'lockTimeout');
+  Validate.range(this.lockTimeout, MIN_LOCK_TIMEOUT_MS, Number.MAX_SAFE_INTEGER, 'lockTimeout');
 
   // retryAttempts must be a positive integer
   Validate.integer(this.retryAttempts, 'retryAttempts');
@@ -139,7 +144,7 @@ class DatabaseConfig {
   /**
    * Create DatabaseConfig instance from JSON object
    * @param {Object} obj - JSON object produced by toJSON
-   * @returns {DatabaseConfig}
+   * @returns {DatabaseConfig} Restored configuration instance
    * @static
    */
   static fromJSON(obj) {

@@ -115,6 +115,7 @@ class ObjectUtils {
   /**
    * Registry of classes for JSON reviving
    * @private
+   * @returns {Object<string, Function>} Class registry for reviver lookups
    */
   static get _classRegistry() {
     return {
@@ -180,7 +181,7 @@ class ObjectUtils {
       if (a === b) return true;
 
       // If one is null/undefined, they must both be so
-      if (a == null || b == null) return a === b;
+      if (a === null || a === undefined || b === null || b === undefined) return a === b;
 
       // Handle Dates
       if (a instanceof Date && b instanceof Date) {

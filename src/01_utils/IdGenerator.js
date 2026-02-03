@@ -4,6 +4,40 @@
  * This class provides various methods for generating unique identifiers
  * for documents and other entities in the database system.
  */
+const UUID_LENGTH = 36;
+const UUID_DASH_POSITION_ONE = 8;
+const UUID_DASH_POSITION_TWO = 13;
+const UUID_DASH_POSITION_THREE = 18;
+const UUID_DASH_POSITION_FOUR = 23;
+const UUID_DASH_POSITIONS = new Set([
+  UUID_DASH_POSITION_ONE,
+  UUID_DASH_POSITION_TWO,
+  UUID_DASH_POSITION_THREE,
+  UUID_DASH_POSITION_FOUR
+]);
+const UUID_VERSION_POSITION = 14;
+const UUID_VARIANT_POSITION = 19;
+const UUID_VERSION_CHAR = '4';
+const UUID_VARIANT_START = 8;
+const UUID_VARIANT_RANGE = 4;
+const HEX_BASE = 16;
+const MILLISECONDS_PER_SECOND = 1000;
+const TIMESTAMP_RANDOM_MAX = 1000;
+const TIMESTAMP_RANDOM_PAD = 3;
+const DEFAULT_SHORT_ID_LENGTH = 8;
+const DEFAULT_ALPHANUMERIC_ID_LENGTH = 12;
+const DEFAULT_NUMERIC_ID_LENGTH = 10;
+const NUMERIC_NON_ZERO_START_INDEX = 1;
+const OBJECT_ID_TIMESTAMP_HEX_LENGTH = 8;
+const OBJECT_ID_RANDOM_HEX_LENGTH = 10;
+const OBJECT_ID_COUNTER_MAX = 16777216;
+const OBJECT_ID_COUNTER_HEX_LENGTH = 6;
+const SEQUENTIAL_COUNTER_PAD = 6;
+const READABLE_ID_NUMBER_MAX = 1000;
+
+/**
+ * Generates unique identifiers for documents and system metadata.
+ */
 class IdGenerator {
   
   /**
@@ -28,15 +62,15 @@ class IdGenerator {
     const chars = '0123456789abcdef';
     let result = '';
     
-    for (let i = 0; i < 36; i++) {
-      if (i === 8 || i === 13 || i === 18 || i === 23) {
+    for (let i = 0; i < UUID_LENGTH; i++) {
+      if (UUID_DASH_POSITIONS.has(i)) {
         result += '-';
-      } else if (i === 14) {
-        result += '4'; // Version 4
-      } else if (i === 19) {
-        result += chars[Math.floor(Math.random() * 4) + 8]; // 8, 9, a, or b
+      } else if (i === UUID_VERSION_POSITION) {
+        result += UUID_VERSION_CHAR; // Version 4
+      } else if (i === UUID_VARIANT_POSITION) {
+        result += chars[Math.floor(Math.random() * UUID_VARIANT_RANGE) + UUID_VARIANT_START]; // 8, 9, a, or b
       } else {
-        result += chars[Math.floor(Math.random() * 16)];
+        result += chars[Math.floor(Math.random() * HEX_BASE)];
       }
     }
     
@@ -50,7 +84,7 @@ class IdGenerator {
    */
   static generateTimestampId(prefix = '') {
     const timestamp = Date.now();
-    const random = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+    const random = Math.floor(Math.random() * TIMESTAMP_RANDOM_MAX).toString().padStart(TIMESTAMP_RANDOM_PAD, '0');
     return prefix ? `${prefix}_${timestamp}_${random}` : `${timestamp}_${random}`;
   }
   
@@ -59,7 +93,7 @@ class IdGenerator {
    * @param {number} length - Desired length of the ID (default: 8)
    * @returns {string} A short ID string
    */
-  static generateShortId(length = 8) {
+  static generateShortId(length = DEFAULT_SHORT_ID_LENGTH) {
     const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
     let result = '';
     
@@ -75,7 +109,7 @@ class IdGenerator {
    * @param {number} length - Desired length of the ID (default: 12)
    * @returns {string} An alphanumeric ID string
    */
-  static generateAlphanumericId(length = 12) {
+  static generateAlphanumericId(length = DEFAULT_ALPHANUMERIC_ID_LENGTH) {
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     let result = '';
     
@@ -91,12 +125,13 @@ class IdGenerator {
    * @param {number} length - Desired length of the ID (default: 10)
    * @returns {string} A numeric ID string
    */
-  static generateNumericId(length = 10) {
+  static generateNumericId(length = DEFAULT_NUMERIC_ID_LENGTH) {
     const chars = '0123456789';
     let result = '';
     
     // Ensure first digit is not 0
-    result += chars.substring(1)[Math.floor(Math.random() * 9)];
+    const nonZeroDigits = chars.substring(NUMERIC_NON_ZERO_START_INDEX);
+    result += nonZeroDigits[Math.floor(Math.random() * nonZeroDigits.length)];
     
     for (let i = 1; i < length; i++) {
       result += chars[Math.floor(Math.random() * chars.length)];
@@ -110,16 +145,20 @@ class IdGenerator {
    * @returns {string} A 24-character hex string ObjectId
    */
   static generateObjectId() {
-    const timestamp = Math.floor(Date.now() / 1000).toString(16).padStart(8, '0');
+    const timestamp = Math.floor(Date.now() / MILLISECONDS_PER_SECOND)
+      .toString(HEX_BASE)
+      .padStart(OBJECT_ID_TIMESTAMP_HEX_LENGTH, '0');
     
     // Generate 5 random bytes (10 hex chars)
     let randomBytes = '';
-    for (let i = 0; i < 10; i++) {
-      randomBytes += Math.floor(Math.random() * 16).toString(16);
+    for (let i = 0; i < OBJECT_ID_RANDOM_HEX_LENGTH; i++) {
+      randomBytes += Math.floor(Math.random() * HEX_BASE).toString(HEX_BASE);
     }
     
     // Generate 3-byte counter (6 hex chars)
-    const counter = Math.floor(Math.random() * 16777216).toString(16).padStart(6, '0');
+    const counter = Math.floor(Math.random() * OBJECT_ID_COUNTER_MAX)
+      .toString(HEX_BASE)
+      .padStart(OBJECT_ID_COUNTER_HEX_LENGTH, '0');
     
     return timestamp + randomBytes + counter;
   }
@@ -138,7 +177,7 @@ class IdGenerator {
     }
     
     const timestamp = Date.now();
-    const counter = IdGenerator._counter.toString().padStart(6, '0');
+    const counter = IdGenerator._counter.toString().padStart(SEQUENTIAL_COUNTER_PAD, '0');
     
     return prefix ? `${prefix}_${timestamp}_${counter}` : `${timestamp}_${counter}`;
   }
@@ -160,7 +199,7 @@ class IdGenerator {
     
     const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
     const noun = nouns[Math.floor(Math.random() * nouns.length)];
-    const number = Math.floor(Math.random() * 1000);
+    const number = Math.floor(Math.random() * READABLE_ID_NUMBER_MAX);
     
     return `${adjective}-${noun}-${number}`;
   }
@@ -202,7 +241,7 @@ class IdGenerator {
    * @returns {Function} A custom ID generator function
    */
   static createCustomGenerator(options = {}) {
-    const { type = 'uuid', prefix = '', length = 12 } = options;
+    const { type = 'uuid', prefix = '', length = DEFAULT_ALPHANUMERIC_ID_LENGTH } = options;
     
     switch (type.toLowerCase()) {
       case 'uuid':

@@ -10,6 +10,7 @@
  */
 class CollectionWriteOperations {
     /**
+     * Create a new write operations helper for a collection.
      * @param {Collection} collection - The parent collection instance.
      */
     constructor(collection) {

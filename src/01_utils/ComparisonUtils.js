@@ -18,27 +18,35 @@
  *    is supported; against object candidate returns false (documented simplification).
  */
 /* exported ComparisonUtils */
+const NEGATIVE_ONE = -1;
+
 /**
  * Utility namespace encapsulating comparison logic shared across query and
  * update components, including equality, ordering, and operator evaluation.
  */
 class ComparisonUtils {
-  /** @type {string[]} */
+
+  /**
+   * Provide the list of supported comparison operators.
+   * @returns {string[]} Supported operator names
+   */
   static get SUPPORTED_OPERATORS() { return ['$eq', '$gt', '$lt']; }
 
   /**
    * Determine deep / semantic equality between two values.
    * @param {*} a - First value
    * @param {*} b - Second value
-   * @param {Object} [options]
+   * @param {Object} [options] - Comparison options
    * @param {boolean} [options.arrayContainsScalar=false] - Treat array vs scalar equality as membership test
-   * @returns {boolean}
+   * @returns {boolean} True when values are considered equal
    */
   static equals(a, b, options = {}) {
     const { arrayContainsScalar = false } = options;
 
     if (a === b) return true; // covers primitives, reference equality
-    if (a == null || b == null) return a === b; // one nullish -> only equal if both
+    if (a === null || a === undefined || b === null || b === undefined) {
+      return a === b; // one nullish -> only equal if both
+    }
 
     // Date equality
     if (a instanceof Date && b instanceof Date) {
@@ -48,7 +56,7 @@ class ComparisonUtils {
     // Array membership semantics (only when enabled & a is array & b not array)
     if (arrayContainsScalar && Array.isArray(a) && !Array.isArray(b)) {
       // Use strict equality for membership (mirrors original QueryEngine.includes behaviour)
-      return a.indexOf(b) !== -1;
+      return a.indexOf(b) !== NEGATIVE_ONE;
     }
 
     // Type mismatch (after membership consideration) -> not equal
@@ -79,13 +87,13 @@ class ComparisonUtils {
    * @returns {number} positive if a>b, negative if a<b, 0 if equal or not comparable
    */
   static compareOrdering(a, b) {
-    if (a == null || b == null) return 0;
+    if (a === null || a === undefined || b === null || b === undefined) return 0;
     if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
     if (typeof a === 'number' && typeof b === 'number') return a - b;
     if (typeof a === 'string' && typeof b === 'string') {
       if (a === b) return 0;
       if (a > b) return 1;
-      return -1;
+      return NEGATIVE_ONE;
     }
     return 0; // Not comparable (different types or unsupported)
   }
@@ -95,9 +103,9 @@ class ComparisonUtils {
    * All operators must pass (logical AND).
    * @param {*} actual - Actual value from document/element
    * @param {Object} operatorObject - Operator specification
-   * @param {Object} [options]
+   * @param {Object} [options] - Operator evaluation options
    * @param {boolean} [options.arrayContainsScalarForEq=true] - Enable array membership semantics for $eq
-   * @returns {boolean}
+   * @returns {boolean} True when all operators match
    * @throws {InvalidQueryError} When unsupported operator used
    */
   static applyOperators(actual, operatorObject, options = {}) {
@@ -134,8 +142,8 @@ class ComparisonUtils {
 
   /**
    * Determine if value is a non-empty operator object (all keys start with $)
-   * @param {*} obj
-   * @returns {boolean}
+   * @param {*} obj - Candidate value to check
+   * @returns {boolean} True when the value is an operator object
    */
   static isOperatorObject(obj) {
     if (!Validate.isPlainObject(obj)) return false;
@@ -148,9 +156,9 @@ class ComparisonUtils {
    * Shallow subset predicate match.
    * @param {*} candidate - Value being tested (object or primitive)
    * @param {*} predicate - Predicate object or operator object
-   * @param {Object} [options]
+   * @param {Object} [options] - Subset matching options
    * @param {boolean} [options.operatorSupport=true] - Allow operator objects at field level
-   * @returns {boolean}
+   * @returns {boolean} True when the candidate satisfies the predicate
    */
   static subsetMatch(candidate, predicate, options = {}) {
     const { operatorSupport = true } = options;

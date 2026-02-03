@@ -1,17 +1,8 @@
 /**
- * ErrorHandler - Provides standardized error handling for GAS DB
- * 
- * This class defines standard error types and provides utilities for
- * error handling, validation, and    if (error instanceof GASDBError) {
-      errorInfo.errorCode = error.code;
-      errorInfo.errorContext = error.context;
-    }
-    
-    GASDBLogger.error(`Error in ${context}: ${error.message}`, errorInfo);
-    
-    if (rethrow) {
-      throw error;
-    }text management.
+ * ErrorHandler - Provides standardised error handling for GAS DB.
+ *
+ * Defines standard error types and utilities for error creation, validation,
+ * and consistent logging across the codebase.
  */
 
 /**
@@ -19,10 +10,10 @@
  */
 class GASDBError extends Error {
   /**
-   *
-   * @param message
-   * @param code
-   * @param context
+   * Create a new GASDBError instance.
+   * @param {string} message - Human-readable error message
+   * @param {string|null} code - Error code identifier
+   * @param {Object|null} context - Contextual metadata for debugging
    */
   constructor(message, code = null, context = null) {
     super(message);
@@ -58,9 +49,9 @@ class GASDBError extends Error {
  */
 class DocumentNotFoundError extends GASDBError {
   /**
-   *
-   * @param query
-   * @param collectionName
+   * Create a document not found error.
+   * @param {Object} query - Query payload that returned no results
+   * @param {string|null} collectionName - Collection name, if available
    */
   constructor(query, collectionName = null) {
     const message = `Document not found for query: ${JSON.stringify(query)}`;
@@ -73,10 +64,10 @@ class DocumentNotFoundError extends GASDBError {
  */
 class DuplicateKeyError extends GASDBError {
   /**
-   *
-   * @param key
-   * @param value
-   * @param collectionName
+   * Create a duplicate key error.
+   * @param {string} key - Field name that violates uniqueness
+   * @param {*} value - Duplicate value
+   * @param {string|null} collectionName - Collection name, if available
    */
   constructor(key, value, collectionName = null) {
     const message = `Duplicate key error: ${key} = ${value}`;
@@ -89,9 +80,9 @@ class DuplicateKeyError extends GASDBError {
  */
 class InvalidQueryError extends GASDBError {
   /**
-   *
-   * @param query
-   * @param reason
+   * Create an invalid query error.
+   * @param {Object} query - Invalid query payload
+   * @param {string|null} reason - Optional reason for invalidity
    */
   constructor(query, reason = null) {
     const message = `Invalid query syntax: ${JSON.stringify(query)}`;
@@ -104,9 +95,9 @@ class InvalidQueryError extends GASDBError {
  */
 class LockTimeoutError extends GASDBError {
   /**
-   *
-   * @param resource
-   * @param timeout
+   * Create a lock timeout error.
+   * @param {string} resource - Name of the locked resource
+   * @param {number} timeout - Timeout duration in milliseconds
    */
   constructor(resource, timeout) {
     const message = `Failed to acquire lock for resource: ${resource} within ${timeout}ms`;
@@ -119,10 +110,10 @@ class LockTimeoutError extends GASDBError {
  */
 class FileIOError extends GASDBError {
   /**
-   *
-   * @param operation
-   * @param fileId
-   * @param originalError
+   * Create a file I/O error.
+   * @param {string} operation - Operation being performed
+   * @param {string} fileId - Drive file identifier
+   * @param {Error|null} originalError - Original error, if provided
    */
   constructor(operation, fileId, originalError = null) {
     const message = `File I/O error during ${operation} for file: ${fileId}`;
@@ -135,10 +126,10 @@ class FileIOError extends GASDBError {
  */
 class ConflictError extends GASDBError {
   /**
-   *
-   * @param resource
-   * @param expectedToken
-   * @param actualToken
+   * Create a conflict error.
+   * @param {string} resource - Resource under contention
+   * @param {string} expectedToken - Expected modification token
+   * @param {string} actualToken - Actual modification token
    */
   constructor(resource, expectedToken, actualToken) {
     const message = `Conflict detected for resource: ${resource}`;
@@ -151,9 +142,9 @@ class ConflictError extends GASDBError {
  */
 class MasterIndexError extends GASDBError {
   /**
-   *
-   * @param operation
-   * @param reason
+   * Create a master index error.
+   * @param {string} operation - Operation name
+   * @param {string|null} reason - Optional failure reason
    */
   constructor(operation, reason = null) {
     const message = `Master index error during ${operation}`;
@@ -166,8 +157,8 @@ class MasterIndexError extends GASDBError {
  */
 class CollectionNotFoundError extends GASDBError {
   /**
-   *
-   * @param collectionName
+   * Create a collection not found error.
+   * @param {string} collectionName - Missing collection name
    */
   constructor(collectionName) {
     const message = `Collection not found: ${collectionName}`;
@@ -180,10 +171,10 @@ class CollectionNotFoundError extends GASDBError {
  */
 class ConfigurationError extends GASDBError {
   /**
-   *
-   * @param setting
-   * @param value
-   * @param reason
+   * Create a configuration error.
+   * @param {string} setting - Setting name
+   * @param {*} value - Provided value
+   * @param {string|null} reason - Optional reason
    */
   constructor(setting, value, reason = null) {
     const message = `Invalid configuration for ${setting}: ${value}`;
@@ -196,8 +187,8 @@ class ConfigurationError extends GASDBError {
  */
 class FileNotFoundError extends GASDBError {
   /**
-   *
-   * @param fileId
+   * Create a file not found error.
+   * @param {string} fileId - Missing file identifier
    */
   constructor(fileId) {
     const message = `File not found: ${fileId}`;
@@ -210,9 +201,9 @@ class FileNotFoundError extends GASDBError {
  */
 class PermissionDeniedError extends GASDBError {
   /**
-   *
-   * @param fileId
-   * @param operation
+   * Create a permission denied error.
+   * @param {string} fileId - File identifier
+   * @param {string} operation - Operation name
    */
   constructor(fileId, operation) {
     const message = `Permission denied for ${operation} on file: ${fileId}`;
@@ -225,9 +216,9 @@ class PermissionDeniedError extends GASDBError {
  */
 class QuotaExceededError extends GASDBError {
   /**
-   *
-   * @param operation
-   * @param quotaType
+   * Create a quota exceeded error.
+   * @param {string} operation - Operation name
+   * @param {string} quotaType - Quota category
    */
   constructor(operation, quotaType = 'unknown') {
     const message = `Drive API quota exceeded for ${operation} (${quotaType})`;
@@ -240,10 +231,10 @@ class QuotaExceededError extends GASDBError {
  */
 class InvalidFileFormatError extends GASDBError {
   /**
-   *
-   * @param fileId
-   * @param expectedFormat
-   * @param reason
+   * Create an invalid file format error.
+   * @param {string} fileId - File identifier
+   * @param {string} expectedFormat - Expected file format
+   * @param {string|null} reason - Optional failure reason
    */
   constructor(fileId, expectedFormat, reason = null) {
     const message = `Invalid file format for file: ${fileId}. Expected: ${expectedFormat}`;
@@ -256,10 +247,10 @@ class InvalidFileFormatError extends GASDBError {
  */
 class InvalidArgumentError extends GASDBError {
   /**
-   *
-   * @param argumentName
-   * @param providedValue
-   * @param reason
+   * Create an invalid argument error.
+   * @param {string} argumentName - Argument name
+   * @param {*} providedValue - Value received
+   * @param {string|null} reason - Optional reason
    */
   constructor(argumentName, providedValue = null, reason = null) {
     let message = `Invalid argument: ${argumentName}`;
@@ -275,9 +266,9 @@ class InvalidArgumentError extends GASDBError {
  */
 class OperationError extends GASDBError {
   /**
-   *
-   * @param operation
-   * @param reason
+   * Create an operation error.
+   * @param {string} operation - Operation name
+   * @param {string|null} reason - Optional reason
    */
   constructor(operation, reason = null) {
     const message = `Operation failed: ${operation}`;
@@ -290,9 +281,9 @@ class OperationError extends GASDBError {
  */
 class LockAcquisitionFailureError extends GASDBError {
   /**
-   *
-   * @param resource
-   * @param reason
+   * Create a lock acquisition failure error.
+   * @param {string} resource - Resource name
+   * @param {string|null} reason - Optional reason
    */
   constructor(resource, reason = null) {
     const message = `Failed to acquire lock for resource: ${resource}`;
@@ -305,11 +296,11 @@ class LockAcquisitionFailureError extends GASDBError {
  */
 class ModificationConflictError extends GASDBError {
   /**
-   *
-   * @param resource
-   * @param expectedToken
-   * @param actualToken
-   * @param reason
+   * Create a modification conflict error.
+   * @param {string} resource - Resource name
+   * @param {string} expectedToken - Expected token
+   * @param {string} actualToken - Actual token
+   * @param {string|null} reason - Optional reason
    */
   constructor(resource, expectedToken, actualToken, reason = null) {
     const message = `Modification conflict detected for resource: ${resource}`;
@@ -322,10 +313,10 @@ class ModificationConflictError extends GASDBError {
  */
 class CoordinationTimeoutError extends GASDBError {
   /**
-   *
-   * @param operation
-   * @param timeout
-   * @param reason
+   * Create a coordination timeout error.
+   * @param {string} operation - Operation name
+   * @param {number} timeout - Timeout duration in milliseconds
+   * @param {string|null} reason - Optional reason
    */
   constructor(operation, timeout, reason = null) {
     const message = `Coordination timeout during ${operation} after ${timeout}ms`;

@@ -9,6 +9,7 @@
  */
 class CollectionReadOperations {
     /**
+     * Create a new read operations helper for a collection.
      * @param {Collection} collection - The parent collection instance.
      */
     constructor(collection) {

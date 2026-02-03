@@ -84,6 +84,7 @@ methodName(param) {
 - **Serialisation**: Use `ObjectUtils.serialise()`/`deserialise()`. Classes needing serialisation: implement `toJSON()`, static `fromJSON()`, register in `ObjectUtils._classRegistry`.
 - **Validation**: Use `Validate` class; class-specific validation as private method.
 - **TDD**: Always follow Red-Green-Refactor.
+- **Linting**: `no-magic-numbers` is an error for source code. Tests may use numeric literals for clarity because the rule is disabled for `tests/**/*.js`.
 
 ## Calling Sub-Agents
 

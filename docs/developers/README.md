@@ -33,6 +33,11 @@ Within this repo (`old_tests/`), you can still use `new Database(config)` then c
 - [**Testing Framework**](./Testing_Framework.md) - Comprehensive guide to the GAS DB testing infrastructure, including AssertionUtilities and TestRunner classes
 - [**UpdateEngine**](./UpdateEngine.md) - Engine for applying MongoDB-style update operators to documents
 
+## Coding Standards
+
+- **Linting**: `no-magic-numbers` is enforced as an error for source files to keep configuration and algorithmic values explicit. Tests allow numeric literals for readability because the rule is disabled for `tests/**/*.js`.
+- **Documentation**: JSDoc completeness is enforced as errors; ensure descriptions, param types, and return details are present.
+
 ## Documentation Structure
 
 - **clasp-watch.sh**: Manage continuous deployment with automatic file watching and clasp authentication

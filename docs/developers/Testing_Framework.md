@@ -338,6 +338,12 @@ Test helpers provide reusable setup and cleanup utilities:
 npm run test
 ```
 
+### Run All Tests (Verbose Output)
+
+```bash
+npm run test:verbose
+```
+
 ### Watch Mode
 
 ```bash

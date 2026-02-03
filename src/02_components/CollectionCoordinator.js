@@ -7,18 +7,20 @@
  * @class
  */
 /* exported CollectionCoordinator */
+const BACKOFF_BASE = 2;
+
 /**
  * Orchestrates coordinated collection operations by applying locking,
  * conflict detection, and metadata synchronisation around core CRUD actions.
  */
 class CollectionCoordinator {
+
   /**
    * Create a new CollectionCoordinator
    * @param {Collection} collection - Collection instance to coordinate
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
    * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
-   * @param {JDbLogger} logger - Logger for operation tracing
-   * @param _logger
+   * @param {JDbLogger} _logger - Logger factory override
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
   constructor(collection, masterIndex, config = {}, _logger = JDbLogger) {
@@ -108,7 +110,7 @@ class CollectionCoordinator {
    * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When tokens differ
    */
   validateModificationToken(localToken, remoteToken) {
-    if (remoteToken != null && localToken !== remoteToken) {
+    if (remoteToken !== null && remoteToken !== undefined && localToken !== remoteToken) {
       // Throw a specific modification conflict error when tokens differ
       throw new ErrorHandler.ErrorTypes.MODIFICATION_CONFLICT(
         this._collection.getName(),
@@ -139,7 +141,7 @@ class CollectionCoordinator {
         }
         // retry after backoff
         if (attempt < retryAttempts) {
-          Utilities.sleep(retryDelayMs * Math.pow(2, attempt - 1));
+          Utilities.sleep(retryDelayMs * Math.pow(BACKOFF_BASE, attempt - 1));
         }
       } catch (e) {
         this._logger.error('Unexpected error during lock acquisition attempt', { collection: name, operationId, error: e.message });
