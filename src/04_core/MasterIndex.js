@@ -9,7 +9,9 @@
  */
 /* exported MasterIndex */
 /**
- *
+ * Coordinates collection metadata across script executions by persisting a
+ * master index in ScriptProperties, providing locking, conflict detection, and
+ * modification history tracking.
  */
 class MasterIndex {
   /**

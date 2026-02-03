@@ -11,7 +11,8 @@
  */
 /* exported ObjectUtils */
 /**
- *
+ * Static helper collection for cloning, serialising, and reviving objects
+ * while preserving Dates and registered class instances.
  */
 class ObjectUtils {
   /**

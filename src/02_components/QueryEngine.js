@@ -21,7 +21,9 @@
  */
 /* exported QueryEngine */
 /**
- *
+ * Evaluates MongoDB-style query documents against in-memory collections,
+ * handling operator validation, dot-notation traversal, and logical
+ * composition.
  */
 class QueryEngine {
   /**

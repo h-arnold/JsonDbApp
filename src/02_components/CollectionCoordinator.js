@@ -8,7 +8,8 @@
  */
 /* exported CollectionCoordinator */
 /**
- *
+ * Orchestrates coordinated collection operations by applying locking,
+ * conflict detection, and metadata synchronisation around core CRUD actions.
  */
 class CollectionCoordinator {
   /**

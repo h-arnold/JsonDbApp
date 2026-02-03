@@ -13,7 +13,8 @@
  */
 /* exported FileService */
 /**
- *
+ * High-level Drive service that layers caching, logging, and validation over
+ * FileOperations to optimise read/write access for collection persistence.
  */
 class FileService {
   /**

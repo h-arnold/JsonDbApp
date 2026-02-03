@@ -12,7 +12,8 @@
  */
 /* exported CollectionMetadata */
 /**
- *
+ * Represents persisted metadata for a collection, providing validated access
+ * to identifiers, document counts, timestamps, and lock information.
  */
 class CollectionMetadata {
   /**

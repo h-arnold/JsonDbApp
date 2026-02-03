@@ -26,7 +26,8 @@
  */
 /* exported DbLockService */
 /**
- *
+ * Wraps Google Apps Script LockService to provide validated, logged lock
+ * acquisition and release for coordinating critical sections across executions.
  */
 class DbLockService {
   /**

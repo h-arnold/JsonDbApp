@@ -19,7 +19,8 @@
  */
 /* exported ComparisonUtils */
 /**
- *
+ * Utility namespace encapsulating comparison logic shared across query and
+ * update components, including equality, ordering, and operator evaluation.
  */
 class ComparisonUtils {
   /** @type {string[]} */

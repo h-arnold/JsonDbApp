@@ -5,7 +5,11 @@
  */
 /* exported UpdateEngine */
 /**
- *
+ * UpdateEngine applies MongoDB-style update operators to plain JavaScript
+ * documents.
+ * @remarks This component is stateless; operator handlers are configured in
+ * the constructor and leverage shared utilities for validation and equality
+ * semantics.
  */
 class UpdateEngine {
   /**
@@ -25,20 +29,29 @@ class UpdateEngine {
       '$push': this._applyPush.bind(this),
       '$pull': this._applyPull.bind(this),
       '$addToSet': this._applyAddToSet.bind(this)
-    };
-  }
-
-  /**
-   * Apply MongoDB-style update operators to a document
-   * @param {Object} document - The document to modify
+     /**
+      * Determine whether two values should be treated as equal for
+      * addToSet uniqueness checks.
+      * @param {*} candidateExisting - Existing array element.
+      * @param {*} candidateNew - Value being considered for insertion.
+      * @returns {boolean} True when the values are equivalent.
+      */
+     const eq = (candidateExisting, candidateNew) => {
    * @param {Object} updateOps - Update operations object
-   * @returns {Object} Updated document
+         if (ComparisonUtils.equals(candidateExisting, candidateNew, { arrayContainsScalar: false })) return true;
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When operators are invalid
    */
   applyOperators(document, updateOps) {
-    this._validateApplyOperatorsInputs(document, updateOps);
+       if (
+         candidateExisting &&
+         candidateNew &&
+         typeof candidateExisting === 'object' &&
+         typeof candidateNew === 'object' &&
+         !(candidateExisting instanceof Date) &&
+         !(candidateNew instanceof Date)
+       ) {
     this._validateUpdateOperationsNotEmpty(updateOps);
-    
+           return ObjectUtils.deepEqual(candidateExisting, candidateNew);
     // Create a deep copy of the document to avoid modifying the original
     let clonedDoc = ObjectUtils.deepClone(document);
     
@@ -47,23 +60,23 @@ class UpdateEngine {
       if (!this._operatorHandlers[operator]) {
         throw new ErrorHandler.ErrorTypes.INVALID_QUERY('operator', operator, `Unsupported update operator: ${operator}`);
       }
-      
-      this._logger.debug(`Applying operator ${operator}`, { fields: Object.keys(updateOps[operator] || {}) });
-      clonedDoc = this._operatorHandlers[operator](clonedDoc, updateOps[operator]);
-    }
-    
+     /**
+      * Append a value to the target array when it is not already present.
+      * @param {*} candidate - Value being added to the array field.
+      */
+     const addOne = candidate => {
     return clonedDoc;
   }
-
+         ? current.map((item, idx) => ({ idx, equals: eq(item, candidate), item }))
   // Private operator handlers
   
   /**
    * Apply $set operator - sets field values
    * @param {Object} document - Document to modify
-   * @param {Object} ops - Set operations
-   * @returns {Object} Modified document
+         if (!Array.isArray(current)) {
+           this._setFieldValue(document, fieldPath, [candidate]);
    */
-  _applySet(document, ops) {
+           current.push(candidate);
     this._validateOperationsNotEmpty(ops, '$set');
     
     for (const fieldPath in ops) {
@@ -366,19 +379,28 @@ _isPlainObject(val) {
    // 1) Try the centralised comparator (handles Dates, arrays, and plain objects).
    // 2) If that does not report equality, fall back to deepEqual for non-Date objects.
      /**
-      *
-      * @param a
-      * @param b
+      * Determine whether two values should be considered equal for addToSet
+      * semantics.
+      * @param {*} existingValue - Existing array entry under comparison.
+      * @param {*} candidateValue - Value being proposed for insertion.
+      * @returns {boolean} True when both values are semantically equal.
       */
-     const eq = (a, b) => {
+     const eq = (existingValue, candidateValue) => {
        try {
-         if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
+         if (ComparisonUtils.equals(existingValue, candidateValue, { arrayContainsScalar: false })) return true;
        } catch {
          // ignore and try fallback
        }
-       if (a && b && typeof a === 'object' && typeof b === 'object' && !(a instanceof Date) && !(b instanceof Date)) {
+       if (
+         existingValue &&
+         candidateValue &&
+         typeof existingValue === 'object' &&
+         typeof candidateValue === 'object' &&
+         !(existingValue instanceof Date) &&
+         !(candidateValue instanceof Date)
+       ) {
          try {
-           return ObjectUtils.deepEqual(a, b);
+           return ObjectUtils.deepEqual(existingValue, candidateValue);
          } catch {
            return false;
          }
@@ -388,22 +410,23 @@ _isPlainObject(val) {
 
    // Helper: append a value only if not present in `current` using the comparator above.
      /**
-      *
-      * @param val
+      * Append a candidate value to the target field when it is not already
+      * present.
+      * @param {*} candidateValue - Value being added to the array field.
       */
-     const addOne = val => {
+     const addOne = candidateValue => {
        const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
        const perItem = Array.isArray(current)
-         ? current.map((item, idx) => ({ idx, equals: eq(item, val), item }))
+         ? current.map((item, idx) => ({ idx, equals: eq(item, candidateValue), item }))
          : [];
        const exists = Array.isArray(current) && perItem.some(e => e.equals);
   this._logger.debug('AddToSet duplicate check', { fieldPath, exists, currentLength: Array.isArray(current) ? current.length : 0 });
-  this._logger.debug('AddToSet compare details', { candidate: val, sample: snapshot, comparisons: perItem });
+  this._logger.debug('AddToSet compare details', { candidate: candidateValue, sample: snapshot, comparisons: perItem });
        if (!exists) {
-         current.push(val);
-         this._logger.debug('AddToSet appended value', { fieldPath, appended: val });
+         current.push(candidateValue);
+         this._logger.debug('AddToSet appended value', { fieldPath, appended: candidateValue });
        } else {
-         this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: val });
+         this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: candidateValue });
        }
      };
 

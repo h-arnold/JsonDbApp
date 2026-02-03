@@ -3,7 +3,9 @@
  */
 /* exported CollectionReadOperations */
 /**
- *
+ * Encapsulates all read-only operations for a {@link Collection}, providing
+ * MongoDB-like query semantics via the underlying DocumentOperations and
+ * QueryEngine.
  */
 class CollectionReadOperations {
     /**

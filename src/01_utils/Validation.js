@@ -6,7 +6,8 @@
  */
 /* exported Validate */
 /**
- *
+ * Centralised validation helper exposing common argument checks that throw
+ * consistent InvalidArgumentError instances across the codebase.
  */
 class Validate {
   

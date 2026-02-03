@@ -152,33 +152,33 @@ class JDbLogger {
   static createComponentLogger(component) {
     return {
       /**
-       *
-       * @param message
-       * @param context
+       * Log an error message for this component.
+       * @param {string} message - Message to record.
+       * @param {Object|null} [context=null] - Optional structured context.
        */
       error: (message, context = null) => {
         JDbLogger.error(`[${component}] ${message}`, context);
       },
       /**
-       *
-       * @param message
-       * @param context
+       * Log a warning for this component.
+       * @param {string} message - Message to record.
+       * @param {Object|null} [context=null] - Optional structured context.
        */
       warn: (message, context = null) => {
         JDbLogger.warn(`[${component}] ${message}`, context);
       },
       /**
-       *
-       * @param message
-       * @param context
+       * Log informational details for this component.
+       * @param {string} message - Message to record.
+       * @param {Object|null} [context=null] - Optional structured context.
        */
       info: (message, context = null) => {
         JDbLogger.info(`[${component}] ${message}`, context);
       },
       /**
-       *
-       * @param message
-       * @param context
+       * Log verbose debug details for this component.
+       * @param {string} message - Message to record.
+       * @param {Object|null} [context=null] - Optional structured context.
        */
       debug: (message, context = null) => {
         JDbLogger.debug(`[${component}] ${message}`, context);

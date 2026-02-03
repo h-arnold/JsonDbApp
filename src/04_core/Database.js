@@ -11,7 +11,9 @@
 /* global PropertiesService, DriveApp, Collection, MasterIndex, FileOperations, FileService, JDbLogger, Validate */
 
 /**
- *
+ * Core facade responsible for database lifecycle management, including
+ * coordinating the MasterIndex, provisioning collections, and mediating
+ * persistence services for Google Apps Script storage.
  */
 class Database {
   
