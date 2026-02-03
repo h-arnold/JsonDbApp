@@ -2,6 +2,9 @@
  * CollectionReadOperations.js - Handles all read operations for a collection.
  */
 /* exported CollectionReadOperations */
+/**
+ *
+ */
 class CollectionReadOperations {
     /**
      * @param {Collection} collection - The parent collection instance.

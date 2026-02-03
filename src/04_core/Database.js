@@ -10,6 +10,9 @@
 /* exported Database */
 /* global PropertiesService, DriveApp, Collection, MasterIndex, FileOperations, FileService, JDbLogger, Validate */
 
+/**
+ *
+ */
 class Database {
   
   /**

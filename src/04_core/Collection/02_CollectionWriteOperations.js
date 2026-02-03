@@ -2,6 +2,9 @@
  * CollectionWriteOperations.js - Handles all write operations for a collection.
  */
 /* exported CollectionWriteOperations */
+/**
+ *
+ */
 class CollectionWriteOperations {
     /**
      * @param {Collection} collection - The parent collection instance.

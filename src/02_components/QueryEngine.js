@@ -20,6 +20,9 @@
  * Supports MongoDB-compatible query syntax for basic operations
  */
 /* exported QueryEngine */
+/**
+ *
+ */
 class QueryEngine {
   /**
    * Creates a new QueryEngine instance
@@ -327,6 +330,7 @@ class QueryEngine {
   /**
    * Find all operators used in query
    * @param {*} obj - Object to search
+   * @param operators
    * @returns {Array} Array of operator strings
    * @private
    */

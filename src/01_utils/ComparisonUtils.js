@@ -18,6 +18,9 @@
  *    is supported; against object candidate returns false (documented simplification).
  */
 /* exported ComparisonUtils */
+/**
+ *
+ */
 class ComparisonUtils {
   /** @type {string[]} */
   static get SUPPORTED_OPERATORS() { return ['$eq', '$gt', '$lt']; }

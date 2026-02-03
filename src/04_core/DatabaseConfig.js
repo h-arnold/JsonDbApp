@@ -7,6 +7,9 @@
  * @class DatabaseConfig
  */
 /* exported DatabaseConfig */
+/**
+ *
+ */
 class DatabaseConfig {
   
   /**

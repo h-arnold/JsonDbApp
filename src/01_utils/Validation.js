@@ -5,6 +5,9 @@
  * Throws standardised ErrorHandler.ErrorTypes.INVALID_ARGUMENT exceptions for consistency.
  */
 /* exported Validate */
+/**
+ *
+ */
 class Validate {
   
   /**

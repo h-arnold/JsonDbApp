@@ -14,6 +14,9 @@
  * - DocumentOperations: Performs low-level document manipulation.
  */
 /* exported Collection */
+/**
+ *
+ */
 class Collection {
     /**
      * Creates a new Collection instance
@@ -260,6 +263,9 @@ class Collection {
     aggregate(pipeline) { return this._readOps.aggregate(pipeline); }
 
     // --- Core Collection Operations ---
+    /**
+     *
+     */
     save() {
         return this._coordinator.coordinate("save", () => {
             this._ensureLoaded();
@@ -271,13 +277,40 @@ class Collection {
     }
 
     // --- Getters ---
+    /**
+     *
+     */
     getMetadata() { this._ensureLoaded(); return this._metadata.toJSON(); }
+    /**
+     *
+     */
     getName() { return this._name; }
+    /**
+     *
+     */
     isDirty() { return this._dirty; }
+    /**
+     *
+     */
     getDriveFileId() { return this._driveFileId; }
+    /**
+     *
+     */
     getDatabase() { return this._database; }
+    /**
+     *
+     */
     getFileService() { return this._fileService; }
+    /**
+     *
+     */
     getLogger() { return this._logger; }
+    /**
+     *
+     */
     get name() { return this._name; }
+    /**
+     *
+     */
     get driveFileId() { return this._driveFileId; }
 }

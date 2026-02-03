@@ -8,6 +8,9 @@
  * @class MasterIndex
  */
 /* exported MasterIndex */
+/**
+ *
+ */
 class MasterIndex {
   /**
    * Create a new MasterIndex instance

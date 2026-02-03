@@ -4,6 +4,9 @@
  * Section 7: Update Engine Implementation (Green Phase)
  */
 /* exported UpdateEngine */
+/**
+ *
+ */
 class UpdateEngine {
   /**
    * Creates a new UpdateEngine instance
@@ -356,12 +359,17 @@ _isPlainObject(val) {
     this._validateOperationsNotEmpty(ops, '$addToSet');
     
     for (const fieldPath in ops) {
-     let current = this._getFieldValue(document, fieldPath);
+     const current = this._getFieldValue(document, fieldPath);
      const valueOrModifier = ops[fieldPath];
 
    // Robust equality comparator used for uniqueness checks:
    // 1) Try the centralised comparator (handles Dates, arrays, and plain objects).
    // 2) If that does not report equality, fall back to deepEqual for non-Date objects.
+     /**
+      *
+      * @param a
+      * @param b
+      */
      const eq = (a, b) => {
        try {
          if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
@@ -379,6 +387,10 @@ _isPlainObject(val) {
      };
 
    // Helper: append a value only if not present in `current` using the comparator above.
+     /**
+      *
+      * @param val
+      */
      const addOne = val => {
        const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
        const perItem = Array.isArray(current)

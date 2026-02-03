@@ -151,15 +151,35 @@ class JDbLogger {
    */
   static createComponentLogger(component) {
     return {
+      /**
+       *
+       * @param message
+       * @param context
+       */
       error: (message, context = null) => {
         JDbLogger.error(`[${component}] ${message}`, context);
       },
+      /**
+       *
+       * @param message
+       * @param context
+       */
       warn: (message, context = null) => {
         JDbLogger.warn(`[${component}] ${message}`, context);
       },
+      /**
+       *
+       * @param message
+       * @param context
+       */
       info: (message, context = null) => {
         JDbLogger.info(`[${component}] ${message}`, context);
       },
+      /**
+       *
+       * @param message
+       * @param context
+       */
       debug: (message, context = null) => {
         JDbLogger.debug(`[${component}] ${message}`, context);
       }

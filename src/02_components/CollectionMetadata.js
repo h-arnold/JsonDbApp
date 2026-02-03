@@ -11,6 +11,9 @@
  * - lockStatus: Lock state information
  */
 /* exported CollectionMetadata */
+/**
+ *
+ */
 class CollectionMetadata {
   /**
    * Create CollectionMetadata instance
