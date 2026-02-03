@@ -1,4 +1,4 @@
-/* global Database, MasterIndex, DriveApp, ErrorHandler */
+/* global Database, MasterIndex, DriveApp, ErrorHandler, InvalidFileFormatError */
 
 /**
  * Database Recover Tests
@@ -66,7 +66,13 @@ describe('Database recoverDatabase()', () => {
     const database = new Database(config);
 
     // Act & Assert - Recovery should reject invalid structures
-    expect(() => database.recoverDatabase(invalidBackupId)).toThrowError(/Invalid backup file structure/);
+    try {
+      database.recoverDatabase(invalidBackupId);
+      throw new Error('Expected InvalidFileFormatError for invalid backup structure');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toMatch(/Invalid backup file structure/);
+    }
   });
 
   it('should validate backup file identifier arguments', () => {

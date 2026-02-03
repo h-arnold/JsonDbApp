@@ -528,7 +528,7 @@ npx eslint 'src/**/*.js' --ext .js
 
 ### Step 3: Run Tests
 ```bash
-npm run test:vitest
+npm run test
 ```
 - All tests must pass
 - Check for any test failures or skipped tests

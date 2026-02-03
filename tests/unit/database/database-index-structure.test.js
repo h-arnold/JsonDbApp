@@ -1,4 +1,4 @@
-/* global MasterIndex */
+/* global MasterIndex, InvalidFileFormatError */
 
 /**
  * Database Index Structure Tests
@@ -208,7 +208,13 @@ describe('Database Index Structure', () => {
     database._fileService.writeFile(database.indexFileId, 'not-an-object');
 
     // Act & Assert - Load should surface a descriptive error
-    expect(() => database.loadIndex()).toThrowError('Index file contains invalid data structure');
+    try {
+      database.loadIndex();
+      throw new Error('Expected InvalidFileFormatError when index data is primitive');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file contains invalid data structure');
+    }
   });
 
   it('throws an error when index data is an array', () => {
@@ -219,7 +225,13 @@ describe('Database Index Structure', () => {
     database._fileService.writeFile(database.indexFileId, []);
 
     // Act & Assert - Loading should treat the array as structural corruption
-    expect(() => database.loadIndex()).toThrowError('Index file contains invalid data structure');
+    try {
+      database.loadIndex();
+      throw new Error('Expected InvalidFileFormatError when index data is array');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file contains invalid data structure');
+    }
   });
 
   it('throws a TypeError when collections is not an object', () => {
@@ -236,8 +248,13 @@ describe('Database Index Structure', () => {
     const loadMalformedIndex = database.loadIndex.bind(database);
 
     // Act & Assert - Loading should fail with a TypeError
-    expect(loadMalformedIndex).toThrowError(TypeError);
-    expect(loadMalformedIndex).toThrowError('Index file collections property is corrupted');
+    try {
+      loadMalformedIndex();
+      throw new Error('Expected InvalidFileFormatError when collections is not an object');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file collections property is corrupted');
+    }
   });
 
   it('throws a TypeError when collections is an array', () => {
@@ -254,7 +271,12 @@ describe('Database Index Structure', () => {
     const loadMalformedIndex = database.loadIndex.bind(database);
 
     // Act & Assert - Array payload should raise the same corruption error
-    expect(loadMalformedIndex).toThrowError(TypeError);
-    expect(loadMalformedIndex).toThrowError('Index file collections property is corrupted');
+    try {
+      loadMalformedIndex();
+      throw new Error('Expected InvalidFileFormatError when collections is an array');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file collections property is corrupted');
+    }
   });
 });

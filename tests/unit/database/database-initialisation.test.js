@@ -1,4 +1,4 @@
-/* global Database, DatabaseConfig, MasterIndex, PropertiesService */
+/* global Database, DatabaseConfig, MasterIndex, PropertiesService, MasterIndexError */
 
 /**
  * Database Initialisation Tests
@@ -100,7 +100,13 @@ describe('Database Initialisation', () => {
       const database = new Database(config);
 
       // Act & Assert - Initialisation should fail with a descriptive error
-      expect(() => database.initialise()).toThrowError(/MasterIndex not found/);
+      try {
+        database.initialise();
+        throw new Error('Expected MasterIndexError when MasterIndex property is missing');
+      } catch (error) {
+        expect(error).toBeInstanceOf(MasterIndexError);
+        expect(error.message).toMatch(/MasterIndex not found/);
+      }
     });
 
     it('should throw when the MasterIndex property contains invalid JSON', () => {
@@ -111,7 +117,13 @@ describe('Database Initialisation', () => {
       const database = new Database(config);
 
       // Act & Assert - Initialisation should surface the JSON parsing failure
-      expect(() => database.initialise()).toThrowError(/Master index error during load/);
+      try {
+        database.initialise();
+        throw new Error('Expected MasterIndexError when MasterIndex contains invalid JSON');
+      } catch (error) {
+        expect(error).toBeInstanceOf(MasterIndexError);
+        expect(error.message).toMatch(/Master index error during load/);
+      }
     });
 
     it('should persist sanitised collection names when sanitisation is enabled', () => {

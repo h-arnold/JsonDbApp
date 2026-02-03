@@ -316,13 +316,13 @@ Explicitly creates a new collection.
 Loads and validates Drive-based index file data.
 
 - **Returns:** `Object` - Index file data with structure validation
-- **Throws:** `Error` for corrupted files or when database not initialised
+- **Throws:** `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT` for corrupted or structurally invalid payloads, `ErrorHandler.ErrorTypes.FILE_IO_ERROR` when Drive reads fail
 
 **Validation & Repair:**
 
-- `_normaliseIndexData()` ensures the parsed value is an object and applies default envelopes
-- `_assertIndexObject()` rejects malformed payloads, including top-level arrays
-- `_ensureCollectionsMap()` guarantees `collections` is a map and seeds missing entries
+- `_normaliseIndexData()` ensures the parsed value is an object, applying default envelopes and surfacing `INVALID_FILE_FORMAT` errors when validation fails
+- `_assertIndexObject()` rejects malformed payloads (including top-level arrays) using `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT`
+- `_ensureCollectionsMap()` guarantees `collections` is a map, repairing missing entries and raising `INVALID_FILE_FORMAT` when an existing value has the wrong type
 - `_ensureLastUpdated()` backfills timestamps when absent
 
 These helpers are also used by index mutation utilities so that validation and repair logic remains centralised. Before reading the Drive index file, `loadIndex()` calls `ensureIndexFile()` so the file is only created or touched when backups are enabled (`backupOnInitialise: true`) or when an explicit index operation needs it.
@@ -401,7 +401,7 @@ Guarantees the index payload has an object shape.
 
 - **Parameters:**
   - `indexCandidate` (any): Value from `_normaliseIndexData()`
-- **Throws:** `Error` when the payload is not a plain object (rejects arrays, primitives, `null`, dates, etc.)
+- **Throws:** `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT` when the payload is not a plain object (rejects arrays, primitives, `null`, dates, etc.)
 - **Behaviour:**
   - Rejects unsupported payloads early so Drive corruption surfaces immediately
   - Returns the candidate unchanged when it is a plain object
@@ -413,7 +413,8 @@ Ensures `collections` exists and has the expected type.
 - **Parameters:**
   - `indexData` (Object): Index data returned by `_assertIndexObject()`
 - **Behaviour:**
-  - Replaces missing or invalid `collections` values with a new object
+  - Repairs a missing `collections` property by seeding an empty map
+  - Throws `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT` when an existing `collections` value is not an object map
   - Preserves valid maps so timestamp comparisons remain stable
 
 #### `_ensureLastUpdated(indexData)`
