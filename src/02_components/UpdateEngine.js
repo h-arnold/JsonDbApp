@@ -5,11 +5,7 @@
  */
 /* exported UpdateEngine */
 /**
- * UpdateEngine applies MongoDB-style update operators to plain JavaScript
- * documents.
- * @remarks This component is stateless; operator handlers are configured in
- * the constructor and leverage shared utilities for validation and equality
- * semantics.
+ *
  */
 class UpdateEngine {
   /**
@@ -29,29 +25,20 @@ class UpdateEngine {
       '$push': this._applyPush.bind(this),
       '$pull': this._applyPull.bind(this),
       '$addToSet': this._applyAddToSet.bind(this)
-     /**
-      * Determine whether two values should be treated as equal for
-      * addToSet uniqueness checks.
-      * @param {*} candidateExisting - Existing array element.
-      * @param {*} candidateNew - Value being considered for insertion.
-      * @returns {boolean} True when the values are equivalent.
-      */
-     const eq = (candidateExisting, candidateNew) => {
+    };
+  }
+
+  /**
+   * Apply MongoDB-style update operators to a document
+   * @param {Object} document - The document to modify
    * @param {Object} updateOps - Update operations object
-         if (ComparisonUtils.equals(candidateExisting, candidateNew, { arrayContainsScalar: false })) return true;
+   * @returns {Object} Updated document
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When operators are invalid
    */
   applyOperators(document, updateOps) {
-       if (
-         candidateExisting &&
-         candidateNew &&
-         typeof candidateExisting === 'object' &&
-         typeof candidateNew === 'object' &&
-         !(candidateExisting instanceof Date) &&
-         !(candidateNew instanceof Date)
-       ) {
+    this._validateApplyOperatorsInputs(document, updateOps);
     this._validateUpdateOperationsNotEmpty(updateOps);
-           return ObjectUtils.deepEqual(candidateExisting, candidateNew);
+    
     // Create a deep copy of the document to avoid modifying the original
     let clonedDoc = ObjectUtils.deepClone(document);
     
@@ -60,23 +47,23 @@ class UpdateEngine {
       if (!this._operatorHandlers[operator]) {
         throw new ErrorHandler.ErrorTypes.INVALID_QUERY('operator', operator, `Unsupported update operator: ${operator}`);
       }
-     /**
-      * Append a value to the target array when it is not already present.
-      * @param {*} candidate - Value being added to the array field.
-      */
-     const addOne = candidate => {
+      
+      this._logger.debug(`Applying operator ${operator}`, { fields: Object.keys(updateOps[operator] || {}) });
+      clonedDoc = this._operatorHandlers[operator](clonedDoc, updateOps[operator]);
+    }
+    
     return clonedDoc;
   }
-         ? current.map((item, idx) => ({ idx, equals: eq(item, candidate), item }))
+
   // Private operator handlers
   
   /**
    * Apply $set operator - sets field values
    * @param {Object} document - Document to modify
-         if (!Array.isArray(current)) {
-           this._setFieldValue(document, fieldPath, [candidate]);
+   * @param {Object} ops - Set operations
+   * @returns {Object} Modified document
    */
-           current.push(candidate);
+  _applySet(document, ops) {
     this._validateOperationsNotEmpty(ops, '$set');
     
     for (const fieldPath in ops) {
@@ -379,28 +366,19 @@ _isPlainObject(val) {
    // 1) Try the centralised comparator (handles Dates, arrays, and plain objects).
    // 2) If that does not report equality, fall back to deepEqual for non-Date objects.
      /**
-      * Determine whether two values should be considered equal for addToSet
-      * semantics.
-      * @param {*} existingValue - Existing array entry under comparison.
-      * @param {*} candidateValue - Value being proposed for insertion.
-      * @returns {boolean} True when both values are semantically equal.
+      *
+      * @param a
+      * @param b
       */
-     const eq = (existingValue, candidateValue) => {
+     const eq = (a, b) => {
        try {
-         if (ComparisonUtils.equals(existingValue, candidateValue, { arrayContainsScalar: false })) return true;
+         if (ComparisonUtils.equals(a, b, { arrayContainsScalar: false })) return true;
        } catch {
          // ignore and try fallback
        }
-       if (
-         existingValue &&
-         candidateValue &&
-         typeof existingValue === 'object' &&
-         typeof candidateValue === 'object' &&
-         !(existingValue instanceof Date) &&
-         !(candidateValue instanceof Date)
-       ) {
+       if (a && b && typeof a === 'object' && typeof b === 'object' && !(a instanceof Date) && !(b instanceof Date)) {
          try {
-           return ObjectUtils.deepEqual(existingValue, candidateValue);
+           return ObjectUtils.deepEqual(a, b);
          } catch {
            return false;
          }
@@ -410,23 +388,22 @@ _isPlainObject(val) {
 
    // Helper: append a value only if not present in `current` using the comparator above.
      /**
-      * Append a candidate value to the target field when it is not already
-      * present.
-      * @param {*} candidateValue - Value being added to the array field.
+      *
+      * @param val
       */
-     const addOne = candidateValue => {
+     const addOne = val => {
        const snapshot = Array.isArray(current) ? current.slice(0, 5) : []; // limit to first 5 for log
        const perItem = Array.isArray(current)
-         ? current.map((item, idx) => ({ idx, equals: eq(item, candidateValue), item }))
+         ? current.map((item, idx) => ({ idx, equals: eq(item, val), item }))
          : [];
        const exists = Array.isArray(current) && perItem.some(e => e.equals);
   this._logger.debug('AddToSet duplicate check', { fieldPath, exists, currentLength: Array.isArray(current) ? current.length : 0 });
-  this._logger.debug('AddToSet compare details', { candidate: candidateValue, sample: snapshot, comparisons: perItem });
+  this._logger.debug('AddToSet compare details', { candidate: val, sample: snapshot, comparisons: perItem });
        if (!exists) {
-         current.push(candidateValue);
-         this._logger.debug('AddToSet appended value', { fieldPath, appended: candidateValue });
+         current.push(val);
+         this._logger.debug('AddToSet appended value', { fieldPath, appended: val });
        } else {
-         this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: candidateValue });
+         this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: val });
        }
      };
 
@@ -523,7 +500,7 @@ _isPlainObject(val) {
 
     // Final assignment: detect numeric tail for arrays
     const last = parts[parts.length - 1];
-    if (Array.isArray(current) && /^\d+$/.test(last)) {
+    if (Array.isArray(current) && /^\\d+$/.test(last)) {
       current[Number(last)] = value;
     } else {
       current[last] = value;
@@ -553,7 +530,7 @@ _isPlainObject(val) {
     }
 
     const last = parts[parts.length - 1];
-    if (Array.isArray(current) && /^\d+$/.test(last)) {
+    if (Array.isArray(current) && /^\\d+$/.test(last)) {
       // Deleting an array index leaves undefined but preserves length
       delete current[Number(last)];
     } else {

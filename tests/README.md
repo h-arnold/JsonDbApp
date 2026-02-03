@@ -16,6 +16,6 @@ Use `npm run test:vitest` from the repository root; it uses the configuration un
 
 ## Notes
 
-- The legacy framework now lives under `old_tests/` and is left untouched until we refactor each suite.
+- The legacy framework remains under `old_tests/`, but the Vitest suites do not depend on it.
 - The mock storage and properties files are kept inside `tests/.gas-drive` and `tests/.gas-script-properties.json` so the sandbox is isolated from the rest of the repo.
 - `MasterIndex` state is persisted inside `tests/.gas-script-properties.json` (via `PropertiesService`); every test deletes the keys it creates so the helper data is cleaned up between runs.
