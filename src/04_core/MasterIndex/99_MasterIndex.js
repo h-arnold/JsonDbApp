@@ -1,14 +1,13 @@
 /**
- * 99_MasterIndex.js - MasterIndex facade coordinating metadata and history.
+ * 99_MasterIndex.js - MasterIndex facade coordinating metadata operations.
  *
  * Provides the primary interface for working with the ScriptProperties-backed master index.
- * Delegates metadata normalisation and history management to specialised helpers while
- * retaining locking, conflict detection, and persistence responsibilities.
+ * Delegates metadata normalisation to specialised helpers while retaining locking,
+ * conflict detection, and persistence responsibilities.
  */
 /* exported MasterIndex */
-/* global MasterIndexMetadataNormaliser, MasterIndexHistoryManager, CollectionMetadata, DbLockService,
-          JDbLogger, Validate, ObjectUtils, PropertiesService, ErrorHandler,
-          DEFAULT_MODIFICATION_HISTORY_LIMIT */
+/* global MasterIndexMetadataNormaliser, CollectionMetadata, DbLockService,
+          JDbLogger, Validate, ObjectUtils, PropertiesService, ErrorHandler */
 
 // TODO: Move this to Database Config.
 const DEFAULT_LOCK_TIMEOUT = 30000;
@@ -30,8 +29,6 @@ class MasterIndex {
     this._logger = JDbLogger.createComponentLogger('MasterIndex');
     this._dbLockService = new DbLockService({ defaultTimeout: this._config.lockTimeout });
     this._metadataNormaliser = new MasterIndexMetadataNormaliser(this);
-    this._historyManager = new MasterIndexHistoryManager(this);
-
     this._loadFromScriptProperties();
     this._initialiseDataState();
   }
@@ -164,51 +161,112 @@ class MasterIndex {
    * Update collection metadata
    * @param {string} name - Collection name
    * @param {Object} updates - Metadata updates
+   * @returns {CollectionMetadata} Updated collection metadata
    */
   updateCollectionMetadata(name, updates) {
     Validate.nonEmptyString(name, 'name');
     Validate.object(updates, 'updates');
 
-    return this._withScriptLock(() => {
-      const collection = this.getCollection(name);
-      if (!collection) {
-        throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
-      }
+    return this._withScriptLock(() => this._updateCollectionMetadataInternal(name, updates));
+  }
 
-      const updateKeys = Object.keys(updates);
-      for (const key of updateKeys) {
-        const value = updates[key];
-        switch (key) {
-          case 'documentCount':
-            collection.setDocumentCount(value);
-            break;
-          case 'modificationToken':
-            collection.setModificationToken(value);
-            break;
-          case 'lockStatus':
-            collection.setLockStatus(value);
-            break;
-          case 'lastUpdated':
-            const date = value instanceof Date ? value : new Date(value);
-            if (isNaN(date.getTime())) {
-              throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lastUpdated', value, 'lastUpdated must be a valid date');
-            }
-            collection.lastUpdated = date;
-            break;
-          default:
-            collection[key] = value;
-            break;
-        }
-      }
+  /**
+   * Internal collection metadata update logic executed under a ScriptLock.
+   * @param {string} name - Collection name
+   * @param {Object} updates - Metadata updates
+   * @returns {CollectionMetadata} Updated collection metadata
+   * @private
+   */
+  _updateCollectionMetadataInternal(name, updates) {
+    const collection = this.getCollection(name);
+    if (!collection) {
+      throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
+    }
 
-      this._data.collections[name] = collection;
-      const timestamp = this._getCurrentTimestamp();
-      this._touchIndex(timestamp);
-      this._addToModificationHistory(name, 'UPDATE_METADATA', updates, timestamp);
-      this.save(undefined, timestamp);
-      this._logger.info('Collection metadata updated.', { collection: name, updates });
-      return collection;
-    });
+    const updateKeys = Object.keys(updates);
+    for (const key of updateKeys) {
+      this._applyCollectionUpdate(collection, key, updates[key]);
+    }
+
+    this._data.collections[name] = collection;
+    const timestamp = this._getCurrentTimestamp();
+    this._touchIndex(timestamp);
+    this.save(undefined, timestamp);
+    this._logger.info('Collection metadata updated.', { collection: name, updates });
+    return collection;
+  }
+
+  /**
+   * Apply a single metadata update to a collection.
+   * @param {CollectionMetadata} collection - Target collection metadata
+   * @param {string} key - Metadata field name
+   * @param {*} value - Field value to apply
+   * @returns {void}
+   * @private
+   */
+  _applyCollectionUpdate(collection, key, value) {
+    const handlers = {
+      documentCount: this._applyDocumentCountUpdate,
+      modificationToken: this._applyModificationTokenUpdate,
+      lockStatus: this._applyLockStatusUpdate,
+      lastUpdated: this._applyLastUpdatedUpdate
+    };
+
+    const handler = handlers[key];
+    if (handler) {
+      handler.call(this, collection, value);
+      return;
+    }
+
+    collection[key] = value;
+  }
+
+  /**
+   * Apply a document count update to a collection.
+   * @param {CollectionMetadata} collection - Target collection metadata
+   * @param {*} value - Document count input
+   * @returns {void}
+   * @private
+   */
+  _applyDocumentCountUpdate(collection, value) {
+    collection.setDocumentCount(value);
+  }
+
+  /**
+   * Apply a modification token update to a collection.
+   * @param {CollectionMetadata} collection - Target collection metadata
+   * @param {*} value - Modification token input
+   * @returns {void}
+   * @private
+   */
+  _applyModificationTokenUpdate(collection, value) {
+    collection.setModificationToken(value);
+  }
+
+  /**
+   * Apply a lock status update to a collection.
+   * @param {CollectionMetadata} collection - Target collection metadata
+   * @param {*} value - Lock status input
+   * @returns {void}
+   * @private
+   */
+  _applyLockStatusUpdate(collection, value) {
+    collection.setLockStatus(value);
+  }
+
+  /**
+   * Apply a lastUpdated update to a collection.
+   * @param {CollectionMetadata} collection - Target collection metadata
+   * @param {*} value - Date input
+   * @returns {void}
+   * @private
+   */
+  _applyLastUpdatedUpdate(collection, value) {
+    const date = value instanceof Date ? value : new Date(value);
+    if (isNaN(date.getTime())) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('lastUpdated', value, 'lastUpdated must be a valid date');
+    }
+    collection.lastUpdated = date;
   }
 
   /**
@@ -230,7 +288,6 @@ class MasterIndex {
         delete this._data.collections[name];
         const timestamp = this._getCurrentTimestamp();
         this._touchIndex(timestamp);
-        this._addToModificationHistory(name, 'removeCollection', { name }, timestamp);
         this.save(undefined, timestamp);
         this._logger.info('Collection removed from master index', { name });
         return true;
@@ -456,11 +513,6 @@ class MasterIndex {
           this._data.collections[collectionName] = collectionMetadata;
           const timestamp = this._getCurrentTimestamp();
           this._touchIndex(timestamp);
-          this._addToModificationHistory(collectionName, 'CONFLICT_RESOLVED', {
-            strategy,
-            newData,
-            resolvedToken: collectionMetadata.getModificationToken()
-          }, timestamp);
 
           return { success: true, data: collectionMetadata, strategy };
 
@@ -468,17 +520,6 @@ class MasterIndex {
           throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(`Unknown conflict resolution strategy: ${strategy}`);
       }
     });
-  }
-
-  /**
-   * Get modification history for a collection
-   * @param {string} collectionName - Collection name
-   * @returns {Array<Object>} Modification history entries in chronological order
-   */
-  getModificationHistory(collectionName) {
-    Validate.nonEmptyString(collectionName, 'collectionName');
-
-    return this._data.modificationHistory[collectionName] || [];
   }
 
   /**
@@ -504,10 +545,7 @@ class MasterIndex {
     return {
       masterIndexKey: config.masterIndexKey || 'GASDB_MASTER_INDEX',
       lockTimeout: config.lockTimeout || DEFAULT_LOCK_TIMEOUT,
-      version: config.version || 1,
-      modificationHistoryLimit: typeof config.modificationHistoryLimit === 'number'
-        ? config.modificationHistoryLimit
-        : DEFAULT_MODIFICATION_HISTORY_LIMIT
+      version: config.version || 1
     };
   }
 
@@ -524,8 +562,7 @@ class MasterIndex {
       this._data = {
         version: this._config.version,
         lastUpdated: timestamp,
-        collections: {},
-        modificationHistory: {}
+        collections: {}
       };
       this.save(undefined, timestamp);
       return;
@@ -570,18 +607,6 @@ class MasterIndex {
   }
 
   /**
-   * Add entry to modification history for debugging and auditing
-   * @param {string} collectionName - Collection name
-   * @param {string} operation - Operation type
-   * @param {Object} data - Operation data
-   * @param {Date} [timestamp] - Timestamp to record
-   * @private
-   */
-  _addToModificationHistory(collectionName, operation, data, timestamp = this._getCurrentTimestamp()) {
-    this._historyManager.record(collectionName, operation, data, timestamp);
-  }
-
-  /**
    * Normalise metadata input prior to persistence.
    * @param {string} name - Target collection name
    * @param {Object|CollectionMetadata} metadata - Source metadata
@@ -594,7 +619,7 @@ class MasterIndex {
   }
 
   /**
-   * Persist collection metadata to internal state and log modification history.
+   * Persist collection metadata to internal state.
    * @param {string} name - Collection identifier
    * @param {CollectionMetadata} metadata - Normalised metadata instance
    * @param {Date} timestamp - Timestamp applied to state change
@@ -610,7 +635,6 @@ class MasterIndex {
 
     this._data.collections[name] = metadata;
     this._touchIndex(effectiveTimestamp);
-    this._addToModificationHistory(name, 'ADD_COLLECTION', metadata, effectiveTimestamp);
     this.save(undefined, effectiveTimestamp);
   }
 
@@ -647,8 +671,7 @@ class MasterIndex {
       this._data = {
         version: this._config.version,
         lastUpdated: this._getCurrentTimestamp(),
-        collections: {},
-        modificationHistory: {}
+        collections: {}
       };
       return;
     }
@@ -657,8 +680,8 @@ class MasterIndex {
       this._data.collections = {};
     }
 
-    if (!Validate.isPlainObject(this._data.modificationHistory)) {
-      this._data.modificationHistory = {};
+    if (this._data.modificationHistory) {
+      delete this._data.modificationHistory;
     }
   }
 }

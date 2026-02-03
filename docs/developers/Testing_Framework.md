@@ -335,31 +335,31 @@ Test helpers provide reusable setup and cleanup utilities:
 ### Run All Tests
 
 ```bash
-npm run test:vitest
+npm run test
 ```
 
 ### Watch Mode
 
 ```bash
-npm run test:vitest -- --watch
+npm run test -- --watch
 ```
 
 ### Run Specific Test File
 
 ```bash
-npm run test:vitest -- tests/unit/master-index/MasterIndex.test.js
+npm run test -- tests/unit/master-index/MasterIndex.test.js
 ```
 
 ### Run Tests Matching Pattern
 
 ```bash
-npm run test:vitest -- -t "should persist"
+npm run test -- -t "should persist"
 ```
 
 ### Coverage
 
 ```bash
-npm run test:vitest -- --coverage
+npm run test -- --coverage
 ```
 
 ## API Reference
