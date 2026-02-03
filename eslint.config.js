@@ -58,6 +58,7 @@ export default defineConfig([
       'jsdoc/require-returns-description': 'warn',
       'jsdoc/require-returns-type': 'warn',
       'max-len': ['warn', { code: 160 }],
+      'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
       'no-console': 'off',
       'no-magic-numbers': [
         'warn',
