@@ -96,5 +96,6 @@ The sub-agents you can call are (first-line names are case-sensitive):
 
   - test-code-review-agent
   - test-creation-agent
+  - refactoring-agent.md
 
 **Always write concisely in British English.**
