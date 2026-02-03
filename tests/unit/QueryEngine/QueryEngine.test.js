@@ -416,6 +416,18 @@ describe('QueryEngine Error Handling', () => {
     }).toThrow();
   });
 
+  it('should reject unsupported operators nested within logical arrays', () => {
+    const queryWithNestedUnsupported = {
+      $and: [
+        { age: { $regex: 'pattern' } }
+      ]
+    };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
+    }).toThrow();
+  });
+
   it('should throw error for null or undefined documents array', () => {
     const query = { name: 'John' };
 
@@ -436,6 +448,27 @@ describe('QueryEngine Error Handling', () => {
     }).toThrow();
   });
 
+  it('should enforce maximum query depth within logical clauses', () => {
+    const limitedEngine = new QueryEngine({ maxNestedDepth: 2 });
+    const deepQuery = {
+      $and: [
+        { level1: { level2: { level3: 'value' } } }
+      ]
+    };
+
+    expect(() => {
+      limitedEngine.executeQuery(testUsers, deepQuery);
+    }).toThrow();
+  });
+
+  it('should throw InvalidQueryError when logical operator conditions are not objects', () => {
+    const queryWithPrimitiveClause = { $or: ['not an object'] };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryWithPrimitiveClause);
+    }).toThrow();
+  });
+
   it('should provide clear error messages for query validation failures', () => {
     const invalidQuery = { $unknownOperator: { field: 'value' } };
 
@@ -450,6 +483,48 @@ describe('QueryEngine Error Handling', () => {
     expect(
       errorMessage.includes('query') || errorMessage.includes('operator') || errorMessage.includes('invalid')
     ).toBe(true);
+  });
+
+  it('should reject unsupported operators nested within field arrays', () => {
+    const queryWithNestedUnsupported = {
+      tags: [
+        { $eq: 'matched' },
+        { $unsupported: true }
+      ]
+    };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
+    }).toThrow();
+  });
+
+  it('should enforce depth limits when arrays contain nested query objects', () => {
+    const limitedEngine = new QueryEngine({ maxNestedDepth: 1 });
+    const deepArrayQuery = {
+      nested: [
+        {
+          child: [
+            { grandChild: 'value' }
+          ]
+        }
+      ]
+    };
+
+    expect(() => {
+      limitedEngine.executeQuery(testUsers, deepArrayQuery);
+    }).toThrow();
+  });
+
+  it('should throw when logical operators receive malformed values within field expressions', () => {
+    const malformedLogicalValue = {
+      status: {
+        $and: 1
+      }
+    };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, malformedLogicalValue);
+    }).toThrow();
   });
 });
 
