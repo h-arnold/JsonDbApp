@@ -74,7 +74,7 @@ class DatabaseConfig {
   _initialiseGeneralDefaults(config) {
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
     this.lockTimeout = config.lockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS;
-    this.logLevel = this._coalesce(config.logLevel, DEFAULT_LOG_LEVEL);
+    this.logLevel = config.logLevel ?? DEFAULT_LOG_LEVEL;
     this.masterIndexKey = config.masterIndexKey || DEFAULT_MASTER_INDEX_KEY;
   }
 
@@ -84,18 +84,12 @@ class DatabaseConfig {
    * @private
    */
   _initialiseRetryConfig(config) {
-    this.retryAttempts = this._coalesce(config.retryAttempts, DEFAULT_RETRY_ATTEMPTS);
-    this.retryDelayMs = this._coalesce(config.retryDelayMs, DEFAULT_RETRY_DELAY_MS);
-    this.lockRetryBackoffBase = this._coalesce(
-      config.lockRetryBackoffBase,
-      DEFAULT_LOCK_RETRY_BACKOFF_BASE
-    );
-    this.fileRetryAttempts = this._coalesce(config.fileRetryAttempts, DEFAULT_FILE_RETRY_ATTEMPTS);
-    this.fileRetryDelayMs = this._coalesce(config.fileRetryDelayMs, DEFAULT_FILE_RETRY_DELAY_MS);
-    this.fileRetryBackoffBase = this._coalesce(
-      config.fileRetryBackoffBase,
-      DEFAULT_FILE_RETRY_BACKOFF_BASE
-    );
+    this.retryAttempts = config.retryAttempts ?? DEFAULT_RETRY_ATTEMPTS;
+    this.retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
+    this.lockRetryBackoffBase = config.lockRetryBackoffBase ?? DEFAULT_LOCK_RETRY_BACKOFF_BASE;
+    this.fileRetryAttempts = config.fileRetryAttempts ?? DEFAULT_FILE_RETRY_ATTEMPTS;
+    this.fileRetryDelayMs = config.fileRetryDelayMs ?? DEFAULT_FILE_RETRY_DELAY_MS;
+    this.fileRetryBackoffBase = config.fileRetryBackoffBase ?? DEFAULT_FILE_RETRY_BACKOFF_BASE;
   }
 
   /**
@@ -135,16 +129,7 @@ class DatabaseConfig {
       config.stripDisallowedCollectionNameCharacters ?? false;
   }
 
-  /**
-   * Provide a null-safe fallback for configuration values.
-   * @param {*} value - Provided value.
-   * @param {*} fallback - Default to use when value is nullish.
-   * @returns {*} Resolved value preferring the provided input when defined.
-   * @private
-   */
-  _coalesce(value, fallback) {
-    return value ?? fallback;
-  }
+
 
   /**
    * Gets the default root folder ID

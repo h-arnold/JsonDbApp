@@ -10,14 +10,13 @@
   - [API Reference](#api-reference)
     - [Public Methods](#public-methods)
       - [`clone()`](#clone)
-  - [`toJSON()`](#tojson)
-  - [`fromJSON(obj)`](#fromjsonobj)
+      - [`toJSON()`](#tojson)
+      - [`fromJSON(obj)`](#fromjsonobj)
     - [Private Methods](#private-methods)
       - [`_initialiseGeneralDefaults(config)`](#_initialisegeneraldefaultsconfig)
       - [`_initialiseRetryConfig(config)`](#_initialiseretryconfigconfig)
       - [`_initialiseQueryEngineConfig(config)`](#_initialisequeryengineconfigconfig)
       - [`_initialiseBooleanFlags(config)`](#_initialisebooleanflagsconfig)
-      - [`_coalesce(value, fallback)`](#_coalescevalue-fallback)
       - [`_getDefaultRootFolder()`](#_getdefaultrootfolder)
       - [`_validateConfig()`](#_validateconfig)
       - [`_validateQueryOperators()`](#_validatequeryoperators)
@@ -33,6 +32,8 @@
   - [Integration with Database](#integration-with-database)
   - [Component-Level Configuration](#component-level-configuration)
     - [QueryEngine Configuration](#queryengine-configuration)
+    - [FileOperations Configuration](#fileoperations-configuration)
+    - [Index Backup Strategy](#index-backup-strategy)
   - [Best Practices](#best-practices)
 
 ## Overview
@@ -102,7 +103,7 @@ constructor((config = {}));
 **Behaviour:**
 
 - Delegates to grouped helpers (`_initialiseGeneralDefaults`, `_initialiseRetryConfig`, `_initialiseQueryEngineConfig`, `_initialiseBooleanFlags`) so each concern applies defaults consistently.
-- Uses `_coalesce` to normalise nullish overrides while keeping explicit falsy values intact.
+- Uses nullish coalescing (`??`) to normalise nullish overrides while keeping explicit falsy values intact.
 - Sets default values for all properties
 - Validates all configuration parameters
 - Throws errors immediately for invalid settings
@@ -167,10 +168,6 @@ Clones provided operator arrays when supplied and records raw values for validat
 #### `_initialiseBooleanFlags(config)`
 
 Initialises boolean feature toggles such as `autoCreateCollections` and `backupOnInitialise`.
-
-#### `_coalesce(value, fallback)`
-
-Shared helper that preserves explicit falsy values yet falls back when a setting is `null` or `undefined`.
 
 #### `_getDefaultRootFolder()`
 
