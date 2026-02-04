@@ -143,7 +143,7 @@ Target: [src/02_components/UpdateEngine.js](src/02_components/UpdateEngine.js)
 1. Refactor UpdateEngine into multi-file handlers and shared field-path utilities.
 2. Consolidate QueryEngine validation passes and shared field-path utilities.
 3. Deduplicate Database collection access logic and index validation helpers.
-4. Simplify MasterIndex metadata normalisation and history logging.
+4. Simplify MasterIndex metadata normalisation.
 5. Standardise ErrorHandler JSDoc and extract common builder helpers.
 6. Address remaining lint-driven complexity and magic number warnings incrementally.
 
