@@ -162,6 +162,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
   it('should treat nullish numeric and boolean properties as defaults', () => {
     const cfg = new DatabaseConfig({
+      logLevel: null,
+      lockTimeout: null,
       retryAttempts: null,
       retryDelayMs: null,
       fileRetryAttempts: null,
@@ -172,6 +174,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
       cacheEnabled: null
     });
 
+    expect(cfg.logLevel).toBe('INFO');
+    expect(cfg.lockTimeout).toBe(30000);
     expect(cfg.retryAttempts).toBe(3);
     expect(cfg.retryDelayMs).toBe(1000);
     expect(cfg.fileRetryAttempts).toBe(3);
