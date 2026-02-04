@@ -51,7 +51,7 @@ class MasterIndex {
    */
   _addCollectionInternal(name, metadata) {
     if (!name || typeof name !== 'string') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('Collection name must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('name', name, 'Collection name must be a non-empty string');
     }
     let collectionMetadata;
     if (metadata instanceof CollectionMetadata) {
