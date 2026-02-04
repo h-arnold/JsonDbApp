@@ -55,8 +55,7 @@ class FileService {
     // Check cache first if enabled
     if (this._cacheEnabled && this._cache.has(fileId)) {
       this._logger.debug('File content retrieved from cache', { fileId });
-      // Return a deep copy to preserve Date objects and avoid reference issues
-      return ObjectUtils.deepClone(this._cache.get(fileId));
+      return this._cache.get(fileId);
     }
     
     const content = this._fileOps.readFile(fileId);
