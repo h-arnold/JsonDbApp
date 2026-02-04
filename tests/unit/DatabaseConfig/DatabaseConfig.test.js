@@ -232,9 +232,13 @@ describe('DatabaseConfig Validation', () => {
       new DatabaseConfig({ queryEngineMaxNestedDepth: -1 });
     }).toThrow();
 
-    expect(() => {
+    try {
       new DatabaseConfig({ queryEngineSupportedOperators: 'invalid' });
-    }).toThrow();
+      throw new Error('Expected error was not thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+      expect(error.context.providedValue).toBe('invalid');
+    }
 
     expect(() => {
       new DatabaseConfig({ queryEngineSupportedOperators: [] });
@@ -244,9 +248,13 @@ describe('DatabaseConfig Validation', () => {
       new DatabaseConfig({ queryEngineSupportedOperators: ['$eq', ''] });
     }).toThrow();
 
-    expect(() => {
+    try {
       new DatabaseConfig({ queryEngineLogicalOperators: 'invalid' });
-    }).toThrow();
+      throw new Error('Expected error was not thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+      expect(error.context.providedValue).toBe('invalid');
+    }
 
     expect(() => {
       new DatabaseConfig({

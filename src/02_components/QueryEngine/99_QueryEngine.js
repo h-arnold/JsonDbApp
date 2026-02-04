@@ -7,9 +7,32 @@
  * handling operator validation, dot-notation traversal, and logical
  * composition.
  */
-const DEFAULT_MAX_NESTED_DEPTH = DatabaseConfig.getDefaultQueryEngineMaxNestedDepth();
-const DEFAULT_SUPPORTED_OPERATORS = DatabaseConfig.getDefaultQueryEngineSupportedOperators();
-const DEFAULT_LOGICAL_OPERATORS = DatabaseConfig.getDefaultQueryEngineLogicalOperators();
+/**
+ * Lazily resolve the default maximum nested depth for the query engine.
+ * Deferred to avoid load-order issues with DatabaseConfig in Apps Script.
+ * @returns {number} Default maximum nested depth.
+ */
+function getDefaultMaxNestedDepth() {
+  return DatabaseConfig.getDefaultQueryEngineMaxNestedDepth();
+}
+
+/**
+ * Lazily resolve the default supported operators for the query engine.
+ * Deferred to avoid load-order issues with DatabaseConfig in Apps Script.
+ * @returns {string[]} Default supported operators.
+ */
+function getDefaultSupportedOperators() {
+  return DatabaseConfig.getDefaultQueryEngineSupportedOperators();
+}
+
+/**
+ * Lazily resolve the default logical operators for the query engine.
+ * Deferred to avoid load-order issues with DatabaseConfig in Apps Script.
+ * @returns {string[]} Default logical operators.
+ */
+function getDefaultLogicalOperators() {
+  return DatabaseConfig.getDefaultQueryEngineLogicalOperators();
+}
 
 /**
  * Query engine facade orchestrating validation and matching helpers.
@@ -180,7 +203,7 @@ class QueryEngine {
     const operators =
       Array.isArray(providedOperators) && providedOperators.length > 0
         ? providedOperators.slice()
-        : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+        : getDefaultSupportedOperators();
 
     operators.forEach((operator) => {
       if (typeof operator !== 'string' || operator.trim() === '') {
@@ -206,7 +229,7 @@ class QueryEngine {
     const operators =
       Array.isArray(providedOperators) && providedOperators.length > 0
         ? providedOperators.slice()
-        : Array.from(DEFAULT_LOGICAL_OPERATORS);
+        : getDefaultLogicalOperators();
 
     operators.forEach((operator) => {
       if (typeof operator !== 'string' || operator.trim() === '') {
@@ -235,7 +258,7 @@ class QueryEngine {
    * @private
    */
   _normaliseMaxNestedDepth(providedDepth) {
-    const depth = providedDepth === undefined ? DEFAULT_MAX_NESTED_DEPTH : providedDepth;
+    const depth = providedDepth === undefined ? getDefaultMaxNestedDepth() : providedDepth;
     Validate.integer(depth, 'config.maxNestedDepth');
     if (depth < 0) {
       throw new InvalidArgumentError('config.maxNestedDepth', depth, 'must be zero or greater');
@@ -276,10 +299,10 @@ class QueryEngine {
   _shouldRefreshOperatorCaches() {
     const currentOperators = Array.isArray(this._config.supportedOperators)
       ? this._config.supportedOperators
-      : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+      : getDefaultSupportedOperators();
     const currentLogicalOperators = Array.isArray(this._config.logicalOperators)
       ? this._config.logicalOperators
-      : Array.from(DEFAULT_LOGICAL_OPERATORS);
+      : getDefaultLogicalOperators();
 
     if (this._supportedOperatorsSnapshot.length !== currentOperators.length) {
       return true;
@@ -311,10 +334,10 @@ class QueryEngine {
   _refreshOperatorCaches() {
     const currentOperators = Array.isArray(this._config.supportedOperators)
       ? this._config.supportedOperators
-      : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+      : getDefaultSupportedOperators();
     const currentLogicalOperators = Array.isArray(this._config.logicalOperators)
       ? this._config.logicalOperators
-      : Array.from(DEFAULT_LOGICAL_OPERATORS);
+      : getDefaultLogicalOperators();
 
     this._supportedOperators = new Set(currentOperators);
     this._logicalOperators = new Set(

@@ -182,7 +182,7 @@ class DatabaseConfig {
     ) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
         'queryEngineSupportedOperators',
-        this.queryEngineSupportedOperators,
+        this._queryEngineSupportedOperatorsRaw,
         'must be an array of non-empty strings'
       );
     }
@@ -192,7 +192,7 @@ class DatabaseConfig {
     ) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
         'queryEngineLogicalOperators',
-        this.queryEngineLogicalOperators,
+        this._queryEngineLogicalOperatorsRaw,
         'must be an array of non-empty strings'
       );
     }
