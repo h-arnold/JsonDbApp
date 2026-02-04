@@ -176,48 +176,20 @@ class DatabaseConfig {
    * @private
    */
   _validateQueryOperators() {
-    if (
-      this._queryEngineSupportedOperatorsProvided &&
-      !Array.isArray(this._queryEngineSupportedOperatorsRaw)
-    ) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-        'queryEngineSupportedOperators',
-        this._queryEngineSupportedOperatorsRaw,
-        'must be an array of non-empty strings'
-      );
-    }
-    if (
-      this._queryEngineLogicalOperatorsProvided &&
-      !Array.isArray(this._queryEngineLogicalOperatorsRaw)
-    ) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-        'queryEngineLogicalOperators',
-        this._queryEngineLogicalOperatorsRaw,
-        'must be an array of non-empty strings'
-      );
-    }
-    Validate.nonEmptyArray(this.queryEngineSupportedOperators, 'queryEngineSupportedOperators');
-    const supportedOperators = this.queryEngineSupportedOperators;
-    supportedOperators.forEach((operator) => {
-      if (typeof operator !== 'string' || operator.trim() === '') {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-          'queryEngineSupportedOperators',
-          operator,
-          'must be an array of non-empty strings'
-        );
-      }
-    });
+    const supportedOperators = this._validateOperatorArray(
+      'queryEngineSupportedOperators',
+      this.queryEngineSupportedOperators,
+      this._queryEngineSupportedOperatorsRaw,
+      this._queryEngineSupportedOperatorsProvided
+    );
+    const logicalOperators = this._validateOperatorArray(
+      'queryEngineLogicalOperators',
+      this.queryEngineLogicalOperators,
+      this._queryEngineLogicalOperatorsRaw,
+      this._queryEngineLogicalOperatorsProvided
+    );
 
-    Validate.nonEmptyArray(this.queryEngineLogicalOperators, 'queryEngineLogicalOperators');
-    const logicalOperators = this.queryEngineLogicalOperators;
     logicalOperators.forEach((operator) => {
-      if (typeof operator !== 'string' || operator.trim() === '') {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-          'queryEngineLogicalOperators',
-          operator,
-          'must be an array of non-empty strings'
-        );
-      }
       if (!supportedOperators.includes(operator)) {
         throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
           'queryEngineLogicalOperators',
@@ -226,6 +198,38 @@ class DatabaseConfig {
         );
       }
     });
+  }
+
+  /**
+   * Validate an operator array for type and contents.
+   * @param {string} configKey - Configuration key name.
+   * @param {string[]} operators - Normalised operator list.
+   * @param {*} rawValue - Raw provided value.
+   * @param {boolean} wasProvided - Whether the raw value was provided.
+   * @returns {string[]} Validated operator list.
+   * @private
+   */
+  _validateOperatorArray(configKey, operators, rawValue, wasProvided) {
+    if (wasProvided && !Array.isArray(rawValue)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        configKey,
+        rawValue,
+        'must be an array of non-empty strings'
+      );
+    }
+
+    Validate.nonEmptyArray(operators, configKey);
+    operators.forEach((operator) => {
+      if (typeof operator !== 'string' || operator.trim() === '') {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+          configKey,
+          operator,
+          'must be an array of non-empty strings'
+        );
+      }
+    });
+
+    return operators;
   }
 
   /**

@@ -9,6 +9,33 @@
 
 import { describe, it, expect, vi } from 'vitest';
 
+/**
+ * Capture an error thrown by the provided action.
+ * @param {Function} action - Action expected to throw.
+ * @returns {Error|null} Thrown error or null when none was thrown.
+ */
+const captureError = (action) => {
+  try {
+    action();
+  } catch (caughtError) {
+    return caughtError;
+  }
+  return null;
+};
+
+/**
+ * Expect an InvalidArgumentError for a query operator configuration.
+ * @param {Object} config - DatabaseConfig input.
+ * @param {*} expectedValue - Expected raw provided value.
+ */
+const expectInvalidOperatorConfig = (config, expectedValue) => {
+  const error = captureError(() => {
+    new DatabaseConfig(config);
+  });
+  expect(error).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+  expect(error.context.providedValue).toBe(expectedValue);
+};
+
 describe('DatabaseConfig Creation and Default Values', () => {
   it('should create DatabaseConfig with default values', () => {
     const config = new DatabaseConfig();
@@ -232,24 +259,7 @@ describe('DatabaseConfig Validation', () => {
       new DatabaseConfig({ queryEngineMaxNestedDepth: -1 });
     }).toThrow();
 
-    /**
-     * Capture an error thrown by the provided action.
-     * @param {Function} action - Action expected to throw.
-     * @returns {Error|null} Thrown error or null when none was thrown.
-     */
-    const captureError = (action) => {
-      try {
-        action();
-      } catch (caughtError) {
-        return caughtError;
-      }
-      return null;
-    };
-    const supportedOperatorError = captureError(() => {
-      new DatabaseConfig({ queryEngineSupportedOperators: 'invalid' });
-    });
-    expect(supportedOperatorError).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
-    expect(supportedOperatorError.context.providedValue).toBe('invalid');
+    expectInvalidOperatorConfig({ queryEngineSupportedOperators: 'invalid' }, 'invalid');
 
     expect(() => {
       new DatabaseConfig({ queryEngineSupportedOperators: [] });
@@ -259,11 +269,7 @@ describe('DatabaseConfig Validation', () => {
       new DatabaseConfig({ queryEngineSupportedOperators: ['$eq', ''] });
     }).toThrow();
 
-    const logicalOperatorError = captureError(() => {
-      new DatabaseConfig({ queryEngineLogicalOperators: 'invalid' });
-    });
-    expect(logicalOperatorError).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
-    expect(logicalOperatorError.context.providedValue).toBe('invalid');
+    expectInvalidOperatorConfig({ queryEngineLogicalOperators: 'invalid' }, 'invalid');
 
     expect(() => {
       new DatabaseConfig({
