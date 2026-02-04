@@ -10,8 +10,6 @@
  * FileOperations class for direct Drive API interactions
  */
 /* exported FileOperations */
-const RETRY_BACKOFF_BASE = 2;
-
 /**
  * Executes low-level Google Drive operations with retry, error translation,
  * and logging support for higher-level services.
@@ -20,17 +18,44 @@ class FileOperations {
   /**
    * Creates a new FileOperations instance
    * @param {Object} logger - Logger instance for operation tracking (optional)
+   * @param {Object|DatabaseConfig} [config] - Optional configuration overrides
    */
-  constructor(logger = null) {
+  constructor(logger = null, config = null) {
     // Create component logger if no logger provided, or use provided logger
     this._logger = logger || JDbLogger.createComponentLogger('FileOperations');
-    this._maxRetries = 3;
-    this._retryDelayMs = 1000;
+    const effectiveConfig = this._resolveConfig(config);
+    this._maxRetries = effectiveConfig.fileRetryAttempts;
+    this._retryDelayMs = effectiveConfig.fileRetryDelayMs;
+    this._retryBackoffBase = effectiveConfig.fileRetryBackoffBase;
 
     this._logger.debug('FileOperations initialised', {
       maxRetries: this._maxRetries,
-      retryDelayMs: this._retryDelayMs
+      retryDelayMs: this._retryDelayMs,
+      retryBackoffBase: this._retryBackoffBase
     });
+  }
+
+  /**
+   * Resolve configuration input to a DatabaseConfig instance.
+   * @param {Object|DatabaseConfig|null} config - Optional configuration input.
+   * @returns {{fileRetryAttempts: number, fileRetryDelayMs: number, fileRetryBackoffBase: number}}
+   *   Normalised configuration.
+   * @private
+   */
+  _resolveConfig(config) {
+    if (config instanceof DatabaseConfig) {
+      return config;
+    }
+
+    if (config && typeof config === 'object') {
+      return new DatabaseConfig(config);
+    }
+
+    return {
+      fileRetryAttempts: DatabaseConfig.getDefaultFileRetryAttempts(),
+      fileRetryDelayMs: DatabaseConfig.getDefaultFileRetryDelayMs(),
+      fileRetryBackoffBase: DatabaseConfig.getDefaultFileRetryBackoffBase()
+    };
   }
 
   /**
@@ -330,7 +355,7 @@ class FileOperations {
         }
 
         if (attempt < this._maxRetries) {
-          const delay = this._retryDelayMs * Math.pow(RETRY_BACKOFF_BASE, attempt - 1);
+          const delay = this._retryDelayMs * Math.pow(this._retryBackoffBase, attempt - 1);
           this._logger.warn(`Operation ${operationName} failed, retrying in ${delay}ms`, {
             attempt,
             maxRetries: this._maxRetries,

@@ -7,8 +7,6 @@
  * @class
  */
 /* exported CollectionCoordinator */
-const BACKOFF_BASE = 2;
-
 /**
  * Orchestrates coordinated collection operations by applying locking,
  * conflict detection, and metadata synchronisation around core CRUD actions.
@@ -30,13 +28,13 @@ class CollectionCoordinator {
     this._masterIndex = masterIndex;
     this._logger = JDbLogger.createComponentLogger('CollectionCoordinator');
 
-    // Use DatabaseConfig defaults if not supplied in config
-    const DEFAULTS = {
-      lockTimeout: 30000,
-      retryAttempts: 3,
-      retryDelayMs: 1000
+    const resolvedConfig = config instanceof DatabaseConfig ? config : new DatabaseConfig(config);
+    this._config = {
+      lockTimeout: resolvedConfig.lockTimeout,
+      retryAttempts: resolvedConfig.retryAttempts,
+      retryDelayMs: resolvedConfig.retryDelayMs,
+      lockRetryBackoffBase: resolvedConfig.lockRetryBackoffBase
     };
-    this._config = Object.assign({}, DEFAULTS, config);
   }
 
   /**
@@ -158,7 +156,7 @@ class CollectionCoordinator {
         }
         // retry after backoff
         if (attempt < retryAttempts) {
-          Utilities.sleep(retryDelayMs * Math.pow(BACKOFF_BASE, attempt - 1));
+          Utilities.sleep(retryDelayMs * Math.pow(this._config.lockRetryBackoffBase, attempt - 1));
         }
       } catch (e) {
         this._logger.error('Unexpected error during lock acquisition attempt', {

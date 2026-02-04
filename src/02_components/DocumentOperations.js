@@ -210,13 +210,10 @@ class DocumentOperations {
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
 
-    // Create QueryEngine instance if not already created
-    if (!this._queryEngine) {
-      this._queryEngine = new QueryEngine();
-    }
+    const queryEngine = this._getQueryEngine();
 
     // Let QueryEngine handle all validation and execution
-    const results = this._queryEngine.executeQuery(documents, query);
+    const results = queryEngine.executeQuery(documents, query);
 
     this._logger.debug('Query executed by findByQuery', {
       queryString: JSON.stringify(query),
@@ -238,13 +235,10 @@ class DocumentOperations {
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
 
-    // Create QueryEngine instance if not already created
-    if (!this._queryEngine) {
-      this._queryEngine = new QueryEngine();
-    }
+    const queryEngine = this._getQueryEngine();
 
     // Let QueryEngine handle all validation and execution
-    const results = this._queryEngine.executeQuery(documents, query);
+    const results = queryEngine.executeQuery(documents, query);
 
     this._logger.debug('Query executed by findMultipleByQuery', {
       queryString: JSON.stringify(query),
@@ -266,13 +260,10 @@ class DocumentOperations {
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
 
-    // Create QueryEngine instance if not already created
-    if (!this._queryEngine) {
-      this._queryEngine = new QueryEngine();
-    }
+    const queryEngine = this._getQueryEngine();
 
     // Let QueryEngine handle all validation and execution
-    const results = this._queryEngine.executeQuery(documents, query);
+    const results = queryEngine.executeQuery(documents, query);
 
     this._logger.debug('Query executed by countByQuery', {
       queryString: JSON.stringify(query),
@@ -324,6 +315,25 @@ class DocumentOperations {
     // - Maximum document size
     // - Field name restrictions
     // - Data type constraints
+  }
+
+  /**
+   * Retrieve or create the QueryEngine instance.
+   * @returns {QueryEngine} QueryEngine instance configured from DatabaseConfig.
+   * @private
+   */
+  _getQueryEngine() {
+    if (!this._queryEngine) {
+      const databaseConfig =
+        this._collection && this._collection._database ? this._collection._database.config : null;
+      const queryEngineConfig =
+        databaseConfig && typeof databaseConfig.getQueryEngineConfig === 'function'
+          ? databaseConfig.getQueryEngineConfig()
+          : undefined;
+      this._queryEngine = new QueryEngine(queryEngineConfig);
+    }
+
+    return this._queryEngine;
   }
 
   /**

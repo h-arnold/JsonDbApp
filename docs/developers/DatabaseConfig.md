@@ -56,14 +56,23 @@ The `DatabaseConfig` class manages database configuration settings with validati
 
 ### Optional Properties
 
-| Property                                  | Type    | Default | Description                                                                                                                                                                                                                                        |
-| ----------------------------------------- | ------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `autoCreateCollections`                   | Boolean | `true`  | Auto-create collections when accessed                                                                                                                                                                                                              |
-| `lockTimeout`                             | Number  | `30000` | Lock timeout in milliseconds                                                                                                                                                                                                                       |
-| `cacheEnabled`                            | Boolean | `true`  | Enable file caching                                                                                                                                                                                                                                |
-| `logLevel`                                | String  | 'INFO'  | Log level (DEBUG, INFO, WARN, ERROR)                                                                                                                                                                                                               |
-| `backupOnInitialise`                      | Boolean | `false` | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
-| `stripDisallowedCollectionNameCharacters` | Boolean | `false` | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks.                                             |
+| Property                                  | Type     | Default                            | Description                                                                                                                                                                                                                                        |
+| ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
+| `lockTimeout`                             | Number   | `30000`                            | Lock timeout in milliseconds                                                                                                                                                                                                                       |
+| `retryAttempts`                           | Number   | `3`                                | Lock acquisition retry attempts                                                                                                                                                                                                                    |
+| `retryDelayMs`                            | Number   | `1000`                             | Delay between lock retries                                                                                                                                                                                                                         |
+| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for lock retries                                                                                                                                                                                                          |
+| `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
+| `logLevel`                                | String   | 'INFO'                             | Log level (DEBUG, INFO, WARN, ERROR)                                                                                                                                                                                                               |
+| `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                                                                      |
+| `fileRetryDelayMs`                        | Number   | `1000`                             | Delay between file retries                                                                                                                                                                                                                         |
+| `fileRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for file retries                                                                                                                                                                                                          |
+| `queryEngineMaxNestedDepth`               | Number   | `10`                               | Maximum allowed query nesting depth                                                                                                                                                                                                                |
+| `queryEngineSupportedOperators`           | String[] | `['$eq','$gt','$lt','$and','$or']` | Operators permitted by the QueryEngine                                                                                                                                                                                                             |
+| `queryEngineLogicalOperators`             | String[] | `['$and','$or']`                   | Logical operators recognised by the QueryEngine                                                                                                                                                                                                    |
+| `backupOnInitialise`                      | Boolean  | `false`                            | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
+| `stripDisallowedCollectionNameCharacters` | Boolean  | `false`                            | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks.                                             |
 
 ## Constructor
 
@@ -155,6 +164,12 @@ Validates all configuration properties according to rules.
 - Recommended range: 5000-60000ms
 - Zero means no timeout (use with caution)
 
+**retryAttempts / retryDelayMs / lockRetryBackoffBase:**
+
+- `retryAttempts` must be a positive integer
+- `retryDelayMs` must be a non-negative number
+- `lockRetryBackoffBase` must be a positive number
+
 **logLevel:**
 
 - Must be one of: 'DEBUG', 'INFO', 'WARN', 'ERROR'
@@ -166,6 +181,7 @@ Validates all configuration properties according to rules.
 - Must be a valid string if provided
 - Auto-detected if not specified
 - Should correspond to accessible Drive folder
+- Default root folder lookups are cached after first access to avoid repeated Drive API calls
 
 **Boolean Properties:**
 
@@ -179,6 +195,18 @@ Validates all configuration properties according to rules.
 - Must be a non-empty string
 - Used as ScriptProperties key
 - Should be unique per database instance
+
+**File retry settings:**
+
+- `fileRetryAttempts` must be a positive integer
+- `fileRetryDelayMs` must be a non-negative number
+- `fileRetryBackoffBase` must be a positive number
+
+**QueryEngine settings:**
+
+- `queryEngineMaxNestedDepth` must be an integer greater than or equal to zero
+- `queryEngineSupportedOperators` must be a non-empty array of non-empty strings
+- `queryEngineLogicalOperators` must be a non-empty array of non-empty strings, each present in `queryEngineSupportedOperators`
 
 ### Error Scenarios
 
@@ -225,7 +253,9 @@ const devConfig = new DatabaseConfig({
   logLevel: 'DEBUG',
   cacheEnabled: true,
   // Enable eager backup if you want an index snapshot each initialise
-  backupOnInitialise: true
+  backupOnInitialise: true,
+  // Looser query depth for exploratory work
+  queryEngineMaxNestedDepth: 12
 });
 
 // Production configuration
@@ -308,7 +338,7 @@ While `DatabaseConfig` handles database-wide settings, individual components may
 
 ### QueryEngine Configuration
 
-The QueryEngine accepts its own configuration object independently of DatabaseConfig:
+The QueryEngine uses defaults sourced from `DatabaseConfig` and is instantiated through `DocumentOperations`. You can still override defaults by passing a custom config directly to `QueryEngine` when needed.
 
 ```javascript
 // QueryEngine has its own configuration
@@ -316,19 +346,31 @@ const queryEngine = new QueryEngine({
   maxNestedDepth: 15 // Override default of 10
 });
 
-// DatabaseConfig and QueryEngine configurations are separate
+// DatabaseConfig supplies defaults for collections
 const dbConfig = new DatabaseConfig({
   logLevel: 'DEBUG',
-  lockTimeout: 20000
+  lockTimeout: 20000,
+  queryEngineMaxNestedDepth: 12,
+  queryEngineSupportedOperators: ['$eq', '$gt', '$lt', '$and', '$or']
 });
 
 const db = new Database(dbConfig);
-// Collections use the QueryEngine internally with their own configuration
+// Collections use the QueryEngine internally with DatabaseConfig defaults
 ```
 
 **QueryEngine Options:**
 
 - `maxNestedDepth` (Number, default: 10): Maximum allowed query nesting depth for security
+- `supportedOperators` (String[], default: `['$eq', '$gt', '$lt', '$and', '$or']`): Operators permitted by the engine
+- `logicalOperators` (String[], default: `['$and', '$or']`): Logical operators permitted by the engine
+
+### FileOperations Configuration
+
+File operations use retry settings from `DatabaseConfig` when the `Database` constructs `FileOperations`:
+
+- `fileRetryAttempts`: Number of retry attempts for Drive operations
+- `fileRetryDelayMs`: Delay between retries
+- `fileRetryBackoffBase`: Exponential backoff base for retries
 
 **Security Note:** QueryEngine always validates all queries for structure and supported operators to prevent malicious queries, regardless of configuration.
 

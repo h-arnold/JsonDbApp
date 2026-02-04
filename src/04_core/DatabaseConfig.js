@@ -10,7 +10,22 @@
 const DEFAULT_LOCK_TIMEOUT_MS = 30000;
 const DEFAULT_RETRY_ATTEMPTS = 3;
 const DEFAULT_RETRY_DELAY_MS = 1000;
+const DEFAULT_LOCK_RETRY_BACKOFF_BASE = 2;
+const DEFAULT_FILE_RETRY_ATTEMPTS = 3;
+const DEFAULT_FILE_RETRY_DELAY_MS = 1000;
+const DEFAULT_FILE_RETRY_BACKOFF_BASE = 2;
+const DEFAULT_QUERY_ENGINE_MAX_NESTED_DEPTH = 10;
+const DEFAULT_QUERY_ENGINE_SUPPORTED_OPERATORS = Object.freeze([
+  '$eq',
+  '$gt',
+  '$lt',
+  '$and',
+  '$or'
+]);
+const DEFAULT_QUERY_ENGINE_LOGICAL_OPERATORS = Object.freeze(['$and', '$or']);
+const DEFAULT_MASTER_INDEX_KEY = 'GASDB_MASTER_INDEX';
 const MIN_LOCK_TIMEOUT_MS = 500;
+const MIN_QUERY_ENGINE_MAX_NESTED_DEPTH = 0;
 
 /**
  * Provides validated configuration state for Database instances, including
@@ -28,8 +43,15 @@ class DatabaseConfig {
    * @param {number} [config.lockTimeout=30000] - Lock timeout in milliseconds (coordination)
    * @param {number} [config.retryAttempts=3] - Number of lock acquisition attempts
    * @param {number} [config.retryDelayMs=1000] - Delay between lock retries (ms)
+   * @param {number} [config.lockRetryBackoffBase=2] - Backoff base for lock retries
    * @param {boolean} [config.cacheEnabled=true] - Enable caching
    * @param {string} [config.logLevel='INFO'] - Log level (DEBUG, INFO, WARN, ERROR)
+   * @param {number} [config.fileRetryAttempts=3] - File operation retry attempts
+   * @param {number} [config.fileRetryDelayMs=1000] - Delay between file retries (ms)
+   * @param {number} [config.fileRetryBackoffBase=2] - Backoff base for file retries
+   * @param {number} [config.queryEngineMaxNestedDepth=10] - Max query nesting depth
+   * @param {string[]} [config.queryEngineSupportedOperators] - Supported query operators
+   * @param {string[]} [config.queryEngineLogicalOperators] - Logical query operators
    * @param {string} [config.masterIndexKey] - Master index key for ScriptProperties
    * @throws {Error} When configuration validation fails
    */
@@ -40,9 +62,29 @@ class DatabaseConfig {
     this.lockTimeout = config.lockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS;
     this.retryAttempts = config.retryAttempts ?? DEFAULT_RETRY_ATTEMPTS;
     this.retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
+    this.lockRetryBackoffBase = config.lockRetryBackoffBase ?? DEFAULT_LOCK_RETRY_BACKOFF_BASE;
     this.cacheEnabled = config.cacheEnabled ?? true;
     this.logLevel = config.logLevel || 'INFO';
-    this.masterIndexKey = config.masterIndexKey || 'GASDB_MASTER_INDEX';
+    this.fileRetryAttempts = config.fileRetryAttempts ?? DEFAULT_FILE_RETRY_ATTEMPTS;
+    this.fileRetryDelayMs = config.fileRetryDelayMs ?? DEFAULT_FILE_RETRY_DELAY_MS;
+    this.fileRetryBackoffBase = config.fileRetryBackoffBase ?? DEFAULT_FILE_RETRY_BACKOFF_BASE;
+    this.queryEngineMaxNestedDepth =
+      config.queryEngineMaxNestedDepth ?? DEFAULT_QUERY_ENGINE_MAX_NESTED_DEPTH;
+    this._queryEngineSupportedOperatorsProvided =
+      Object.prototype.hasOwnProperty.call(config, 'queryEngineSupportedOperators') &&
+      config.queryEngineSupportedOperators !== undefined;
+    this._queryEngineLogicalOperatorsProvided =
+      Object.prototype.hasOwnProperty.call(config, 'queryEngineLogicalOperators') &&
+      config.queryEngineLogicalOperators !== undefined;
+    this._queryEngineSupportedOperatorsRaw = config.queryEngineSupportedOperators;
+    this._queryEngineLogicalOperatorsRaw = config.queryEngineLogicalOperators;
+    this.queryEngineSupportedOperators = Array.isArray(config.queryEngineSupportedOperators)
+      ? config.queryEngineSupportedOperators.slice()
+      : Array.from(DEFAULT_QUERY_ENGINE_SUPPORTED_OPERATORS);
+    this.queryEngineLogicalOperators = Array.isArray(config.queryEngineLogicalOperators)
+      ? config.queryEngineLogicalOperators.slice()
+      : Array.from(DEFAULT_QUERY_ENGINE_LOGICAL_OPERATORS);
+    this.masterIndexKey = config.masterIndexKey || DEFAULT_MASTER_INDEX_KEY;
     this.backupOnInitialise = config.backupOnInitialise ?? false;
     this.stripDisallowedCollectionNameCharacters =
       config.stripDisallowedCollectionNameCharacters ?? false;
@@ -57,9 +99,15 @@ class DatabaseConfig {
    * @private
    */
   _getDefaultRootFolder() {
+    if (DatabaseConfig._defaultRootFolderId) {
+      return DatabaseConfig._defaultRootFolderId;
+    }
+
     try {
       // Use the root Drive folder as default
-      return DriveApp.getRootFolder().getId();
+      const rootFolderId = DriveApp.getRootFolder().getId();
+      DatabaseConfig._defaultRootFolderId = rootFolderId;
+      return rootFolderId;
     } catch (error) {
       throw new Error('Failed to get default root folder: ' + error.message);
     }
@@ -84,9 +132,28 @@ class DatabaseConfig {
     // retryDelayMs must be a non-negative number
     Validate.nonNegativeNumber(this.retryDelayMs, 'retryDelayMs');
 
+    // lockRetryBackoffBase must be a positive number
+    Validate.positiveNumber(this.lockRetryBackoffBase, 'lockRetryBackoffBase');
+
     // Validate log level against allowed values
     const validLogLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
     Validate.enum(this.logLevel, validLogLevels, 'logLevel');
+
+    // File operation retry configuration
+    Validate.integer(this.fileRetryAttempts, 'fileRetryAttempts');
+    Validate.positiveNumber(this.fileRetryAttempts, 'fileRetryAttempts');
+    Validate.nonNegativeNumber(this.fileRetryDelayMs, 'fileRetryDelayMs');
+    Validate.positiveNumber(this.fileRetryBackoffBase, 'fileRetryBackoffBase');
+
+    // QueryEngine configuration
+    Validate.integer(this.queryEngineMaxNestedDepth, 'queryEngineMaxNestedDepth');
+    Validate.range(
+      this.queryEngineMaxNestedDepth,
+      MIN_QUERY_ENGINE_MAX_NESTED_DEPTH,
+      Number.MAX_SAFE_INTEGER,
+      'queryEngineMaxNestedDepth'
+    );
+    this._validateQueryOperators();
 
     // Optional string: rootFolderId
     Validate.optional(this.rootFolderId, Validate.string, 'rootFolderId');
@@ -105,6 +172,67 @@ class DatabaseConfig {
   }
 
   /**
+   * Validate query operator arrays.
+   * @private
+   */
+  _validateQueryOperators() {
+    const supportedOperators = this._validateOperatorArray(
+      'queryEngineSupportedOperators',
+      this.queryEngineSupportedOperators,
+      this._queryEngineSupportedOperatorsRaw,
+      this._queryEngineSupportedOperatorsProvided
+    );
+    const logicalOperators = this._validateOperatorArray(
+      'queryEngineLogicalOperators',
+      this.queryEngineLogicalOperators,
+      this._queryEngineLogicalOperatorsRaw,
+      this._queryEngineLogicalOperatorsProvided
+    );
+
+    logicalOperators.forEach((operator) => {
+      if (!supportedOperators.includes(operator)) {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+          'queryEngineLogicalOperators',
+          operator,
+          'logical operators must be present in queryEngineSupportedOperators'
+        );
+      }
+    });
+  }
+
+  /**
+   * Validate an operator array for type and contents.
+   * @param {string} configKey - Configuration key name.
+   * @param {string[]} operators - Normalised operator list.
+   * @param {*} rawValue - Raw provided value.
+   * @param {boolean} wasProvided - Whether the raw value was provided.
+   * @returns {string[]} Validated operator list.
+   * @private
+   */
+  _validateOperatorArray(configKey, operators, rawValue, wasProvided) {
+    if (wasProvided && !Array.isArray(rawValue)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        configKey,
+        rawValue,
+        'must be an array of non-empty strings'
+      );
+    }
+
+    Validate.nonEmptyArray(operators, configKey);
+    operators.forEach((operator) => {
+      if (typeof operator !== 'string' || operator.trim() === '') {
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+          configKey,
+          operator,
+          'must be an array of non-empty strings'
+        );
+      }
+    });
+
+    return operators;
+  }
+
+  /**
    * Creates a copy of this configuration
    *
    * @returns {DatabaseConfig} New configuration instance
@@ -116,8 +244,15 @@ class DatabaseConfig {
       lockTimeout: this.lockTimeout,
       retryAttempts: this.retryAttempts,
       retryDelayMs: this.retryDelayMs,
+      lockRetryBackoffBase: this.lockRetryBackoffBase,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
+      fileRetryAttempts: this.fileRetryAttempts,
+      fileRetryDelayMs: this.fileRetryDelayMs,
+      fileRetryBackoffBase: this.fileRetryBackoffBase,
+      queryEngineMaxNestedDepth: this.queryEngineMaxNestedDepth,
+      queryEngineSupportedOperators: this.queryEngineSupportedOperators.slice(),
+      queryEngineLogicalOperators: this.queryEngineLogicalOperators.slice(),
       masterIndexKey: this.masterIndexKey,
       backupOnInitialise: this.backupOnInitialise,
       stripDisallowedCollectionNameCharacters: this.stripDisallowedCollectionNameCharacters
@@ -136,8 +271,15 @@ class DatabaseConfig {
       lockTimeout: this.lockTimeout,
       retryAttempts: this.retryAttempts,
       retryDelayMs: this.retryDelayMs,
+      lockRetryBackoffBase: this.lockRetryBackoffBase,
       cacheEnabled: this.cacheEnabled,
       logLevel: this.logLevel,
+      fileRetryAttempts: this.fileRetryAttempts,
+      fileRetryDelayMs: this.fileRetryDelayMs,
+      fileRetryBackoffBase: this.fileRetryBackoffBase,
+      queryEngineMaxNestedDepth: this.queryEngineMaxNestedDepth,
+      queryEngineSupportedOperators: this.queryEngineSupportedOperators.slice(),
+      queryEngineLogicalOperators: this.queryEngineLogicalOperators.slice(),
       masterIndexKey: this.masterIndexKey,
       backupOnInitialise: this.backupOnInitialise,
       stripDisallowedCollectionNameCharacters: this.stripDisallowedCollectionNameCharacters
@@ -158,8 +300,15 @@ class DatabaseConfig {
         lockTimeout: obj.lockTimeout,
         retryAttempts: obj.retryAttempts,
         retryDelayMs: obj.retryDelayMs,
+        lockRetryBackoffBase: obj.lockRetryBackoffBase,
         cacheEnabled: obj.cacheEnabled,
         logLevel: obj.logLevel,
+        fileRetryAttempts: obj.fileRetryAttempts,
+        fileRetryDelayMs: obj.fileRetryDelayMs,
+        fileRetryBackoffBase: obj.fileRetryBackoffBase,
+        queryEngineMaxNestedDepth: obj.queryEngineMaxNestedDepth,
+        queryEngineSupportedOperators: obj.queryEngineSupportedOperators,
+        queryEngineLogicalOperators: obj.queryEngineLogicalOperators,
         masterIndexKey: obj.masterIndexKey,
         backupOnInitialise: obj.backupOnInitialise,
         stripDisallowedCollectionNameCharacters: obj.stripDisallowedCollectionNameCharacters
@@ -168,4 +317,107 @@ class DatabaseConfig {
     }
     throw new InvalidArgumentError('obj', obj, 'Invalid JSON for DatabaseConfig');
   }
+
+  /**
+   * Get QueryEngine configuration settings.
+   * @returns {{maxNestedDepth: number, supportedOperators: string[], logicalOperators: string[]}}
+   *   QueryEngine configuration snapshot.
+   */
+  getQueryEngineConfig() {
+    return {
+      maxNestedDepth: this.queryEngineMaxNestedDepth,
+      supportedOperators: this.queryEngineSupportedOperators.slice(),
+      logicalOperators: this.queryEngineLogicalOperators.slice()
+    };
+  }
+
+  /**
+   * Provides default MasterIndex key.
+   * @returns {string} Default master index key.
+   */
+  static getDefaultMasterIndexKey() {
+    return DEFAULT_MASTER_INDEX_KEY;
+  }
+
+  /**
+   * Provides default lock timeout.
+   * @returns {number} Default lock timeout in milliseconds.
+   */
+  static getDefaultLockTimeout() {
+    return DEFAULT_LOCK_TIMEOUT_MS;
+  }
+
+  /**
+   * Provides default retry attempts for lock acquisition.
+   * @returns {number} Default retry attempt count.
+   */
+  static getDefaultRetryAttempts() {
+    return DEFAULT_RETRY_ATTEMPTS;
+  }
+
+  /**
+   * Provides default retry delay.
+   * @returns {number} Default retry delay in milliseconds.
+   */
+  static getDefaultRetryDelayMs() {
+    return DEFAULT_RETRY_DELAY_MS;
+  }
+
+  /**
+   * Provides default lock retry backoff base.
+   * @returns {number} Default lock retry backoff base.
+   */
+  static getDefaultLockRetryBackoffBase() {
+    return DEFAULT_LOCK_RETRY_BACKOFF_BASE;
+  }
+
+  /**
+   * Provides default file retry attempts.
+   * @returns {number} Default file retry attempt count.
+   */
+  static getDefaultFileRetryAttempts() {
+    return DEFAULT_FILE_RETRY_ATTEMPTS;
+  }
+
+  /**
+   * Provides default file retry delay.
+   * @returns {number} Default file retry delay in milliseconds.
+   */
+  static getDefaultFileRetryDelayMs() {
+    return DEFAULT_FILE_RETRY_DELAY_MS;
+  }
+
+  /**
+   * Provides default file retry backoff base.
+   * @returns {number} Default file retry backoff base.
+   */
+  static getDefaultFileRetryBackoffBase() {
+    return DEFAULT_FILE_RETRY_BACKOFF_BASE;
+  }
+
+  /**
+   * Provides default QueryEngine max nested depth.
+   * @returns {number} Default max nested depth.
+   */
+  static getDefaultQueryEngineMaxNestedDepth() {
+    return DEFAULT_QUERY_ENGINE_MAX_NESTED_DEPTH;
+  }
+
+  /**
+   * Provides default QueryEngine supported operators.
+   * @returns {string[]} Default supported operators.
+   */
+  static getDefaultQueryEngineSupportedOperators() {
+    return Array.from(DEFAULT_QUERY_ENGINE_SUPPORTED_OPERATORS);
+  }
+
+  /**
+   * Provides default QueryEngine logical operators.
+   * @returns {string[]} Default logical operators.
+   */
+  static getDefaultQueryEngineLogicalOperators() {
+    return Array.from(DEFAULT_QUERY_ENGINE_LOGICAL_OPERATORS);
+  }
 }
+
+DatabaseConfig._defaultRootFolderId = null;

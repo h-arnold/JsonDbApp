@@ -31,6 +31,35 @@ function createGasMockRecording() {
   return file.getId();
 }
 
+/**
+ * Records DriveApp.getRootFolder() and Folder.getId() output to JSON.
+ * @returns {string} Drive file ID of the snapshot file.
+ */
+function recordRootFolderSnapshot() {
+  var now = new Date();
+  var timestamp = now.toISOString().replace(/[:.]/g, '-');
+  var root = DriveApp.getRootFolder();
+  var snapshot = {
+    meta: {
+      generatedAt: now.toISOString(),
+      timezone: Session.getScriptTimeZone(),
+      scriptId: ScriptApp.getScriptId()
+    },
+    rootFolder: {
+      id: root.getId(),
+      name: root.getName()
+    }
+  };
+
+  var output = JSON.stringify(snapshot, null, 2);
+  var folder = ensureRecordingFolder_();
+  var fileName = 'gas-root-folder-snapshot-' + timestamp + '.json';
+  var file = folder.createFile(fileName, output, MimeType.PLAIN_TEXT);
+
+  Logger.log('Root folder snapshot written: ' + file.getId());
+  return file.getId();
+}
+
 function recordPropertiesService() {
   var props = PropertiesService.getScriptProperties();
   var testKey = 'GASDB_MOCK_RECORD_PROPERTIES_' + new Date().getTime();
@@ -107,8 +136,9 @@ function recordDriveApp() {
 
   return {
     rootFolder: {
-      id: root.getId(),
-      name: root.getName()
+      serialisedGetRootFolder: JSON.stringify(root),
+      seralisedGetFolderId: JSON.stringify(root.getId()),
+      serialisedGetFolderName: JSON.stringify(root.getName())
     },
     createdFolder: {
       id: folder.getId(),
@@ -118,6 +148,12 @@ function recordDriveApp() {
       id: file.getId(),
       name: fileName,
       mimeType: file.getMimeType()
+    },
+    fullySerialisedFileProps: {
+      serilaisedFileObj: JSON.stringify(file),
+      serialisedFileName: JSON.stringify(file.getName()),
+      serialisedFileId: JSON.stringify(file.getId()),
+      serialisedFileMimeType: JSON.stringify(file.getMimeType())
     },
     getFileById: {
       id: fileById.getId(),
