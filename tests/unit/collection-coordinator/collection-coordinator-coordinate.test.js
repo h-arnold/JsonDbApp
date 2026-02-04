@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Coordinate Tests
- * 
+ *
  * Tests for CollectionCoordinator.coordinate method.
  */
 
@@ -26,19 +26,19 @@ describe('CollectionCoordinator Coordinate', () => {
 
   it('should execute callback and return result in happy path', () => {
     const coordinator = createTestCoordinator(collection, env.masterIndex);
-    
+
     const result = coordinator.coordinate('insertOne', () => 'operation-result');
-    
+
     expect(result).toBe('operation-result');
   });
 
   it('should resolve conflicts and complete operation', () => {
     simulateConflict(env.masterIndex, 'coordinatorTest');
-    
+
     const coordinator = createTestCoordinator(collection, env.masterIndex);
-    
+
     const result = coordinator.coordinate('updateOne', () => 'conflict-resolved-result');
-    
+
     expect(result).toBe('conflict-resolved-result');
   });
 });

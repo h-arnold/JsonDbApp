@@ -2,6 +2,8 @@
 
 - [MasterIndex Developer Documentation](#masterindex-developer-documentation)
   - [Overview](#overview)
+  - [Internal Helper Components](#internal-helper-components)
+    - [MasterIndexMetadataNormaliser](#masterindexmetadatanormaliser)
   - [Core Workflow](#core-workflow)
     - [Collection Access Protocol](#collection-access-protocol)
     - [Virtual Locking](#virtual-locking)
@@ -56,6 +58,14 @@ The `Database` class delegates collection operations to `MasterIndex`:
 - Collection listing and metadata retrieval
 - Backup synchronisation to Drive-based index files
 
+## Internal Helper Components
+
+### MasterIndexMetadataNormaliser
+
+**Location:** [src/04_core/MasterIndex/01_MasterIndexMetadataNormaliser.js](../../src/04_core/MasterIndex/01_MasterIndexMetadataNormaliser.js)
+
+Encapsulates the transformation of incoming metadata into `CollectionMetadata` instances. The normaliser clamps timestamps, clones lock status payloads, and ensures modification tokens are generated when missing. This keeps `_addCollectionInternal` and bulk operations lean while guaranteeing consistent metadata regardless of input type (plain object or existing `CollectionMetadata`).
+
 ## Core Workflow
 
 ### Collection Access Protocol
@@ -105,9 +115,6 @@ Prevents concurrent modifications across script instances:
   },
   locks: {
     [collectionName]: { lockedBy: String, lockedAt: String, expiresAt: String }
-  },
-  modificationHistory: {
-    [collectionName]: Array<{ operation: String, timestamp: String, data: Object }>
   }
 }
 ```
@@ -115,7 +122,7 @@ Prevents concurrent modifications across script instances:
 ## Constructor
 
 ```javascript
-constructor(config = {})
+constructor((config = {}));
 ```
 
 **Parameters:**
@@ -251,8 +258,7 @@ if (masterIndex.acquireLock('users', operationId)) {
 const expectedToken = 'previously-read-token';
 
 if (masterIndex.hasConflict('users', expectedToken)) {
-  const resolution = masterIndex.resolveConflict('users', 
-    newData, 'LAST_WRITE_WINS');
+  const resolution = masterIndex.resolveConflict('users', newData, 'LAST_WRITE_WINS');
 } else {
   masterIndex.updateCollectionMetadata('users', newData);
 }

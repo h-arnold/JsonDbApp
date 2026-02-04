@@ -17,8 +17,7 @@ class CollectionCoordinator {
    * @param {Collection} collection - Collection instance to coordinate
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
    * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
-   * @param {JDbLogger} logger - Logger for operation tracing
-   * @param _logger
+   * @param {JDbLogger} _logger - Logger factory override
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
   constructor(collection, masterIndex, config = {}, _logger = JDbLogger) {
@@ -29,13 +28,13 @@ class CollectionCoordinator {
     this._masterIndex = masterIndex;
     this._logger = JDbLogger.createComponentLogger('CollectionCoordinator');
 
-    // Use DatabaseConfig defaults if not supplied in config
-    const DEFAULTS = {
-      lockTimeout: 30000,
-      retryAttempts: 3,
-      retryDelayMs: 1000
+    const resolvedConfig = config instanceof DatabaseConfig ? config : new DatabaseConfig(config);
+    this._config = {
+      lockTimeout: resolvedConfig.lockTimeout,
+      retryAttempts: resolvedConfig.retryAttempts,
+      retryDelayMs: resolvedConfig.retryDelayMs,
+      lockRetryBackoffBase: resolvedConfig.lockRetryBackoffBase
     };
-    this._config = Object.assign({}, DEFAULTS, config);
   }
 
   /**
@@ -64,8 +63,15 @@ class CollectionCoordinator {
         lockAcquired = true;
       } catch (e) {
         if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
-          this._logger.error('Lock acquisition timed out', { collection: name, operationId: opId, timeout: this._config.lockTimeout });
-          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeout);
+          this._logger.error('Lock acquisition timed out', {
+            collection: name,
+            operationId: opId,
+            timeout: this._config.lockTimeout
+          });
+          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+            operationName,
+            this._config.lockTimeout
+          );
         }
         throw e;
       }
@@ -81,8 +87,15 @@ class CollectionCoordinator {
       // Enforce coordination timeout on operation execution
       const elapsed = Date.now() - startTime;
       if (elapsed > this._config.lockTimeout) {
-        this._logger.error('Operation timed out', { collection: name, opId, timeout: this._config.lockTimeout });
-        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(operationName, this._config.lockTimeout);
+        this._logger.error('Operation timed out', {
+          collection: name,
+          opId,
+          timeout: this._config.lockTimeout
+        });
+        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+          operationName,
+          this._config.lockTimeout
+        );
       }
 
       // Persist metadata updates
@@ -91,7 +104,11 @@ class CollectionCoordinator {
       return result;
     } catch (e) {
       // Log and rethrow
-      this._logger.error(`Operation ${operationName} failed`, { collection: name, opId, error: e.message });
+      this._logger.error(`Operation ${operationName} failed`, {
+        collection: name,
+        opId,
+        error: e.message
+      });
       throw e;
     } finally {
       if (lockAcquired) {
@@ -108,7 +125,7 @@ class CollectionCoordinator {
    * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When tokens differ
    */
   validateModificationToken(localToken, remoteToken) {
-    if (remoteToken != null && localToken !== remoteToken) {
+    if (remoteToken !== null && remoteToken !== undefined && localToken !== remoteToken) {
       // Throw a specific modification conflict error when tokens differ
       throw new ErrorHandler.ErrorTypes.MODIFICATION_CONFLICT(
         this._collection.getName(),
@@ -128,7 +145,7 @@ class CollectionCoordinator {
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
     const { retryAttempts, retryDelayMs, lockTimeout } = this._config;
-    
+
     let acquired = false;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
@@ -139,10 +156,14 @@ class CollectionCoordinator {
         }
         // retry after backoff
         if (attempt < retryAttempts) {
-          Utilities.sleep(retryDelayMs * Math.pow(2, attempt - 1));
+          Utilities.sleep(retryDelayMs * Math.pow(this._config.lockRetryBackoffBase, attempt - 1));
         }
       } catch (e) {
-        this._logger.error('Unexpected error during lock acquisition attempt', { collection: name, operationId, error: e.message });
+        this._logger.error('Unexpected error during lock acquisition attempt', {
+          collection: name,
+          operationId,
+          error: e.message
+        });
         // Re-throw unexpected errors immediately, as they are not contention issues
         // and should not be handled by the standard retry/fail mechanism.
         throw e;
@@ -209,11 +230,11 @@ class CollectionCoordinator {
       }
     } catch (e) {
       // Log and wrap any failure in a MasterIndexError
-      this._logger.error('Master index metadata update failed', { collection: name, error: e.message });
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
-        'updateCollectionMetadata',
-        e.message
-      );
+      this._logger.error('Master index metadata update failed', {
+        collection: name,
+        error: e.message
+      });
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('updateCollectionMetadata', e.message);
     }
   }
 }

@@ -2,10 +2,32 @@
 name: Test Creation Agent
 description: Creates tests in a manner compliant with the repo standards
 argument-hint: Create tests for this class.
-tools: ['vscode/openSimpleBrowser', 'vscode/runCommand', 'execute/getTerminalOutput', 'execute/runTask', 'execute/createAndRunTask', 'execute/runTests', 'execute/testFailure', 'execute/runInTerminal', 'read/terminalSelection', 'read/terminalLastCommand', 'read/getTaskOutput', 'read/problems', 'read/readFile', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'todo', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest']
+tools:
+  [
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/createAndRunTask',
+    'execute/runTests',
+    'execute/testFailure',
+    'execute/runInTerminal',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'read/getTaskOutput',
+    'read/problems',
+    'read/readFile',
+    'edit/createDirectory',
+    'edit/createFile',
+    'edit/editFiles',
+    'search',
+    'web',
+    'todo',
+    'github.vscode-pull-request-github/issue_fetch',
+    'github.vscode-pull-request-github/activePullRequest'
+  ]
 infer: true
 ---
-
 
 # Test Creation Agent
 
@@ -18,12 +40,14 @@ Create high-quality, well-structured Vitest tests that follow the project's test
 ## Testing Framework Overview
 
 ### Technology Stack
+
 - **Test Framework**: Vitest (modern, fast test runner)
 - **Environment**: Node.js with Google Apps Script (GAS) mocks
 - **Test Runner Command**: `npm run test:vitest`
 - **Lint Command**: `npx eslint 'tests/**/*.js' --ext .js`
 
 ### Directory Structure
+
 ```
 tests/
 ├── vitest.config.js           # Test configuration
@@ -59,16 +83,20 @@ tests/
 ## Test File Structure
 
 ### Standard Pattern
+
 ```javascript
 /**
  * [Component] [Category] Tests
- * 
+ *
  * Brief description of what these tests cover.
  * Refactored from old_tests/unit/[OriginalPath] (if applicable)
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { setupTestEnvironment, createTestResource } from '../../helpers/[component]-test-helpers.js';
+import {
+  setupTestEnvironment,
+  createTestResource
+} from '../../helpers/[component]-test-helpers.js';
 
 describe('[Component] [Category]', () => {
   let env;
@@ -79,11 +107,13 @@ describe('[Component] [Category]', () => {
 
   it('should [expected behavior]', () => {
     // Arrange
-    const testData = { /* ... */ };
-    
+    const testData = {
+      /* ... */
+    };
+
     // Act
     const result = performOperation(testData);
-    
+
     // Assert
     expect(result).toBeDefined();
     expect(result.property).toBe(expectedValue);
@@ -92,6 +122,7 @@ describe('[Component] [Category]', () => {
 ```
 
 ### Assertion Patterns
+
 - `expect(value).toBe(expected)` - Strict equality
 - `expect(value).toEqual(expected)` - Deep equality
 - `expect(value).toBeDefined()` - Not undefined
@@ -102,15 +133,17 @@ describe('[Component] [Category]', () => {
 - `expect(obj).toHaveProperty('key')` - Object property check
 
 ### Arrange-Act-Assert Pattern
+
 Always follow the AAA pattern with clear comments:
+
 ```javascript
 it('should perform operation correctly', () => {
   // Arrange - Set up test data and dependencies
   const input = createTestInput();
-  
+
   // Act - Execute the operation being tested
   const result = operation(input);
-  
+
   // Assert - Verify the results
   expect(result).toBe(expectedValue);
 });
@@ -119,6 +152,7 @@ it('should perform operation correctly', () => {
 ## Existing Test Helpers
 
 ### Collection Test Helpers (`tests/helpers/collection-test-helpers.js`)
+
 - `createMasterIndexKey()` - Creates unique master index key with auto-cleanup
 - `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
@@ -129,6 +163,7 @@ it('should perform operation correctly', () => {
 - `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 
 ### Collection Coordinator Test Helpers (`tests/helpers/collection-coordinator-test-helpers.js`)
+
 - `createTestCollection(env, collectionName, fileId)` - Creates and registers collection
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestCoordinator(env, customConfig)` - Creates CollectionCoordinator instance
@@ -138,13 +173,16 @@ it('should perform operation correctly', () => {
 - `simulateConflict(env, collectionName)` - Simulates modification token conflict
 
 ### Collection Metadata Test Helpers (`tests/helpers/collection-metadata-test-helpers.js`)
+
 - `createBasicMetadata(overrides)` - Creates CollectionMetadata with defaults
 - `createMetadataWithCount(documentCount, overrides)` - Creates metadata with document count
 
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
+
 - Provides utilities for testing DocumentOperations component
 
 ### Database Test Helpers (`tests/helpers/database-test-helpers.js`)
+
 - `cleanupDatabaseTests()` - Removes Drive files and ScriptProperties keys created during Database tests
 - `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
 - `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects
@@ -154,6 +192,7 @@ it('should perform operation correctly', () => {
 - `setupInitialisedDatabase(overrides)` - Creates Database instances that already ran createDatabase() and initialise()
 
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
+
 - GAS API mocks are tested separately to ensure they work correctly
 
 ## GAS Mock Limitations & Test Skipping
@@ -163,6 +202,7 @@ it('should perform operation correctly', () => {
 **IMPORTANT**: GAS mocks must provide a realistic replacement for the real Google Apps Script APIs. However, if you encounter a situation where the mocks don't adequately mirror the real thing:
 
 **Indicators of Inadequate Mocks:**
+
 - Missing API methods or properties that the source code uses
 - Incorrect behavior that doesn't match GAS documentation
 - Missing event handlers or callback mechanisms
@@ -179,6 +219,7 @@ it('should perform operation correctly', () => {
 4. **Provide context** for what needs to be added to gas-mocks
 
 **Example of properly skipped test:**
+
 ```javascript
 // SKIPPED: GAS mocks don't currently support DriveApp.searchFiles() with complex queries
 // The real GAS API supports query parameters like 'mimeType contains "image/"' but our
@@ -190,6 +231,7 @@ it.skip('should find files by MIME type using complex query', () => {
 ```
 
 **Comment Template:**
+
 ```javascript
 // SKIPPED: [Brief reason]
 // [Detailed explanation of what GAS API feature is missing]
@@ -203,6 +245,7 @@ it.skip('test description', () => {
 ### Documenting Mock Gaps
 
 When skipping tests due to mock limitations:
+
 - Be specific about which GAS API method/property is missing
 - Explain what the real GAS behavior should be
 - Add enough detail for someone to implement the mock later
@@ -211,6 +254,7 @@ When skipping tests due to mock limitations:
 ### Mock Quality Standards
 
 Remember: **GAS mocks should provide realistic replacement**
+
 - Mock behavior should match Google Apps Script documentation
 - All commonly used APIs should be mocked
 - Error conditions should mirror real GAS
@@ -221,12 +265,14 @@ Remember: **GAS mocks should provide realistic replacement**
 ## Code Quality Requirements
 
 ### 1. DRY (Don't Repeat Yourself)
+
 - **Extract repeated setup code** into helper functions
 - **Reuse existing helpers** before creating new ones
 - **Share test data** through helper functions or constants
 - If you find yourself copying code between tests, create a helper function
 
 ### 2. Lint Compliance (NON-NEGOTIABLE)
+
 - **All test code MUST pass ESLint**: `npx eslint 'tests/**/*.js' --ext .js`
 - **Zero errors, zero warnings** required
 - Common requirements:
@@ -236,17 +282,20 @@ Remember: **GAS mocks should provide realistic replacement**
   - Proper error types in `.toThrow()` assertions
 
 ### 3. Test Isolation
+
 - Each test must be independent
 - Use `beforeEach` for setup, `afterEach` for cleanup
 - Don't rely on test execution order
 - Helper functions handle automatic cleanup via registered resources
 
 ### 4. Descriptive Test Names
+
 - Use `it('should [expected behavior]', ...)` format
 - Be specific: "creates Collection with correct properties" not "works"
 - Group related tests in `describe` blocks
 
 ### 5. Complete Coverage
+
 - Test happy paths
 - Test error conditions
 - Test edge cases (empty inputs, null values, boundary conditions)
@@ -274,12 +323,14 @@ Remember: **GAS mocks should provide realistic replacement**
 **IMPORTANT**: When you create or modify test helpers, update this list:
 
 ### Steps to Update
+
 1. Add new helper functions to the "Existing Test Helpers" section above
 2. Include function signature and brief description
 3. Organize by helper file
 4. Keep the list alphabetically sorted within each file section
 
 ### When to Update
+
 - Creating new helper files
 - Adding new helper functions to existing files
 - Modifying helper function signatures
@@ -288,6 +339,7 @@ Remember: **GAS mocks should provide realistic replacement**
 ## Examples
 
 ### Good Test Example
+
 ```javascript
 describe('Collection Find Operations', () => {
   it('should find document by ID', () => {
@@ -295,10 +347,10 @@ describe('Collection Find Operations', () => {
     const env = setupCollectionTestEnvironment();
     const { collection } = createTestCollection(env, 'findTest');
     const { insertedId } = collection.insertOne({ field: 'value' });
-    
+
     // Act
     const result = collection.findOne({ _id: insertedId });
-    
+
     // Assert
     expect(result).not.toBeNull();
     expect(result.field).toBe('value');
@@ -307,6 +359,7 @@ describe('Collection Find Operations', () => {
 ```
 
 ### Bad Test Example (Anti-pattern)
+
 ```javascript
 describe('Collection', () => {
   it('works', () => {
@@ -339,7 +392,7 @@ describe('Collection', () => {
 ✅ AAA pattern followed consistently  
 ✅ Test names are descriptive  
 ✅ Automatic cleanup via helper functions  
-✅ Helper list updated if helpers were added/modified  
+✅ Helper list updated if helpers were added/modified
 
 ## Remember
 

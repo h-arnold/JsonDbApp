@@ -2,6 +2,7 @@
 
 - [DatabaseConfig Developer Documentation](#databaseconfig-developer-documentation)
   - [Overview](#overview)
+  - [Constants](#constants)
   - [Configuration Properties](#configuration-properties)
     - [Core Properties](#core-properties)
     - [Optional Properties](#optional-properties)
@@ -9,11 +10,17 @@
   - [API Reference](#api-reference)
     - [Public Methods](#public-methods)
       - [`clone()`](#clone)
-  - [`toJSON()`](#tojson)
-  - [`fromJSON(obj)`](#fromjsonobj)
+      - [`toJSON()`](#tojson)
+      - [`fromJSON(obj)`](#fromjsonobj)
     - [Private Methods](#private-methods)
+      - [`_initialiseGeneralDefaults(config)`](#_initialisegeneraldefaultsconfig)
+      - [`_initialiseRetryConfig(config)`](#_initialiseretryconfigconfig)
+      - [`_initialiseQueryEngineConfig(config)`](#_initialisequeryengineconfigconfig)
+      - [`_initialiseBooleanFlags(config)`](#_initialisebooleanflagsconfig)
       - [`_getDefaultRootFolder()`](#_getdefaultrootfolder)
       - [`_validateConfig()`](#_validateconfig)
+      - [`_validateQueryOperators()`](#_validatequeryoperators)
+      - [`_validateOperatorArray(configKey, operators, rawValue, wasProvided)`](#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided)
   - [Validation Rules](#validation-rules)
     - [Property Validation](#property-validation)
     - [Error Scenarios](#error-scenarios)
@@ -25,6 +32,8 @@
   - [Integration with Database](#integration-with-database)
   - [Component-Level Configuration](#component-level-configuration)
     - [QueryEngine Configuration](#queryengine-configuration)
+    - [FileOperations Configuration](#fileoperations-configuration)
+    - [Index Backup Strategy](#index-backup-strategy)
   - [Best Practices](#best-practices)
 
 ## Overview
@@ -45,30 +54,46 @@ The `DatabaseConfig` class manages database configuration settings with validati
 - Clear error messages for invalid settings
 - Sensible defaults for all properties
 
+## Constants
+
+`DatabaseConfig` internally defines shared constants for log handling so the configuration stays in sync with `GASDBLogger` behaviour. These are implementation details used for validation and are **not** exposed as public static properties or part of the public API:
+
+- `LOG_LEVELS`: ordered array of accepted level names (`['DEBUG','INFO','WARN','ERROR']`) used during validation.
+- `DEFAULT_LOG_LEVEL`: default value (`'INFO'`) applied when no explicit level is supplied.
+
 ## Configuration Properties
 
 ### Core Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `rootFolderId` | String | Drive root folder | Root Drive folder for database files |
+| Property         | Type   | Default              | Description                           |
+| ---------------- | ------ | -------------------- | ------------------------------------- |
+| `rootFolderId`   | String | Drive root folder    | Root Drive folder for database files  |
 | `masterIndexKey` | String | 'GASDB_MASTER_INDEX' | ScriptProperties key for master index |
 
 ### Optional Properties
 
-| Property | Type | Default | Description |
-|----------|------|---------|-------------|
-| `autoCreateCollections` | Boolean | `true` | Auto-create collections when accessed |
-| `lockTimeout` | Number | `30000` | Lock timeout in milliseconds |
-| `cacheEnabled` | Boolean | `true` | Enable file caching |
-| `logLevel` | String | 'INFO' | Log level (DEBUG, INFO, WARN, ERROR) |
-| `backupOnInitialise` | Boolean | `false` | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
-| `stripDisallowedCollectionNameCharacters` | Boolean | `false` | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks. |
+| Property                                  | Type     | Default                            | Description                                                                                                                                                                                                                                        |
+| ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
+| `lockTimeout`                             | Number   | `30000`                            | Lock timeout in milliseconds                                                                                                                                                                                                                       |
+| `retryAttempts`                           | Number   | `3`                                | Lock acquisition retry attempts                                                                                                                                                                                                                    |
+| `retryDelayMs`                            | Number   | `1000`                             | Delay between lock retries                                                                                                                                                                                                                         |
+| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for lock retries                                                                                                                                                                                                          |
+| `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
+| `logLevel`                                | String   | `DEFAULT_LOG_LEVEL` ('INFO')       | Log level constrained to the values declared in `LOG_LEVELS`                                                                                                                                                                                       |
+| `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                                                                      |
+| `fileRetryDelayMs`                        | Number   | `1000`                             | Delay between file retries                                                                                                                                                                                                                         |
+| `fileRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for file retries                                                                                                                                                                                                          |
+| `queryEngineMaxNestedDepth`               | Number   | `10`                               | Maximum allowed query nesting depth                                                                                                                                                                                                                |
+| `queryEngineSupportedOperators`           | String[] | `['$eq','$gt','$lt','$and','$or']` | Operators permitted by the QueryEngine                                                                                                                                                                                                             |
+| `queryEngineLogicalOperators`             | String[] | `['$and','$or']`                   | Logical operators recognised by the QueryEngine                                                                                                                                                                                                    |
+| `backupOnInitialise`                      | Boolean  | `false`                            | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
+| `stripDisallowedCollectionNameCharacters` | Boolean  | `false`                            | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks.                                             |
 
 ## Constructor
 
 ```javascript
-constructor(config = {})
+constructor((config = {}));
 ```
 
 **Parameters:**
@@ -77,6 +102,8 @@ constructor(config = {})
 
 **Behaviour:**
 
+- Delegates to grouped helpers (`_initialiseGeneralDefaults`, `_initialiseRetryConfig`, `_initialiseQueryEngineConfig`, `_initialiseBooleanFlags`) so each concern applies defaults consistently.
+- Uses nullish coalescing (`??`) to normalise nullish overrides while keeping explicit falsy values intact.
 - Sets default values for all properties
 - Validates all configuration parameters
 - Throws errors immediately for invalid settings
@@ -126,6 +153,22 @@ Creates a `DatabaseConfig` from an object produced by `toJSON()`.
 
 ### Private Methods
 
+#### `_initialiseGeneralDefaults(config)`
+
+Applies root folder, lock timeout, log level (via `DEFAULT_LOG_LEVEL`), and master index defaults.
+
+#### `_initialiseRetryConfig(config)`
+
+Normalises retry-related options (lock and file retries) with grouped defaults.
+
+#### `_initialiseQueryEngineConfig(config)`
+
+Clones provided operator arrays when supplied and records raw values for validation while restoring defaults when omitted.
+
+#### `_initialiseBooleanFlags(config)`
+
+Initialises boolean feature toggles such as `autoCreateCollections` and `backupOnInitialise`.
+
 #### `_getDefaultRootFolder()`
 
 Determines the default root folder ID.
@@ -145,6 +188,14 @@ Validates all configuration properties according to rules.
   3. Format validation
   4. Constraint checking
 
+#### `_validateQueryOperators()`
+
+Ensures logical operators are a subset of supported operators and raises `INVALID_ARGUMENT` when alignment fails.
+
+#### `_validateOperatorArray(configKey, operators, rawValue, wasProvided)`
+
+Validates optional operator arrays against type constraints and preserves the original error context.
+
 ## Validation Rules
 
 ### Property Validation
@@ -155,10 +206,17 @@ Validates all configuration properties according to rules.
 - Recommended range: 5000-60000ms
 - Zero means no timeout (use with caution)
 
+**retryAttempts / retryDelayMs / lockRetryBackoffBase:**
+
+- `retryAttempts` must be a positive integer
+- `retryDelayMs` must be a non-negative number
+- `lockRetryBackoffBase` must be a positive number
+
 **logLevel:**
 
-- Must be one of: 'DEBUG', 'INFO', 'WARN', 'ERROR'
+- Must be one of the entries in `LOG_LEVELS` (currently 'DEBUG', 'INFO', 'WARN', 'ERROR')
 - Case-sensitive validation
+- Defaults to `DEFAULT_LOG_LEVEL` to remain consistent with `GASDBLogger`
 - Affects logging verbosity across the system
 
 **rootFolderId:**
@@ -166,6 +224,7 @@ Validates all configuration properties according to rules.
 - Must be a valid string if provided
 - Auto-detected if not specified
 - Should correspond to accessible Drive folder
+- Default root folder lookups are cached after first access to avoid repeated Drive API calls
 
 **Boolean Properties:**
 
@@ -180,17 +239,29 @@ Validates all configuration properties according to rules.
 - Used as ScriptProperties key
 - Should be unique per database instance
 
+**File retry settings:**
+
+- `fileRetryAttempts` must be a positive integer
+- `fileRetryDelayMs` must be a non-negative number
+- `fileRetryBackoffBase` must be a positive number
+
+**QueryEngine settings:**
+
+- `queryEngineMaxNestedDepth` must be an integer greater than or equal to zero
+- `queryEngineSupportedOperators` must be a non-empty array of non-empty strings
+- `queryEngineLogicalOperators` must be a non-empty array of non-empty strings, each present in `queryEngineSupportedOperators`
+
 ### Error Scenarios
 
 Common validation errors and their meanings:
 
-| Error Message | Cause | Solution |
-|---------------|-------|----------|
-| "Lock timeout must be a non-negative number" | Invalid timeout value | Use positive number or zero |
-| "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level | Use exact string match |
-| "Auto create collections must be a boolean" | Non-boolean value | Use true or false explicitly |
-| "Failed to get default root folder" | Drive access issue | Check permissions and authentication |
-| "Collection sanitisation flag must be a boolean" | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly |
+| Error Message                                        | Cause                                                           | Solution                             |
+| ---------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| "Lock timeout must be a non-negative number"         | Invalid timeout value                                           | Use positive number or zero          |
+| "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level                                               | Use exact string match               |
+| "Auto create collections must be a boolean"          | Non-boolean value                                               | Use true or false explicitly         |
+| "Failed to get default root folder"                  | Drive access issue                                              | Check permissions and authentication |
+| "Collection sanitisation flag must be a boolean"     | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
 
 ## Usage Examples
 
@@ -225,7 +296,9 @@ const devConfig = new DatabaseConfig({
   logLevel: 'DEBUG',
   cacheEnabled: true,
   // Enable eager backup if you want an index snapshot each initialise
-  backupOnInitialise: true
+  backupOnInitialise: true,
+  // Looser query depth for exploratory work
+  queryEngineMaxNestedDepth: 12
 });
 
 // Production configuration
@@ -280,9 +353,11 @@ The DatabaseConfig class integrates seamlessly with the Database class. For Apps
 
 ```javascript
 // First-time setup
-const db1 = JsonDbApp.createAndInitialiseDatabase(new DatabaseConfig({
-  masterIndexKey: 'myMasterIndex'
-}));
+const db1 = JsonDbApp.createAndInitialiseDatabase(
+  new DatabaseConfig({
+    masterIndexKey: 'myMasterIndex'
+  })
+);
 
 // Load existing database
 const db2 = JsonDbApp.loadDatabase({
@@ -306,27 +381,39 @@ While `DatabaseConfig` handles database-wide settings, individual components may
 
 ### QueryEngine Configuration
 
-The QueryEngine accepts its own configuration object independently of DatabaseConfig:
+The QueryEngine uses defaults sourced from `DatabaseConfig` and is instantiated through `DocumentOperations`. You can still override defaults by passing a custom config directly to `QueryEngine` when needed.
 
 ```javascript
 // QueryEngine has its own configuration
 const queryEngine = new QueryEngine({
-  maxNestedDepth: 15  // Override default of 10
+  maxNestedDepth: 15 // Override default of 10
 });
 
-// DatabaseConfig and QueryEngine configurations are separate
+// DatabaseConfig supplies defaults for collections
 const dbConfig = new DatabaseConfig({
   logLevel: 'DEBUG',
-  lockTimeout: 20000
+  lockTimeout: 20000,
+  queryEngineMaxNestedDepth: 12,
+  queryEngineSupportedOperators: ['$eq', '$gt', '$lt', '$and', '$or']
 });
 
 const db = new Database(dbConfig);
-// Collections use the QueryEngine internally with their own configuration
+// Collections use the QueryEngine internally with DatabaseConfig defaults
 ```
 
 **QueryEngine Options:**
 
 - `maxNestedDepth` (Number, default: 10): Maximum allowed query nesting depth for security
+- `supportedOperators` (String[], default: `['$eq', '$gt', '$lt', '$and', '$or']`): Operators permitted by the engine
+- `logicalOperators` (String[], default: `['$and', '$or']`): Logical operators permitted by the engine
+
+### FileOperations Configuration
+
+File operations use retry settings from `DatabaseConfig` when the `Database` constructs `FileOperations`:
+
+- `fileRetryAttempts`: Number of retry attempts for Drive operations
+- `fileRetryDelayMs`: Delay between retries
+- `fileRetryBackoffBase`: Exponential backoff base for retries
 
 **Security Note:** QueryEngine always validates all queries for structure and supported operators to prevent malicious queries, regardless of configuration.
 

@@ -1,12 +1,10 @@
 {
-    "github.copilot.chat.codesearch.enabled": true,
-    "github.copilot.chat.generateTests.codeLens": true,
-    "githubPullRequests.experimental.chat": true,
-    "editor.wordWrap": "on",
-    "github.copilot.chat.edits.suggestRelatedFilesForTests": false,
-    // ESLint integration for GAS
-    "eslint.validate": [
-        "javascript"
-    ],
-    "eslint.nodePath": "node_modules/.bin",
+  "github.copilot.chat.codesearch.enabled": true,
+  "github.copilot.chat.generateTests.codeLens": true,
+  "githubPullRequests.experimental.chat": true,
+  "editor.wordWrap": "on",
+  "github.copilot.chat.edits.suggestRelatedFilesForTests": false,
+  // ESLint integration for GAS
+  "eslint.validate": ["javascript"],
+  "eslint.nodePath": "node_modules/.bin"
 }

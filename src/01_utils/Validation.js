@@ -1,6 +1,6 @@
 /**
  * ValidationUtils - Common validation utilities to reduce code duplication
- * 
+ *
  * Provides static methods for common validation patterns used throughout the codebase.
  * Throws standardised ErrorHandler.ErrorTypes.INVALID_ARGUMENT exceptions for consistency.
  */
@@ -10,7 +10,6 @@
  * consistent InvalidArgumentError instances across the codebase.
  */
 class Validate {
-  
   /**
    * Validate that a value is not null or undefined
    * @param {*} value - The value to validate
@@ -33,7 +32,11 @@ class Validate {
   static type(value, expectedType, paramName) {
     const actualType = typeof value;
     if (actualType !== expectedType) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must be of type ${expectedType}, got ${actualType}`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        `must be of type ${expectedType}, got ${actualType}`
+      );
     }
   }
 
@@ -45,7 +48,11 @@ class Validate {
    */
   static nonEmptyString(value, paramName) {
     if (!value || typeof value !== 'string' || value.trim() === '') {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a non-empty string');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        'must be a non-empty string'
+      );
     }
   }
 
@@ -72,9 +79,13 @@ class Validate {
     if (!value || typeof value !== 'object' || Array.isArray(value)) {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be an object');
     }
-    
+
     if (!allowEmpty && Object.keys(value).length === 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must not be an empty object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        'must not be an empty object'
+      );
     }
   }
 
@@ -111,7 +122,11 @@ class Validate {
   static nonEmptyArray(value, paramName) {
     this.array(value, paramName);
     if (value.length === 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a non-empty array');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        'must be a non-empty array'
+      );
     }
   }
 
@@ -149,7 +164,11 @@ class Validate {
   static positiveNumber(value, paramName) {
     this.number(value, paramName);
     if (value <= 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a positive number');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        'must be a positive number'
+      );
     }
   }
 
@@ -162,7 +181,11 @@ class Validate {
   static nonNegativeNumber(value, paramName) {
     this.number(value, paramName);
     if (value < 0) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a non-negative number');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        'must be a non-negative number'
+      );
     }
   }
 
@@ -177,7 +200,11 @@ class Validate {
   static range(value, min, max, paramName) {
     this.number(value, paramName);
     if (value < min || value > max) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must be between ${min} and ${max}`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        `must be between ${min} and ${max}`
+      );
     }
   }
 
@@ -203,7 +230,11 @@ class Validate {
   static enum(value, allowedValues, paramName) {
     this.array(allowedValues, 'allowedValues');
     if (!allowedValues.includes(value)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must be one of: ${allowedValues.join(', ')}`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        `must be one of: ${allowedValues.join(', ')}`
+      );
     }
   }
 
@@ -217,10 +248,14 @@ class Validate {
   static objectProperties(obj, requiredProps, paramName) {
     this.object(obj, paramName);
     this.nonEmptyArray(requiredProps, 'requiredProps');
-    
+
     for (const prop of requiredProps) {
       if (!obj.hasOwnProperty(prop)) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, obj, `must have property '${prop}'`);
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+          paramName,
+          obj,
+          `must have property '${prop}'`
+        );
       }
     }
   }
@@ -239,7 +274,11 @@ class Validate {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('pattern', pattern, 'must be a RegExp');
     }
     if (!pattern.test(value)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `must match ${description}`);
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        `must match ${description}`
+      );
     }
   }
 
@@ -279,7 +318,7 @@ class Validate {
    */
   static any(validators, value, paramName) {
     this.nonEmptyArray(validators, 'validators');
-    
+
     const errors = [];
     for (const validator of validators) {
       this.func(validator, 'validator');
@@ -290,9 +329,13 @@ class Validate {
         errors.push(error.message);
       }
     }
-    
+
     // All validators failed
-    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, `failed all validation conditions: ${errors.join('; ')}`);
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+      paramName,
+      value,
+      `failed all validation conditions: ${errors.join('; ')}`
+    );
   }
 
   /**
@@ -303,7 +346,11 @@ class Validate {
    */
   static validateObject(value, paramName) {
     if (!value || typeof value !== 'object' || Array.isArray(value) || value instanceof Date) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, value, 'must be a plain object');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        value,
+        'must be a plain object'
+      );
     }
   }
 
@@ -313,7 +360,12 @@ class Validate {
    * @returns {boolean} True if value is a plain object
    */
   static isPlainObject(value) {
-    return value !== null && typeof value === 'object' && !Array.isArray(value) && !(value instanceof Date);
+    return (
+      value !== null &&
+      typeof value === 'object' &&
+      !Array.isArray(value) &&
+      !(value instanceof Date)
+    );
   }
 
   /**
@@ -328,30 +380,38 @@ class Validate {
    */
   static validateUpdateObject(update, paramName, options = {}) {
     this.object(update, paramName, false); // Don't allow empty objects
-    
-    const {
-      allowMixed = false,
-      requireOperators = false,
-      forbidOperators = false
-    } = options;
-    
+
+    const { allowMixed = false, requireOperators = false, forbidOperators = false } = options;
+
     const updateKeys = Object.keys(update);
-    const hasOperators = updateKeys.some(key => key.startsWith('$'));
-    const hasNonOperators = updateKeys.some(key => !key.startsWith('$'));
-    
+    const hasOperators = updateKeys.some((key) => key.startsWith('$'));
+    const hasNonOperators = updateKeys.some((key) => !key.startsWith('$'));
+
     // Check for forbidden operators
     if (forbidOperators && hasOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, update, 'cannot contain update operators');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        update,
+        'cannot contain update operators'
+      );
     }
-    
+
     // Check for required operators
     if (requireOperators && !hasOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, update, 'requires update operators (e.g. {$set: {field: value}})');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        update,
+        'requires update operators (e.g. {$set: {field: value}})'
+      );
     }
-    
+
     // Check for mixed operators and fields
     if (!allowMixed && hasOperators && hasNonOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(paramName, update, 'cannot mix update operators with document fields');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        paramName,
+        update,
+        'cannot mix update operators with document fields'
+      );
     }
   }
 }

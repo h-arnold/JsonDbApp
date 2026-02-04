@@ -1,4 +1,4 @@
-/* global MasterIndex */
+/* global MasterIndex, InvalidFileFormatError */
 
 /**
  * Database Index Structure Tests
@@ -6,7 +6,7 @@
  * Ports legacy index backup behaviours into the Vitest suite.
  */
 
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
 import {
   setupDatabaseTestEnvironment,
   setupInitialisedDatabase,
@@ -95,5 +95,196 @@ describe('Database Index Structure', () => {
     const entry = indexData.collections[expectedName];
     expect(entry.name).toBe(expectedName);
     expect(collection.getName()).toBe(expectedName);
+  });
+
+  it('repairs missing collections when loading the index file', () => {
+    // Arrange - Start with a database that maintains an index backup
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+    const warnSpy = vi.spyOn(console, 'warn');
+
+    try {
+      database._fileService.writeFile(database.indexFileId, {
+        lastUpdated: new Date(),
+        version: 1
+      });
+
+      // Act - Load the index after corrupting the collections property
+      const indexData = database.loadIndex();
+
+      // Assert - Collections are repaired and a warning is emitted
+      expect(indexData.collections).toEqual({});
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing collections property, repairing')
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('repairs missing lastUpdated when loading the index file', () => {
+    // Arrange - Prepare a database with backup support
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+    const warnSpy = vi.spyOn(console, 'warn');
+
+    try {
+      database._fileService.writeFile(database.indexFileId, {
+        collections: {},
+        version: 1
+      });
+
+      // Act - Perform the load
+      const indexData = database.loadIndex();
+
+      // Assert - lastUpdated should be repaired and warning generated
+      expect(indexData.lastUpdated).toBeInstanceOf(Date);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing lastUpdated property, repairing')
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('repairs missing collections before adding to the index', () => {
+    // Arrange - Corrupt the index backup prior to adding a collection entry
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+    const warnSpy = vi.spyOn(console, 'warn');
+
+    try {
+      database._fileService.writeFile(database.indexFileId, {
+        lastUpdated: new Date(),
+        version: 1
+      });
+
+      // Act - Add collection metadata despite the missing collections map
+      database._addCollectionToIndex('helperRepairAdd', 'drive-file-id');
+
+      // Assert - Helper repairs structure and logs the warning once
+      const indexData = database.loadIndex();
+      expect(indexData.collections).toHaveProperty('helperRepairAdd');
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing collections property, repairing')
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('repairs missing lastUpdated before removing from the index', () => {
+    // Arrange - Persist index data without lastUpdated
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+    const warnSpy = vi.spyOn(console, 'warn');
+
+    try {
+      database._fileService.writeFile(database.indexFileId, {
+        collections: {
+          helperRepairRemove: {
+            name: 'helperRepairRemove',
+            fileId: 'drive-file-id',
+            created: new Date(),
+            lastUpdated: new Date(),
+            documentCount: 0
+          }
+        },
+        version: 1
+      });
+
+      // Act - Remove collection metadata with missing lastUpdated field on payload
+      database._removeCollectionFromIndex('helperRepairRemove');
+
+      // Assert - Helper restores lastUpdated and writes through the repaired payload
+      const indexData = database.loadIndex();
+      expect(indexData.collections).not.toHaveProperty('helperRepairRemove');
+      expect(indexData.lastUpdated).toBeInstanceOf(Date);
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('[Database] Index file missing lastUpdated property, repairing')
+      );
+    } finally {
+      warnSpy.mockRestore();
+    }
+  });
+
+  it('throws an error when index data is not an object', () => {
+    // Arrange - Corrupt the underlying JSON to a primitive value
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+
+    database._fileService.writeFile(database.indexFileId, 'not-an-object');
+
+    // Act & Assert - Load should surface a descriptive error
+    try {
+      database.loadIndex();
+      throw new Error('Expected InvalidFileFormatError when index data is primitive');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file contains invalid data structure');
+    }
+  });
+
+  it('throws an error when index data is an array', () => {
+    // Arrange - Persist an array instead of the expected object payload
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+
+    database._fileService.writeFile(database.indexFileId, []);
+
+    // Act & Assert - Loading should treat the array as structural corruption
+    try {
+      database.loadIndex();
+      throw new Error('Expected InvalidFileFormatError when index data is array');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file contains invalid data structure');
+    }
+  });
+
+  it('throws a TypeError when collections is not an object', () => {
+    // Arrange - Persist malformed collections payload
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+
+    database._fileService.writeFile(database.indexFileId, {
+      collections: 'invalid-collections',
+      lastUpdated: new Date(),
+      version: 1
+    });
+
+    const loadMalformedIndex = database.loadIndex.bind(database);
+
+    // Act & Assert - Loading should fail with a TypeError
+    try {
+      loadMalformedIndex();
+      throw new Error('Expected InvalidFileFormatError when collections is not an object');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file collections property is corrupted');
+    }
+  });
+
+  it('throws a TypeError when collections is an array', () => {
+    // Arrange - Persist collections property as an array to mirror Drive corruption
+    const { database } = setupInitialisedDatabase({ backupOnInitialise: true });
+    registerDatabaseFile(database.indexFileId);
+
+    database._fileService.writeFile(database.indexFileId, {
+      collections: [],
+      lastUpdated: new Date(),
+      version: 1
+    });
+
+    const loadMalformedIndex = database.loadIndex.bind(database);
+
+    // Act & Assert - Array payload should raise the same corruption error
+    try {
+      loadMalformedIndex();
+      throw new Error('Expected InvalidFileFormatError when collections is an array');
+    } catch (error) {
+      expect(error).toBeInstanceOf(InvalidFileFormatError);
+      expect(error.message).toBe('Index file collections property is corrupted');
+    }
   });
 });

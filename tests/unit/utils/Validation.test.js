@@ -23,7 +23,7 @@ describe('Validate type', () => {
     expect(() => Validate.type(123, 'number', 'param')).not.toThrow();
     expect(() => Validate.type(true, 'boolean', 'param')).not.toThrow();
     expect(() => Validate.type({}, 'object', 'param')).not.toThrow();
-    expect(() => Validate.type(function(){}, 'function', 'param')).not.toThrow();
+    expect(() => Validate.type(function () {}, 'function', 'param')).not.toThrow();
   });
 
   it('should throw for wrong types', () => {
@@ -61,7 +61,7 @@ describe('Validate string', () => {
 describe('Validate object', () => {
   it('should validate objects', () => {
     expect(() => Validate.object({}, 'param')).not.toThrow();
-    expect(() => Validate.object({key: 'value'}, 'param')).not.toThrow();
+    expect(() => Validate.object({ key: 'value' }, 'param')).not.toThrow();
     expect(() => Validate.object(new Date(), 'param')).not.toThrow();
   });
 
@@ -170,7 +170,7 @@ describe('Validate number', () => {
 
 describe('Validate function', () => {
   it('should validate functions', () => {
-    expect(() => Validate.func(function(){}, 'param')).not.toThrow();
+    expect(() => Validate.func(function () {}, 'param')).not.toThrow();
     expect(() => Validate.func(() => {}, 'param')).not.toThrow();
     expect(() => Validate.func(Validate.required, 'param')).not.toThrow();
   });
@@ -189,34 +189,30 @@ describe('Validate enum', () => {
   });
 
   it('should throw for invalid enum values', () => {
-    expect(() => Validate.enum('yellow', ['red', 'green', 'blue'], 'param')).toThrow(InvalidArgumentError);
+    expect(() => Validate.enum('yellow', ['red', 'green', 'blue'], 'param')).toThrow(
+      InvalidArgumentError
+    );
     expect(() => Validate.enum(4, [1, 2, 3], 'param')).toThrow(InvalidArgumentError);
   });
 });
 
 describe('Validate object properties', () => {
   it('should validate required properties', () => {
-    expect(() => Validate.objectProperties(
-      {name: 'test', age: 25, active: true}, 
-      ['name', 'age'], 
-      'param'
-    )).not.toThrow();
+    expect(() =>
+      Validate.objectProperties({ name: 'test', age: 25, active: true }, ['name', 'age'], 'param')
+    ).not.toThrow();
   });
 
   it('should throw for missing properties', () => {
-    expect(() => Validate.objectProperties(
-      {name: 'test'}, 
-      ['name', 'age'], 
-      'param'
-    )).toThrow(InvalidArgumentError);
+    expect(() => Validate.objectProperties({ name: 'test' }, ['name', 'age'], 'param')).toThrow(
+      InvalidArgumentError
+    );
   });
 
   it('should throw for non-objects', () => {
-    expect(() => Validate.objectProperties(
-      'not an object', 
-      ['name'], 
-      'param'
-    )).toThrow(InvalidArgumentError);
+    expect(() => Validate.objectProperties('not an object', ['name'], 'param')).toThrow(
+      InvalidArgumentError
+    );
   });
 });
 
@@ -227,57 +223,111 @@ describe('Validate pattern', () => {
   });
 
   it('should throw for pattern mismatch', () => {
-    expect(() => Validate.pattern('invalid-email', /\S+@\S+\.\S+/, 'email')).toThrow(InvalidArgumentError);
+    expect(() => Validate.pattern('invalid-email', /\S+@\S+\.\S+/, 'email')).toThrow(
+      InvalidArgumentError
+    );
     expect(() => Validate.pattern(123, /\d+/, 'param')).toThrow(InvalidArgumentError);
   });
 });
 
 describe('Validate optional', () => {
   it('should skip validation for null/undefined', () => {
-    expect(() => Validate.optional(null, () => { throw new Error('Should not run'); }, 'param')).not.toThrow();
-    expect(() => Validate.optional(undefined, () => { throw new Error('Should not run'); }, 'param')).not.toThrow();
+    expect(() =>
+      Validate.optional(
+        null,
+        () => {
+          throw new Error('Should not run');
+        },
+        'param'
+      )
+    ).not.toThrow();
+    expect(() =>
+      Validate.optional(
+        undefined,
+        () => {
+          throw new Error('Should not run');
+        },
+        'param'
+      )
+    ).not.toThrow();
   });
 
   it('should validate non-null/undefined values', () => {
-    expect(() => Validate.optional('test', (value, name) => {
-      Validate.nonEmptyString(value, name);
-    }, 'param')).not.toThrow();
+    expect(() =>
+      Validate.optional(
+        'test',
+        (value, name) => {
+          Validate.nonEmptyString(value, name);
+        },
+        'param'
+      )
+    ).not.toThrow();
   });
 
   it('should throw if validation fails', () => {
-    expect(() => Validate.optional('', (value, name) => {
-      Validate.nonEmptyString(value, name);
-    }, 'param')).toThrow(InvalidArgumentError);
+    expect(() =>
+      Validate.optional(
+        '',
+        (value, name) => {
+          Validate.nonEmptyString(value, name);
+        },
+        'param'
+      )
+    ).toThrow(InvalidArgumentError);
   });
 });
 
 describe('Validate compound validators', () => {
   it('should pass when all validators pass', () => {
-    expect(() => Validate.all([
-      (value, name) => Validate.string(value, name),
-      (value, name) => Validate.nonEmptyString(value, name)
-    ], 'test', 'param')).not.toThrow();
+    expect(() =>
+      Validate.all(
+        [
+          (value, name) => Validate.string(value, name),
+          (value, name) => Validate.nonEmptyString(value, name)
+        ],
+        'test',
+        'param'
+      )
+    ).not.toThrow();
   });
 
   it('should throw when any validator fails', () => {
-    expect(() => Validate.all([
-      (value, name) => Validate.string(value, name),
-      (value, name) => Validate.number(value, name)
-    ], 'test', 'param')).toThrow(InvalidArgumentError);
+    expect(() =>
+      Validate.all(
+        [
+          (value, name) => Validate.string(value, name),
+          (value, name) => Validate.number(value, name)
+        ],
+        'test',
+        'param'
+      )
+    ).toThrow(InvalidArgumentError);
   });
 
   it('should pass when at least one validator passes', () => {
-    expect(() => Validate.any([
-      (value, name) => Validate.string(value, name),
-      (value, name) => Validate.number(value, name)
-    ], 'test', 'param')).not.toThrow();
+    expect(() =>
+      Validate.any(
+        [
+          (value, name) => Validate.string(value, name),
+          (value, name) => Validate.number(value, name)
+        ],
+        'test',
+        'param'
+      )
+    ).not.toThrow();
   });
 
   it('should throw when all validators fail', () => {
-    expect(() => Validate.any([
-      (value, name) => Validate.number(value, name),
-      (value, name) => Validate.boolean(value, name)
-    ], 'test', 'param')).toThrow(InvalidArgumentError);
+    expect(() =>
+      Validate.any(
+        [
+          (value, name) => Validate.number(value, name),
+          (value, name) => Validate.boolean(value, name)
+        ],
+        'test',
+        'param'
+      )
+    ).toThrow(InvalidArgumentError);
   });
 });
 
@@ -305,7 +355,7 @@ describe('Validate error messages', () => {
 describe('Validate plain object', () => {
   it('should validate plain objects', () => {
     expect(() => Validate.validateObject({}, 'param')).not.toThrow();
-    expect(() => Validate.validateObject({key: 'value'}, 'param')).not.toThrow();
+    expect(() => Validate.validateObject({ key: 'value' }, 'param')).not.toThrow();
   });
 
   it('should throw for non-plain objects', () => {
@@ -316,7 +366,7 @@ describe('Validate plain object', () => {
 
   it('should identify plain objects', () => {
     expect(Validate.isPlainObject({})).toBe(true);
-    expect(Validate.isPlainObject({a: 1})).toBe(true);
+    expect(Validate.isPlainObject({ a: 1 })).toBe(true);
     expect(Validate.isPlainObject([])).toBe(false);
     expect(Validate.isPlainObject(new Date())).toBe(false);
     expect(Validate.isPlainObject(null)).toBe(false);
@@ -326,8 +376,8 @@ describe('Validate plain object', () => {
 
 describe('Validate update object', () => {
   it('should validate default cases', () => {
-    expect(() => Validate.validateUpdateObject({field: 1}, 'param')).not.toThrow();
-    expect(() => Validate.validateUpdateObject({$set: {field: 1}}, 'param')).not.toThrow();
+    expect(() => Validate.validateUpdateObject({ field: 1 }, 'param')).not.toThrow();
+    expect(() => Validate.validateUpdateObject({ $set: { field: 1 } }, 'param')).not.toThrow();
   });
 
   it('should throw for empty update object', () => {
@@ -335,19 +385,27 @@ describe('Validate update object', () => {
   });
 
   it('should throw when operators are forbidden', () => {
-    expect(() => Validate.validateUpdateObject({$set: {field: 1}}, 'param', {forbidOperators: true})).toThrow(InvalidArgumentError);
+    expect(() =>
+      Validate.validateUpdateObject({ $set: { field: 1 } }, 'param', { forbidOperators: true })
+    ).toThrow(InvalidArgumentError);
   });
 
   it('should throw when operators are required', () => {
-    expect(() => Validate.validateUpdateObject({field: 1}, 'param', {requireOperators: true})).toThrow(InvalidArgumentError);
+    expect(() =>
+      Validate.validateUpdateObject({ field: 1 }, 'param', { requireOperators: true })
+    ).toThrow(InvalidArgumentError);
   });
 
   it('should throw for mixed operators and fields', () => {
-    expect(() => Validate.validateUpdateObject({$set: {field: 1}, field: 2}, 'param')).toThrow(InvalidArgumentError);
+    expect(() => Validate.validateUpdateObject({ $set: { field: 1 }, field: 2 }, 'param')).toThrow(
+      InvalidArgumentError
+    );
   });
 
   it('should allow mixed when specified', () => {
-    expect(() => Validate.validateUpdateObject({$set: {field: 1}, field: 2}, 'param', {allowMixed: true})).not.toThrow();
+    expect(() =>
+      Validate.validateUpdateObject({ $set: { field: 1 }, field: 2 }, 'param', { allowMixed: true })
+    ).not.toThrow();
   });
 
   it('should throw for non-object update', () => {

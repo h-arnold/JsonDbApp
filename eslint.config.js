@@ -24,11 +24,11 @@ export default defineConfig([
       jsdoc
     },
     rules: {
-      'complexity': ['warn', 8],
-      'curly': ['warn', 'all'],
-      'eqeqeq': ['warn', 'always'],
+      complexity: ['warn', 7], // The minimum CC has been set at 7 because there are quite a few functions and methods where reducing it below that would negatively impact readability.
+      curly: ['warn', 'all'],
+      eqeqeq: ['warn', 'always'],
       'jsdoc/require-description': [
-        'warn',
+        'error',
         {
           contexts: [
             'FunctionDeclaration',
@@ -40,7 +40,7 @@ export default defineConfig([
         }
       ],
       'jsdoc/require-jsdoc': [
-        'warn',
+        'error',
         {
           contexts: [
             'FunctionDeclaration',
@@ -51,17 +51,17 @@ export default defineConfig([
           ]
         }
       ],
-      'jsdoc/require-param': 'warn',
-      'jsdoc/require-param-description': 'warn',
-      'jsdoc/require-param-type': 'warn',
-      'jsdoc/require-returns': 'warn',
-      'jsdoc/require-returns-description': 'warn',
-      'jsdoc/require-returns-type': 'warn',
+      'jsdoc/require-param': 'error',
+      'jsdoc/require-param-description': 'error',
+      'jsdoc/require-param-type': 'error',
+      'jsdoc/require-returns': 'error',
+      'jsdoc/require-returns-description': 'error',
+      'jsdoc/require-returns-type': 'error',
       'max-len': ['warn', { code: 160 }],
       'max-lines': ['warn', { max: 500, skipBlankLines: true, skipComments: true }],
       'no-console': 'off',
       'no-magic-numbers': [
-        'warn',
+        'error',
         {
           ignore: [0, 1],
           ignoreArrayIndexes: true,
@@ -82,17 +82,12 @@ export default defineConfig([
       ecmaVersion: 2021
     },
     rules: {
+      // Allow magic numbers in tests for clearer expectations and data fixtures.
       'no-magic-numbers': 'off'
     }
   },
   {
-    ignores: [
-      'eslint.config.js',  
-      'node_modules/',
-      'tests/data/',
-      '*.log',
-      '*.pid'
-    ]
+    ignores: ['eslint.config.js', 'node_modules/', 'tests/data/', '*.log', '*.pid']
   },
   prettierConfig
 ]);

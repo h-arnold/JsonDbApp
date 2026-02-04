@@ -58,7 +58,7 @@ describe('ObjectUtils deepClone dates', () => {
   it('should preserve Date objects', () => {
     const originalDate = new Date('2023-06-15T10:30:00.000Z');
     const clonedDate = ObjectUtils.deepClone(originalDate);
-    
+
     expect(clonedDate).toBeInstanceOf(Date);
     expect(clonedDate.getTime()).toBe(originalDate.getTime());
     expect(clonedDate).not.toBe(originalDate);
@@ -70,7 +70,7 @@ describe('ObjectUtils deepClone dates', () => {
       new Date('2024-12-31T23:59:59.999Z'),
       new Date()
     ];
-    
+
     dates.forEach((date) => {
       const cloned = ObjectUtils.deepClone(date);
       expect(cloned).toBeInstanceOf(Date);
@@ -103,7 +103,7 @@ describe('ObjectUtils deepClone arrays', () => {
       new Date('2023-12-31T23:59:59.999Z')
     ];
     const clonedDateArray = ObjectUtils.deepClone(dateArray);
-    
+
     expect(clonedDateArray.length).toBe(3);
     expect(clonedDateArray[0]).toBeInstanceOf(Date);
     expect(clonedDateArray[1]).toBe('string');
@@ -119,7 +119,7 @@ describe('ObjectUtils deepClone arrays', () => {
       [new Date('2023-06-15T10:30:00.000Z'), true]
     ];
     const clonedNested = ObjectUtils.deepClone(nestedArray);
-    
+
     expect(clonedNested.length).toBe(3);
     expect(clonedNested[0]).toEqual([1, 2, 3]);
     expect(clonedNested[2][0]).toBeInstanceOf(Date);
@@ -152,7 +152,7 @@ describe('ObjectUtils deepClone objects', () => {
       name: 'test document'
     };
     const clonedDateObj = ObjectUtils.deepClone(dateObj);
-    
+
     expect(clonedDateObj.created).toBeInstanceOf(Date);
     expect(clonedDateObj.updated).toBeInstanceOf(Date);
     expect(clonedDateObj.name).toBe('test document');
@@ -182,9 +182,9 @@ describe('ObjectUtils deepClone complex structures', () => {
         }
       }
     };
-    
+
     const cloned = ObjectUtils.deepClone(complexObj);
-    
+
     expect(cloned.user.id).toBe('user123');
     expect(cloned.user.profile.personal.name).toBe('John Doe');
     expect(cloned.user.profile.personal.birthDate).toBeInstanceOf(Date);
@@ -247,9 +247,9 @@ describe('ObjectUtils convertDateStringsToObjects', () => {
       null,
       undefined
     ];
-    
+
     const converted = ObjectUtils.convertDateStringsToObjects(mixedArray);
-    
+
     expect(converted[0]).toBeInstanceOf(Date);
     expect(converted[1]).toBe('regular string');
     expect(converted[2]).toBeInstanceOf(Date);
@@ -268,9 +268,9 @@ describe('ObjectUtils convertDateStringsToObjects', () => {
       regularString: 'test',
       number: 42
     };
-    
+
     const converted = ObjectUtils.convertDateStringsToObjects(mixedObj);
-    
+
     expect(converted.validDate).toBeInstanceOf(Date);
     expect(typeof converted.invalidDate).toBe('string');
     expect(converted.existingDate).toBeInstanceOf(Date);
@@ -300,16 +300,12 @@ describe('ObjectUtils convertDateStringsToObjects', () => {
         }
       },
       metadata: {
-        timestamps: [
-          '2023-03-15T09:30:00.000Z',
-          '2023-09-22T16:45:00.000Z',
-          'invalid timestamp'
-        ]
+        timestamps: ['2023-03-15T09:30:00.000Z', '2023-09-22T16:45:00.000Z', 'invalid timestamp']
       }
     };
-    
+
     const converted = ObjectUtils.convertDateStringsToObjects(nestedObj);
-    
+
     expect(converted.user.created).toBeInstanceOf(Date);
     expect(converted.user.profile.personal.birthDate).toBeInstanceOf(Date);
     expect(converted.user.profile.personal.name).toBe('John Doe');
@@ -332,9 +328,9 @@ describe('ObjectUtils serialise', () => {
   it('should serialise simple objects', () => {
     const simpleObj = { name: 'test', value: 42, active: true };
     const serialised = ObjectUtils.serialise(simpleObj);
-    
+
     expect(typeof serialised).toBe('string');
-    
+
     const parsed = JSON.parse(serialised);
     expect(parsed.name).toBe('test');
     expect(parsed.value).toBe(42);
@@ -346,7 +342,7 @@ describe('ObjectUtils serialise', () => {
       created: new Date('2023-06-15T10:30:00.000Z'),
       name: 'Test Document'
     };
-    
+
     const serialised = ObjectUtils.serialise(dateObj);
     const parsed = JSON.parse(serialised);
     expect(parsed.created).toBe('2023-06-15T10:30:00.000Z');
@@ -359,7 +355,7 @@ describe('ObjectUtils serialise', () => {
       42,
       { timestamp: new Date('2023-12-31T23:59:59.999Z') }
     ];
-    
+
     const serialised = ObjectUtils.serialise(arrayWithDates);
     const parsed = JSON.parse(serialised);
     expect(parsed[0]).toBe('2023-01-01T00:00:00.000Z');
@@ -398,7 +394,7 @@ describe('ObjectUtils deserialise', () => {
   it('should deserialise JSON strings', () => {
     const jsonString = '{"name":"test","value":42,"active":true}';
     const deserialised = ObjectUtils.deserialise(jsonString);
-    
+
     expect(typeof deserialised).toBe('object');
     expect(deserialised.name).toBe('test');
     expect(deserialised.value).toBe(42);
@@ -408,15 +404,16 @@ describe('ObjectUtils deserialise', () => {
   it('should restore dates from ISO strings', () => {
     const jsonWithDates = '{"created":"2023-06-15T10:30:00.000Z","name":"Test"}';
     const deserialised = ObjectUtils.deserialise(jsonWithDates);
-    
+
     expect(deserialised.created).toBeInstanceOf(Date);
     expect(deserialised.created.toISOString()).toBe('2023-06-15T10:30:00.000Z');
   });
 
   it('should restore arrays with dates', () => {
-    const jsonArray = '["2023-01-01T00:00:00.000Z","string value",42,{"timestamp":"2023-12-31T23:59:59.999Z"}]';
+    const jsonArray =
+      '["2023-01-01T00:00:00.000Z","string value",42,{"timestamp":"2023-12-31T23:59:59.999Z"}]';
     const deserialised = ObjectUtils.deserialise(jsonArray);
-    
+
     expect(Array.isArray(deserialised)).toBe(true);
     expect(deserialised[0]).toBeInstanceOf(Date);
     expect(deserialised[1]).toBe('string value');
@@ -446,10 +443,10 @@ describe('ObjectUtils round-trip serialisation', () => {
       },
       tags: ['admin', 'premium']
     };
-    
+
     const serialised = ObjectUtils.serialise(originalData);
     const deserialised = ObjectUtils.deserialise(serialised);
-    
+
     expect(deserialised.user.name).toBe('John Doe');
     expect(deserialised.user.created).toBeInstanceOf(Date);
     expect(deserialised.user.created.getTime()).toBe(originalData.user.created.getTime());
@@ -464,7 +461,7 @@ describe('ObjectUtils edge cases', () => {
     for (let i = 0; i < 1000; i++) {
       largeObj[`property${i}`] = `value${i}`;
     }
-    
+
     const cloned = ObjectUtils.deepClone(largeObj);
     expect(Object.keys(cloned).length).toBe(1000);
   });
@@ -475,9 +472,11 @@ describe('ObjectUtils edge cases', () => {
       name: 'test',
       /** Returns test string
        * @returns {string} Test */
-      method: function() { return 'test'; }
+      method: function () {
+        return 'test';
+      }
     };
-    
+
     const cloned = ObjectUtils.deepClone(objWithFunction);
     expect(cloned.name).toBe('test');
     expect(() => objWithFunction.method()).not.toThrow();
@@ -526,17 +525,13 @@ describe('ObjectUtils class revival', () => {
   });
 
   it('should revive CollectionMetadata instances', () => {
-    const originalMeta = new CollectionMetadata(
-      'testCollection',
-      'file123',
-      {
-        created: new Date('2023-01-01T00:00:00.000Z'),
-        lastUpdated: new Date('2023-06-15T10:30:00.000Z'),
-        documentCount: 5,
-        modificationToken: 'token123',
-        lockStatus: null
-      }
-    );
+    const originalMeta = new CollectionMetadata('testCollection', 'file123', {
+      created: new Date('2023-01-01T00:00:00.000Z'),
+      lastUpdated: new Date('2023-06-15T10:30:00.000Z'),
+      documentCount: 5,
+      modificationToken: 'token123',
+      lockStatus: null
+    });
 
     const serialised = ObjectUtils.serialise(originalMeta);
     const deserialised = ObjectUtils.deserialise(serialised);

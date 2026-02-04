@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Update Master Index Tests
- * 
+ *
  * Tests for CollectionCoordinator.updateMasterIndexMetadata.
  */
 
@@ -29,7 +29,7 @@ describe('CollectionCoordinator Update Master Index Metadata', () => {
     expect(() => {
       coordinator.updateMasterIndexMetadata();
     }).not.toThrow();
-    
+
     const updatedCollections = Object.keys(env.masterIndex.getCollections());
     expect(updatedCollections).toContain('coordinatorTest');
   });

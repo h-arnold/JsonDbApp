@@ -44,7 +44,10 @@ describe('Database createDatabase()', () => {
     const { config, masterIndexKey, rootFolderId } = createDatabaseTestConfig();
     registerMasterIndexKey(masterIndexKey);
     const folder = DriveApp.getFolderById(rootFolderId);
-    const existingFile = folder.createFile('existing-collection.json', JSON.stringify({ documents: {}, metadata: {} }));
+    const existingFile = folder.createFile(
+      'existing-collection.json',
+      JSON.stringify({ documents: {}, metadata: {} })
+    );
     registerDatabaseFile(existingFile.getId());
     const existingMasterIndex = new MasterIndex({ masterIndexKey });
     existingMasterIndex.addCollection('existingCollection', {

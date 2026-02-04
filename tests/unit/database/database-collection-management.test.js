@@ -1,4 +1,4 @@
-/* global MasterIndex */
+/* global MasterIndex, OperationError, InvalidArgumentError */
 
 /**
  * Database Collection Management Tests
@@ -63,6 +63,24 @@ describe('Database collection management', () => {
     expect(masterIndex.getCollections()[collectionName].fileId).toBe(createdCollection.driveFileId);
   });
 
+  it('should access existing collections via getCollection when not cached in memory', () => {
+    // Arrange - Create and evict the in-memory cache entry
+    const { database, masterIndexKey } = setupInitialisedDatabase();
+    const collectionName = generateUniqueName('getCollectionReload');
+    const createdCollection = database.createCollection(collectionName);
+    registerDatabaseFile(createdCollection.driveFileId);
+    database.collections.delete(collectionName);
+
+    // Act - Reload the collection through Database.getCollection()
+    const reloadedCollection = database.getCollection(collectionName);
+
+    // Assert - Reloaded collection should match persisted metadata
+    expect(reloadedCollection.name).toBe(collectionName);
+    expect(reloadedCollection.driveFileId).toBe(createdCollection.driveFileId);
+    const masterIndex = new MasterIndex({ masterIndexKey });
+    expect(masterIndex.getCollection(collectionName).fileId).toBe(createdCollection.driveFileId);
+  });
+
   it('should auto-create collections when autoCreateCollections is enabled', () => {
     // Arrange - Prepare database with default auto-create behaviour
     const { database, masterIndexKey } = setupInitialisedDatabase();
@@ -78,13 +96,78 @@ describe('Database collection management', () => {
     expect(Object.keys(masterIndex.getCollections())).toContain(targetName);
   });
 
+  it('should auto-create collections via getCollection when autoCreateCollections is enabled', () => {
+    // Arrange - Use default configuration that permits auto creation
+    const { database, masterIndexKey } = setupInitialisedDatabase();
+    const targetName = generateUniqueName('getCollectionAutoCreated');
+
+    // Act - Access a missing collection through getCollection()
+    const autoCreated = database.getCollection(targetName);
+    registerDatabaseFile(autoCreated.driveFileId);
+
+    // Assert - Collection should be created and registered in the MasterIndex
+    expect(autoCreated.name).toBe(targetName);
+    const masterIndex = new MasterIndex({ masterIndexKey });
+    expect(Object.keys(masterIndex.getCollections())).toContain(targetName);
+  });
+
   it('should throw when accessing a missing collection with auto-create disabled', () => {
     // Arrange - Disable auto-create in the configuration
     const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
     const missingName = generateUniqueName('missingCollection');
 
     // Act & Assert - Accessing should fail with an informative message
-    expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);
+    try {
+      database.collection(missingName);
+      throw new Error('Expected OperationError to be thrown for missing collection');
+    } catch (error) {
+      expect(error).toBeInstanceOf(OperationError);
+      expect(error.message).toMatch(/auto-create is disabled/);
+    }
+  });
+
+  it('should report original name when sanitised lookup fails and auto-create is disabled', () => {
+    // Arrange - Disable auto-create while allowing sanitisation adjustments
+    const { database } = setupInitialisedDatabase({
+      autoCreateCollections: false,
+      stripDisallowedCollectionNameCharacters: true
+    });
+    const unsanitisedName = 'invalid/name';
+
+    // Act & Assert - Resolution failure should surface the original unsanitised name
+    try {
+      database.collection(unsanitisedName);
+      throw new Error(
+        'Expected OperationError when sanitised lookup fails with auto-create disabled'
+      );
+    } catch (error) {
+      expect(error).toBeInstanceOf(OperationError);
+      expect(error.message).toBe(
+        "Collection 'invalid/name' does not exist and auto-create is disabled"
+      );
+    }
+  });
+
+  it('should report original name via getCollection when sanitised lookup fails and auto-create is disabled', () => {
+    // Arrange - Disable auto-create while allowing sanitisation adjustments
+    const { database } = setupInitialisedDatabase({
+      autoCreateCollections: false,
+      stripDisallowedCollectionNameCharacters: true
+    });
+    const unsanitisedName = 'invalid/name';
+
+    // Act & Assert - Resolution failure should surface the original unsanitised name
+    try {
+      database.getCollection(unsanitisedName);
+      throw new Error(
+        'Expected OperationError when sanitised getCollection fails with auto-create disabled'
+      );
+    } catch (error) {
+      expect(error).toBeInstanceOf(OperationError);
+      expect(error.message).toBe(
+        "Collection 'invalid/name' does not exist and auto-create is disabled"
+      );
+    }
   });
 
   it('should list all collections that have been created', () => {
@@ -129,7 +212,13 @@ describe('Database collection management', () => {
 
     // Act & Assert - Each invalid value should trigger validation errors
     for (const invalidName of invalidNames) {
-      expect(() => database.createCollection(invalidName)).toThrowError(/must be a non-empty string|Collection name/);
+      try {
+        database.createCollection(invalidName);
+        throw new Error('Expected InvalidArgumentError for invalid collection name');
+      } catch (error) {
+        expect(error).toBeInstanceOf(InvalidArgumentError);
+        expect(error.message).toMatch(/must be a non-empty string|Collection name/);
+      }
     }
   });
 
@@ -138,7 +227,7 @@ describe('Database collection management', () => {
     const { database } = setupInitialisedDatabase();
 
     // Act & Assert - Invalid characters should raise an error
-    expect(() => database.createCollection('invalid/name')).toThrowError(/invalid characters/);
+    expect(() => database.createCollection('invalid/name')).toThrow(InvalidArgumentError);
   });
 
   it('should sanitise invalid characters when sanitisation is enabled', () => {
@@ -171,7 +260,7 @@ describe('Database collection management', () => {
     });
 
     // Act & Assert - Reserved names must still be rejected
-    expect(() => database.createCollection('index/')).toThrowError(/reserved/);
+    expect(() => database.createCollection('index/')).toThrow(InvalidArgumentError);
   });
 
   it('should prevent duplicates when sanitised names collide', () => {
@@ -188,7 +277,7 @@ describe('Database collection management', () => {
     registerDatabaseFile(firstCollection.driveFileId);
 
     // Assert - Second creation should fail due to sanitised name collision
-    expect(() => database.createCollection(secondInput)).toThrowError(/already exists/);
+    expect(() => database.createCollection(secondInput)).toThrow(OperationError);
     const existingCollection = database.collection(secondInput);
     expect(existingCollection.name).toBe(firstCollection.name);
     expect(existingCollection.driveFileId).toBe(firstCollection.driveFileId);

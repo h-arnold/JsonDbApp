@@ -1,20 +1,20 @@
 /**
  * DocumentOperations.js - Document Operations Component
- * 
+ *
  * Handles basic CRUD operations on document collections stored as plain objects.
  * Provides ID-based document manipulation with validation and error handling.
- * 
+ *
  * Part of Section 5: Collection Components and Basic CRUD Operations
  * Note: Filtering capabilities will be added in Section 6: Query Engine
  */
 
 /**
  * DocumentOperations - Manages document CRUD operations
- * 
+ *
  * Handles document operations:
  * - Document insertion with ID generation
  * - Document retrieval by ID
- * - Document updates by ID  
+ * - Document updates by ID
  * - Document deletion by ID
  * - Document counting and existence checks
  */
@@ -34,7 +34,7 @@ class DocumentOperations {
     this._queryEngine = null; // Lazy-loaded QueryEngine instance
     this._updateEngine = null; // Lazy-loaded UpdateEngine instance
   }
-  
+
   /**
    * Insert a document with automatic or provided ID
    * @param {Object} doc - Document to insert
@@ -45,10 +45,10 @@ class DocumentOperations {
   insertDocument(doc) {
     // Validate document
     this._validateDocument(doc);
-    
+
     // Create a copy to avoid modifying the original
     const documentToInsert = ObjectUtils.deepClone(doc);
-    
+
     // Generate ID if not provided
     if (!documentToInsert._id) {
       documentToInsert._id = this._generateDocumentId();
@@ -56,19 +56,19 @@ class DocumentOperations {
       this._validateDocumentId(documentToInsert._id);
       this._checkDuplicateId(documentToInsert._id);
     }
-    
+
     // Insert document
     this._collection._documents[documentToInsert._id] = documentToInsert;
-    
+
     // Update collection metadata and mark dirty
     this._collection._updateMetadata();
     this._collection._markDirty();
-    
+
     this._logger.debug('Document inserted', { documentId: documentToInsert._id });
-    
+
     return documentToInsert;
   }
-  
+
   /**
    * Find document by ID
    * @param {string} id - Document ID to find
@@ -78,24 +78,24 @@ class DocumentOperations {
   findDocumentById(id) {
     // Validate ID
     Validate.nonEmptyString(id, 'id');
-    
+
     const document = this._collection._documents[id];
-    
+
     if (document) {
       // Return a copy to prevent external modification
       return ObjectUtils.deepClone(document);
     }
-    
+
     return null;
   }
-  
+
   /**
    * Find all documents in collection
    * @returns {Array<Object>} Array of all documents
    */
   findAllDocuments() {
     const documents = [];
-    
+
     // Convert documents object to array
     for (const documentId in this._collection._documents) {
       if (this._collection._documents.hasOwnProperty(documentId)) {
@@ -103,12 +103,12 @@ class DocumentOperations {
         documents.push(ObjectUtils.deepClone(this._collection._documents[documentId]));
       }
     }
-    
+
     this._logger.debug('Found all documents', { count: documents.length });
-    
+
     return documents;
   }
-  
+
   /**
    * Update document by ID
    * @param {string} id - Document ID to update
@@ -120,34 +120,34 @@ class DocumentOperations {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
     Validate.object(updateData, 'updateData');
-    
+
     // Check if document exists
     if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
     }
-    
+
     // Create updated document by merging
     const existingDocument = this._collection._documents[id];
     const updatedDocument = Object.assign({}, existingDocument, updateData);
-    
+
     // Preserve the original _id (cannot be changed)
     updatedDocument._id = existingDocument._id;
-    
+
     // Validate the updated document
     this._validateDocument(updatedDocument);
-    
+
     // Update document in collection
     this._collection._documents[id] = updatedDocument;
-    
+
     // Update collection metadata and mark dirty
     this._collection._updateMetadata();
     this._collection._markDirty();
-    
+
     this._logger.debug('Document updated', { documentId: id });
-    
+
     return { acknowledged: true, modifiedCount: 1 };
   }
-  
+
   /**
    * Delete document by ID
    * @param {string} id - Document ID to delete
@@ -157,21 +157,21 @@ class DocumentOperations {
   deleteDocument(id) {
     // Validate ID
     Validate.nonEmptyString(id, 'id');
-    
+
     // Check if document exists
     if (!this.documentExists(id)) {
       return { acknowledged: true, deletedCount: 0 };
     }
-    
+
     // Delete document
     delete this._collection._documents[id];
-    
+
     // Update collection metadata and mark dirty
     this._collection._updateMetadata();
     this._collection._markDirty();
-    
+
     this._logger.debug('Document deleted', { documentId: id });
-    
+
     return { acknowledged: true, deletedCount: 1 };
   }
 
@@ -184,7 +184,7 @@ class DocumentOperations {
     this._logger.debug('Counted documents', { count });
     return count;
   }
-  
+
   /**
    * Check if document exists by ID
    * @param {string} id - Document ID to check
@@ -194,7 +194,7 @@ class DocumentOperations {
   documentExists(id) {
     // Validate ID
     Validate.nonEmptyString(id, 'id');
-    
+
     return this._collection._documents.hasOwnProperty(id);
   }
 
@@ -206,26 +206,23 @@ class DocumentOperations {
    */
   findByQuery(query) {
     this._validateQuery(query);
-    
+
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
-    
-    // Create QueryEngine instance if not already created
-    if (!this._queryEngine) {
-      this._queryEngine = new QueryEngine();
-    }
-    
+
+    const queryEngine = this._getQueryEngine();
+
     // Let QueryEngine handle all validation and execution
-    const results = this._queryEngine.executeQuery(documents, query);
-    
-    this._logger.debug('Query executed by findByQuery', { 
-      queryString: JSON.stringify(query), 
-      resultCount: results.length 
+    const results = queryEngine.executeQuery(documents, query);
+
+    this._logger.debug('Query executed by findByQuery', {
+      queryString: JSON.stringify(query),
+      resultCount: results.length
     });
-    
+
     return results.length > 0 ? results[0] : null;
   }
-  
+
   /**
    * Find multiple documents matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
@@ -234,26 +231,23 @@ class DocumentOperations {
    */
   findMultipleByQuery(query) {
     this._validateQuery(query);
-    
+
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
-    
-    // Create QueryEngine instance if not already created
-    if (!this._queryEngine) {
-      this._queryEngine = new QueryEngine();
-    }
-    
+
+    const queryEngine = this._getQueryEngine();
+
     // Let QueryEngine handle all validation and execution
-    const results = this._queryEngine.executeQuery(documents, query);
-    
-    this._logger.debug('Query executed by findMultipleByQuery', { 
-      queryString: JSON.stringify(query), 
-      resultCount: results.length 
+    const results = queryEngine.executeQuery(documents, query);
+
+    this._logger.debug('Query executed by findMultipleByQuery', {
+      queryString: JSON.stringify(query),
+      resultCount: results.length
     });
-    
+
     return results;
   }
-  
+
   /**
    * Count documents matching query using QueryEngine
    * @param {Object} query - MongoDB-compatible query object
@@ -262,23 +256,20 @@ class DocumentOperations {
    */
   countByQuery(query) {
     this._validateQuery(query);
-    
+
     // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
-    
-    // Create QueryEngine instance if not already created
-    if (!this._queryEngine) {
-      this._queryEngine = new QueryEngine();
-    }
-    
+
+    const queryEngine = this._getQueryEngine();
+
     // Let QueryEngine handle all validation and execution
-    const results = this._queryEngine.executeQuery(documents, query);
-    
-    this._logger.debug('Query executed by countByQuery', { 
-      queryString: JSON.stringify(query), 
-      resultCount: results.length 
+    const results = queryEngine.executeQuery(documents, query);
+
+    this._logger.debug('Query executed by countByQuery', {
+      queryString: JSON.stringify(query),
+      resultCount: results.length
     });
-    
+
     return results.length;
   }
 
@@ -291,20 +282,20 @@ class DocumentOperations {
     let id;
     let attempts = 0;
     const maxAttempts = 100;
-    
+
     // Generate unique ID (with collision protection)
     do {
       id = IdGenerator.generateUUID();
       attempts++;
-      
+
       if (attempts >= maxAttempts) {
         throw new Error('Failed to generate unique document ID after maximum attempts');
       }
     } while (this._collection._documents[id]);
-    
+
     return id;
   }
-  
+
   /**
    * Validate document structure and content
    * @private
@@ -315,17 +306,36 @@ class DocumentOperations {
     // Use ValidationUtils for standard validations
     Validate.required(doc, 'doc');
     Validate.object(doc, 'doc');
-    
+
     // DocumentOperations-specific validations
     this._validateDocumentFields(doc);
     this._validateDocumentIdInDocument(doc._id, doc);
-    
+
     // Additional validation could be added here for:
     // - Maximum document size
     // - Field name restrictions
     // - Data type constraints
   }
-  
+
+  /**
+   * Retrieve or create the QueryEngine instance.
+   * @returns {QueryEngine} QueryEngine instance configured from DatabaseConfig.
+   * @private
+   */
+  _getQueryEngine() {
+    if (!this._queryEngine) {
+      const databaseConfig =
+        this._collection && this._collection._database ? this._collection._database.config : null;
+      const queryEngineConfig =
+        databaseConfig && typeof databaseConfig.getQueryEngineConfig === 'function'
+          ? databaseConfig.getQueryEngineConfig()
+          : undefined;
+      this._queryEngine = new QueryEngine(queryEngineConfig);
+    }
+
+    return this._queryEngine;
+  }
+
   /**
    * Apply update operators to a document by ID
    * @param {string} id - Document identifier
@@ -338,15 +348,15 @@ class DocumentOperations {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
     Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
-    
+
     // Validate operators before checking existence so invalid ops throw
     this._validateUpdateOperators(updateOps);
-    
+
     // Check existence
     if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
     }
-    
+
     // Get existing document for the update engine
     const existing = this._collection._documents[id];
     // Apply operators
@@ -354,7 +364,7 @@ class DocumentOperations {
 
     // Check if the document was actually modified
     if (ObjectUtils.deepEqual(existing, updatedDoc)) {
-        return { acknowledged: true, modifiedCount: 0 };
+      return { acknowledged: true, modifiedCount: 0 };
     }
 
     // Persist
@@ -378,14 +388,14 @@ class DocumentOperations {
     // Validate parameters
     Validate.object(query, 'query');
     Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
-    
+
     // Find matches
     const matches = this.findMultipleByQuery(query);
     if (matches.length === 0) {
       throw new ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND(query, this._collection.name);
     }
     // Apply updates
-    matches.forEach(doc => this.updateDocumentWithOperators(doc._id, updateOps));
+    matches.forEach((doc) => this.updateDocumentWithOperators(doc._id, updateOps));
     return matches.length;
   }
 
@@ -400,7 +410,7 @@ class DocumentOperations {
     // Validate parameters
     Validate.nonEmptyString(id, 'id');
     Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
-    
+
     // Check existence
     if (!this.documentExists(id)) {
       return { acknowledged: true, modifiedCount: 0 };
@@ -428,14 +438,14 @@ class DocumentOperations {
     // Validate parameters
     Validate.object(query, 'query');
     Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
-    
+
     // Find matches
     const matches = this.findMultipleByQuery(query);
     if (matches.length === 0) {
       return 0;
     }
     // Apply replacements
-    matches.forEach(d => this.replaceDocument(d._id, doc));
+    matches.forEach((d) => this.replaceDocument(d._id, doc));
     return matches.length;
   }
 
@@ -458,7 +468,11 @@ class DocumentOperations {
    */
   _validateDocumentIdInDocument(id, doc) {
     if (id !== undefined && (typeof id !== 'string' || id.trim() === '')) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc._id', id, 'Document _id must be a non-empty string if provided');
+      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+        'doc._id',
+        id,
+        'Document _id must be a non-empty string if provided'
+      );
     }
   }
 
@@ -471,7 +485,11 @@ class DocumentOperations {
   _validateDocumentFields(doc) {
     for (const field in doc) {
       if (field.startsWith('__')) {
-        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('doc', doc, `Field name "${field}" is reserved (cannot start with __)`);
+        throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+          'doc',
+          doc,
+          `Field name "${field}" is reserved (cannot start with __)`
+        );
       }
     }
   }
@@ -484,7 +502,11 @@ class DocumentOperations {
    */
   _checkDuplicateId(id) {
     if (this._collection._documents[id]) {
-      throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR('document', id, 'Document with this ID already exists');
+      throw new ErrorHandler.ErrorTypes.CONFLICT_ERROR(
+        'document',
+        id,
+        'Document with this ID already exists'
+      );
     }
   }
 
@@ -509,10 +531,13 @@ class DocumentOperations {
     if (!this._updateEngine) {
       this._updateEngine = new UpdateEngine();
     }
-    
+
     for (const operator in updateOps) {
       if (!this._updateEngine._operatorHandlers[operator]) {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(updateOps, `Unsupported update operator: ${operator}`);
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+          updateOps,
+          `Unsupported update operator: ${operator}`
+        );
       }
     }
   }

@@ -20,18 +20,18 @@ describe('ComparisonUtils equals', () => {
   });
 
   it('should handle deep objects and arrays', () => {
-    const objA = { a: 1, b: { c: 2 }, arr: [1,2,3] };
-    const objB = { a: 1, b: { c: 2 }, arr: [1,2,3] };
-    const objC = { a: 1, b: { c: 2 }, arr: [1,2,4] };
+    const objA = { a: 1, b: { c: 2 }, arr: [1, 2, 3] };
+    const objB = { a: 1, b: { c: 2 }, arr: [1, 2, 3] };
+    const objC = { a: 1, b: { c: 2 }, arr: [1, 2, 4] };
     expect(ComparisonUtils.equals(objA, objB)).toBe(true);
     expect(ComparisonUtils.equals(objA, objC)).toBe(false);
   });
 
   it('should handle array contains scalar toggle', () => {
-    const arr = [1,2,3];
+    const arr = [1, 2, 3];
     expect(ComparisonUtils.equals(arr, 2)).toBe(false);
     expect(ComparisonUtils.equals(arr, 2, { arrayContainsScalar: true })).toBe(true);
-    expect(ComparisonUtils.equals([1,'2',3], 2, { arrayContainsScalar: true })).toBe(false);
+    expect(ComparisonUtils.equals([1, '2', 3], 2, { arrayContainsScalar: true })).toBe(false);
   });
 });
 
@@ -43,9 +43,9 @@ describe('ComparisonUtils compareOrdering', () => {
   });
 
   it('should compare strings', () => {
-    expect(ComparisonUtils.compareOrdering('b','a')).toBeGreaterThan(0);
-    expect(ComparisonUtils.compareOrdering('a','b')).toBeLessThan(0);
-    expect(ComparisonUtils.compareOrdering('abc','abc')).toBe(0);
+    expect(ComparisonUtils.compareOrdering('b', 'a')).toBeGreaterThan(0);
+    expect(ComparisonUtils.compareOrdering('a', 'b')).toBeLessThan(0);
+    expect(ComparisonUtils.compareOrdering('abc', 'abc')).toBe(0);
   });
 
   it('should compare dates', () => {
@@ -91,13 +91,13 @@ describe('ComparisonUtils isOperatorObject', () => {
 
 describe('ComparisonUtils subsetMatch', () => {
   it('should match plain fields', () => {
-    const candidate = { a:1, b:2, extra: true };
-    expect(ComparisonUtils.subsetMatch(candidate, { a:1, b:2 })).toBe(true);
-    expect(ComparisonUtils.subsetMatch(candidate, { a:1, c:3 })).toBe(false);
+    const candidate = { a: 1, b: 2, extra: true };
+    expect(ComparisonUtils.subsetMatch(candidate, { a: 1, b: 2 })).toBe(true);
+    expect(ComparisonUtils.subsetMatch(candidate, { a: 1, c: 3 })).toBe(false);
   });
 
   it('should match with operators', () => {
-    const candidate = { a:5, b:10 };
+    const candidate = { a: 5, b: 10 };
     expect(ComparisonUtils.subsetMatch(candidate, { a: { $gt: 3 }, b: { $lt: 20 } })).toBe(true);
     expect(ComparisonUtils.subsetMatch(candidate, { a: { $gt: 5 } })).toBe(false);
   });
@@ -105,11 +105,13 @@ describe('ComparisonUtils subsetMatch', () => {
   it('should match mixed fields and operators', () => {
     const candidate = { sku: 'prod2', price: 24, stock: 50 };
     expect(ComparisonUtils.subsetMatch(candidate, { sku: 'prod2', price: { $lt: 25 } })).toBe(true);
-    expect(ComparisonUtils.subsetMatch(candidate, { sku: 'prod2', price: { $lt: 10 } })).toBe(false);
+    expect(ComparisonUtils.subsetMatch(candidate, { sku: 'prod2', price: { $lt: 10 } })).toBe(
+      false
+    );
   });
 
   it('should handle operator object directly', () => {
     expect(ComparisonUtils.subsetMatch(5, { $gt: 3 })).toBe(true);
-    expect(ComparisonUtils.subsetMatch({ a:1 }, { $gt: 0 })).toBe(false);
+    expect(ComparisonUtils.subsetMatch({ a: 1 }, { $gt: 0 })).toBe(false);
   });
 });

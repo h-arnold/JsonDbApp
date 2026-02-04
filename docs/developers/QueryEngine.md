@@ -73,15 +73,21 @@ Creates a new `QueryEngine` instance with optional configuration.
 
 - `config` (Object, optional): Configuration object with the following optional properties:
   - `maxNestedDepth` (Number): Maximum allowed query nesting depth (defaults to 10)
+  - `supportedOperators` (String[]): Operators permitted by the engine (defaults to DatabaseConfig settings)
+  - `logicalOperators` (String[]): Logical operators permitted by the engine (defaults to DatabaseConfig settings)
 
 **Example:**
 
 ```javascript
-// Default configuration
+// Default configuration (uses DatabaseConfig defaults)
 const queryEngine = new QueryEngine();
 
 // Custom configuration
-const queryEngine = new QueryEngine({ maxNestedDepth: 5 });
+const queryEngine = new QueryEngine({
+  maxNestedDepth: 5,
+  supportedOperators: ['$eq', '$gt'],
+  logicalOperators: ['$and']
+});
 ```
 
 ### `executeQuery(documents, query)`
@@ -102,12 +108,12 @@ Filters an array of documents based on the provided query object.
 ```javascript
 const queryEngine = new QueryEngine();
 const docs = [
-  { name: "Alice", age: 30, city: "New York" },
-  { name: "Bob", age: 24, city: "London" },
-  { name: "Charlie", age: 30, city: "Paris" }
+  { name: 'Alice', age: 30, city: 'New York' },
+  { name: 'Bob', age: 24, city: 'London' },
+  { name: 'Charlie', age: 30, city: 'Paris' }
 ];
 
-const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
+const results = queryEngine.executeQuery(docs, { age: 30, city: 'New York' });
 // results: [{ name: "Alice", age: 30, city: "New York" }]
 ```
 
@@ -132,7 +138,7 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 - `document` (Object): The document to test.
 - `fieldPath` (String): Field path (supports dot notation).
-- `queryValue` (*|Object): Expected value or operator object.
+- `queryValue` (\*|Object): Expected value or operator object.
 
 **Returns:**
 
@@ -144,8 +150,8 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 **Parameters:**
 
-- `documentValue` (*): Value from document.
-- `queryValue` (*): Value from query.
+- `documentValue` (\*): Value from document.
+- `queryValue` (\*): Value from query.
 - `operator` (String): Comparison operator (`$eq`, `$gt`, `$lt`).
 
 **Returns:**
@@ -175,7 +181,7 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 **Parameters:**
 
-- `value` (*): Value to check.
+- `value` (\*): Value to check.
 
 **Returns:**
 
@@ -187,7 +193,7 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: "New York" });
 
 **Parameters:**
 
-- `documentValue` (*): Value from document.
+- `documentValue` (\*): Value from document.
 - `operators` (Object): Operator object (e.g., `{$gt: 5, $lt: 10}`).
 
 **Returns:**
@@ -237,7 +243,7 @@ Benefits: single source of truth for comparison rules, consistent Date handling,
 
 **Parameters:**
 
-- `obj` (*): Object to check.
+- `obj` (\*): Object to check.
 - `depth` (Number): Current depth.
 
 **Throws:**
@@ -262,7 +268,7 @@ Benefits: single source of truth for comparison rules, consistent Date handling,
 
 **Parameters:**
 
-- `obj` (*): Object to search.
+- `obj` (\*): Object to search.
 - `operators` (Array): Array to collect operators (optional, defaults to empty array).
 
 **Returns:**
@@ -287,7 +293,7 @@ Benefits: single source of truth for comparison rules, consistent Date handling,
 
 **Parameters:**
 
-- `obj` (*): Object to validate.
+- `obj` (\*): Object to validate.
 - `depth` (Number): Current recursion depth.
 
 **Throws:**
@@ -332,25 +338,25 @@ Benefits: single source of truth for comparison rules, consistent Date handling,
 
 > **Note:** The following table summarises operator support in the current implementation. Only operators marked as "✔ Implemented" are available. Others are planned for future development.
 
-| Operator         | Implemented | Notes                                      |
-|------------------|:-----------:|---------------------------------------------|
-| `$eq`            |      ✔      | Supported                                   |
-| `$gt`            |      ✔      | Supported                                   |
-| `$lt`            |      ✔      | Supported                                   |
-| `$and`           |      ✔      | Supported                                   |
-| `$or`            |      ✔      | Supported                                   |
-| `$ne`            |      ✖      | Planned                                     |
-| `$gte`           |      ✖      | Planned                                     |
-| `$lte`           |      ✖      | Planned                                     |
-| `$in`            |      ✖      | Planned                                     |
-| `$nin`           |      ✖      | Planned                                     |
-| `$not`           |      ✖      | Planned                                     |
-| `$nor`           |      ✖      | Planned                                     |
-| `$exists`        |      ✖      | Planned                                     |
-| `$type`          |      ✖      | Planned                                     |
-| `$all`           |      ✖      | Planned                                     |
-| `$elemMatch`     |      ✖      | Planned                                     |
-| `$size`          |      ✖      | Planned                                     |
+| Operator     | Implemented | Notes     |
+| ------------ | :---------: | --------- |
+| `$eq`        |      ✔      | Supported |
+| `$gt`        |      ✔      | Supported |
+| `$lt`        |      ✔      | Supported |
+| `$and`       |      ✔      | Supported |
+| `$or`        |      ✔      | Supported |
+| `$ne`        |      ✖      | Planned   |
+| `$gte`       |      ✖      | Planned   |
+| `$lte`       |      ✖      | Planned   |
+| `$in`        |      ✖      | Planned   |
+| `$nin`       |      ✖      | Planned   |
+| `$not`       |      ✖      | Planned   |
+| `$nor`       |      ✖      | Planned   |
+| `$exists`    |      ✖      | Planned   |
+| `$type`      |      ✖      | Planned   |
+| `$all`       |      ✖      | Planned   |
+| `$elemMatch` |      ✖      | Planned   |
+| `$size`      |      ✖      | Planned   |
 
 ### Currently Supported Operators
 
@@ -360,16 +366,21 @@ Benefits: single source of truth for comparison rules, consistent Date handling,
 - `$and`: Joins query clauses with a logical AND. Returns all documents that match the conditions of all clauses. (Implicit when multiple fields are specified at the same level)
 - `$or`: Joins query clauses with a logical OR. Returns all documents that match the conditions of at least one clause.
 
+Defaults for supported and logical operators are defined in `DatabaseConfig` and can be overridden via the `QueryEngine` constructor.
+
 ## Usage Examples
 
 ### Simple Equality Match
 
 ```javascript
 const queryEngine = new QueryEngine();
-const documents = [{ item: "apple", qty: 10 }, { item: "banana", qty: 20 }];
+const documents = [
+  { item: 'apple', qty: 10 },
+  { item: 'banana', qty: 20 }
+];
 
 // Equivalent to: { item: { $eq: "apple" } }
-const result = queryEngine.executeQuery(documents, { item: "apple" });
+const result = queryEngine.executeQuery(documents, { item: 'apple' });
 // result: [{ item: "apple", qty: 10 }]
 ```
 
@@ -378,9 +389,9 @@ const result = queryEngine.executeQuery(documents, { item: "apple" });
 ```javascript
 const queryEngine = new QueryEngine();
 const documents = [
-  { product: "A", price: 10 },
-  { product: "B", price: 20 },
-  { product: "C", price: 30 }
+  { product: 'A', price: 10 },
+  { product: 'B', price: 20 },
+  { product: 'C', price: 30 }
 ];
 
 // Price greater than 15
@@ -397,34 +408,27 @@ const affordable = queryEngine.executeQuery(documents, { price: { $lt: 25 } });
 ```javascript
 const queryEngine = new QueryEngine();
 const documents = [
-  { name: "Shirt", colour: "blue", stock: 5 },
-  { name: "Pants", colour: "blue", stock: 0 },
-  { name: "Shirt", colour: "red", stock: 10 }
+  { name: 'Shirt', colour: 'blue', stock: 5 },
+  { name: 'Pants', colour: 'blue', stock: 0 },
+  { name: 'Shirt', colour: 'red', stock: 10 }
 ];
 
 // Blue items that are in stock
 const blueAndInStock = queryEngine.executeQuery(documents, {
-  $and: [
-    { colour: "blue" },
-    { stock: { $gt: 0 } }
-  ]
+  $and: [{ colour: 'blue' }, { stock: { $gt: 0 } }]
 });
 // blueAndInStock: [{ name: "Shirt", colour: "blue", stock: 5 }]
 
 // Implicit AND
 const blueAndInStockImplicit = queryEngine.executeQuery(documents, {
-  colour: "blue",
+  colour: 'blue',
   stock: { $gt: 0 }
 });
 // blueAndInStockImplicit: [{ name: "Shirt", colour: "blue", stock: 5 }]
 
-
 // Red items OR items with no stock
 const redOrNoStock = queryEngine.executeQuery(documents, {
-  $or: [
-    { colour: "red" },
-    { stock: 0 }
-  ]
+  $or: [{ colour: 'red' }, { stock: 0 }]
 });
 // redOrNoStock: [
 //   { name: "Pants", colour: "blue", stock: 0 },
@@ -439,11 +443,11 @@ Use dot notation to query fields within embedded documents.
 ```javascript
 const queryEngine = new QueryEngine();
 const documents = [
-  { item: "journal", details: { supplier: "X", pages: 200 } },
-  { item: "pen", details: { supplier: "Y", colour: "blue" } }
+  { item: 'journal', details: { supplier: 'X', pages: 200 } },
+  { item: 'pen', details: { supplier: 'Y', colour: 'blue' } }
 ];
 
-const journalsFromX = queryEngine.executeQuery(documents, { "details.supplier": "X" });
+const journalsFromX = queryEngine.executeQuery(documents, { 'details.supplier': 'X' });
 // journalsFromX: [{ item: "journal", details: { supplier: "X", pages: 200 } }]
 ```
 
@@ -452,13 +456,13 @@ const journalsFromX = queryEngine.executeQuery(documents, { "details.supplier": 
 ```javascript
 const queryEngine = new QueryEngine();
 const documents = [
-  { item: "A", tags: ["red", "round"], ratings: [5, 8, 9] },
-  { item: "B", tags: ["blue", "square"], ratings: [7, 8] },
-  { item: "C", tags: ["red", "square"], ratings: [6] }
+  { item: 'A', tags: ['red', 'round'], ratings: [5, 8, 9] },
+  { item: 'B', tags: ['blue', 'square'], ratings: [7, 8] },
+  { item: 'C', tags: ['red', 'square'], ratings: [6] }
 ];
 
 // Items tagged "red" (simple match in array)
-const redItems = queryEngine.executeQuery(documents, { tags: "red" });
+const redItems = queryEngine.executeQuery(documents, { tags: 'red' });
 // redItems: [
 //   { item: "A", tags: ["red", "round"], ratings: [5, 8, 9] },
 //   { item: "C", tags: ["red", "square"], ratings: [6] }
@@ -494,7 +498,6 @@ The `QueryEngine` uses the following error types for different issues:
   - Unrecognised query operators
   - Invalid operator syntax or values (e.g., `$and` without an array value)
   - Query nesting depth exceeded
-  
 - `InvalidArgumentError`: For input validation problems such as:
   - Non-array documents parameter
   - Null, undefined, string, or array query parameters

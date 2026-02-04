@@ -1,6 +1,6 @@
 /**
  * CollectionMetadata Test Helpers for Vitest
- * 
+ *
  * Provides utilities for setting up and tearing down CollectionMetadata tests.
  */
 
@@ -43,5 +43,5 @@ export const createTestLockStatus = (overrides = {}) => {
  * @returns {Promise<void>}
  */
 export const waitForTimestamp = (ms = 10) => {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };

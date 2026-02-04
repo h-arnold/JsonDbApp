@@ -1,6 +1,6 @@
 /**
  * DocumentOperations Test Helpers for Vitest
- * 
+ *
  * Provides utilities for setting up and tearing down DocumentOperations tests.
  */
 
@@ -38,7 +38,7 @@ export const createTestFolder = () => {
 export const createTestCollectionFile = (folderId, collectionName) => {
   const folder = DriveApp.getFolderById(folderId);
   const fileName = `${collectionName}.json`;
-  
+
   const testData = {
     collection: collectionName,
     metadata: {
@@ -49,7 +49,7 @@ export const createTestCollectionFile = (folderId, collectionName) => {
     },
     documents: {}
   };
-  
+
   const file = folder.createFile(fileName, JSON.stringify(testData, null, 2), 'application/json');
   const fileId = file.getId();
   testResources.fileIds.add(fileId);
@@ -64,11 +64,11 @@ export const setupTestEnvironment = () => {
   const folderId = createTestFolder();
   const collectionName = `documentOperationsTest_${generateTimestamp()}`;
   const fileId = createTestCollectionFile(folderId, collectionName);
-  
+
   const logger = JDbLogger.createComponentLogger('DocumentOps-Test');
   const fileOps = new FileOperations(logger);
   const fileService = new FileService(fileOps, logger);
-  
+
   const testCollection = {
     _documents: {},
     _metadata: {
@@ -84,16 +84,22 @@ export const setupTestEnvironment = () => {
      * Gets Drive file ID
      * @returns {string} File ID
      */
-    getDriveFileId() { return this._driveFileId; },
+    getDriveFileId() {
+      return this._driveFileId;
+    },
     /**
      * Gets metadata
      * @returns {object} Metadata
      */
-    getMetadata() { return this._metadata; },
+    getMetadata() {
+      return this._metadata;
+    },
     /**
      * Marks collection as dirty
      */
-    _markDirty() { this._isDirty = true; },
+    _markDirty() {
+      this._isDirty = true;
+    },
     /**
      * Updates metadata timestamp
      */
@@ -128,9 +134,9 @@ export const setupTestEnvironment = () => {
       }
     }
   };
-  
+
   testCollection._loadData();
-  
+
   return {
     folderId,
     fileId,
@@ -143,22 +149,22 @@ export const setupTestEnvironment = () => {
  * Cleanup function - automatically registered with afterEach
  */
 export const cleanupTestResources = () => {
-  testResources.fileIds.forEach(fileId => {
+  testResources.fileIds.forEach((fileId) => {
     try {
       DriveApp.getFileById(fileId).setTrashed(true);
     } catch {
       // Ignore cleanup errors
     }
   });
-  
-  testResources.folderIds.forEach(folderId => {
+
+  testResources.folderIds.forEach((folderId) => {
     try {
       DriveApp.getFolderById(folderId).setTrashed(true);
     } catch {
       // Ignore cleanup errors
     }
   });
-  
+
   testResources.fileIds.clear();
   testResources.folderIds.clear();
 };

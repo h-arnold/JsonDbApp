@@ -1,6 +1,6 @@
 /**
  * CollectionMetadata - Manages collection metadata as plain objects
- * 
+ *
  * Handles metadata properties:
  * - name: Collection name
  * - fileId: Google Drive file ID
@@ -32,17 +32,17 @@ class CollectionMetadata {
     // Handle different constructor signatures
     let name = null;
     let metadata = {};
-    
+
     if (typeof nameOrInitialMetadata === 'string') {
       // Constructor called with name parameter: new CollectionMetadata(name, fileId, initialMetadata)
       name = nameOrInitialMetadata;
-      
+
       // Validate name
       Validate.nonEmptyString(name, 'name');
-      
+
       // Validate fileId
       Validate.optional(fileId, Validate.string, 'fileId');
-      
+
       metadata = initialMetadata || {};
     } else if (Validate.isPlainObject(nameOrInitialMetadata)) {
       // Constructor called with legacy signature: new CollectionMetadata(initialMetadata)
@@ -67,7 +67,7 @@ class CollectionMetadata {
 
     // Use a single 'now' variable for both created and lastUpdated
     const now = new Date();
-    
+
     // Set created timestamp
     if (metadata.created !== undefined) {
       Validate.required(metadata.created, 'created');
@@ -83,7 +83,11 @@ class CollectionMetadata {
     if (metadata.lastUpdated !== undefined) {
       Validate.required(metadata.lastUpdated, 'lastUpdated');
       if (!(metadata.lastUpdated instanceof Date) || isNaN(metadata.lastUpdated.getTime())) {
-        throw new InvalidArgumentError('lastUpdated', metadata.lastUpdated, 'Must be a valid Date object');
+        throw new InvalidArgumentError(
+          'lastUpdated',
+          metadata.lastUpdated,
+          'Must be a valid Date object'
+        );
       }
       this.lastUpdated = new Date(metadata.lastUpdated.getTime());
     } else {
@@ -128,7 +132,11 @@ class CollectionMetadata {
    */
   _validateLockStatus(lockStatus) {
     Validate.object(lockStatus, 'lockStatus');
-    Validate.objectProperties(lockStatus, ['isLocked', 'lockedBy', 'lockedAt', 'lockTimeout'], 'lockStatus');
+    Validate.objectProperties(
+      lockStatus,
+      ['isLocked', 'lockedBy', 'lockedAt', 'lockTimeout'],
+      'lockStatus'
+    );
 
     Validate.boolean(lockStatus.isLocked, 'lockStatus.isLocked');
     Validate.optional(lockStatus.lockedBy, Validate.string, 'lockStatus.lockedBy');
@@ -241,12 +249,15 @@ class CollectionMetadata {
     result.modificationToken = this.modificationToken;
 
     // Include lock status with deep copy if it exists
-    result.lockStatus = this.lockStatus !== null ? {
-      isLocked: this.lockStatus.isLocked,
-      lockedBy: this.lockStatus.lockedBy,
-      lockedAt: this.lockStatus.lockedAt,
-      lockTimeout: this.lockStatus.lockTimeout
-    } : null;
+    result.lockStatus =
+      this.lockStatus !== null
+        ? {
+            isLocked: this.lockStatus.isLocked,
+            lockedBy: this.lockStatus.lockedBy,
+            lockedAt: this.lockStatus.lockedAt,
+            lockTimeout: this.lockStatus.lockTimeout
+          }
+        : null;
 
     return result;
   }
@@ -255,22 +266,24 @@ class CollectionMetadata {
    * Create independent clone of metadata
    * @returns {CollectionMetadata} New instance with same values
    */
-   clone() {
-     const cloneMetadata = {
+  clone() {
+    const cloneMetadata = {
       created: new Date(this.created.getTime()),
       lastUpdated: new Date(this.lastUpdated.getTime()),
       documentCount: this.documentCount,
       modificationToken: this.modificationToken,
-      lockStatus: this.lockStatus ? {
-        isLocked: this.lockStatus.isLocked,
-        lockedBy: this.lockStatus.lockedBy,
-        lockedAt: this.lockStatus.lockedAt, // Keep as timestamp number
-        lockTimeout: this.lockStatus.lockTimeout // Keep as timestamp number
-      } : null
+      lockStatus: this.lockStatus
+        ? {
+            isLocked: this.lockStatus.isLocked,
+            lockedBy: this.lockStatus.lockedBy,
+            lockedAt: this.lockStatus.lockedAt, // Keep as timestamp number
+            lockTimeout: this.lockStatus.lockTimeout // Keep as timestamp number
+          }
+        : null
     };
 
-     return new CollectionMetadata(this.name, this.fileId, cloneMetadata);
-   }
+    return new CollectionMetadata(this.name, this.fileId, cloneMetadata);
+  }
 
   /**
    * Create CollectionMetadata instance from plain object
@@ -280,37 +293,34 @@ class CollectionMetadata {
    * @static
    */
   static fromJSON(obj) {
-     Validate.object(obj, 'obj');
-     Validate.objectProperties(obj, ['name', 'fileId'], 'obj');
+    Validate.object(obj, 'obj');
+    Validate.objectProperties(obj, ['name', 'fileId'], 'obj');
 
-     const name = obj.name;
-     const fileId = obj.fileId;
-     const metadata = {
-       created: obj.created,
-       lastUpdated: obj.lastUpdated,
-       documentCount: obj.documentCount,
-       modificationToken: obj.modificationToken,
-       lockStatus: obj.lockStatus
-     };
+    const name = obj.name;
+    const fileId = obj.fileId;
+    const metadata = {
+      created: obj.created,
+      lastUpdated: obj.lastUpdated,
+      documentCount: obj.documentCount,
+      modificationToken: obj.modificationToken,
+      lockStatus: obj.lockStatus
+    };
 
-     return new CollectionMetadata(name, fileId, metadata);
-   }
-  
-   /**
-    * Create new CollectionMetadata instance with specified name and fileId
-    * @param {string} name - Collection name
-    * @param {string} fileId - Google Drive file ID
-    * @returns {CollectionMetadata} New CollectionMetadata instance
-    * @static
-    */
-   static create(name, fileId) {
-     return new CollectionMetadata(name, fileId);
-   }
+    return new CollectionMetadata(name, fileId, metadata);
+  }
+
+  /**
+   * Create new CollectionMetadata instance with specified name and fileId
+   * @param {string} name - Collection name
+   * @param {string} fileId - Google Drive file ID
+   * @returns {CollectionMetadata} New CollectionMetadata instance
+   * @static
+   */
+  static create(name, fileId) {
+    return new CollectionMetadata(name, fileId);
+  }
 }
 
-
-
-
-if (typeof module !== "undefined" && module.exports) {
+if (typeof module !== 'undefined' && module.exports) {
   module.exports = { CollectionMetadata };
 }

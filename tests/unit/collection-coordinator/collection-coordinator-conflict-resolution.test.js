@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Conflict Resolution Tests
- * 
+ *
  * Tests for CollectionCoordinator conflict resolution behaviour.
  */
 
@@ -26,9 +26,9 @@ describe('CollectionCoordinator Conflict Resolution', () => {
 
   it('should resolve conflict using reload strategy', () => {
     simulateConflict(env.masterIndex, 'coordinatorTest');
-    
+
     const coordinator = createTestCoordinator(collection, env.masterIndex);
-    
+
     expect(() => {
       coordinator.resolveConflict();
     }).not.toThrow();

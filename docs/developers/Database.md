@@ -3,13 +3,20 @@
 - [Database Developer Documentation](#database-developer-documentation)
   - [Overview](#overview)
   - [Architecture \& MasterIndex Integration](#architecture--masterindex-integration)
-    - [Post-Refactoring Design](#post-refactoring-design)
-    - [Primary vs Secondary Data Sources](#primary-vs-secondary-data-sources)
+    - [Refactored Design (Single Source of Truth)](#refactored-design-single-source-of-truth)
+    - [Data Sources](#data-sources)
     - [Collection Access Protocol](#collection-access-protocol)
+  - [Database Initialization and Recovery Workflow](#database-initialization-and-recovery-workflow)
+    - [First-Time Setup](#first-time-setup)
+    - [Normal Initialization](#normal-initialization)
+    - [Disaster Recovery](#disaster-recovery)
+    - [Benefits of New Workflow](#benefits-of-new-workflow)
   - [Constructor](#constructor)
   - [API Reference](#api-reference)
     - [Core Methods](#core-methods)
+      - [`createDatabase()`](#createdatabase)
       - [`initialise()`](#initialise)
+      - [`recoverDatabase(backupFileId)`](#recoverdatabasebackupfileid)
       - [`collection(name)`](#collectionname)
       - [`createCollection(name)`](#createcollectionname)
       - [`listCollections()`](#listcollections)
@@ -19,8 +26,13 @@
     - [Private Methods](#private-methods)
       - [`_findExistingIndexFile()`](#_findexistingindexfile)
       - [`_createIndexFile()`](#_createindexfile)
-      - [`_loadIndexFile()`](#_loadindexfile)
+      - [`ensureIndexFile()`](#ensureindexfile)
+      - [`_resolveCollection(resolvedName, originalName)`](#_resolvecollectionresolvedname-originalname)
       - [`_createCollectionObject(name, driveFileId)`](#_createcollectionobjectname-drivefileid)
+      - [`_normaliseIndexData(rawData)`](#_normaliseindexdatarawdata)
+      - [`_assertIndexObject(indexCandidate)`](#_assertindexobjectindexcandidate)
+      - [`_ensureCollectionsMap(indexData)`](#_ensurecollectionsmapindexdata)
+      - [`_ensureLastUpdated(indexData)`](#_ensurelastupdatedindexdata)
       - [`_validateCollectionName(name)`](#_validatecollectionnamename)
   - [Usage Examples](#usage-examples)
     - [Basic Database Setup](#basic-database-setup)
@@ -41,7 +53,7 @@ The `Database` class is the main entry point for GAS DB operations, providing hi
 **Key Responsibilities:**
 
 - Database creation, initialization, and recovery
-- Collection creation, access, and deletion  
+- Collection creation, access, and deletion
 - MasterIndex as single source of truth for metadata
 - Drive index file backup operations
 - High-level database operations and error handling
@@ -85,15 +97,16 @@ Database (Orchestrator)
 
 ### Collection Access Protocol
 
-**UPDATED:** Simplified to use MasterIndex as single source of truth:
+**UPDATED:** Both `collection()` and `getCollection()` now validate the caller input, log any sanitisation, and delegate to the shared `_resolveCollection(resolvedName, originalName)` helper so the same caching and error messaging applies regardless of entry point:
 
-1. Check in-memory collections cache
-2. Query MasterIndex (single source of truth)
-3. Auto-create if enabled and collection doesn't exist
+1. Public methods sanitise and validate the name up front, logging when characters were stripped while keeping the unsanitised input for messaging
+2. `_resolveCollection()` checks the in-memory collections cache using the sanitised key
+3. If not cached, the helper queries MasterIndex (single source of truth)
+4. When the collection is still missing, `_resolveCollection()` auto-creates if permitted, otherwise it raises an error that includes the caller’s original name
 
-**Important:** No longer falls back to Drive index file.
+**Important:** `_resolveCollection()` ensures the caller sees the original name in error messages when auto-create is disabled, even if sanitisation adjusted the lookup key. The helper also short-circuits when the configuration forbids auto-creation so the behaviour stays consistent between `collection()` and `getCollection()`.
 
-You can tune the behaviour by enabling `stripDisallowedCollectionNameCharacters` on `DatabaseConfig`. When enabled, these characters are stripped from the requested name before validation, the cleaned name is logged when characters were removed, and the cleaned name is the one persisted in caches and the MasterIndex. The sanitised name still undergoes the reserved-name and empty-name checks so the system never exposes a forbidden value, it just removes the offending characters first.
+You can tune the behaviour by enabling `stripDisallowedCollectionNameCharacters` on `DatabaseConfig`. When enabled, the sanitised name is the one persisted in caches and the MasterIndex, yet `_resolveCollection()` keeps the unsanitised input for messaging parity so developers can reconcile errors with their original call site.
 
 ## Database Initialization and Recovery Workflow
 
@@ -134,8 +147,8 @@ db.initialise();
 
 ```javascript
 const db = new Database(config);
-db.recoverDatabase(backupFileId);  // Restores from backup to MasterIndex
-db.initialise();                   // Loads from restored MasterIndex
+db.recoverDatabase(backupFileId); // Restores from backup to MasterIndex
+db.initialise(); // Loads from restored MasterIndex
 ```
 
 ### Benefits of New Workflow
@@ -148,7 +161,7 @@ db.initialise();                   // Loads from restored MasterIndex
 ## Constructor
 
 ```javascript
-constructor(config = {})
+constructor((config = {}));
 ```
 
 **Parameters:**
@@ -243,13 +256,14 @@ const db = new Database({
 - **Returns:** `Object` - Collection object
 - **Throws:** `Error` for invalid names or when collection doesn't exist and auto-create is disabled
 
-**Access Priority:**
+**Access Path:**
 
-1. In-memory cache
-2. MasterIndex (single source of truth)
-3. Auto-create (if enabled)
+1. Public method sanitises and validates the name, logging adjustments
+2. `_resolveCollection()` uses the sanitised name for cache and MasterIndex lookups
+3. Cache hit returns immediately; otherwise MasterIndex metadata is used to build the collection
+4. Auto-create (if enabled) creates the collection before returning; when disabled the helper throws with the caller's original name
 
-**Important:** No longer falls back to Drive index file.
+**Important:** No longer falls back to Drive index file. When auto-create is disabled, `_resolveCollection()` raises an error that includes the caller's original name so regression tests can assert messaging consistency.
 
 #### `createCollection(name)`
 
@@ -302,15 +316,18 @@ Explicitly creates a new collection.
 Loads and validates Drive-based index file data.
 
 - **Returns:** `Object` - Index file data with structure validation
-- **Throws:** `Error` for corrupted files or when database not initialised
+- **Throws:** `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT` for corrupted or structurally invalid payloads, `ErrorHandler.ErrorTypes.FILE_IO_ERROR` when Drive reads fail
 
 **Validation & Repair:**
 
-- Validates JSON structure
-- Repairs missing `collections` or `lastUpdated` properties
-- Detects and reports corruption scenarios
+- `_normaliseIndexData()` ensures the parsed value is an object, applying default envelopes and surfacing `INVALID_FILE_FORMAT` errors when validation fails
+- `_assertIndexObject()` rejects malformed payloads (including top-level arrays) using `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT`
+- `_ensureCollectionsMap()` guarantees `collections` is a map, repairing missing entries and raising `INVALID_FILE_FORMAT` when an existing value has the wrong type
+- `_ensureLastUpdated()` backfills timestamps when absent
 
-Before reading the Drive index file, `loadIndex()` calls `ensureIndexFile()` so the file is only created or touched when backups are enabled (`backupOnInitialise: true`) or when an explicit index operation needs it.
+These helpers are also used by index mutation utilities so that validation and repair logic remains centralised. Before reading the Drive index file, `loadIndex()` calls `ensureIndexFile()` so the file is only created or touched when backups are enabled (`backupOnInitialise: true`) or when an explicit index operation needs it.
+
+Regression suites cover array payload rejection and timestamp preservation so that future changes retain these guarantees.
 
 #### `backupIndexToDrive()`
 
@@ -342,13 +359,19 @@ Creates a new Drive-based index file with initial structure.
 
 Lazily locates or creates the Drive-based index file. This helper is invoked when `backupOnInitialise` is `true` during `initialise()` and before any other Drive index operations so unnecessary Drive writes are avoided when backups are disabled.
 
-#### `_loadIndexFile()`
+#### `_resolveCollection(resolvedName, originalName)`
 
-Loads index file and synchronizes with MasterIndex.
+Centralises collection resolution for both `collection()` and `getCollection()` after the public wrapper sanitises the input.
 
-- **Side Effects:**
-  - Populates in-memory collections
-  - Syncs missing collections to MasterIndex
+- **Parameters:**
+  - `resolvedName` (String): Sanitised collection name used for cache and MasterIndex lookups
+  - `originalName` (String): Caller-supplied name used for error messaging and auto-create delegations
+- **Returns:** `Object` - Collection object from cache or newly constructed via MasterIndex metadata
+- **Behaviour:**
+  - Checks cache before contacting MasterIndex
+  - Rehydrates a collection using MasterIndex metadata when available
+  - Throws with the original caller input when auto-create is disabled and the collection is missing
+  - Creates and caches new collections (via `createCollection(originalName)`) when auto-create is permitted
 
 #### `_createCollectionObject(name, driveFileId)`
 
@@ -359,6 +382,50 @@ Creates a minimal collection object (placeholder for full Collection class).
   - `driveFileId` (String): Drive file ID
 - **Returns:** `Object` - Collection object
 - **Note:** Currently returns minimal object; will integrate with full Collection class in Section 5
+
+#### `_normaliseIndexData(rawData)`
+
+Prepares parsed index content for validation and repair.
+
+- **Parameters:**
+  - `rawData` (any): Value returned by `JSON.parse`
+- **Behaviour:**
+  - Delegates to `_assertIndexObject()` to reject anything other than a plain object whilst expecting callers to supply an object-shaped payload
+  - Does **not** coerce primitives, arrays, or `null` into objects; it simply verifies the input already meets the contract
+  - Ensures the collections map and `lastUpdated` timestamp exist by calling `_ensureCollectionsMap()` and `_ensureLastUpdated()`
+  - Returns the original object reference so callers persist a repaired but familiar structure
+
+#### `_assertIndexObject(indexCandidate)`
+
+Guarantees the index payload has an object shape.
+
+- **Parameters:**
+  - `indexCandidate` (any): Value from `_normaliseIndexData()`
+- **Throws:** `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT` when the payload is not a plain object (rejects arrays, primitives, `null`, dates, etc.)
+- **Behaviour:**
+  - Rejects unsupported payloads early so Drive corruption surfaces immediately
+  - Returns the candidate unchanged when it is a plain object
+
+#### `_ensureCollectionsMap(indexData)`
+
+Ensures `collections` exists and has the expected type.
+
+- **Parameters:**
+  - `indexData` (Object): Index data returned by `_assertIndexObject()`
+- **Behaviour:**
+  - Repairs a missing `collections` property by seeding an empty map
+  - Throws `ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT` when an existing `collections` value is not an object map
+  - Preserves valid maps so timestamp comparisons remain stable
+
+#### `_ensureLastUpdated(indexData)`
+
+Ensures the index metadata has a `lastUpdated` timestamp.
+
+- **Parameters:**
+  - `indexData` (Object): Index object returned by `_assertIndexObject()`
+- **Behaviour:**
+  - Adds a timestamp when missing or invalid
+  - Keeps existing timestamps intact so tests can assert stability
 
 #### `_validateCollectionName(name)`
 
@@ -450,7 +517,7 @@ try {
 
 ```javascript
 // Collection Creation Flow
-db.createCollection('users')
+db.createCollection('users');
 // 1. Validate name
 // 2. Create Drive file
 // 3. Add to MasterIndex (primary)
@@ -470,11 +537,14 @@ The Database class maintains consistency between data sources:
 
 ```javascript
 // Periodic backup pattern
-setInterval(() => {
-  if (db.backupIndexToDrive()) {
-    console.log('Periodic backup completed');
-  }
-}, 30 * 60 * 1000); // Every 30 minutes
+setInterval(
+  () => {
+    if (db.backupIndexToDrive()) {
+      console.log('Periodic backup completed');
+    }
+  },
+  30 * 60 * 1000
+); // Every 30 minutes
 ```
 
 ## Error Types

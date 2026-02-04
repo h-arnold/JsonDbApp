@@ -104,10 +104,10 @@ describe('Component Feature', () => {
   it('should perform expected behaviour', () => {
     // Arrange
     const input = { value: 42 };
-    
+
     // Act
     const result = component.process(input);
-    
+
     // Assert
     expect(result.value).toBe(42);
     expect(result.processed).toBe(true);
@@ -166,7 +166,7 @@ describe('IdGenerator', () => {
     const generator = new IdGenerator();
     const id1 = generator.generateId();
     const id2 = generator.generateId();
-    
+
     expect(id1).toBeDefined();
     expect(id2).toBeDefined();
     expect(id1).not.toBe(id2);
@@ -198,7 +198,7 @@ describe('MasterIndex Persistence', () => {
   it('should persist to ScriptProperties', () => {
     const key = registerKey(`TEST_KEY_${Date.now()}`);
     const masterIndex = new MasterIndex({ masterIndexKey: key });
-    
+
     const stored = scriptProperties.getProperty(key);
     expect(stored).toBeDefined();
     expect(typeof stored).toBe('string');
@@ -220,10 +220,10 @@ describe('Database Collection Management', () => {
   it('should create a new collection', () => {
     const { database } = setupInitialisedDatabase();
     const name = generateUniqueName('testCollection');
-    
+
     const collection = database.createCollection(name);
     registerDatabaseFile(collection.driveFileId);
-    
+
     expect(collection.name).toBe(name);
     expect(database.listCollections()).toContain(name);
   });
@@ -237,9 +237,8 @@ describe('Error Handling', () => {
   it('should throw InvalidArgumentError for invalid input', () => {
     const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
     const missingName = generateUniqueName('missing');
-    
-    expect(() => database.collection(missingName))
-      .toThrowError(/auto-create is disabled/);
+
+    expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);
   });
 });
 ```
@@ -298,8 +297,8 @@ The GAS mocks ([tools/gas-mocks/gas-mocks.cjs](../../tools/gas-mocks/gas-mocks.c
 
 ```javascript
 const mocks = createGasMocks({
-  driveRoot: '/tmp/gasdb-drive',           // Where Drive files are stored
-  propertiesFile: '/tmp/gasdb-props.json'  // Where ScriptProperties are persisted
+  driveRoot: '/tmp/gasdb-drive', // Where Drive files are stored
+  propertiesFile: '/tmp/gasdb-props.json' // Where ScriptProperties are persisted
 });
 ```
 
@@ -324,40 +323,66 @@ Test helpers provide reusable setup and cleanup utilities:
 
 ### MasterIndex Helpers
 
-- `createTestMasterIndex(config)`: Creates isolated MasterIndex with unique key
-- `seedMasterIndex(key, data)`: Pre-populates MasterIndex state
-- `registerKey(key)`: Tracks ScriptProperties keys for cleanup
+([tests/helpers/master-index-test-helpers.js](../../tests/helpers/master-index-test-helpers.js))
+
+- `createMasterIndexKey()`: Generates and registers a unique ScriptProperties key for tests
+- `registerMasterIndexKey(key)`: Adds an existing key to the tracked cleanup set
+- `createTestMasterIndex(config)`: Builds an isolated MasterIndex with automatic key tracking; accepts overrides such as `modificationHistoryLimit` so history trimming can be exercised deterministically
+- `seedMasterIndex(key, data)`: Serialises and stores master index payloads for fixtures; pair with CollectionMetadata instances when validating the metadata normaliser
+- `cleanupMasterIndexTests()`: Deletes all registered ScriptProperties keys after each test
+
+When writing MasterIndex suites, prefer the public API so the internal helpers (MasterIndexMetadataNormaliser and MasterIndexHistoryManager) are exercised end to end. This ensures metadata cloning, timestamp coercion, and modification history capping mirror production behaviour. For example:
+
+```javascript
+const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 5 });
+masterIndex.addCollection('users', { fileId: 'users-file' });
+
+for (let i = 0; i < 10; i += 1) {
+  masterIndex.updateCollectionMetadata('users', { documentCount: i });
+}
+
+const history = masterIndex.getModificationHistory('users');
+expect(history).toHaveLength(5);
+```
+
+`DEFAULT_MODIFICATION_HISTORY_LIMIT` is exported alongside the MasterIndex facade; use it when you need to assert the fallback cap without overriding configuration.
 
 ## Running Tests
 
 ### Run All Tests
 
 ```bash
-npm run test:vitest
+npm run test
+```
+
+### Run All Tests (Verbose Output)
+
+```bash
+npm run test:verbose
 ```
 
 ### Watch Mode
 
 ```bash
-npm run test:vitest -- --watch
+npm run test -- --watch
 ```
 
 ### Run Specific Test File
 
 ```bash
-npm run test:vitest -- tests/unit/master-index/MasterIndex.test.js
+npm run test -- tests/unit/master-index/MasterIndex.test.js
 ```
 
 ### Run Tests Matching Pattern
 
 ```bash
-npm run test:vitest -- -t "should persist"
+npm run test -- -t "should persist"
 ```
 
 ### Coverage
 
 ```bash
-npm run test:vitest -- --coverage
+npm run test -- --coverage
 ```
 
 ## API Reference

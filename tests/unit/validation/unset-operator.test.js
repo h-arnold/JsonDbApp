@@ -1,6 +1,6 @@
 /**
  * $unset (Field Removal) Operator Validation Tests
- * 
+ *
  * Tests MongoDB-compatible $unset operator against ValidationMockData.
  * Covers:
  * - Basic field removal (top-level, multiple fields, nested fields, deeply nested)
@@ -9,7 +9,10 @@
  */
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { setupValidationTestEnvironment, cleanupValidationTests } from '../../helpers/validation-test-helpers.js';
+import {
+  setupValidationTestEnvironment,
+  cleanupValidationTests
+} from '../../helpers/validation-test-helpers.js';
 
 let testEnv;
 
@@ -29,13 +32,10 @@ describe('$unset Field Removal Operator Tests', () => {
       collection.updateOne({ _id: 'person1' }, { $set: { tempField: 'temporary' } });
       const doc = collection.findOne({ _id: 'person1' });
       expect(doc.tempField).toBe('temporary');
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'person1' },
-        { $unset: { tempField: '' } }
-      );
-      
+      const result = collection.updateOne({ _id: 'person1' }, { $unset: { tempField: '' } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -46,14 +46,14 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should remove multiple top-level fields', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      collection.updateOne({ _id: 'person1' }, { $set: { temp1: 'value1', temp2: 'value2', temp3: 'value3' } });
-      
-      // Act
-      const result = collection.updateOne(
+      collection.updateOne(
         { _id: 'person1' },
-        { $unset: { temp1: '', temp3: '' } }
+        { $set: { temp1: 'value1', temp2: 'value2', temp3: 'value3' } }
       );
-      
+
+      // Act
+      const result = collection.updateOne({ _id: 'person1' }, { $unset: { temp1: '', temp3: '' } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -65,13 +65,13 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should remove nested fields using dot notation', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $unset: { 'preferences.newsletter': '' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -82,13 +82,13 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should remove deeply nested fields', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $unset: { 'preferences.settings.notifications.email.frequency': '' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -101,13 +101,10 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should leave parent object when removing field', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'person1' },
-        { $unset: { 'name.first': '' } }
-      );
-      
+      const result = collection.updateOne({ _id: 'person1' }, { $unset: { 'name.first': '' } });
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -119,13 +116,13 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should leave empty object when removing all fields', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $unset: { 'name.first': '', 'name.last': '' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -138,13 +135,13 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should maintain object hierarchy when removing nested field', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $unset: { 'preferences.settings.theme': '' } }
       );
-      
+
       // Assert
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
@@ -162,13 +159,10 @@ describe('$unset Field Removal Operator Tests', () => {
       const original = collection.findOne({ _id: 'person1' });
       expect(original).not.toBe(null);
       expect(original.name).not.toBe(undefined);
-      
+
       // Act
-      const result = collection.updateOne(
-        { _id: 'person1' },
-        { $unset: { nonExistentField: '' } }
-      );
-      
+      const result = collection.updateOne({ _id: 'person1' }, { $unset: { nonExistentField: '' } });
+
       // Assert
       // Unsetting a non-existent field should be a no-op
       expect(result.modifiedCount).toBe(0);
@@ -182,12 +176,9 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should handle _id field unset appropriately', () => {
       const collection = testEnv.collections.persons;
-      
+
       try {
-        const result = collection.updateOne(
-          { _id: 'person1' },
-          { $unset: { _id: '' } }
-        );
+        const result = collection.updateOne({ _id: 'person1' }, { $unset: { _id: '' } });
         // If successful, verify _id still exists
         expect(result.modifiedCount).toBeGreaterThanOrEqual(0);
         const updated = collection.findOne({ _id: 'person1' });
@@ -203,13 +194,13 @@ describe('$unset Field Removal Operator Tests', () => {
     it('should handle unsetting field in non-existent parent object', () => {
       // Arrange
       const collection = testEnv.collections.persons;
-      
+
       // Act
       const result = collection.updateOne(
         { _id: 'person1' },
         { $unset: { 'nonExistentParent.childField': '' } }
       );
-      
+
       // Assert
       // Should handle gracefully without creating the parent object
       expect(result.modifiedCount).toBeGreaterThanOrEqual(0);

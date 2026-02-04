@@ -1,6 +1,6 @@
 /**
  * QueryEngineTest.js - QueryEngine Class Tests
- * 
+ *
  * Comprehensive tests for the QueryEngine class including:
  * - Basic document matching against query patterns
  * - Field access utilities (including nested fields)
@@ -52,6 +52,14 @@ describe('QueryEngine Basic Functionality', () => {
 
   it('should create QueryEngine instance', () => {
     expect(queryEngine).toBeInstanceOf(QueryEngine);
+  });
+
+  it('should use DatabaseConfig defaults for query engine configuration', () => {
+    const config = queryEngine.getConfig();
+    const defaults = new DatabaseConfig();
+
+    expect(config.maxNestedDepth).toBe(defaults.queryEngineMaxNestedDepth);
+    expect(config.supportedOperators).toEqual(defaults.queryEngineSupportedOperators);
   });
 
   it('should have executeQuery method', () => {
@@ -270,10 +278,7 @@ describe('QueryEngine Logical Operators', () => {
 
   it('should support explicit $and operator', () => {
     const query = {
-      $and: [
-        { active: true },
-        { age: { $gt: 25 } }
-      ]
+      $and: [{ active: true }, { age: { $gt: 25 } }]
     };
     const results = queryEngine.executeQuery(testUsers, query);
 
@@ -286,10 +291,7 @@ describe('QueryEngine Logical Operators', () => {
 
   it('should support $or operator', () => {
     const query = {
-      $or: [
-        { age: { $lt: 25 } },
-        { age: { $gt: 35 } }
-      ]
+      $or: [{ age: { $lt: 25 } }, { age: { $gt: 35 } }]
     };
     const results = queryEngine.executeQuery(testUsers, query);
 
@@ -318,10 +320,7 @@ describe('QueryEngine Logical Operators', () => {
       $and: [
         { active: true },
         {
-          $or: [
-            { 'profile.department': 'Engineering' },
-            { 'profile.department': 'Product' }
-          ]
+          $or: [{ 'profile.department': 'Engineering' }, { 'profile.department': 'Product' }]
         }
       ]
     };
@@ -330,18 +329,15 @@ describe('QueryEngine Logical Operators', () => {
     expect(results.length > 0).toBe(true);
     results.forEach((doc) => {
       expect(doc.active).toBe(true);
-      expect(
-        doc.profile.department === 'Engineering' || doc.profile.department === 'Product'
-      ).toBe(true);
+      expect(doc.profile.department === 'Engineering' || doc.profile.department === 'Product').toBe(
+        true
+      );
     });
   });
 
   it('should support $or with comparison operators', () => {
     const query = {
-      $or: [
-        { age: { $lt: 25 } },
-        { score: { $gt: 90 } }
-      ]
+      $or: [{ age: { $lt: 25 } }, { score: { $gt: 90 } }]
     };
     const results = queryEngine.executeQuery(testUsers, query);
 
@@ -416,6 +412,33 @@ describe('QueryEngine Error Handling', () => {
     }).toThrow();
   });
 
+  it('should respect supported operator pruning after construction', () => {
+    const config = queryEngine.getConfig();
+    const eqIndex = config.supportedOperators.indexOf('$eq');
+
+    expect(eqIndex).toBeGreaterThan(-1);
+
+    config.supportedOperators.splice(eqIndex, 1);
+
+    expect(queryEngine.isOperatorSupported('$eq')).toBe(false);
+
+    const queryUsingEq = { age: { $eq: 30 } };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryUsingEq);
+    }).toThrow();
+  });
+
+  it('should reject unsupported operators nested within logical arrays', () => {
+    const queryWithNestedUnsupported = {
+      $and: [{ age: { $regex: 'pattern' } }]
+    };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
+    }).toThrow();
+  });
+
   it('should throw error for null or undefined documents array', () => {
     const query = { name: 'John' };
 
@@ -436,6 +459,25 @@ describe('QueryEngine Error Handling', () => {
     }).toThrow();
   });
 
+  it('should enforce maximum query depth within logical clauses', () => {
+    const limitedEngine = new QueryEngine({ maxNestedDepth: 2 });
+    const deepQuery = {
+      $and: [{ level1: { level2: { level3: 'value' } } }]
+    };
+
+    expect(() => {
+      limitedEngine.executeQuery(testUsers, deepQuery);
+    }).toThrow();
+  });
+
+  it('should throw InvalidQueryError when logical operator conditions are not objects', () => {
+    const queryWithPrimitiveClause = { $or: ['not an object'] };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryWithPrimitiveClause);
+    }).toThrow();
+  });
+
   it('should provide clear error messages for query validation failures', () => {
     const invalidQuery = { $unknownOperator: { field: 'value' } };
 
@@ -448,8 +490,47 @@ describe('QueryEngine Error Handling', () => {
 
     expect(errorMessage.length > 0).toBe(true);
     expect(
-      errorMessage.includes('query') || errorMessage.includes('operator') || errorMessage.includes('invalid')
+      errorMessage.includes('query') ||
+        errorMessage.includes('operator') ||
+        errorMessage.includes('invalid')
     ).toBe(true);
+  });
+
+  it('should reject unsupported operators nested within field arrays', () => {
+    const queryWithNestedUnsupported = {
+      tags: [{ $eq: 'matched' }, { $unsupported: true }]
+    };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
+    }).toThrow();
+  });
+
+  it('should enforce depth limits when arrays contain nested query objects', () => {
+    const limitedEngine = new QueryEngine({ maxNestedDepth: 1 });
+    const deepArrayQuery = {
+      nested: [
+        {
+          child: [{ grandChild: 'value' }]
+        }
+      ]
+    };
+
+    expect(() => {
+      limitedEngine.executeQuery(testUsers, deepArrayQuery);
+    }).toThrow();
+  });
+
+  it('should throw when logical operators receive malformed values within field expressions', () => {
+    const malformedLogicalValue = {
+      status: {
+        $and: 1
+      }
+    };
+
+    expect(() => {
+      queryEngine.executeQuery(testUsers, malformedLogicalValue);
+    }).toThrow();
   });
 });
 
@@ -508,10 +589,10 @@ describe('QueryEngine Edge Cases', () => {
 
   it('should handle numeric field names and special characters', () => {
     const docsWithSpecialFields = [
-      { _id: 'doc1', '123': 'numeric field', 'special@field': 'value' },
-      { _id: 'doc2', '123': 'another value', 'special@field': 'different' }
+      { _id: 'doc1', 123: 'numeric field', 'special@field': 'value' },
+      { _id: 'doc2', 123: 'another value', 'special@field': 'different' }
     ];
-    const results = queryEngine.executeQuery(docsWithSpecialFields, { '123': 'numeric field' });
+    const results = queryEngine.executeQuery(docsWithSpecialFields, { 123: 'numeric field' });
 
     expect(results.length).toBe(1);
     expect(results[0]._id).toBe('doc1');

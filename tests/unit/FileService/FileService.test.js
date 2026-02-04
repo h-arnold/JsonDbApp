@@ -397,7 +397,9 @@ describe('FileService Error Handling', () => {
 
   it('should throw error when creating file without data', () => {
     expect(() => fileService.createFile('test.json', null)).toThrow(ERROR_TYPES.INVALID_ARGUMENT);
-    expect(() => fileService.createFile('test.json', undefined)).toThrow(ERROR_TYPES.INVALID_ARGUMENT);
+    expect(() => fileService.createFile('test.json', undefined)).toThrow(
+      ERROR_TYPES.INVALID_ARGUMENT
+    );
   });
 
   it('should throw error when deleting file without fileId', () => {

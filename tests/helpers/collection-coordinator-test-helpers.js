@@ -1,6 +1,6 @@
 /**
  * CollectionCoordinator Test Helpers for Vitest
- * 
+ *
  * Provides utilities for setting up and tearing down CollectionCoordinator tests.
  */
 
@@ -52,7 +52,7 @@ export const createTestFolder = () => {
 export const createTestCollectionFile = (folderId, collectionName) => {
   const folder = DriveApp.getFolderById(folderId);
   const fileName = `${collectionName}.json`;
-  
+
   const testData = {
     collection: collectionName,
     metadata: {
@@ -93,7 +93,7 @@ export const createTestCollectionFile = (folderId, collectionName) => {
   const file = folder.createFile(fileName, JSON.stringify(testData, null, 2));
   const fileId = file.getId();
   testResources.fileIds.add(fileId);
-  
+
   return fileId;
 };
 
@@ -104,23 +104,23 @@ export const createTestCollectionFile = (folderId, collectionName) => {
 export const setupCoordinatorTestEnvironment = () => {
   const masterIndexKey = createMasterIndexKey();
   const folderId = createTestFolder();
-  
+
   // Create logger
-  const logger = JDbLogger.createComponentLogger("CollectionCoordinator-Test");
-  
+  const logger = JDbLogger.createComponentLogger('CollectionCoordinator-Test');
+
   // Create FileService dependencies
   const fileOps = new FileOperations(logger);
   const fileService = new FileService(fileOps, logger);
-  
+
   // Create MasterIndex
   const masterIndex = new MasterIndex({ masterIndexKey, version: 1 });
-  
+
   // Create DatabaseConfig
   const dbConfig = new DatabaseConfig({
     name: 'testDB',
     rootFolderId: folderId
   });
-  
+
   // Create mock database object
   const database = {
     name: 'testDB',
@@ -134,7 +134,7 @@ export const setupCoordinatorTestEnvironment = () => {
      */
     getMasterIndex: () => masterIndex
   };
-  
+
   return {
     masterIndexKey,
     folderId,
@@ -154,7 +154,7 @@ export const setupCoordinatorTestEnvironment = () => {
  */
 export const createTestCollection = (env, collectionName) => {
   const fileId = createTestCollectionFile(env.folderId, collectionName);
-  
+
   // Register collection in master index
   const metadataData = {
     name: collectionName,
@@ -165,21 +165,16 @@ export const createTestCollection = (env, collectionName) => {
     modificationToken: `token-${generateTimestamp()}`,
     lockStatus: null
   };
-  
+
   const collectionMetadata = ObjectUtils.deserialise(ObjectUtils.serialise(metadataData));
   env.masterIndex.addCollection(collectionName, collectionMetadata);
-  
+
   // Create Collection instance
-  const collection = new Collection(
-    collectionName,
-    fileId,
-    env.database,
-    env.fileService
-  );
-  
+  const collection = new Collection(collectionName, fileId, env.database, env.fileService);
+
   // Load the collection
   collection._ensureLoaded();
-  
+
   return { collection, fileId };
 };
 
@@ -199,12 +194,12 @@ export const createTestCoordinator = (collection, masterIndex, config = {}) => {
  */
 export const cleanupCoordinatorTests = () => {
   const scriptProperties = PropertiesService.getScriptProperties();
-  
+
   // Clean up master index keys
   for (const key of testResources.masterIndexKeys) {
     scriptProperties.deleteProperty(key);
   }
-  
+
   // Clean up files
   for (const fileId of testResources.fileIds) {
     try {
@@ -214,7 +209,7 @@ export const cleanupCoordinatorTests = () => {
       // File may already be deleted, ignore
     }
   }
-  
+
   // Clean up folders
   for (const folderId of testResources.folderIds) {
     try {
@@ -224,7 +219,7 @@ export const cleanupCoordinatorTests = () => {
       // Folder may already be deleted, ignore
     }
   }
-  
+
   // Clear tracking sets
   testResources.masterIndexKeys.clear();
   testResources.fileIds.clear();

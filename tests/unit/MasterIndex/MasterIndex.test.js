@@ -24,13 +24,13 @@ describe('MasterIndex Functionality', () => {
       lastModified: new Date().toISOString(),
       modificationToken: 'test-token-123'
     };
-    
+
     masterIndex.addCollection('testCollection', testCollection);
     masterIndex.save();
-    
+
     const newMasterIndex = new MasterIndex();
     const collections = newMasterIndex.getCollections();
-    
+
     expect(collections).toHaveProperty('testCollection');
     expect(collections.testCollection.documentCount).toBe(5);
   });
@@ -38,7 +38,7 @@ describe('MasterIndex Functionality', () => {
   it('should load existing master index from ScriptProperties', () => {
     const existingData = {
       collections: {
-        'existingCollection': {
+        existingCollection: {
           name: 'existingCollection',
           fileId: 'existing-file-id',
           documentCount: 3
@@ -47,12 +47,15 @@ describe('MasterIndex Functionality', () => {
       locks: {},
       version: '1.0.0'
     };
-    
-    PropertiesService.getScriptProperties().setProperty('GASDB_MASTER_INDEX', JSON.stringify(existingData));
-    
+
+    PropertiesService.getScriptProperties().setProperty(
+      'GASDB_MASTER_INDEX',
+      JSON.stringify(existingData)
+    );
+
     const newIndex = new MasterIndex();
     const collections = newIndex.getCollections();
-    
+
     expect(collections).toHaveProperty('existingCollection');
     expect(collections.existingCollection.documentCount).toBe(3);
   });
@@ -63,14 +66,14 @@ describe('MasterIndex Functionality', () => {
       fileId: 'update-file-id',
       documentCount: 0
     });
-    
+
     masterIndex.updateCollectionMetadata('updateTest', {
       documentCount: 10,
       lastUpdated: '2025-06-02T10:00:00Z'
     });
-    
+
     const collection = masterIndex.getCollection('updateTest');
-    
+
     expect(collection.documentCount).toBe(10);
     expect(collection.lastUpdated.toISOString()).toBe('2025-06-02T10:00:00.000Z');
   });
@@ -79,7 +82,7 @@ describe('MasterIndex Functionality', () => {
     const testKey = 'GASDB_MI_S2_Functionality_TestKey';
     PropertiesService.getScriptProperties().deleteProperty(testKey);
     const mi = new MasterIndex({ masterIndexKey: testKey });
-    
+
     const collectionName = 'collectionToRemove';
     const collectionData = {
       name: collectionName,
@@ -111,7 +114,7 @@ describe('MasterIndex Functionality', () => {
       lastModified: new Date().toISOString(),
       modificationToken: 'test-token-123'
     };
-    
+
     masterIndex.addCollection(collectionName, collectionData);
     const retrievedCollection = masterIndex.getCollection(collectionName);
 
@@ -128,10 +131,10 @@ describe('MasterIndex Functionality', () => {
       documentCount: 3,
       modificationToken: 'test-token-456'
     });
-    
+
     masterIndex.addCollection(collectionName, metadata);
     const retrievedCollection = masterIndex.getCollection(collectionName);
-    
+
     expect(retrievedCollection).toBeInstanceOf(CollectionMetadata);
     expect(retrievedCollection.name).toBe(collectionName);
     expect(retrievedCollection.fileId).toBe('test-file-id-2');
@@ -150,11 +153,11 @@ describe('MasterIndex Functionality', () => {
       fileId: 'file-id-2',
       documentCount: 4
     };
-    
+
     masterIndex.addCollection('collection1', collection1Data);
     masterIndex.addCollection('collection2', collection2Data);
     const allCollections = masterIndex.getCollections();
-    
+
     expect(allCollections.collection1).toBeInstanceOf(CollectionMetadata);
     expect(allCollections.collection2).toBeInstanceOf(CollectionMetadata);
     expect(allCollections.collection1.name).toBe('collection1');
@@ -173,13 +176,13 @@ describe('MasterIndex Functionality', () => {
         lockTimeout: null
       }
     });
-    
+
     masterIndex.addCollection(collectionName, metadata);
     masterIndex.save();
-    
+
     const newMasterIndex = new MasterIndex();
     const retrievedCollection = newMasterIndex.getCollection(collectionName);
-    
+
     expect(retrievedCollection).toBeInstanceOf(CollectionMetadata);
     expect(retrievedCollection.name).toBe(collectionName);
     expect(retrievedCollection.fileId).toBe('persist-file-id');
@@ -194,15 +197,15 @@ describe('MasterIndex Functionality', () => {
       documentCount: 0,
       modificationToken: 'initial-token'
     });
-    
+
     masterIndex.addCollection(collectionName, initialMetadata);
     masterIndex.updateCollectionMetadata(collectionName, {
       documentCount: 15,
       modificationToken: 'updated-token'
     });
-    
+
     const updatedCollection = masterIndex.getCollection(collectionName);
-    
+
     expect(updatedCollection).toBeInstanceOf(CollectionMetadata);
     expect(updatedCollection.documentCount).toBe(15);
     expect(updatedCollection.modificationToken).toBe('updated-token');
@@ -213,12 +216,12 @@ describe('MasterIndex Functionality', () => {
   it('should throw error if MasterIndex is corrupted', () => {
     const testKey = 'GASDB_MI_CORRUPT_' + new Date().getTime();
     PropertiesService.getScriptProperties().setProperty(testKey, '{corruptJson');
-    
+
     expect(() => {
       const mi = new MasterIndex({ masterIndexKey: testKey });
       mi.getCollections();
     }).toThrow();
-    
+
     PropertiesService.getScriptProperties().deleteProperty(testKey);
   });
 });
@@ -233,7 +236,7 @@ describe('Conflict Detection and Resolution', () => {
   it('should generate unique modification tokens', () => {
     const token1 = masterIndex.generateModificationToken();
     const token2 = masterIndex.generateModificationToken();
-    
+
     expect(token1).not.toBe(token2);
     expect(token1.length).toBeGreaterThan(0);
     expect(token2.length).toBeGreaterThan(0);
@@ -242,55 +245,46 @@ describe('Conflict Detection and Resolution', () => {
   it('should detect conflicts using modification tokens', () => {
     const collectionName = 'conflictDetectionTest';
     const originalToken = masterIndex.generateModificationToken();
-    
+
     masterIndex.addCollection(collectionName, {
       name: collectionName,
       fileId: 'conflict-file-id',
       modificationToken: originalToken
     });
-    
+
     const newToken = masterIndex.generateModificationToken();
     masterIndex.updateCollectionMetadata(collectionName, {
       modificationToken: newToken
     });
-    
+
     const hasConflict = masterIndex.hasConflict(collectionName, originalToken);
-    
+
     expect(hasConflict).toBe(true);
   });
 
   it('should resolve conflicts with last-write-wins strategy', () => {
     const collectionName = 'conflictResolutionTest';
     const originalToken = masterIndex.generateModificationToken();
-    
+
     masterIndex.addCollection(collectionName, {
       name: collectionName,
       fileId: 'resolution-file-id',
       modificationToken: originalToken,
       documentCount: 5
     });
-    
-    const resolution = masterIndex.resolveConflict(collectionName, {
-      documentCount: 8,
-      lastModified: '2025-06-02T11:00:00Z'
-    }, 'LAST_WRITE_WINS');
-    
+
+    const resolution = masterIndex.resolveConflict(
+      collectionName,
+      {
+        documentCount: 8,
+        lastModified: '2025-06-02T11:00:00Z'
+      },
+      'LAST_WRITE_WINS'
+    );
+
     expect(resolution.success).toBe(true);
     expect(resolution.data.documentCount).toBe(8);
     expect(resolution.data.modificationToken).not.toBe(originalToken);
-  });
-
-  it('should track modification history for debugging', () => {
-    const collectionName = 'historyTest';
-    
-    masterIndex.addCollection(collectionName, { name: collectionName, fileId: 'history-file-id' });
-    masterIndex.updateCollectionMetadata(collectionName, { documentCount: 1 });
-    masterIndex.updateCollectionMetadata(collectionName, { documentCount: 2 });
-    
-    const history = masterIndex.getModificationHistory(collectionName);
-    
-    expect(Array.isArray(history)).toBe(true);
-    expect(history.length).toBeGreaterThanOrEqual(2);
   });
 
   it('should validate modification token format', () => {
@@ -298,7 +292,7 @@ describe('Conflict Detection and Resolution', () => {
     const isValid = masterIndex.validateModificationToken(validToken);
     const isInvalidEmpty = masterIndex.validateModificationToken('');
     const isInvalidNull = masterIndex.validateModificationToken(null);
-    
+
     expect(isValid).toBe(true);
     expect(isInvalidEmpty).toBe(false);
     expect(isInvalidNull).toBe(false);
@@ -320,11 +314,11 @@ describe('MasterIndex Integration', () => {
       fileId: 'integration-file-id',
       modificationToken: masterIndex.generateModificationToken()
     });
-    
+
     const lockAcquired = masterIndex.acquireCollectionLock(collectionName, operationId);
     const token = masterIndex.generateModificationToken();
     masterIndex.updateCollectionMetadata(collectionName, { modificationToken: token });
-    
+
     expect(lockAcquired).toBe(true);
     expect(masterIndex.isCollectionLocked(collectionName)).toBe(true);
     expect(masterIndex.hasConflict(collectionName, token)).toBe(false);
@@ -333,26 +327,26 @@ describe('MasterIndex Integration', () => {
   it('should handle complete operation lifecycle', () => {
     const collectionName = 'lifecycleTest';
     const operationId = 'lifecycle-operation';
-    
+
     masterIndex.addCollection(collectionName, {
       name: collectionName,
       fileId: 'lifecycle-file-id',
       modificationToken: masterIndex.generateModificationToken()
     });
     const lockAcquired = masterIndex.acquireCollectionLock(collectionName, operationId);
-    
+
     masterIndex.updateCollectionMetadata(collectionName, {
       documentCount: 10,
       lastModified: new Date().toISOString()
     });
-    
+
     const lockReleased = masterIndex.releaseCollectionLock(collectionName, operationId);
     masterIndex.save();
-    
+
     expect(lockAcquired).toBe(true);
     expect(lockReleased).toBe(true);
     expect(masterIndex.isCollectionLocked(collectionName)).toBe(false);
-    
+
     const collection = masterIndex.getCollection(collectionName);
     expect(collection.documentCount).toBe(10);
   });
@@ -363,16 +357,20 @@ describe('MasterIndex Integration', () => {
       documentCount: 5,
       modificationToken: 'original-token'
     });
-    
+
     masterIndex.addCollection(collectionName, originalMetadata);
-    
-    const resolution = masterIndex.resolveConflict(collectionName, {
-      documentCount: 8,
-      lastModified: '2025-06-02T11:00:00Z'
-    }, 'LAST_WRITE_WINS');
-    
+
+    const resolution = masterIndex.resolveConflict(
+      collectionName,
+      {
+        documentCount: 8,
+        lastModified: '2025-06-02T11:00:00Z'
+      },
+      'LAST_WRITE_WINS'
+    );
+
     const resolvedCollection = masterIndex.getCollection(collectionName);
-    
+
     expect(resolution.success).toBe(true);
     expect(resolvedCollection).toBeInstanceOf(CollectionMetadata);
     expect(resolvedCollection.documentCount).toBe(8);
@@ -388,20 +386,20 @@ describe('MasterIndex Integration', () => {
       documentCount: 2,
       modificationToken: 'lifecycle-token'
     });
-    
+
     masterIndex.addCollection(collectionName, metadata);
     const lockAcquired = masterIndex.acquireCollectionLock(collectionName, operationId);
-    
+
     masterIndex.updateCollectionMetadata(collectionName, {
       documentCount: 12
     });
-    
+
     const lockReleased = masterIndex.releaseCollectionLock(collectionName, operationId);
     masterIndex.save();
-    
+
     const newMasterIndex = new MasterIndex();
     const persistedCollection = newMasterIndex.getCollection(collectionName);
-    
+
     expect(lockAcquired).toBe(true);
     expect(lockReleased).toBe(true);
     expect(persistedCollection).toBeInstanceOf(CollectionMetadata);

@@ -2,9 +2,34 @@
 name: Refactoring Agent
 description: Refactors existing classes to ensure that they are DRY and SOLID
 argument-hint: Refactor code to make it more readable and maintainable
-tools: ['vscode/openSimpleBrowser', 'vscode/runCommand', 'execute/getTerminalOutput', 'execute/runTask', 'execute/createAndRunTask', 'execute/runTests', 'execute/testFailure', 'execute/runInTerminal', 'read/terminalSelection', 'read/terminalLastCommand', 'read/getTaskOutput', 'read/problems', 'read/readFile', 'edit/createDirectory', 'edit/createFile', 'edit/editFiles', 'search', 'web', 'todo', 'github.vscode-pull-request-github/issue_fetch', 'github.vscode-pull-request-github/activePullRequest']
+tools:
+  [
+    'vscode/openSimpleBrowser',
+    'vscode/runCommand',
+    'execute/getTerminalOutput',
+    'execute/runTask',
+    'execute/createAndRunTask',
+    'execute/testFailure',
+    'execute/runTests',
+    'execute/runInTerminal',
+    'read/terminalSelection',
+    'read/terminalLastCommand',
+    'read/getTaskOutput',
+    'read/problems',
+    'read/readFile',
+    'edit/createDirectory',
+    'edit/createFile',
+    'edit/editFiles',
+    'search',
+    'web',
+    'agent',
+    'github.vscode-pull-request-github/issue_fetch',
+    'github.vscode-pull-request-github/activePullRequest',
+    'todo'
+  ]
 infer: true
 ---
+
 # Refactoring Agent Instructions
 
 ## Mission
@@ -30,13 +55,13 @@ src/XX_category/ClassName/
 - **01-98**: Operation group files (read, write, validation, field operations, etc.)
 - **99**: Main class facade (constructor, public API, delegation)
 
-### The 99_ Facade Pattern
+### The 99\_ Facade Pattern
 
 The `99_*.js` file is the **main entry point** and should:
 
 1. **Constructor & State**: Define the constructor with all dependencies and internal state
 2. **Component Initialization**: Instantiate all operation handler classes
-3. **Private Helpers**: Include core private methods used across operations (_ensureLoaded,_markDirty, etc.)
+3. **Private Helpers**: Include core private methods used across operations (\_ensureLoaded,\_markDirty, etc.)
 4. **Public API Delegation**: Provide thin public methods that delegate to operation handlers
 5. **Exports**: Handle module.exports for Node.js compatibility
 
@@ -44,35 +69,47 @@ The `99_*.js` file is the **main entry point** and should:
 
 ```javascript
 class Collection {
-    constructor(name, driveFileId, database, fileService) {
-        // Validation
-        Validate.nonEmptyString(name, "name");
-        // ... more validation
-        
-        // State initialization
-        this._name = name;
-        this._driveFileId = driveFileId;
-        this._loaded = false;
-        this._dirty = false;
-        
-        // Component initialization
-        this._readOps = new CollectionReadOperations(this);
-        this._writeOps = new CollectionWriteOperations(this);
-    }
-    
-    // Core private helpers
-    _ensureLoaded() { /* ... */ }
-    _markDirty() { /* ... */ }
-    _validateFilter(filter, operation) { /* ... */ }
-    
-    // Public API - delegate to operation handlers
-    insertOne(doc) { return this._writeOps.insertOne(doc); }
-    findOne(filter) { return this._readOps.findOne(filter); }
-    // ... more delegations
-    
-    // Getters
-    getName() { return this._name; }
-    // ... more getters
+  constructor(name, driveFileId, database, fileService) {
+    // Validation
+    Validate.nonEmptyString(name, 'name');
+    // ... more validation
+
+    // State initialization
+    this._name = name;
+    this._driveFileId = driveFileId;
+    this._loaded = false;
+    this._dirty = false;
+
+    // Component initialization
+    this._readOps = new CollectionReadOperations(this);
+    this._writeOps = new CollectionWriteOperations(this);
+  }
+
+  // Core private helpers
+  _ensureLoaded() {
+    /* ... */
+  }
+  _markDirty() {
+    /* ... */
+  }
+  _validateFilter(filter, operation) {
+    /* ... */
+  }
+
+  // Public API - delegate to operation handlers
+  insertOne(doc) {
+    return this._writeOps.insertOne(doc);
+  }
+  findOne(filter) {
+    return this._readOps.findOne(filter);
+  }
+  // ... more delegations
+
+  // Getters
+  getName() {
+    return this._name;
+  }
+  // ... more getters
 }
 ```
 
@@ -89,19 +126,25 @@ Each `01_*.js`, `02_*.js` file should contain a **handler class** with:
 
 ```javascript
 class CollectionReadOperations {
-    constructor(collection) {
-        this._collection = collection;
-    }
+  constructor(collection) {
+    this._collection = collection;
+  }
 
-    findOne(filter = {}) {
-        this._collection._ensureLoaded();
-        this._collection._validateFilter(filter, "findOne");
-        // ... implementation using this._collection._documents, etc.
-    }
-    
-    find(filter = {}) { /* ... */ }
-    countDocuments(filter = {}) { /* ... */ }
-    aggregate(pipeline = []) { /* ... */ }
+  findOne(filter = {}) {
+    this._collection._ensureLoaded();
+    this._collection._validateFilter(filter, 'findOne');
+    // ... implementation using this._collection._documents, etc.
+  }
+
+  find(filter = {}) {
+    /* ... */
+  }
+  countDocuments(filter = {}) {
+    /* ... */
+  }
+  aggregate(pipeline = []) {
+    /* ... */
+  }
 }
 ```
 
@@ -112,6 +155,7 @@ class CollectionReadOperations {
 Before splitting a class into multi-file structure, examine it for refactoring opportunities related to shared helpers:
 
 **Step 1: Identify Extractable Patterns**
+
 - [ ] Look for validation logic that repeats (extract to private method or Validation class)
 - [ ] Find object transformation patterns that recur (extract to utility functions)
 - [ ] Identify field operations that repeat (get, set, unset on nested paths)
@@ -119,12 +163,14 @@ Before splitting a class into multi-file structure, examine it for refactoring o
 - [ ] Check for repeated data structure queries
 
 **Step 2: Plan Helper Extraction**
-- **Class-specific helpers** (used only in this class): Extract to private methods in 99_ facade
+
+- **Class-specific helpers** (used only in this class): Extract to private methods in 99\_ facade
 - **Cross-class helpers** (used in 3+ classes): Extract to Utility class
-- **Operator handlers** (MongoDB-style operations): Create operation handler classes (01_*.js, 02_*.js)
+- **Operator handlers** (MongoDB-style operations): Create operation handler classes (01*\*.js, 02*\*.js)
 - **Validation patterns**: Consolidate into Validation class or dedicated validator
 
 **Step 3: Document Before Refactoring**
+
 ```
 Shared Helpers to Extract:
 1. _validateDocument() - Extracted from 3 methods, move to private helper
@@ -133,9 +179,10 @@ Shared Helpers to Extract:
 ```
 
 **Step 4: Implement During Refactoring**
+
 - Extract helpers in same refactoring session
-- Operation handlers created as 01_*.js, 02_*.js files
-- Private helpers consolidated in 99_*.js facade
+- Operation handlers created as 01*\*.js, 02*\*.js files
+- Private helpers consolidated in 99\_\*.js facade
 - Utility-grade helpers added to appropriate Utility class
 
 ### 1. Analyze the Target Class
@@ -144,10 +191,10 @@ Before refactoring, identify:
 
 - **Total lines of code** (classes >500 lines are good candidates)
 - **Logical operation groups** (read vs write, field operations vs array operations, etc.)
-- **Shared private helpers** (these stay in 99_ facade or become operation handlers)
+- **Shared private helpers** (these stay in 99\_ facade or become operation handlers)
 - **Extractable patterns** (candidates for utility classes or helper methods)
-- **Dependencies injected via constructor** (these stay in 99_ facade)
-- **Public API methods** (these become delegators in 99_ facade)
+- **Dependencies injected via constructor** (these stay in 99\_ facade)
+- **Public API methods** (these become delegators in 99\_ facade)
 
 ### 2. Identify Operation Groups and Shared Helpers
 
@@ -172,6 +219,7 @@ For UpdateEngine example:
   - Extract generic field validation to Validation utility class
 
 **DRY Check**: Before creating operation handlers, scan for:
+
 - Identical validation logic across handlers → Extract to private method in facade
 - Repeated field operations → Create dedicated FieldPathUtils handler
 - Common error handling patterns → Create error wrapper in facade
@@ -189,34 +237,53 @@ For Database example:
 
 Before creating operation handlers, extract any reusable helpers that multiple handlers will need:
 
-**Private Methods in Facade (99_*.js):**
+**Private Methods in Facade (99\_\*.js):**
+
 ```javascript
 class UpdateEngine {
   constructor() {
     // ... initialization
   }
-  
+
   // Shared helpers used by multiple handlers
-  _validateNumericValue(value, fieldPath, operation) { /* ... */ }
-  _validateArrayField(field, fieldPath, operation) { /* ... */ }
-  _ensureArrayField(document, fieldPath) { /* ... */ }
-  _validateUpdateOperationsNotEmpty(ops) { /* ... */ }
+  _validateNumericValue(value, fieldPath, operation) {
+    /* ... */
+  }
+  _validateArrayField(field, fieldPath, operation) {
+    /* ... */
+  }
+  _ensureArrayField(document, fieldPath) {
+    /* ... */
+  }
+  _validateUpdateOperationsNotEmpty(ops) {
+    /* ... */
+  }
 }
 ```
 
 **Field Path Utility Handler (01_UpdateEngineFieldPathUtils.js):**
 Extract field operations that both read and write operators need:
+
 ```javascript
 class UpdateEngineFieldPathUtils {
-  constructor(engine) { this._engine = engine; }
-  
-  getFieldValue(doc, path) { /* ... */ }
-  setFieldValue(doc, path, value) { /* ... */ }
-  unsetFieldValue(doc, path) { /* ... */ }
+  constructor(engine) {
+    this._engine = engine;
+  }
+
+  getFieldValue(doc, path) {
+    /* ... */
+  }
+  setFieldValue(doc, path, value) {
+    /* ... */
+  }
+  unsetFieldValue(doc, path) {
+    /* ... */
+  }
 }
 ```
 
 **Check Each Handler:**
+
 - Do multiple handlers call the same private method from facade? → Good pattern
 - Do multiple handlers manipulate fields? → Should use FieldPathUtils handler
 - Can any handler logic be shared? → Extract to utility function
@@ -232,30 +299,32 @@ For each operation group, create a handler class that may use shared helpers:
 /* exported UpdateEngineFieldOperators */
 
 class UpdateEngineFieldOperators {
-    /**
-     * @param {UpdateEngine} engine - The parent UpdateEngine instance
-     */
-    constructor(engine) {
-        this._engine = engine;
-    }
+  /**
+   * @param {UpdateEngine} engine - The parent UpdateEngine instance
+   */
+  constructor(engine) {
+    this._engine = engine;
+  }
 
-    /**
-     * Apply $set operator - sets field values
-     * @param {Object} document - Document to modify
-     * @param {Object} ops - Set operations
-     * @returns {Object} Modified document
-     */
-    applySet(document, ops) {
-        this._engine._validateOperationsNotEmpty(ops, '$set');
-        // ... implementation
-    }
-    
-    applyInc(document, ops) { /* ... */ }
-    // ... more field operators
+  /**
+   * Apply $set operator - sets field values
+   * @param {Object} document - Document to modify
+   * @param {Object} ops - Set operations
+   * @returns {Object} Modified document
+   */
+  applySet(document, ops) {
+    this._engine._validateOperationsNotEmpty(ops, '$set');
+    // ... implementation
+  }
+
+  applyInc(document, ops) {
+    /* ... */
+  }
+  // ... more field operators
 }
 ```
 
-### 5. Refactor the Main Class (99_ File)
+### 5. Refactor the Main Class (99\_ File)
 
 Transform the monolithic class into a facade:
 
@@ -266,48 +335,54 @@ Transform the monolithic class into a facade:
 /* exported UpdateEngine */
 
 class UpdateEngine {
-    constructor() {
-        this._logger = JDbLogger.createComponentLogger('UpdateEngine');
-        
-        // Instantiate operation handlers
-        this._fieldOps = new UpdateEngineFieldOperators(this);
-        this._arrayOps = new UpdateEngineArrayOperators(this);
-        this._fieldPathUtils = new UpdateEngineFieldPathUtils(this);
-        
-        // Map of supported operators to their handler methods
-        this._operatorHandlers = {
-            '$set': this._fieldOps.applySet.bind(this._fieldOps),
-            '$inc': this._fieldOps.applyInc.bind(this._fieldOps),
-            // ... more mappings
-            '$push': this._arrayOps.applyPush.bind(this._arrayOps),
-            '$pull': this._arrayOps.applyPull.bind(this._arrayOps),
-            // ... more mappings
-        };
+  constructor() {
+    this._logger = JDbLogger.createComponentLogger('UpdateEngine');
+
+    // Instantiate operation handlers
+    this._fieldOps = new UpdateEngineFieldOperators(this);
+    this._arrayOps = new UpdateEngineArrayOperators(this);
+    this._fieldPathUtils = new UpdateEngineFieldPathUtils(this);
+
+    // Map of supported operators to their handler methods
+    this._operatorHandlers = {
+      $set: this._fieldOps.applySet.bind(this._fieldOps),
+      $inc: this._fieldOps.applyInc.bind(this._fieldOps),
+      // ... more mappings
+      $push: this._arrayOps.applyPush.bind(this._arrayOps),
+      $pull: this._arrayOps.applyPull.bind(this._arrayOps)
+      // ... more mappings
+    };
+  }
+
+  // Public API - main entry point
+  applyOperators(document, updateOps) {
+    this._validateApplyOperatorsInputs(document, updateOps);
+    this._validateUpdateOperationsNotEmpty(updateOps);
+
+    let clonedDoc = ObjectUtils.deepClone(document);
+
+    for (const operator in updateOps) {
+      const handler = this._operatorHandlers[operator];
+      if (!handler) {
+        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(/* ... */);
+      }
+      clonedDoc = handler(clonedDoc, updateOps[operator]);
     }
 
-    // Public API - main entry point
-    applyOperators(document, updateOps) {
-        this._validateApplyOperatorsInputs(document, updateOps);
-        this._validateUpdateOperationsNotEmpty(updateOps);
-        
-        let clonedDoc = ObjectUtils.deepClone(document);
-        
-        for (const operator in updateOps) {
-            const handler = this._operatorHandlers[operator];
-            if (!handler) {
-                throw new ErrorHandler.ErrorTypes.INVALID_QUERY(/* ... */);
-            }
-            clonedDoc = handler(clonedDoc, updateOps[operator]);
-        }
-        
-        return clonedDoc;
-    }
-    
-    // Shared validation methods (used by multiple handlers)
-    _validateApplyOperatorsInputs(document, updateOps) { /* ... */ }
-    _validateOperationsNotEmpty(ops, operatorName) { /* ... */ }
-    _validateNumericValue(value, fieldPath, operation) { /* ... */ }
-    // ... more shared validators
+    return clonedDoc;
+  }
+
+  // Shared validation methods (used by multiple handlers)
+  _validateApplyOperatorsInputs(document, updateOps) {
+    /* ... */
+  }
+  _validateOperationsNotEmpty(ops, operatorName) {
+    /* ... */
+  }
+  _validateNumericValue(value, fieldPath, operation) {
+    /* ... */
+  }
+  // ... more shared validators
 }
 ```
 
@@ -318,12 +393,12 @@ Each file should include proper exports for both GAS and Node.js:
 ```javascript
 // At the end of each operation handler file
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { UpdateEngineFieldOperators };
+  module.exports = { UpdateEngineFieldOperators };
 }
 
 // At the end of 99_ facade file
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { UpdateEngine };
+  module.exports = { UpdateEngine };
 }
 ```
 
@@ -420,10 +495,10 @@ applyInc(document, ops) {
 
 ```javascript
 class CollectionReadOperations {
-    findOne(filter) {
-        // WRONG: Directly accessing _documents
-        return this._collection._documents[filter._id];
-    }
+  findOne(filter) {
+    // WRONG: Directly accessing _documents
+    return this._collection._documents[filter._id];
+  }
 }
 ```
 
@@ -431,11 +506,11 @@ class CollectionReadOperations {
 
 ```javascript
 class CollectionReadOperations {
-    findOne(filter) {
-        // RIGHT: Using parent's provided method
-        this._collection._ensureLoaded();
-        return this._collection._documentOperations.findDocumentById(filter._id);
-    }
+  findOne(filter) {
+    // RIGHT: Using parent's provided method
+    this._collection._ensureLoaded();
+    return this._collection._documentOperations.findDocumentById(filter._id);
+  }
 }
 ```
 
@@ -445,10 +520,10 @@ class CollectionReadOperations {
 
 ```javascript
 class CollectionReadOperations {
-    constructor(collection) {
-        this._collection = collection;
-        this._cache = {}; // WRONG: Handler-local state
-    }
+  constructor(collection) {
+    this._collection = collection;
+    this._cache = {}; // WRONG: Handler-local state
+  }
 }
 ```
 
@@ -469,10 +544,10 @@ class Collection {
 
 ```javascript
 class UpdateEngineFieldOperators {
-    applySet(document, ops) {
-        // WRONG: Handler calling another handler
-        return this._engine._arrayOps.applyPush(document, ops);
-    }
+  applySet(document, ops) {
+    // WRONG: Handler calling another handler
+    return this._engine._arrayOps.applyPush(document, ops);
+  }
 }
 ```
 
@@ -480,13 +555,13 @@ class UpdateEngineFieldOperators {
 
 ```javascript
 class UpdateEngine {
-    applyOperators(document, updateOps) {
-        // Facade coordinates between handlers
-        for (const operator in updateOps) {
-            const handler = this._operatorHandlers[operator];
-            clonedDoc = handler(clonedDoc, updateOps[operator]);
-        }
+  applyOperators(document, updateOps) {
+    // Facade coordinates between handlers
+    for (const operator in updateOps) {
+      const handler = this._operatorHandlers[operator];
+      clonedDoc = handler(clonedDoc, updateOps[operator]);
     }
+  }
 }
 ```
 
@@ -497,8 +572,8 @@ When passing handler methods as callbacks, ensure proper binding:
 ```javascript
 // In facade constructor
 this._operatorHandlers = {
-    '$set': this._fieldOps.applySet.bind(this._fieldOps),  // ✅ Bound
-    '$inc': this._fieldOps.applyInc,  // ❌ Not bound - will lose context
+  $set: this._fieldOps.applySet.bind(this._fieldOps), // ✅ Bound
+  $inc: this._fieldOps.applyInc // ❌ Not bound - will lose context
 };
 ```
 

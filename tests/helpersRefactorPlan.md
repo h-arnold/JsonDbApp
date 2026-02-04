@@ -2,7 +2,7 @@
 
 **Date:** 3 February 2026  
 **Status:** Planning Phase  
-**Target:** Reduce test code duplication and improve maintainability  
+**Target:** Reduce test code duplication and improve maintainability
 
 ---
 
@@ -30,6 +30,7 @@ Helper modules (`collection-test-helpers.js`, `database-test-helpers.js`, `colle
 - **Cleanup loops** – Same pattern to purge temporary resources after tests
 
 **Examples:**
+
 - `tests/helpers/collection-test-helpers.js` – Creates Drive folders and documents
 - `tests/helpers/database-test-helpers.js` – Duplicates folder creation with nearly identical code
 - `tests/helpers/collection-coordinator-test-helpers.js` – Further duplication of the same patterns
@@ -66,7 +67,7 @@ function generateTestResourcePrefix() {
 function createMockDriveFolder(folderName) {
   return {
     id: `folder-${folderName}-${Math.random().toString(36).substr(2, 9)}`,
-    name: folderName,
+    name: folderName
   };
 }
 
@@ -81,7 +82,7 @@ function createMockDriveFile(fileName, content = {}) {
     id: `file-${fileName}-${Math.random().toString(36).substr(2, 9)}`,
     name: fileName,
     mimeType: 'application/json',
-    content,
+    content
   };
 }
 
@@ -93,7 +94,7 @@ function createMockDriveFile(fileName, content = {}) {
  */
 function registerCleanupCallbacks(callbacks = []) {
   return () => {
-    callbacks.forEach(cb => {
+    callbacks.forEach((cb) => {
       try {
         cb();
       } catch (e) {
@@ -113,20 +114,20 @@ function registerCleanupCallbacks(callbacks = []) {
  */
 function setupTestDriveEnvironment(config) {
   const { folderName, files = [] } = config;
-  
+
   const folder = createMockDriveFolder(folderName);
-  const createdFiles = files.map(({ name, content }) => 
-    createMockDriveFile(name, content)
-  );
-  
+  const createdFiles = files.map(({ name, content }) => createMockDriveFile(name, content));
+
   const cleanupCallbacks = [
-    () => { /* mock cleanup logic */ },
+    () => {
+      /* mock cleanup logic */
+    }
   ];
-  
+
   return {
     folder,
     files: createdFiles,
-    cleanup: registerCleanupCallbacks(cleanupCallbacks),
+    cleanup: registerCleanupCallbacks(cleanupCallbacks)
   };
 }
 ```
@@ -158,16 +159,16 @@ Multiple collection operation test suites repeat the same test data fixtures and
   - `tests/unit/collection/collection-find-operations.test.js`
   - `tests/unit/collection/collection-update-operations.test.js`
   - Similar suites for other operations
-  
 - **Assertion Helpers** – MongoDB-style result checks (checking `acknowledged`, `matchedCount`, `modifiedCount`) are hand-coded in every suite
 
 **Example duplication in multiple files:**
+
 ```javascript
 // Repeated across several test files
 const testDocuments = [
   { _id: 'alice', name: 'Alice', age: 30, city: 'London' },
   { _id: 'bob', name: 'Bob', age: 25, city: 'Paris' },
-  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin' },
+  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin' }
 ];
 
 // Repeated assertion pattern
@@ -193,19 +194,19 @@ Fixtures and assertions created inline for each test file without coordination. 
 export const STANDARD_PERSONS = [
   { _id: 'alice', name: 'Alice', age: 30, city: 'London', joined: '2020-01-15' },
   { _id: 'bob', name: 'Bob', age: 25, city: 'Paris', joined: '2021-03-22' },
-  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin', joined: '2019-11-08' },
+  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin', joined: '2019-11-08' }
 ];
 
 // Standard order documents for testing
 export const STANDARD_ORDERS = [
-  { _id: 'order1', customerId: 'alice', total: 150.00, status: 'pending' },
-  { _id: 'order2', customerId: 'bob', total: 75.50, status: 'shipped' },
+  { _id: 'order1', customerId: 'alice', total: 150.0, status: 'pending' },
+  { _id: 'order2', customerId: 'bob', total: 75.5, status: 'shipped' }
 ];
 
 // Standard inventory documents for testing
 export const STANDARD_INVENTORY = [
   { _id: 'item1', name: 'Widget A', quantity: 100, price: 9.99 },
-  { _id: 'item2', name: 'Widget B', quantity: 50, price: 14.99 },
+  { _id: 'item2', name: 'Widget B', quantity: 50, price: 14.99 }
 ];
 ```
 
@@ -224,20 +225,25 @@ export const STANDARD_INVENTORY = [
  */
 export function assertWriteResult(result, expected = {}) {
   if (!result) throw new Error('Write result is null or undefined');
-  if (result.acknowledged !== true) throw new Error(`Expected acknowledged: true, got ${result.acknowledged}`);
-  
+  if (result.acknowledged !== true)
+    throw new Error(`Expected acknowledged: true, got ${result.acknowledged}`);
+
   if (expected.matchedCount !== undefined && result.matchedCount !== expected.matchedCount) {
     throw new Error(`Expected matchedCount: ${expected.matchedCount}, got ${result.matchedCount}`);
   }
-  
+
   if (expected.modifiedCount !== undefined && result.modifiedCount !== expected.modifiedCount) {
-    throw new Error(`Expected modifiedCount: ${expected.modifiedCount}, got ${result.modifiedCount}`);
+    throw new Error(
+      `Expected modifiedCount: ${expected.modifiedCount}, got ${result.modifiedCount}`
+    );
   }
-  
+
   if (expected.insertedCount !== undefined && result.insertedCount !== expected.insertedCount) {
-    throw new Error(`Expected insertedCount: ${expected.insertedCount}, got ${result.insertedCount}`);
+    throw new Error(
+      `Expected insertedCount: ${expected.insertedCount}, got ${result.insertedCount}`
+    );
   }
-  
+
   if (expected.deletedCount !== undefined && result.deletedCount !== expected.deletedCount) {
     throw new Error(`Expected deletedCount: ${expected.deletedCount}, got ${result.deletedCount}`);
   }
@@ -254,7 +260,7 @@ export function assertQueryResults(results, expected) {
   if (results.length !== expected.length) {
     throw new Error(`Expected ${expected.length} results, got ${results.length}`);
   }
-  
+
   expected.forEach((exp, idx) => {
     const result = results[idx];
     Object.entries(exp).forEach(([key, value]) => {
@@ -273,7 +279,7 @@ export function assertQueryResults(results, expected) {
  */
 export function assertQueryResult(result, expected) {
   if (!result) throw new Error('Expected a result, got null or undefined');
-  
+
   Object.entries(expected).forEach(([key, value]) => {
     if (result[key] !== value) {
       throw new Error(`${key}: expected ${value}, got ${result[key]}`);
@@ -353,23 +359,23 @@ export function getStandardValidationDescriptors() {
       getInitialData: () => [
         { _id: 'p1', name: 'Alice', age: 30, tags: ['admin'] },
         { _id: 'p2', name: 'Bob', age: 25, tags: ['user'] },
-        { _id: 'p3', name: 'Charlie', age: 35, tags: ['user', 'moderator'] },
-      ],
+        { _id: 'p3', name: 'Charlie', age: 35, tags: ['user', 'moderator'] }
+      ]
     },
     {
       name: 'orders',
       getInitialData: () => [
-        { _id: 'o1', customerId: 'p1', total: 150.00, items: ['item1', 'item2'] },
-        { _id: 'o2', customerId: 'p2', total: 75.50, items: ['item3'] },
-      ],
+        { _id: 'o1', customerId: 'p1', total: 150.0, items: ['item1', 'item2'] },
+        { _id: 'o2', customerId: 'p2', total: 75.5, items: ['item3'] }
+      ]
     },
     {
       name: 'inventory',
       getInitialData: () => [
         { _id: 'inv1', name: 'Widget A', quantity: 100, price: 9.99 },
-        { _id: 'inv2', name: 'Widget B', quantity: 50, price: 14.99 },
-      ],
-    },
+        { _id: 'inv2', name: 'Widget B', quantity: 50, price: 14.99 }
+      ]
+    }
   ];
 }
 
@@ -382,18 +388,18 @@ export function getStandardValidationDescriptors() {
  */
 export async function seedValidationCollections(database, descriptors) {
   const collections = {};
-  
+
   for (const descriptor of descriptors) {
     const collection = database.collection(descriptor.name);
     const initialData = descriptor.getInitialData();
-    
+
     for (const doc of initialData) {
       await collection.insertOne(doc);
     }
-    
+
     collections[descriptor.name] = collection;
   }
-  
+
   return collections;
 }
 
@@ -404,9 +410,9 @@ export async function seedValidationCollections(database, descriptors) {
  */
 export function getCustomValidationDescriptors(overrides = {}) {
   const base = getStandardValidationDescriptors();
-  
+
   if (overrides.personCount) {
-    const persons = base.find(d => d.name === 'persons');
+    const persons = base.find((d) => d.name === 'persons');
     if (persons) {
       const originalData = persons.getInitialData;
       persons.getInitialData = () => {
@@ -419,7 +425,7 @@ export function getCustomValidationDescriptors(overrides = {}) {
       };
     }
   }
-  
+
   return base;
 }
 ```
@@ -427,16 +433,19 @@ export function getCustomValidationDescriptors(overrides = {}) {
 **Usage in validation test files:**
 
 ```javascript
-import { seedValidationCollections, getStandardValidationDescriptors } from '../../helpers/validation-seeding-helper.js';
+import {
+  seedValidationCollections,
+  getStandardValidationDescriptors
+} from '../../helpers/validation-seeding-helper.js';
 
 describe('Operator Validation', () => {
   let collections;
-  
+
   beforeEach(async () => {
     const database = createTestDatabase();
     collections = await seedValidationCollections(database, getStandardValidationDescriptors());
   });
-  
+
   it('should validate $set operator', () => {
     // Test logic using collections.persons, collections.orders, etc.
   });
@@ -470,6 +479,7 @@ Metadata builder logic is duplicated between multiple helpers:
 - Other helpers – Repeat metadata builder pattern
 
 **Example duplication:**
+
 ```javascript
 // In collection-metadata-test-helpers.js
 function createTestMetadata() {
@@ -479,7 +489,7 @@ function createTestMetadata() {
     name: 'test_collection',
     driveFileId: `file-${token}`,
     createdAt: timestamp,
-    updatedAt: timestamp,
+    updatedAt: timestamp
   };
 }
 
@@ -491,7 +501,7 @@ function createMetadata() {
     name: 'collection',
     driveFileId: `file-${uid}`,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   };
 }
 ```
@@ -525,7 +535,7 @@ function generateUniqueToken() {
 export function createTestMetadata(overrides = {}) {
   const timestamp = new Date().toISOString();
   const token = generateUniqueToken();
-  
+
   return {
     name: overrides.name || `test_collection_${token}`,
     driveFileId: overrides.driveFileId || `file_${token}`,
@@ -533,7 +543,7 @@ export function createTestMetadata(overrides = {}) {
     updatedAt: overrides.updatedAt || timestamp,
     documentCount: overrides.documentCount || 0,
     indexes: overrides.indexes || [],
-    ...overrides,
+    ...overrides
   };
 }
 
@@ -546,11 +556,13 @@ export function createTestMetadata(overrides = {}) {
 export function createTestMetadataBatch(count, baseOverrides = {}) {
   const batch = [];
   for (let i = 0; i < count; i++) {
-    batch.push(createTestMetadata({
-      ...baseOverrides,
-      name: `${baseOverrides.name || 'collection'}_${i}`,
-      driveFileId: `file_batch_${i}_${generateUniqueToken()}`,
-    }));
+    batch.push(
+      createTestMetadata({
+        ...baseOverrides,
+        name: `${baseOverrides.name || 'collection'}_${i}`,
+        driveFileId: `file_batch_${i}_${generateUniqueToken()}`
+      })
+    );
   }
   return batch;
 }
@@ -566,11 +578,11 @@ export function createTestMetadataBatch(count, baseOverrides = {}) {
 export function registerTestMetadata(masterIndex, collectionName, metadataOverrides = {}) {
   const metadata = createTestMetadata({
     name: collectionName,
-    ...metadataOverrides,
+    ...metadataOverrides
   });
-  
+
   masterIndex.addCollection(collectionName, metadata);
-  
+
   return metadata;
 }
 
@@ -586,7 +598,7 @@ export function serializeTestMetadata(metadata) {
     createdAt: metadata.createdAt,
     updatedAt: metadata.updatedAt,
     documentCount: metadata.documentCount || 0,
-    indexes: metadata.indexes || [],
+    indexes: metadata.indexes || []
   };
 }
 ```
@@ -611,6 +623,7 @@ export function serializeTestMetadata(metadata) {
 ## Implementation Roadmap
 
 ### Phase 1: Foundation (High Priority)
+
 1. Create `drive-resource-utils.js` – Centralise Drive lifecycle logic
 2. Extend `MockQueryData.js` – Add standard fixture exports
 3. Create `metadata-builder-helper.js` – Centralise metadata construction
@@ -619,6 +632,7 @@ export function serializeTestMetadata(metadata) {
 **Benefit:** ~400–450 lines eliminated; foundation for remaining refactors
 
 ### Phase 2: Assertion & Fixture Consolidation (High Priority)
+
 4. Create `collection-assertion-helpers.js` – MongoDB-style result checks
 5. Refactor collection operation test files – Use fixtures and assertion helpers
 
@@ -626,6 +640,7 @@ export function serializeTestMetadata(metadata) {
 **Benefit:** ~200–250 lines eliminated; consistent assertion patterns
 
 ### Phase 3: Validation & Seeding Refactor (Medium Priority)
+
 6. Create `validation-seeding-helper.js` – Descriptor-based collection seeding
 7. Refactor validation test files – Use seeding helper
 
@@ -633,6 +648,7 @@ export function serializeTestMetadata(metadata) {
 **Benefit:** ~150 lines eliminated; easier to add new validation scenarios
 
 ### Phase 4: Integration & Verification (Medium Priority)
+
 8. Run full test suite – Confirm all tests pass
 9. Run lint – Verify 0 errors, 0 warnings
 10. Check SonarQube – Verify duplication metrics improve
@@ -685,22 +701,25 @@ export function serializeTestMetadata(metadata) {
 ### Example 1: Drive Folder Creation (Current Duplication)
 
 **collection-test-helpers.js:**
+
 ```javascript
 const folder = {
   id: `folder-test-${Date.now()}`,
-  name: 'Test Collection Folder',
+  name: 'Test Collection Folder'
 };
 ```
 
 **database-test-helpers.js:**
+
 ```javascript
 const testFolder = {
   id: `folder-${Math.random().toString(36).substr(2, 9)}`,
-  name: 'Test Database Folder',
+  name: 'Test Database Folder'
 };
 ```
 
 **Proposed Refactor (using drive-resource-utils):**
+
 ```javascript
 import { createMockDriveFolder } from './drive-resource-utils.js';
 
@@ -710,24 +729,27 @@ const folder = createMockDriveFolder('Test Collection Folder');
 ### Example 2: Collection Fixture Setup (Current Duplication)
 
 **collection-insert-operations.test.js:**
+
 ```javascript
 const testDocs = [
   { _id: 'alice', name: 'Alice', age: 30, city: 'London' },
   { _id: 'bob', name: 'Bob', age: 25, city: 'Paris' },
-  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin' },
+  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin' }
 ];
 ```
 
 **collection-find-operations.test.js:**
+
 ```javascript
 const documents = [
   { _id: 'alice', name: 'Alice', age: 30, city: 'London' },
   { _id: 'bob', name: 'Bob', age: 25, city: 'Paris' },
-  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin' },
+  { _id: 'charlie', name: 'Charlie', age: 35, city: 'Berlin' }
 ];
 ```
 
 **Proposed Refactor (using fixtures from MockQueryData):**
+
 ```javascript
 import { STANDARD_PERSONS } from '../../data/MockQueryData.js';
 
@@ -737,6 +759,7 @@ const testDocs = STANDARD_PERSONS;
 ### Example 3: Metadata Builder (Current Duplication)
 
 **collection-metadata-test-helpers.js:**
+
 ```javascript
 function createTestMetadata() {
   const timestamp = new Date().toISOString();
@@ -745,12 +768,13 @@ function createTestMetadata() {
     name: 'test_collection',
     driveFileId: `file-${token}`,
     createdAt: timestamp,
-    updatedAt: timestamp,
+    updatedAt: timestamp
   };
 }
 ```
 
 **database-test-helpers.js:**
+
 ```javascript
 function createMetadata() {
   const now = new Date().toISOString();
@@ -759,12 +783,13 @@ function createMetadata() {
     name: 'collection',
     driveFileId: `file-${uid}`,
     createdAt: now,
-    updatedAt: now,
+    updatedAt: now
   };
 }
 ```
 
 **Proposed Refactor (using metadata-builder-helper):**
+
 ```javascript
 import { createTestMetadata } from './metadata-builder-helper.js';
 

@@ -95,6 +95,10 @@ class MockFile {
     return this.mimeType;
   }
 
+  toJSON() {
+    return {};
+  }
+
   /**
    * Returns a Blob object for the file with content and MIME type.
    * @returns {Object} Blob-like object with getDataAsString() and getContentType().
@@ -125,7 +129,7 @@ class MockFile {
     const fileContent = content == null ? '' : String(content);
     fs.writeFileSync(this.filePath, fileContent);
     this.store?.files?.set(this.id, this);
-    return this; 
+    return this;
   }
 
   /**
@@ -192,6 +196,10 @@ class MockFolder {
     return this.name;
   }
 
+  toJSON() {
+    return {};
+  }
+
   setTrashed(trashed) {
     this.trashed = Boolean(trashed);
     this.store.folders.set(this.id, this);
@@ -216,23 +224,23 @@ class MockFolder {
 
   getFiles() {
     const files = Array.from(this.store.files.values())
-      .filter(file => path.dirname(file.filePath) === this.folderPath)
-      .filter(file => !file.trashed);
+      .filter((file) => path.dirname(file.filePath) === this.folderPath)
+      .filter((file) => !file.trashed);
     return new MockFileIterator(files);
   }
 
   getFilesByType(mimeType) {
     const files = Array.from(this.store.files.values())
-      .filter(file => path.dirname(file.filePath) === this.folderPath)
-      .filter(file => !file.trashed)
-      .filter(file => file.mimeType === mimeType);
+      .filter((file) => path.dirname(file.filePath) === this.folderPath)
+      .filter((file) => !file.trashed)
+      .filter((file) => file.mimeType === mimeType);
     return new MockFileIterator(files);
   }
 
   getFoldersByName(name) {
     const folders = Array.from(this.store.folders.values())
-      .filter(folder => !folder.trashed)
-      .filter(folder => folder.name === name);
+      .filter((folder) => !folder.trashed)
+      .filter((folder) => folder.name === name);
     return new MockFolderIterator(folders);
   }
 }
@@ -312,7 +320,7 @@ function createGasMocks(options = {}) {
 
   const rootFolder = new MockFolder({
     id: generateId(),
-    name: 'root',
+    name: 'My Drive',
     folderPath: rootPath,
     store
   });
@@ -365,8 +373,8 @@ function createGasMocks(options = {}) {
     },
     getFolders() {
       const folders = Array.from(store.folders.values())
-        .filter(folder => !folder.trashed)
-        .filter(folder => folder !== rootFolder);
+        .filter((folder) => !folder.trashed)
+        .filter((folder) => folder !== rootFolder);
       return new MockFolderIterator(folders);
     }
   };

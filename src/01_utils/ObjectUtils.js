@@ -1,8 +1,8 @@
 /**
  * ObjectUtils - Utilities for object manipulation with Date preservation
- * 
+ *
  * Provides utilities for deep cloning objects while preserving Date instances
- * and other complex objects. Used throughout the codebase to avoid JSON 
+ * and other complex objects. Used throughout the codebase to avoid JSON
  * serialisation/deserialisation that converts Dates to strings.
  */
 
@@ -25,17 +25,17 @@ class ObjectUtils {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
-    
+
     // Handle Date objects
     if (obj instanceof Date) {
       return new Date(obj.getTime());
     }
-    
+
     // Handle Arrays
     if (Array.isArray(obj)) {
-      return obj.map(item => ObjectUtils.deepClone(item));
+      return obj.map((item) => ObjectUtils.deepClone(item));
     }
-    
+
     // Handle regular objects
     const cloned = {};
     for (const key in obj) {
@@ -43,10 +43,10 @@ class ObjectUtils {
         cloned[key] = ObjectUtils.deepClone(obj[key]);
       }
     }
-    
+
     return cloned;
   }
-  
+
   /**
    * Recursively convert ISO date strings to Date objects
    * @param {*} obj - Object to process (can be any type)
@@ -57,7 +57,7 @@ class ObjectUtils {
     if (obj === null || obj === undefined) {
       return obj;
     }
-    
+
     // Handle string primitives - check if they're ISO date strings
     if (typeof obj === 'string') {
       if (ObjectUtils._isISODateString(obj)) {
@@ -65,17 +65,17 @@ class ObjectUtils {
       }
       return obj;
     }
-    
+
     // Handle non-object types (numbers, booleans, etc.)
     if (typeof obj !== 'object') {
       return obj;
     }
-    
+
     // Handle Date objects (already converted)
     if (obj instanceof Date) {
       return obj;
     }
-    
+
     // Handle arrays
     if (Array.isArray(obj)) {
       obj.forEach((item, index) => {
@@ -83,11 +83,11 @@ class ObjectUtils {
       });
       return obj;
     }
-    
+
     // Handle objects
-    Object.keys(obj).forEach(key => {
+    Object.keys(obj).forEach((key) => {
       const value = obj[key];
-      
+
       // Check if it's an ISO date string
       if (typeof value === 'string' && ObjectUtils._isISODateString(value)) {
         obj[key] = new Date(value);
@@ -96,10 +96,10 @@ class ObjectUtils {
         obj[key] = ObjectUtils.convertDateStringsToObjects(value);
       }
     });
-    
+
     return obj;
   }
-  
+
   /**
    * Check if a string is an ISO date string
    * @private
@@ -115,6 +115,7 @@ class ObjectUtils {
   /**
    * Registry of classes for JSON reviving
    * @private
+   * @returns {Object<string, Function>} Class registry for reviver lookups
    */
   static get _classRegistry() {
     return {
@@ -176,49 +177,49 @@ class ObjectUtils {
    * @returns {boolean} True if values are deeply equal, false otherwise.
    */
   static deepEqual(a, b) {
-      // Strict equality check for primitives and same-instance objects
-      if (a === b) return true;
+    // Strict equality check for primitives and same-instance objects
+    if (a === b) return true;
 
-      // If one is null/undefined, they must both be so
-      if (a == null || b == null) return a === b;
+    // If one is null/undefined, they must both be so
+    if (a === null || a === undefined || b === null || b === undefined) return a === b;
 
-      // Handle Dates
-      if (a instanceof Date && b instanceof Date) {
-        return a.getTime() === b.getTime();
+    // Handle Dates
+    if (a instanceof Date && b instanceof Date) {
+      return a.getTime() === b.getTime();
+    }
+
+    // Types must be the same
+    if (typeof a !== 'object' || typeof b !== 'object') return false;
+
+    // Handle arrays
+    if (Array.isArray(a) && Array.isArray(b)) {
+      // Arrays with different lengths are not equal
+      if (a.length !== b.length) return false;
+      // Recursively compare each element
+      for (let i = 0; i < a.length; i++) {
+        if (!ObjectUtils.deepEqual(a[i], b[i])) return false;
       }
-
-      // Types must be the same
-      if (typeof a !== 'object' || typeof b !== 'object') return false;
-
-      // Handle arrays
-      if (Array.isArray(a) && Array.isArray(b)) {
-        // Arrays with different lengths are not equal
-        if (a.length !== b.length) return false;
-        // Recursively compare each element
-        for (let i = 0; i < a.length; i++) {
-          if (!ObjectUtils.deepEqual(a[i], b[i])) return false;
-        }
-        return true;
-      }
-
-      // If one is an array and the other is not, they are not equal
-      if (Array.isArray(a) || Array.isArray(b)) return false;
-
-      // Handle objects
-      const keysA = Object.keys(a);
-      const keysB = Object.keys(b);
-
-      // Objects with different number of keys are not equal
-      if (keysA.length !== keysB.length) return false;
-
-      for (const key of keysA) {
-        // If a key from A is not in B, they are not equal
-        if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
-        // Recursively compare the values of each key
-        if (!ObjectUtils.deepEqual(a[key], b[key])) return false;
-      }
-
-      // If all keys and values match, the objects are equal
       return true;
+    }
+
+    // If one is an array and the other is not, they are not equal
+    if (Array.isArray(a) || Array.isArray(b)) return false;
+
+    // Handle objects
+    const keysA = Object.keys(a);
+    const keysB = Object.keys(b);
+
+    // Objects with different number of keys are not equal
+    if (keysA.length !== keysB.length) return false;
+
+    for (const key of keysA) {
+      // If a key from A is not in B, they are not equal
+      if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
+      // Recursively compare the values of each key
+      if (!ObjectUtils.deepEqual(a[key], b[key])) return false;
+    }
+
+    // If all keys and values match, the objects are equal
+    return true;
   }
 }

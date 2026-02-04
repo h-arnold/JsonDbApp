@@ -466,6 +466,7 @@ classDiagram
 ```
 
 ## Class Relationships
+
 ```mermaid
 classDiagram
     Database "1" -- "1" DatabaseConfig : uses

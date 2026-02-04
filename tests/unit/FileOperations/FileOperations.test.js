@@ -25,9 +25,7 @@ const createTestData = () => ({
     created: new Date().toISOString(),
     updated: new Date().toISOString()
   },
-  documents: [
-    { _id: 'doc1_setup', data: 'sample document 1 from setup' }
-  ]
+  documents: [{ _id: 'doc1_setup', data: 'sample document 1 from setup' }]
 });
 
 /**
@@ -36,7 +34,9 @@ const createTestData = () => ({
  * @returns {Object} Harness exposing FileOperations instance and mock controls.
  */
 const createFileOperationsTestContext = (overrides = {}) => {
-  const initialData = overrides.initialData ? ObjectUtils.deepClone(overrides.initialData) : createTestData();
+  const initialData = overrides.initialData
+    ? ObjectUtils.deepClone(overrides.initialData)
+    : createTestData();
   const testFileId = overrides.testFileId || 'test-file-id-123';
   const testFolderId = overrides.testFolderId || 'test-folder-id-456';
   const fileName = overrides.fileName || 'test-file.json';
@@ -321,7 +321,9 @@ describe('FileOperations Error Handling', () => {
       }))
     }));
 
-    expect(() => fileOps.readFile('malformed-json-file-id')).toThrow(ERROR_TYPES.INVALID_FILE_FORMAT);
+    expect(() => fileOps.readFile('malformed-json-file-id')).toThrow(
+      ERROR_TYPES.INVALID_FILE_FORMAT
+    );
   });
 
   it('should handle corrupted files with partial JSON and date strings', () => {
@@ -333,11 +335,14 @@ describe('FileOperations Error Handling', () => {
       }))
     }));
 
-    expect(() => fileOps.readFile('corrupted-with-dates-file-id')).toThrow(ERROR_TYPES.INVALID_FILE_FORMAT);
+    expect(() => fileOps.readFile('corrupted-with-dates-file-id')).toThrow(
+      ERROR_TYPES.INVALID_FILE_FORMAT
+    );
   });
 
   it('should handle files with invalid JSON that could trigger double-parsing detection', () => {
-    const doubleParseContent = '"{\"already\": \"stringified\", \"date\": \"2023-06-15T10:30:00.000Z\"}"';
+    const doubleParseContent =
+      '"{\"already\": \"stringified\", \"date\": \"2023-06-15T10:30:00.000Z\"}"';
 
     mockDriveApp.getFileById = vi.fn(() => ({
       getBlob: vi.fn(() => ({
@@ -490,10 +495,7 @@ describe('FileOperations Date Handling', () => {
         { date: new Date('2023-06-01T12:00:00.000Z'), type: 'middle' },
         { date: new Date('2023-12-31T23:59:59.999Z'), type: 'end' }
       ],
-      milestones: [
-        new Date('2023-03-15T09:30:00.000Z'),
-        new Date('2023-09-22T16:45:00.000Z')
-      ]
+      milestones: [new Date('2023-03-15T09:30:00.000Z'), new Date('2023-09-22T16:45:00.000Z')]
     };
 
     fileOps.writeFile(testFileId, testData);
@@ -543,8 +545,12 @@ describe('FileOperations Date Handling', () => {
     expect(result.user.profile.personal.birthDate instanceof Date).toBe(true);
     expect(result.user.profile.personal.preferences.lastUpdated instanceof Date).toBe(true);
     expect(result.user.profile.professional.startDate instanceof Date).toBe(true);
-    expect(result.user.profile.professional.certifications[0].obtainedDate instanceof Date).toBe(true);
-    expect(result.user.profile.professional.certifications[0].expiryDate instanceof Date).toBe(true);
+    expect(result.user.profile.professional.certifications[0].obtainedDate instanceof Date).toBe(
+      true
+    );
+    expect(result.user.profile.professional.certifications[0].expiryDate instanceof Date).toBe(
+      true
+    );
     expect(result.user.profile.personal.birthDate.getFullYear()).toBe(1990);
     expect(result.user.profile.professional.startDate.getFullYear()).toBe(2015);
   });
