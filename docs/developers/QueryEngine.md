@@ -73,15 +73,21 @@ Creates a new `QueryEngine` instance with optional configuration.
 
 - `config` (Object, optional): Configuration object with the following optional properties:
   - `maxNestedDepth` (Number): Maximum allowed query nesting depth (defaults to 10)
+  - `supportedOperators` (String[]): Operators permitted by the engine (defaults to DatabaseConfig settings)
+  - `logicalOperators` (String[]): Logical operators permitted by the engine (defaults to DatabaseConfig settings)
 
 **Example:**
 
 ```javascript
-// Default configuration
+// Default configuration (uses DatabaseConfig defaults)
 const queryEngine = new QueryEngine();
 
 // Custom configuration
-const queryEngine = new QueryEngine({ maxNestedDepth: 5 });
+const queryEngine = new QueryEngine({
+  maxNestedDepth: 5,
+  supportedOperators: ['$eq', '$gt'],
+  logicalOperators: ['$and']
+});
 ```
 
 ### `executeQuery(documents, query)`
@@ -359,6 +365,8 @@ Benefits: single source of truth for comparison rules, consistent Date handling,
 - `$lt`: Matches values that are less than a specified value.
 - `$and`: Joins query clauses with a logical AND. Returns all documents that match the conditions of all clauses. (Implicit when multiple fields are specified at the same level)
 - `$or`: Joins query clauses with a logical OR. Returns all documents that match the conditions of at least one clause.
+
+Defaults for supported and logical operators are defined in `DatabaseConfig` and can be overridden via the `QueryEngine` constructor.
 
 ## Usage Examples
 

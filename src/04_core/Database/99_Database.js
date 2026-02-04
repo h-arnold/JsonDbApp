@@ -32,7 +32,7 @@ class Database {
     this.indexFileId = null;
     this.collections = new Map();
     this._logger = JDbLogger.createComponentLogger('Database');
-    this._fileOps = new FileOperations(this._logger);
+    this._fileOps = new FileOperations(this._logger, this.config);
     this._fileService = new FileService(this._fileOps, this._logger);
     this._masterIndex = null;
 

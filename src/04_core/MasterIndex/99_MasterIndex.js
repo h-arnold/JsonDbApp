@@ -10,9 +10,6 @@
           CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
           ErrorHandler */
 
-// TODO: Move this to Database Config.
-const DEFAULT_LOCK_TIMEOUT = 30000;
-
 /**
  * Coordinates collection metadata across script executions using a ScriptProperties-backed index.
  */
@@ -368,8 +365,8 @@ class MasterIndex {
    */
   _initialiseConfig(config) {
     return {
-      masterIndexKey: config.masterIndexKey || 'GASDB_MASTER_INDEX',
-      lockTimeout: config.lockTimeout || DEFAULT_LOCK_TIMEOUT,
+      masterIndexKey: config.masterIndexKey || DatabaseConfig.getDefaultMasterIndexKey(),
+      lockTimeout: config.lockTimeout || DatabaseConfig.getDefaultLockTimeout(),
       version: config.version || 1
     };
   }

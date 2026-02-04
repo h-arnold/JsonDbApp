@@ -54,6 +54,14 @@ describe('QueryEngine Basic Functionality', () => {
     expect(queryEngine).toBeInstanceOf(QueryEngine);
   });
 
+  it('should use DatabaseConfig defaults for query engine configuration', () => {
+    const config = queryEngine.getConfig();
+    const defaults = new DatabaseConfig();
+
+    expect(config.maxNestedDepth).toBe(defaults.queryEngineMaxNestedDepth);
+    expect(config.supportedOperators).toEqual(defaults.queryEngineSupportedOperators);
+  });
+
   it('should have executeQuery method', () => {
     expect(typeof queryEngine.executeQuery).toBe('function');
   });
