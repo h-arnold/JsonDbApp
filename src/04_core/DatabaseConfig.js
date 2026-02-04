@@ -129,8 +129,6 @@ class DatabaseConfig {
       config.stripDisallowedCollectionNameCharacters ?? false;
   }
 
-
-
   /**
    * Gets the default root folder ID
    *
