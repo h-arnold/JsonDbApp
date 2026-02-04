@@ -56,7 +56,7 @@ The `DatabaseConfig` class manages database configuration settings with validati
 
 ## Constants
 
-`DatabaseConfig` exposes shared constants for log handling so the configuration stays in sync with `GASDBLogger` behaviour:
+`DatabaseConfig` internally defines shared constants for log handling so the configuration stays in sync with `GASDBLogger` behaviour. These are implementation details used for validation and are **not** exposed as public static properties or part of the public API:
 
 - `LOG_LEVELS`: ordered array of accepted level names (`['DEBUG','INFO','WARN','ERROR']`) used during validation.
 - `DEFAULT_LOG_LEVEL`: default value (`'INFO'`) applied when no explicit level is supplied.
