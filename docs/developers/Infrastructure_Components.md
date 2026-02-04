@@ -140,23 +140,30 @@ All errors extend the base `GASDBError` class and include:
 - Context object for debugging information
 - Timestamp for error tracking
 
-| Error Class               | Code                   | Usage                                                                 |
-| ------------------------- | ---------------------- | --------------------------------------------------------------------- |
-| `DocumentNotFoundError`   | `DOCUMENT_NOT_FOUND`   | Document queries that return no results                               |
-| `DuplicateKeyError`       | `DUPLICATE_KEY`        | Unique constraint violations                                          |
-| `InvalidQueryError`       | `INVALID_QUERY`        | Malformed query syntax                                                |
-| `LockTimeoutError`        | `LOCK_TIMEOUT`         | Lock acquisition failures                                             |
-| `FileIOError`             | `FILE_IO_ERROR`        | Drive API operation failures                                          |
-| `ConflictError`           | `CONFLICT_ERROR`       | Modification token mismatches                                         |
-| `MasterIndexError`        | `MASTER_INDEX_ERROR`   | ScriptProperties access failures                                      |
-| `CollectionNotFoundError` | `COLLECTION_NOT_FOUND` | Missing collection references                                         |
-| `ConfigurationError`      | `CONFIGURATION_ERROR`  | Invalid configuration values                                          |
-| `FileNotFoundError`       | `FILE_NOT_FOUND`       | Specific file not found on Drive                                      |
-| `PermissionDeniedError`   | `PERMISSION_DENIED`    | Lack of permission for a file operation                               |
-| `QuotaExceededError`      | `QUOTA_EXCEEDED`       | Google Drive API quota limits reached                                 |
-| `InvalidFileFormatError`  | `INVALID_FILE_FORMAT`  | File content does not match expected format (e.g., not valid JSON)    |
-| `InvalidArgumentError`    | `INVALID_ARGUMENT`     | Incorrect or missing function arguments (also used by Validate class) |
-| `OperationError`          | `OPERATION_ERROR`      | General failure during an operation not covered by other error types  |
+The shared `ERROR_CODES` catalogue mirrors the registered error types so consumers who prefer constants over string literals can import and compare against those values without relying on free-form strings.
+
+| Error Class                   | Code                       | Usage                                                                                  |
+| ----------------------------- | -------------------------- | -------------------------------------------------------------------------------------- |
+| `DocumentNotFoundError`       | `DOCUMENT_NOT_FOUND`       | Document queries that return no results                                                |
+| `DuplicateKeyError`           | `DUPLICATE_KEY`            | Unique constraint violations                                                           |
+| `InvalidQueryError`           | `INVALID_QUERY`            | Malformed query syntax                                                                 |
+| `LockTimeoutError`            | `LOCK_TIMEOUT`             | Lock acquisition failures                                                              |
+| `FileIOError`                 | `FILE_IO_ERROR`            | Drive API operation failures                                                           |
+| `ConflictError`               | `CONFLICT_ERROR`           | Modification token mismatches                                                          |
+| `MasterIndexError`            | `MASTER_INDEX_ERROR`       | ScriptProperties access failures                                                       |
+| `CollectionNotFoundError`     | `COLLECTION_NOT_FOUND`     | Missing collection references                                                          |
+| `ConfigurationError`          | `CONFIGURATION_ERROR`      | Invalid configuration values                                                           |
+| `FileNotFoundError`           | `FILE_NOT_FOUND`           | Specific file not found on Drive                                                       |
+| `PermissionDeniedError`       | `PERMISSION_DENIED`        | Lack of permission for a file operation                                                |
+| `QuotaExceededError`          | `QUOTA_EXCEEDED`           | Google Drive API quota limits reached                                                  |
+| `InvalidFileFormatError`      | `INVALID_FILE_FORMAT`      | File content does not match expected format (e.g., not valid JSON)                     |
+| `InvalidArgumentError`        | `INVALID_ARGUMENT`         | Incorrect or missing function arguments (also used by Validate class)                  |
+| `OperationError`              | `OPERATION_ERROR`          | General failure during an operation not covered by other error types                   |
+| `LockAcquisitionFailureError` | `LOCK_ACQUISITION_FAILURE` | Lock attempts that fail immediately without waiting (e.g., contention without timeout) |
+| `ModificationConflictError`   | `MODIFICATION_CONFLICT`    | Fine-grained token mismatches where a more specific conflict signal is required        |
+| `CoordinationTimeoutError`    | `COORDINATION_TIMEOUT`     | Cross-component orchestration exceeded the allotted coordination window                |
+
+When creating new subclasses, use the `createErrorConstructorArgs` helper to assemble the standard `(message, code, context)` tuple. This keeps constructors minimal and ensures new errors align with the catalogued codes and logging expectations.
 
 #### 1.2.1.2. Error Management Methods
 
