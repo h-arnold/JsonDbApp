@@ -35,7 +35,7 @@ class MasterIndexConflictResolver {
           'CollectionMetadata, Validate, and ErrorHandler are required'
         );
       }
-      throw new Error('MasterIndexConflictResolver requires required dependencies.');
+      throw new Error('CollectionMetadata, Validate, and ErrorHandler are required.');
     }
 
     Validate.required(masterIndex, 'masterIndex');
@@ -53,7 +53,7 @@ class MasterIndexConflictResolver {
     const timestamp = this._masterIndex._getCurrentTimestamp().getTime();
     const randomPart = Math.random()
       .toString(RANDOM_TOKEN_RADIX)
-      .substr(RANDOM_TOKEN_OFFSET, RANDOM_TOKEN_LENGTH);
+      .slice(RANDOM_TOKEN_OFFSET, RANDOM_TOKEN_OFFSET + RANDOM_TOKEN_LENGTH);
     return `${timestamp}-${randomPart}`;
   }
 
@@ -122,7 +122,7 @@ class MasterIndexConflictResolver {
    * @private
    */
   _resolveCollectionMetadata(collectionName) {
-    const collectionData = this._masterIndex._data.collections[collectionName];
+    const collectionData = this._masterIndex._getCollectionData(collectionName);
     if (!collectionData) {
       throw new this._ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
     }
@@ -145,9 +145,6 @@ class MasterIndexConflictResolver {
       switch (key) {
         case 'documentCount':
           collectionMetadata.setDocumentCount(newData[key]);
-          break;
-        case 'modificationToken':
-          collectionMetadata.setModificationToken(newData[key]);
           break;
         case 'lockStatus':
           collectionMetadata.setLockStatus(newData[key]);

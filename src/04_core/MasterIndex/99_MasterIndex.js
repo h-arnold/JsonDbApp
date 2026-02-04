@@ -344,10 +344,8 @@ class MasterIndex {
     return this._withScriptLock(() => {
       const resolution = this._conflictResolver.resolveConflict(collectionName, newData, strategy);
       if (resolution && resolution.success && resolution.data) {
-        this._data.collections[collectionName] = resolution.data;
         const timestamp = this._getCurrentTimestamp();
-        this._touchIndex(timestamp);
-        this.save(undefined, timestamp);
+        this._persistCollectionMetadata(collectionName, resolution.data, timestamp);
       }
       return resolution;
     });
@@ -468,6 +466,20 @@ class MasterIndex {
     this._data.collections[name] = metadata;
     this._touchIndex(effectiveTimestamp);
     this.save(undefined, effectiveTimestamp);
+  }
+
+  /**
+   * Fetch raw collection data without exposing internal state mutation.
+   * @param {string} name - Collection identifier
+   * @returns {CollectionMetadata|Object|null} Stored collection data or null
+   * @private
+   */
+  _getCollectionData(name) {
+    Validate.nonEmptyString(name, 'name');
+    if (!this._data || !this._data.collections) {
+      return null;
+    }
+    return this._data.collections[name] || null;
   }
 
   /**
