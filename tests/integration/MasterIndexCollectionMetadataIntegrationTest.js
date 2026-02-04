@@ -178,7 +178,7 @@ function testDatabaseMasterIndexIntegration() {
       const database = new Database(config);
       database.initialise();
       // Act: Create collection through Database API
-      const collection = database.collection('integration_collection');
+      database.collection('integration_collection');
       
       // Assert: MasterIndex should contain proper CollectionMetadata
       const masterIndex = database._masterIndex;
