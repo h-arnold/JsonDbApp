@@ -631,6 +631,8 @@ const dbLogger = GASDBLogger.createComponentLogger('Database');
 const collectionLogger = GASDBLogger.createComponentLogger('Collection');
 ```
 
+`DatabaseConfig` enforces these names via its `LOG_LEVELS` constant and defaults to `DEFAULT_LOG_LEVEL` (`'INFO'`), ensuring runtime configuration always maps cleanly onto `GASDBLogger` expectations.
+
 ### 1.4.2. Error Handler Configuration
 
 ```javascript
