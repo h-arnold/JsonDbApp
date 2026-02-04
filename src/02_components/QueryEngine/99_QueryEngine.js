@@ -7,9 +7,9 @@
  * handling operator validation, dot-notation traversal, and logical
  * composition.
  */
-const DEFAULT_MAX_NESTED_DEPTH = 10;
-const DEFAULT_SUPPORTED_OPERATORS = Object.freeze(['$eq', '$gt', '$lt', '$and', '$or']);
-const LOGICAL_OPERATORS = Object.freeze(['$and', '$or']);
+const DEFAULT_MAX_NESTED_DEPTH = DatabaseConfig.getDefaultQueryEngineMaxNestedDepth();
+const DEFAULT_SUPPORTED_OPERATORS = DatabaseConfig.getDefaultQueryEngineSupportedOperators();
+const DEFAULT_LOGICAL_OPERATORS = DatabaseConfig.getDefaultQueryEngineLogicalOperators();
 
 /**
  * Query engine facade orchestrating validation and matching helpers.
@@ -20,6 +20,7 @@ class QueryEngine {
    * @param {Object} [config] - Optional configuration overrides.
    * @param {number} [config.maxNestedDepth=10] - Maximum allowed query depth.
    * @param {string[]} [config.supportedOperators] - Operators permitted by the engine.
+   * @param {string[]} [config.logicalOperators] - Logical operators permitted by the engine.
    * @param {Map<string, readonly string[]>} [config.fieldPathCache] - Shared cache for field path segments.
    * @param {FieldPathUtils} [config.fieldPathUtils] - Shared FieldPathUtils instance.
    */
@@ -27,6 +28,7 @@ class QueryEngine {
     this._logger = JDbLogger.createComponentLogger('QueryEngine');
     this._config = this._buildConfig(config);
     this._supportedOperatorsSnapshot = [];
+    this._logicalOperatorsSnapshot = [];
     this._supportedOperators = new Set();
     this._logicalOperators = new Set();
     this._refreshOperatorCaches();
@@ -76,7 +78,8 @@ class QueryEngine {
 
   /**
    * Retrieve immutable engine configuration.
-   * @returns {{supportedOperators: string[], maxNestedDepth: number}} Engine configuration.
+   * @returns {{supportedOperators: string[], logicalOperators: string[], maxNestedDepth: number}}
+   *   Engine configuration.
    */
   getConfig() {
     return this._config;
@@ -143,9 +146,13 @@ class QueryEngine {
     const config = rawConfig || {};
 
     const supportedOperators = this._normaliseSupportedOperators(config.supportedOperators);
+    const logicalOperators = this._normaliseLogicalOperators(
+      config.logicalOperators,
+      supportedOperators
+    );
     const maxNestedDepth = this._normaliseMaxNestedDepth(config.maxNestedDepth);
 
-    return { supportedOperators, maxNestedDepth };
+    return { supportedOperators, logicalOperators, maxNestedDepth };
   }
 
   /**
@@ -181,6 +188,39 @@ class QueryEngine {
           'supportedOperators',
           operator,
           'Operator names must be non-empty strings'
+        );
+      }
+    });
+
+    return operators;
+  }
+
+  /**
+   * Normalise logical operator declarations.
+   * @param {string[]} [providedOperators] - Optional logical operator list.
+   * @param {string[]} supportedOperators - Supported operators list.
+   * @returns {string[]} Validated logical operator list.
+   * @private
+   */
+  _normaliseLogicalOperators(providedOperators, supportedOperators) {
+    const operators =
+      Array.isArray(providedOperators) && providedOperators.length > 0
+        ? providedOperators.slice()
+        : Array.from(DEFAULT_LOGICAL_OPERATORS);
+
+    operators.forEach((operator) => {
+      if (typeof operator !== 'string' || operator.trim() === '') {
+        throw new InvalidArgumentError(
+          'logicalOperators',
+          operator,
+          'Operator names must be non-empty strings'
+        );
+      }
+      if (!supportedOperators.includes(operator)) {
+        throw new InvalidArgumentError(
+          'logicalOperators',
+          operator,
+          'Logical operators must be included in supportedOperators'
         );
       }
     });
@@ -237,6 +277,9 @@ class QueryEngine {
     const currentOperators = Array.isArray(this._config.supportedOperators)
       ? this._config.supportedOperators
       : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+    const currentLogicalOperators = Array.isArray(this._config.logicalOperators)
+      ? this._config.logicalOperators
+      : Array.from(DEFAULT_LOGICAL_OPERATORS);
 
     if (this._supportedOperatorsSnapshot.length !== currentOperators.length) {
       return true;
@@ -244,6 +287,16 @@ class QueryEngine {
 
     for (let index = 0; index < currentOperators.length; index += 1) {
       if (currentOperators[index] !== this._supportedOperatorsSnapshot[index]) {
+        return true;
+      }
+    }
+
+    if (this._logicalOperatorsSnapshot.length !== currentLogicalOperators.length) {
+      return true;
+    }
+
+    for (let index = 0; index < currentLogicalOperators.length; index += 1) {
+      if (currentLogicalOperators[index] !== this._logicalOperatorsSnapshot[index]) {
         return true;
       }
     }
@@ -259,12 +312,16 @@ class QueryEngine {
     const currentOperators = Array.isArray(this._config.supportedOperators)
       ? this._config.supportedOperators
       : Array.from(DEFAULT_SUPPORTED_OPERATORS);
+    const currentLogicalOperators = Array.isArray(this._config.logicalOperators)
+      ? this._config.logicalOperators
+      : Array.from(DEFAULT_LOGICAL_OPERATORS);
 
     this._supportedOperators = new Set(currentOperators);
     this._logicalOperators = new Set(
-      LOGICAL_OPERATORS.filter((operator) => this._supportedOperators.has(operator))
+      currentLogicalOperators.filter((operator) => this._supportedOperators.has(operator))
     );
     this._supportedOperatorsSnapshot = currentOperators.slice();
+    this._logicalOperatorsSnapshot = currentLogicalOperators.slice();
   }
 }
 

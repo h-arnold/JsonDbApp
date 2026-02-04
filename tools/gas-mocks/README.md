@@ -9,6 +9,8 @@ The mocks cover the core subset of APIs needed by most JsonDbApp tests. They pro
 - Lock and sleep operations use busy-wait loops that block the event loop and won't properly simulate concurrent behaviour in single-threaded Node.js.
 - The mocks are suitable for single-threaded sequential test scenarios but won't simulate true concurrent lock contention.
 
+DriveApp provides a singleton root folder via `getRootFolder()`, and `Folder.getId()` returns the mock folder identifier so tests can resolve it via `DriveApp.getFolderById()`.
+
 ## Files
 
 - `plan.md`: method signatures + data shapes mapped from GAS reference docs.

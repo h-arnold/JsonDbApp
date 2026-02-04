@@ -26,4 +26,17 @@ describe('Gas mocks run inside Viitest', () => {
     expect(() => lock.waitLock(10)).not.toThrow();
     lock.releaseLock();
   });
+
+  it('provides a root folder with an id that can be resolved', () => {
+    const root = DriveApp.getRootFolder();
+
+    expect(root).toBeDefined();
+    expect(typeof root.getId).toBe('function');
+
+    const rootId = root.getId();
+    const resolved = DriveApp.getFolderById(rootId);
+
+    expect(resolved.getId()).toBe(rootId);
+    expect(typeof resolved.getName).toBe('function');
+  });
 });
