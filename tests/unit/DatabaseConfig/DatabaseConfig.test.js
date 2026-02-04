@@ -232,13 +232,24 @@ describe('DatabaseConfig Validation', () => {
       new DatabaseConfig({ queryEngineMaxNestedDepth: -1 });
     }).toThrow();
 
-    try {
+    /**
+     * Capture an error thrown by the provided action.
+     * @param {Function} action - Action expected to throw.
+     * @returns {Error|null} Thrown error or null when none was thrown.
+     */
+    const captureError = (action) => {
+      try {
+        action();
+      } catch (caughtError) {
+        return caughtError;
+      }
+      return null;
+    };
+    const supportedOperatorError = captureError(() => {
       new DatabaseConfig({ queryEngineSupportedOperators: 'invalid' });
-      throw new Error('Expected error was not thrown');
-    } catch (error) {
-      expect(error).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
-      expect(error.context.providedValue).toBe('invalid');
-    }
+    });
+    expect(supportedOperatorError).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+    expect(supportedOperatorError.context.providedValue).toBe('invalid');
 
     expect(() => {
       new DatabaseConfig({ queryEngineSupportedOperators: [] });
@@ -248,13 +259,11 @@ describe('DatabaseConfig Validation', () => {
       new DatabaseConfig({ queryEngineSupportedOperators: ['$eq', ''] });
     }).toThrow();
 
-    try {
+    const logicalOperatorError = captureError(() => {
       new DatabaseConfig({ queryEngineLogicalOperators: 'invalid' });
-      throw new Error('Expected error was not thrown');
-    } catch (error) {
-      expect(error).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
-      expect(error.context.providedValue).toBe('invalid');
-    }
+    });
+    expect(logicalOperatorError).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+    expect(logicalOperatorError.context.providedValue).toBe('invalid');
 
     expect(() => {
       new DatabaseConfig({

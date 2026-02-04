@@ -161,7 +161,8 @@ class QueryEngine {
   /**
    * Build validated configuration object from raw input.
    * @param {Object} rawConfig - Raw configuration input.
-   * @returns {{supportedOperators: string[], maxNestedDepth: number}} Normalised configuration.
+   * @returns {{supportedOperators: string[], logicalOperators: string[], maxNestedDepth: number}}
+   *   Normalised configuration.
    * @private
    */
   _buildConfig(rawConfig) {
