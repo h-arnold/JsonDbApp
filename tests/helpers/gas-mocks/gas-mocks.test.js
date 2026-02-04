@@ -39,4 +39,14 @@ describe('Gas mocks run inside Viitest', () => {
     expect(resolved.getId()).toBe(rootId);
     expect(typeof resolved.getName).toBe('function');
   });
+
+  it('serialises Drive folders and files as empty objects', () => {
+    const root = DriveApp.getRootFolder();
+    const folder = DriveApp.createFolder('mock-serialise');
+    const file = folder.createFile('serialise.json', '{}', MimeType.JSON);
+
+    expect(JSON.stringify(root)).toBe('{}');
+    expect(JSON.stringify(folder)).toBe('{}');
+    expect(JSON.stringify(file)).toBe('{}');
+  });
 });

@@ -136,8 +136,9 @@ function recordDriveApp() {
 
   return {
     rootFolder: {
-      id: root.getId(),
-      name: root.getName()
+      serialisedGetRootFolder: JSON.stringify(root),
+      seralisedGetFolderId: JSON.stringify(root.getId()),
+      serialisedGetFolderName: JSON.stringify(root.getName())
     },
     createdFolder: {
       id: folder.getId(),
@@ -147,6 +148,12 @@ function recordDriveApp() {
       id: file.getId(),
       name: fileName,
       mimeType: file.getMimeType()
+    },
+    fullySerialisedFileProps: {
+      serilaisedFileObj: JSON.stringify(file),
+      serialisedFileName: JSON.stringify(file.getName()),
+      serialisedFileId: JSON.stringify(file.getId()),
+      serialisedFileMimeType: JSON.stringify(file.getMimeType())
     },
     getFileById: {
       id: fileById.getId(),

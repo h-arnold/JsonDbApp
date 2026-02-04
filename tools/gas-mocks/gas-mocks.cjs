@@ -95,6 +95,10 @@ class MockFile {
     return this.mimeType;
   }
 
+  toJSON() {
+    return {};
+  }
+
   /**
    * Returns a Blob object for the file with content and MIME type.
    * @returns {Object} Blob-like object with getDataAsString() and getContentType().
@@ -190,6 +194,10 @@ class MockFolder {
 
   getName() {
     return this.name;
+  }
+
+  toJSON() {
+    return {};
   }
 
   setTrashed(trashed) {
@@ -312,7 +320,7 @@ function createGasMocks(options = {}) {
 
   const rootFolder = new MockFolder({
     id: generateId(),
-    name: 'root',
+    name: 'My Drive',
     folderPath: rootPath,
     store
   });
