@@ -24,6 +24,8 @@ const DEFAULT_QUERY_ENGINE_SUPPORTED_OPERATORS = Object.freeze([
 ]);
 const DEFAULT_QUERY_ENGINE_LOGICAL_OPERATORS = Object.freeze(['$and', '$or']);
 const DEFAULT_MASTER_INDEX_KEY = 'GASDB_MASTER_INDEX';
+const LOG_LEVELS = Object.freeze(['DEBUG', 'INFO', 'WARN', 'ERROR']);
+const DEFAULT_LOG_LEVEL = 'INFO';
 const MIN_LOCK_TIMEOUT_MS = 500;
 const MIN_QUERY_ENGINE_MAX_NESTED_DEPTH = 0;
 
@@ -56,18 +58,46 @@ class DatabaseConfig {
    * @throws {Error} When configuration validation fails
    */
   constructor(config = {}) {
-    // Set default values
+    const resolvedConfig = config || {};
+    this._initialiseGeneralDefaults(resolvedConfig);
+    this._initialiseRetryConfig(resolvedConfig);
+    this._initialiseQueryEngineConfig(resolvedConfig);
+    this._initialiseBooleanFlags(resolvedConfig);
+    this._validateConfig();
+  }
+
+  /**
+   * Apply core defaults covering root folder, lock timeout, log level, and master index key.
+   * @param {Object} config - Raw configuration object provided to the constructor.
+   * @private
+   */
+  _initialiseGeneralDefaults(config) {
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
-    this.autoCreateCollections = config.autoCreateCollections ?? true;
     this.lockTimeout = config.lockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS;
+    this.logLevel = config.logLevel ?? DEFAULT_LOG_LEVEL;
+    this.masterIndexKey = config.masterIndexKey || DEFAULT_MASTER_INDEX_KEY;
+  }
+
+  /**
+   * Configure retry-related settings for lock and file operations.
+   * @param {Object} config - Raw configuration object provided to the constructor.
+   * @private
+   */
+  _initialiseRetryConfig(config) {
     this.retryAttempts = config.retryAttempts ?? DEFAULT_RETRY_ATTEMPTS;
     this.retryDelayMs = config.retryDelayMs ?? DEFAULT_RETRY_DELAY_MS;
     this.lockRetryBackoffBase = config.lockRetryBackoffBase ?? DEFAULT_LOCK_RETRY_BACKOFF_BASE;
-    this.cacheEnabled = config.cacheEnabled ?? true;
-    this.logLevel = config.logLevel || 'INFO';
     this.fileRetryAttempts = config.fileRetryAttempts ?? DEFAULT_FILE_RETRY_ATTEMPTS;
     this.fileRetryDelayMs = config.fileRetryDelayMs ?? DEFAULT_FILE_RETRY_DELAY_MS;
     this.fileRetryBackoffBase = config.fileRetryBackoffBase ?? DEFAULT_FILE_RETRY_BACKOFF_BASE;
+  }
+
+  /**
+   * Normalise QueryEngine defaults while retaining raw configuration tracking flags.
+   * @param {Object} config - Raw configuration object provided to the constructor.
+   * @private
+   */
+  _initialiseQueryEngineConfig(config) {
     this.queryEngineMaxNestedDepth =
       config.queryEngineMaxNestedDepth ?? DEFAULT_QUERY_ENGINE_MAX_NESTED_DEPTH;
     this._queryEngineSupportedOperatorsProvided =
@@ -84,12 +114,19 @@ class DatabaseConfig {
     this.queryEngineLogicalOperators = Array.isArray(config.queryEngineLogicalOperators)
       ? config.queryEngineLogicalOperators.slice()
       : Array.from(DEFAULT_QUERY_ENGINE_LOGICAL_OPERATORS);
-    this.masterIndexKey = config.masterIndexKey || DEFAULT_MASTER_INDEX_KEY;
+  }
+
+  /**
+   * Populate boolean feature flags using sensible defaults.
+   * @param {Object} config - Raw configuration object provided to the constructor.
+   * @private
+   */
+  _initialiseBooleanFlags(config) {
+    this.autoCreateCollections = config.autoCreateCollections ?? true;
+    this.cacheEnabled = config.cacheEnabled ?? true;
     this.backupOnInitialise = config.backupOnInitialise ?? false;
     this.stripDisallowedCollectionNameCharacters =
       config.stripDisallowedCollectionNameCharacters ?? false;
-    // Validate configuration
-    this._validateConfig();
   }
 
   /**
@@ -136,8 +173,7 @@ class DatabaseConfig {
     Validate.positiveNumber(this.lockRetryBackoffBase, 'lockRetryBackoffBase');
 
     // Validate log level against allowed values
-    const validLogLevels = ['DEBUG', 'INFO', 'WARN', 'ERROR'];
-    Validate.enum(this.logLevel, validLogLevels, 'logLevel');
+    Validate.enum(this.logLevel, LOG_LEVELS, 'logLevel');
 
     // File operation retry configuration
     Validate.integer(this.fileRetryAttempts, 'fileRetryAttempts');

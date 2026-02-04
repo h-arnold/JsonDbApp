@@ -299,53 +299,47 @@ describe('Conflict Detection and Resolution', () => {
 });
 
 describe('MasterIndex Helper Behaviour', () => {
-  it('should normalise history entries and enforce default capping', () => {
-    // Arrange - create collection and configure default history fallback
-    const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 0 });
-    addTestCollection(masterIndex, 'helperHistory');
-    const isoPattern = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/;
-    const updatesToApply = DEFAULT_MODIFICATION_HISTORY_LIMIT + 5;
+  it('should drop legacy modification history during initialisation', () => {
+    const key = createMasterIndexKey();
+    const seededMetadata = new CollectionMetadata('legacyHistory', 'legacy-file-id', {
+      documentCount: 1,
+      modificationToken: 'legacy-token'
+    });
+    const seededData = {
+      version: 1,
+      lastUpdated: new Date('2025-01-01T00:00:00Z'),
+      collections: { legacyHistory: seededMetadata },
+      modificationHistory: [
+        {
+          collection: 'legacyHistory',
+          operation: 'UPDATE_METADATA',
+          timestamp: '2025-01-01T00:00:00.000Z',
+          data: { documentCount: 1 }
+        }
+      ]
+    };
+    seedMasterIndex(key, seededData);
 
-    // Act - issue enough updates to trigger history capping via public APIs
-    for (let i = 0; i < updatesToApply; i += 1) {
-      masterIndex.updateCollectionMetadata('helperHistory', { documentCount: i });
-    }
-    const history = masterIndex.getModificationHistory('helperHistory');
+    const masterIndex = new MasterIndex({ masterIndexKey: key });
+    const storedCollection = masterIndex.getCollection('legacyHistory');
 
-    // Assert - verify capped length, timestamp normalisation, and retained payload data
-    expect(history).toHaveLength(DEFAULT_MODIFICATION_HISTORY_LIMIT);
-    const firstEntry = history[0];
-    const lastEntry = history.at(-1);
-    expect(firstEntry.operation).toBe('UPDATE_METADATA');
-    expect(lastEntry.operation).toBe('UPDATE_METADATA');
-    expect(isoPattern.test(firstEntry.timestamp)).toBe(true);
-    expect(isoPattern.test(lastEntry.timestamp)).toBe(true);
-    expect(firstEntry.data.documentCount).toBe(updatesToApply - DEFAULT_MODIFICATION_HISTORY_LIMIT);
-    expect(lastEntry.data.documentCount).toBe(updatesToApply - 1);
+    expect(storedCollection).toBeInstanceOf(CollectionMetadata);
+    expect(storedCollection.documentCount).toBe(1);
+    expect(typeof masterIndex.getModificationHistory).toBe('undefined');
+
+    const persistedPayload = scriptProperties.getProperty(key);
+    expect(typeof persistedPayload).toBe('string');
+    expect(persistedPayload.includes('modificationHistory')).toBe(false);
   });
 
-  it('should preserve addCollection history snapshots after metadata mutations', () => {
-    // Arrange - capture initial addCollection history entry
+  it('should operate without modification history tracking', () => {
     const { masterIndex } = createTestMasterIndex();
-    const initialMetadata = new CollectionMetadata('historySnapshot', 'history-file-id', {
-      documentCount: 2,
-      modificationToken: 'token-history'
-    });
-    masterIndex.addCollection('historySnapshot', initialMetadata);
-    const historyBeforeUpdate = masterIndex.getModificationHistory('historySnapshot').slice();
-    const initialEntry = historyBeforeUpdate[0];
+    addTestCollection(masterIndex, 'historyless');
 
-    // Act - mutate metadata via public update API
-    masterIndex.updateCollectionMetadata('historySnapshot', { documentCount: 5 });
-    const updatedCollection = masterIndex.getCollection('historySnapshot');
+    expect('getModificationHistory' in masterIndex).toBe(false);
 
-    // Assert - ensure history snapshot remains immutable after updates
-    expect(historyBeforeUpdate).toHaveLength(1);
-    expect(initialEntry.data).toBeInstanceOf(CollectionMetadata);
-    expect(initialEntry.data.documentCount).toBe(2);
-    expect(updatedCollection.documentCount).toBe(5);
-    expect(initialEntry.data.documentCount).toBe(2);
-    expect(initialEntry.data).not.toBe(updatedCollection);
+    const updated = masterIndex.updateCollectionMetadata('historyless', { documentCount: 5 });
+    expect(updated.documentCount).toBe(5);
   });
 });
 

@@ -24,7 +24,7 @@ export default defineConfig([
       jsdoc
     },
     rules: {
-      complexity: ['warn', 6],
+      complexity: ['warn', 7], // The minimum CC has been set at 7 because there are quite a few functions and methods where reducing it below that would negatively impact readability.
       curly: ['warn', 'all'],
       eqeqeq: ['warn', 'always'],
       'jsdoc/require-description': [

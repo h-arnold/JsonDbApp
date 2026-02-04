@@ -2,6 +2,7 @@
 
 - [DatabaseConfig Developer Documentation](#databaseconfig-developer-documentation)
   - [Overview](#overview)
+  - [Constants](#constants)
   - [Configuration Properties](#configuration-properties)
     - [Core Properties](#core-properties)
     - [Optional Properties](#optional-properties)
@@ -9,11 +10,17 @@
   - [API Reference](#api-reference)
     - [Public Methods](#public-methods)
       - [`clone()`](#clone)
-  - [`toJSON()`](#tojson)
-  - [`fromJSON(obj)`](#fromjsonobj)
+      - [`toJSON()`](#tojson)
+      - [`fromJSON(obj)`](#fromjsonobj)
     - [Private Methods](#private-methods)
+      - [`_initialiseGeneralDefaults(config)`](#_initialisegeneraldefaultsconfig)
+      - [`_initialiseRetryConfig(config)`](#_initialiseretryconfigconfig)
+      - [`_initialiseQueryEngineConfig(config)`](#_initialisequeryengineconfigconfig)
+      - [`_initialiseBooleanFlags(config)`](#_initialisebooleanflagsconfig)
       - [`_getDefaultRootFolder()`](#_getdefaultrootfolder)
       - [`_validateConfig()`](#_validateconfig)
+      - [`_validateQueryOperators()`](#_validatequeryoperators)
+      - [`_validateOperatorArray(configKey, operators, rawValue, wasProvided)`](#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided)
   - [Validation Rules](#validation-rules)
     - [Property Validation](#property-validation)
     - [Error Scenarios](#error-scenarios)
@@ -25,6 +32,8 @@
   - [Integration with Database](#integration-with-database)
   - [Component-Level Configuration](#component-level-configuration)
     - [QueryEngine Configuration](#queryengine-configuration)
+    - [FileOperations Configuration](#fileoperations-configuration)
+    - [Index Backup Strategy](#index-backup-strategy)
   - [Best Practices](#best-practices)
 
 ## Overview
@@ -45,6 +54,13 @@ The `DatabaseConfig` class manages database configuration settings with validati
 - Clear error messages for invalid settings
 - Sensible defaults for all properties
 
+## Constants
+
+`DatabaseConfig` internally defines shared constants for log handling so the configuration stays in sync with `GASDBLogger` behaviour. These are implementation details used for validation and are **not** exposed as public static properties or part of the public API:
+
+- `LOG_LEVELS`: ordered array of accepted level names (`['DEBUG','INFO','WARN','ERROR']`) used during validation.
+- `DEFAULT_LOG_LEVEL`: default value (`'INFO'`) applied when no explicit level is supplied.
+
 ## Configuration Properties
 
 ### Core Properties
@@ -64,7 +80,7 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | `retryDelayMs`                            | Number   | `1000`                             | Delay between lock retries                                                                                                                                                                                                                         |
 | `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for lock retries                                                                                                                                                                                                          |
 | `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
-| `logLevel`                                | String   | 'INFO'                             | Log level (DEBUG, INFO, WARN, ERROR)                                                                                                                                                                                                               |
+| `logLevel`                                | String   | `DEFAULT_LOG_LEVEL` ('INFO')       | Log level constrained to the values declared in `LOG_LEVELS`                                                                                                                                                                                       |
 | `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                                                                      |
 | `fileRetryDelayMs`                        | Number   | `1000`                             | Delay between file retries                                                                                                                                                                                                                         |
 | `fileRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for file retries                                                                                                                                                                                                          |
@@ -86,6 +102,8 @@ constructor((config = {}));
 
 **Behaviour:**
 
+- Delegates to grouped helpers (`_initialiseGeneralDefaults`, `_initialiseRetryConfig`, `_initialiseQueryEngineConfig`, `_initialiseBooleanFlags`) so each concern applies defaults consistently.
+- Uses nullish coalescing (`??`) to normalise nullish overrides while keeping explicit falsy values intact.
 - Sets default values for all properties
 - Validates all configuration parameters
 - Throws errors immediately for invalid settings
@@ -135,6 +153,22 @@ Creates a `DatabaseConfig` from an object produced by `toJSON()`.
 
 ### Private Methods
 
+#### `_initialiseGeneralDefaults(config)`
+
+Applies root folder, lock timeout, log level (via `DEFAULT_LOG_LEVEL`), and master index defaults.
+
+#### `_initialiseRetryConfig(config)`
+
+Normalises retry-related options (lock and file retries) with grouped defaults.
+
+#### `_initialiseQueryEngineConfig(config)`
+
+Clones provided operator arrays when supplied and records raw values for validation while restoring defaults when omitted.
+
+#### `_initialiseBooleanFlags(config)`
+
+Initialises boolean feature toggles such as `autoCreateCollections` and `backupOnInitialise`.
+
 #### `_getDefaultRootFolder()`
 
 Determines the default root folder ID.
@@ -154,6 +188,14 @@ Validates all configuration properties according to rules.
   3. Format validation
   4. Constraint checking
 
+#### `_validateQueryOperators()`
+
+Ensures logical operators are a subset of supported operators and raises `INVALID_ARGUMENT` when alignment fails.
+
+#### `_validateOperatorArray(configKey, operators, rawValue, wasProvided)`
+
+Validates optional operator arrays against type constraints and preserves the original error context.
+
 ## Validation Rules
 
 ### Property Validation
@@ -172,8 +214,9 @@ Validates all configuration properties according to rules.
 
 **logLevel:**
 
-- Must be one of: 'DEBUG', 'INFO', 'WARN', 'ERROR'
+- Must be one of the entries in `LOG_LEVELS` (currently 'DEBUG', 'INFO', 'WARN', 'ERROR')
 - Case-sensitive validation
+- Defaults to `DEFAULT_LOG_LEVEL` to remain consistent with `GASDBLogger`
 - Affects logging verbosity across the system
 
 **rootFolderId:**
