@@ -159,6 +159,28 @@ describe('DatabaseConfig Creation and Default Values', () => {
     const deserialised = DatabaseConfig.fromJSON(serialised);
     expect(deserialised.stripDisallowedCollectionNameCharacters).toBe(true);
   });
+
+  it('should treat nullish numeric and boolean properties as defaults', () => {
+    const cfg = new DatabaseConfig({
+      retryAttempts: null,
+      retryDelayMs: null,
+      fileRetryAttempts: null,
+      fileRetryDelayMs: null,
+      lockRetryBackoffBase: null,
+      fileRetryBackoffBase: null,
+      autoCreateCollections: null,
+      cacheEnabled: null
+    });
+
+    expect(cfg.retryAttempts).toBe(3);
+    expect(cfg.retryDelayMs).toBe(1000);
+    expect(cfg.fileRetryAttempts).toBe(3);
+    expect(cfg.fileRetryDelayMs).toBe(1000);
+    expect(cfg.lockRetryBackoffBase).toBe(2);
+    expect(cfg.fileRetryBackoffBase).toBe(2);
+    expect(cfg.autoCreateCollections).toBe(true);
+    expect(cfg.cacheEnabled).toBe(true);
+  });
 });
 
 describe('DatabaseConfig Validation', () => {
