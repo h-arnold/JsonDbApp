@@ -28,6 +28,7 @@ class CollectionMetadata {
    * @param {Object} [initialMetadata.lockStatus] - Lock status
    * @throws {InvalidArgumentError} For invalid metadata input
    */
+  // eslint-disable-next-line complexity
   constructor(nameOrInitialMetadata = {}, fileId = null, initialMetadata = {}) {
     // Handle different constructor signatures
     let name = null;

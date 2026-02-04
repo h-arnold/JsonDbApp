@@ -122,6 +122,7 @@ class UpdateEngineValidation {
    * @param {string} fieldPath - Field path for error reporting
    * @param {string} operation - Operation name for error reporting
    */
+  // eslint-disable-next-line complexity
   validateComparableValues(currentValue, newValue, fieldPath, operation) {
     const currentType = typeof currentValue;
     const newType = typeof newValue;

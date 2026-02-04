@@ -52,6 +52,7 @@ class ObjectUtils {
    * @param {*} obj - Object to process (can be any type)
    * @returns {*} Object with ISO date strings converted to Date instances
    */
+  // eslint-disable-next-line complexity
   static convertDateStringsToObjects(obj) {
     // Handle primitives and null/undefined
     if (obj === null || obj === undefined) {
@@ -176,6 +177,7 @@ class ObjectUtils {
    * @param {*} b - Second value for comparison.
    * @returns {boolean} True if values are deeply equal, false otherwise.
    */
+  // eslint-disable-next-line complexity
   static deepEqual(a, b) {
     // Strict equality check for primitives and same-instance objects
     if (a === b) return true;

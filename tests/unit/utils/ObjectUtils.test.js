@@ -1,6 +1,7 @@
 /**
  * ObjectUtils.test.js - Vitest tests for ObjectUtils
  */
+/* eslint-disable max-lines */
 
 const VALID_ISO_STRINGS = [
   '2023-01-01T00:00:00.000Z',

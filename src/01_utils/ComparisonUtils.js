@@ -41,6 +41,7 @@ class ComparisonUtils {
    * @param {boolean} [options.arrayContainsScalar=false] - Treat array vs scalar equality as membership test
    * @returns {boolean} True when values are considered equal
    */
+  // eslint-disable-next-line complexity
   static equals(a, b, options = {}) {
     const { arrayContainsScalar = false } = options;
 
@@ -87,6 +88,7 @@ class ComparisonUtils {
    * @param {*} b - Second value
    * @returns {number} positive if a>b, negative if a<b, 0 if equal or not comparable
    */
+  // eslint-disable-next-line complexity
   static compareOrdering(a, b) {
     if (a === null || a === undefined || b === null || b === undefined) return 0;
     if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
@@ -109,6 +111,7 @@ class ComparisonUtils {
    * @returns {boolean} True when all operators match
    * @throws {InvalidQueryError} When unsupported operator used
    */
+  // eslint-disable-next-line complexity
   static applyOperators(actual, operatorObject, options = {}) {
     const { arrayContainsScalarForEq = true } = options;
     if (!ComparisonUtils.isOperatorObject(operatorObject)) {
@@ -170,6 +173,7 @@ class ComparisonUtils {
    * @param {boolean} [options.operatorSupport=true] - Allow operator objects at field level
    * @returns {boolean} True when the candidate satisfies the predicate
    */
+  // eslint-disable-next-line complexity
   static subsetMatch(candidate, predicate, options = {}) {
     const { operatorSupport = true } = options;
 

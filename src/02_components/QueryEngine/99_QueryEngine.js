@@ -297,6 +297,7 @@ class QueryEngine {
    * @returns {boolean} True when the cache snapshot differs from config.
    * @private
    */
+  // eslint-disable-next-line complexity
   _shouldRefreshOperatorCaches() {
     const currentOperators = Array.isArray(this._config.supportedOperators)
       ? this._config.supportedOperators

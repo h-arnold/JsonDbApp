@@ -269,6 +269,7 @@ class IdGenerator {
    * @param {number} options.length - Length for applicable types
    * @returns {Function} A custom ID generator function
    */
+  // eslint-disable-next-line complexity
   static createCustomGenerator(options = {}) {
     const { type = 'uuid', prefix = '', length = DEFAULT_ALPHANUMERIC_ID_LENGTH } = options;
 

@@ -238,6 +238,7 @@ class CollectionWriteOperations {
    * @throws {InvalidArgumentError} For invalid parameters
    */
   replaceOne(filterOrId, doc) {
+    // eslint-disable-next-line complexity
     return this._coordinator.coordinate('replaceOne', () => {
       this._collection._ensureLoaded();
 

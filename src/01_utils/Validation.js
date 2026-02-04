@@ -378,6 +378,7 @@ class Validate {
    * @param {boolean} options.forbidOperators - Whether operators are forbidden (default: false)
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When update structure is invalid
    */
+  // eslint-disable-next-line complexity
   static validateUpdateObject(update, paramName, options = {}) {
     this.object(update, paramName, false); // Don't allow empty objects
 

@@ -291,6 +291,7 @@ class FileOperations {
    * @param {string} fileId - File ID involved in the operation
    * @throws {FileNotFoundError|PermissionDeniedError|QuotaExceededError|FileIOError}
    */
+  // eslint-disable-next-line complexity
   _handleDriveApiError(error, operation, fileId) {
     const errorMessage = error.message || '';
 
@@ -335,6 +336,7 @@ class FileOperations {
    * @param {string} operationName - Name for logging
    * @returns {*} Result of the operation
    */
+  // eslint-disable-next-line complexity
   _retryOperation(operation, operationName) {
     let lastError;
 

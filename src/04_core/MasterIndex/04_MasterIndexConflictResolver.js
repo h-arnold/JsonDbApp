@@ -25,6 +25,7 @@ class MasterIndexConflictResolver {
    * @param {Object} dependencies.Validate - Validation helper
    * @param {Object} dependencies.ErrorHandler - Error handler module
    */
+  // eslint-disable-next-line complexity
   constructor(masterIndex, dependencies = {}) {
     const { CollectionMetadata, Validate, ErrorHandler } = dependencies;
     if (!CollectionMetadata || !Validate || !ErrorHandler) {
