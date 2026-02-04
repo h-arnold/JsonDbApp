@@ -6,14 +6,12 @@
  * conflict detection, and persistence responsibilities.
  */
 /* exported MasterIndex */
-/* global MasterIndexMetadataNormaliser, MasterIndexLockManager, CollectionMetadata, DbLockService,
-          JDbLogger, Validate, ObjectUtils, PropertiesService, ErrorHandler */
+/* global MasterIndexMetadataNormaliser, MasterIndexLockManager, MasterIndexConflictResolver,
+          CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
+          ErrorHandler */
 
 // TODO: Move this to Database Config.
 const DEFAULT_LOCK_TIMEOUT = 30000;
-const RANDOM_TOKEN_RADIX = 36;
-const RANDOM_TOKEN_OFFSET = 2;
-const RANDOM_TOKEN_LENGTH = 9;
 
 /**
  * Coordinates collection metadata across script executions using a ScriptProperties-backed index.
@@ -30,6 +28,11 @@ class MasterIndex {
     this._dbLockService = new DbLockService({ defaultTimeout: this._config.lockTimeout });
     this._metadataNormaliser = new MasterIndexMetadataNormaliser(this);
     this._lockManager = new MasterIndexLockManager(this);
+    this._conflictResolver = new MasterIndexConflictResolver(this, {
+      CollectionMetadata,
+      Validate,
+      ErrorHandler
+    });
     this._simpleUpdateHandlers = this._buildSimpleUpdateHandlers();
     this._loadFromScriptProperties();
     this._initialiseDataState();
@@ -317,11 +320,7 @@ class MasterIndex {
    * @returns {string} Unique modification token
    */
   generateModificationToken() {
-    const timestamp = this._getCurrentTimestamp().getTime();
-    const randomPart = Math.random()
-      .toString(RANDOM_TOKEN_RADIX)
-      .substr(RANDOM_TOKEN_OFFSET, RANDOM_TOKEN_LENGTH);
-    return `${timestamp}-${randomPart}`;
+    return this._conflictResolver.generateModificationToken();
   }
 
   /**
@@ -331,15 +330,7 @@ class MasterIndex {
    * @returns {boolean} True if there's a conflict
    */
   hasConflict(collectionName, expectedToken) {
-    Validate.nonEmptyString(collectionName, 'collectionName');
-    Validate.nonEmptyString(expectedToken, 'expectedToken');
-
-    const collection = this._data.collections[collectionName];
-    if (!collection) {
-      return false;
-    }
-
-    return collection.modificationToken !== expectedToken;
+    return this._conflictResolver.hasConflict(collectionName, expectedToken);
   }
 
   /**
@@ -350,52 +341,15 @@ class MasterIndex {
    * @returns {Object} Resolution result
    */
   resolveConflict(collectionName, newData, strategy) {
-    Validate.nonEmptyString(collectionName, 'collectionName');
-    Validate.object(newData, 'newData', false);
-    strategy = strategy || 'LAST_WRITE_WINS';
-
     return this._withScriptLock(() => {
-      const collectionData = this._data.collections[collectionName];
-      if (!collectionData) {
-        throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(collectionName);
+      const resolution = this._conflictResolver.resolveConflict(collectionName, newData, strategy);
+      if (resolution && resolution.success && resolution.data) {
+        this._data.collections[collectionName] = resolution.data;
+        const timestamp = this._getCurrentTimestamp();
+        this._touchIndex(timestamp);
+        this.save(undefined, timestamp);
       }
-
-      const collectionMetadata =
-        collectionData instanceof CollectionMetadata
-          ? collectionData
-          : new CollectionMetadata(collectionData);
-
-      switch (strategy) {
-        case 'LAST_WRITE_WINS':
-          Object.keys(newData).forEach((key) => {
-            switch (key) {
-              case 'documentCount':
-                collectionMetadata.setDocumentCount(newData[key]);
-                break;
-              case 'modificationToken':
-                collectionMetadata.setModificationToken(newData[key]);
-                break;
-              case 'lockStatus':
-                collectionMetadata.setLockStatus(newData[key]);
-                break;
-              default:
-                break;
-            }
-          });
-          collectionMetadata.setModificationToken(this.generateModificationToken());
-          collectionMetadata.touch();
-
-          this._data.collections[collectionName] = collectionMetadata;
-          const timestamp = this._getCurrentTimestamp();
-          this._touchIndex(timestamp);
-
-          return { success: true, data: collectionMetadata, strategy };
-
-        default:
-          throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
-            `Unknown conflict resolution strategy: ${strategy}`
-          );
-      }
+      return resolution;
     });
   }
 
@@ -405,11 +359,7 @@ class MasterIndex {
    * @returns {boolean} True if valid format (timestamp-random)
    */
   validateModificationToken(token) {
-    if (typeof token !== 'string') {
-      return false;
-    }
-    const regex = /^\d+-[a-z0-9]+$/;
-    return regex.test(token);
+    return this._conflictResolver.validateModificationToken(token);
   }
 
   /**
