@@ -13,7 +13,7 @@ Enhancements to collection name sanitisation (now configurable), improved local 
 - Add configurable collection name sanitisation with a new option to control sanitisation behaviour.
 - Add GAS API mock plan and local Node-based stubs to support local testing of GAS integrations.
 - Fix: use `TypeError` when a corrupted `collections` property is detected (replacing a generic `Error`).
-- Improved developer experience: add a Dev Container, `ACTION_PLAN.md` and tooling to simplify local setup and testing.
+- Improved developer experience: add a Dev Container and tooling to simplify local setup and testing.
 - Tests updated and new/modified suites to cover the above behaviour and improve reliability.
 
 ### PRs merged
@@ -27,7 +27,7 @@ Enhancements to collection name sanitisation (now configurable), improved local 
 - 6ce793c — feat: Add GAS API mock plan and local Node-based stubs (#19)
 - 92ace0f — docs: Update README with project copy instructions and clarify test versions
 - 7910a72 — fix: change error type from Error to TypeError for corrupted collections property
-- Added: `.devcontainer/` and Dev Container configuration, `ACTION_PLAN.md`, and improved CI/dev tooling
+- Added: `.devcontainer/` and Dev Container configuration, plus improved CI/dev tooling
 - Added: `tools/gas-mocks/` and `tools/gas-recorder/` to support local testing and recordings
 - Added: `src/appsscript.json` and small project configuration updates
 - Tests: Updated and added several unit and integration tests covering Database and Collection behaviours

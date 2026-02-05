@@ -50,13 +50,13 @@ The `DatabaseConfig` class manages database configuration settings with validati
 **Design Principles:**
 
 - Fail-fast validation in constructor
-- Immutable configuration after creation
+- Configuration intended to be treated as immutable after creation
 - Clear error messages for invalid settings
 - Sensible defaults for all properties
 
 ## Constants
 
-`DatabaseConfig` internally defines shared constants for log handling so the configuration stays in sync with `GASDBLogger` behaviour. These are implementation details used for validation and are **not** exposed as public static properties or part of the public API:
+`DatabaseConfig` internally defines shared constants for log handling so the configuration stays in sync with `JDbLogger` behaviour. These are implementation details used for validation and are **not** exposed as public static properties or part of the public API:
 
 - `LOG_LEVELS`: ordered array of accepted level names (`['DEBUG','INFO','WARN','ERROR']`) used during validation.
 - `DEFAULT_LOG_LEVEL`: default value (`'INFO'`) applied when no explicit level is supplied.
@@ -93,7 +93,11 @@ The `DatabaseConfig` class manages database configuration settings with validati
 ## Constructor
 
 ```javascript
-constructor((config = {}));
+class DatabaseConfig {
+  constructor(config = {}) {
+    // ...
+  }
+}
 ```
 
 **Parameters:**
@@ -202,9 +206,9 @@ Validates optional operator arrays against type constraints and preserves the or
 
 **lockTimeout:**
 
-- Must be a non-negative number
+- Must be a number of at least 500ms
 - Recommended range: 5000-60000ms
-- Zero means no timeout (use with caution)
+- Zero is invalid because the minimum is enforced during validation
 
 **retryAttempts / retryDelayMs / lockRetryBackoffBase:**
 
@@ -216,7 +220,7 @@ Validates optional operator arrays against type constraints and preserves the or
 
 - Must be one of the entries in `LOG_LEVELS` (currently 'DEBUG', 'INFO', 'WARN', 'ERROR')
 - Case-sensitive validation
-- Defaults to `DEFAULT_LOG_LEVEL` to remain consistent with `GASDBLogger`
+- Defaults to `DEFAULT_LOG_LEVEL` to remain consistent with `JDbLogger`
 - Affects logging verbosity across the system
 
 **rootFolderId:**
@@ -257,7 +261,7 @@ Common validation errors and their meanings:
 
 | Error Message                                        | Cause                                                           | Solution                             |
 | ---------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
-| "Lock timeout must be a non-negative number"         | Invalid timeout value                                           | Use positive number or zero          |
+| "Lock timeout must be a number"                      | Invalid timeout value                                           | Use a number of at least 500ms       |
 | "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level                                               | Use exact string match               |
 | "Auto create collections must be a boolean"          | Non-boolean value                                               | Use true or false explicitly         |
 | "Failed to get default root folder"                  | Drive access issue                                              | Check permissions and authentication |

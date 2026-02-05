@@ -4,7 +4,7 @@
 
 - [1. JsonDbApp Infrastructure Components](#1-jsondbapp-infrastructure-components)
   - [1.1. Overview](#11-overview)
-  - [1.2. Logger (GASDBLogger)](#12-logger-gasdblogger)
+  - [1.2. Logger (JDbLogger)](#12-logger-gasdblogger)
     - [1.2.0.1. Key Features](#1201-key-features)
     - [1.2.0.2. Core Methods](#1202-core-methods)
     - [1.2.0.3. Usage Examples](#1203-usage-examples)
@@ -47,9 +47,9 @@
 
 The JsonDbApp infrastructure provides essential utilities for logging, error management, ID generation, and object manipulation. These components are designed specifically for Google Apps Script environments and support the core database functionality.
 
-## 1.2. Logger (GASDBLogger)
+## 1.2. Logger (JDbLogger)
 
-The `GASDBLogger` provides sophisticated logging capabilities with multiple levels, component-specific loggers, and performance tracking.
+The `JDbLogger` provides sophisticated logging capabilities with multiple levels, component-specific loggers, and performance tracking.
 
 A comprehensive logging utility providing structured logging with multiple levels and context support for Google Apps Script environments.
 
@@ -78,19 +78,19 @@ A comprehensive logging utility providing structured logging with multiple level
 
 ```javascript
 // Basic logging
-GASDBLogger.info('Database initialised successfully');
-GASDBLogger.error('Failed to read file', { fileId: 'abc123', error: 'Permission denied' });
+JDbLogger.info('Database initialised successfully');
+JDbLogger.error('Failed to read file', { fileId: 'abc123', error: 'Permission denied' });
 
 // Set log level
-GASDBLogger.setLevelByName('DEBUG'); // Show all messages
-GASDBLogger.setLevelByName('ERROR'); // Show only errors
+JDbLogger.setLevelByName('DEBUG'); // Show all messages
+JDbLogger.setLevelByName('ERROR'); // Show only errors
 
 // Component-specific logging
-const dbLogger = GASDBLogger.createComponentLogger('Database');
+const dbLogger = JDbLogger.createComponentLogger('Database');
 dbLogger.info('Collection created', { name: 'users' });
 
 // Operation timing
-const result = GASDBLogger.timeOperation(
+const result = JDbLogger.timeOperation(
   'loadCollection',
   () => {
     return loadCollectionFromDrive(collectionId);
@@ -121,7 +121,7 @@ const result = GASDBLogger.timeOperation(
 3. **Use component loggers:**
 
    ```javascript
-   const logger = GASDBLogger.createComponentLogger('Collection');
+   const logger = JDbLogger.createComponentLogger('Collection');
    ```
 
 ---
@@ -559,7 +559,7 @@ class Database {
     ValidationUtils.validateType(config.rootFolderId, 'string', 'rootFolderId');
 
     // Set up logging
-    this.logger = GASDBLogger.createComponentLogger('Database');
+    this.logger = JDbLogger.createComponentLogger('Database');
     this.logger.info('Initializing database', { config });
 
     // Generate instance ID
@@ -567,7 +567,7 @@ class Database {
   }
 
   performOperation(operationName, operationFn) {
-    return GASDBLogger.timeOperation(
+    return JDbLogger.timeOperation(
       operationName,
       () => {
         try {
@@ -623,15 +623,15 @@ class Collection {
 
 ```javascript
 // Set global log level
-GASDBLogger.setLevelByName('DEBUG'); // Development
-GASDBLogger.setLevelByName('INFO'); // Production
+JDbLogger.setLevelByName('DEBUG'); // Development
+JDbLogger.setLevelByName('INFO'); // Production
 
 // Component-specific configuration
-const dbLogger = GASDBLogger.createComponentLogger('Database');
-const collectionLogger = GASDBLogger.createComponentLogger('Collection');
+const dbLogger = JDbLogger.createComponentLogger('Database');
+const collectionLogger = JDbLogger.createComponentLogger('Collection');
 ```
 
-`DatabaseConfig` enforces these names via its `LOG_LEVELS` constant and defaults to `DEFAULT_LOG_LEVEL` (`'INFO'`), ensuring runtime configuration always maps cleanly onto `GASDBLogger` expectations.
+`DatabaseConfig` enforces these names via its `LOG_LEVELS` constant and defaults to `DEFAULT_LOG_LEVEL` (`'INFO'`), ensuring runtime configuration always maps cleanly onto `JDbLogger` expectations.
 
 ### 1.4.2. Error Handler Configuration
 
@@ -703,8 +703,8 @@ All infrastructure components are designed to be stable and backwards compatible
 
 ### 1.6.1. Component Dependencies
 
-- **GASDBLogger:** Self-contained, no dependencies
-- **ErrorHandler:** Uses GASDBLogger for error logging
+- **JDbLogger:** Self-contained, no dependencies
+- **ErrorHandler:** Uses JDbLogger for error logging
 - **IdGenerator:** Self-contained, uses Google Apps Script Utilities when available
 - **ObjectUtils:** Self-contained, no dependencies
 
@@ -712,11 +712,11 @@ All infrastructure components are designed to be stable and backwards compatible
 
 These components can be extended for future functionality:
 
-1. **Custom Log Destinations:** Extend GASDBLogger to support additional output targets
+1. **Custom Log Destinations:** Extend JDbLogger to support additional output targets
 2. **Additional Error Types:** Add new error classes that extend GASDBError
 3. **New ID Strategies:** Add additional generation methods to IdGenerator
 4. **Object Manipulation:** Add additional utility methods to ObjectUtils for specialized data handling
 
 ---
 
-_This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (GASDBLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability._
+_This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (JDbLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability._
