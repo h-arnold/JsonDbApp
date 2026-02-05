@@ -352,7 +352,10 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ### MI1. MasterIndex update logic and conflict resolution duplicate field handling
 
-**Area:** `src/04_core/MasterIndex/99_MasterIndex.js`, `04_MasterIndexConflictResolver.js`
+**Area:**
+
+- `src/04_core/MasterIndex/99_MasterIndex.js`
+- `src/04_core/MasterIndex/04_MasterIndexConflictResolver.js`
 
 **Suggestion:** Centralise metadata update semantics for `documentCount` and `lockStatus`.
 
