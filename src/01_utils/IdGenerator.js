@@ -269,30 +269,41 @@ class IdGenerator {
    * @param {number} options.length - Length for applicable types
    * @returns {Function} A custom ID generator function
    */
-  // eslint-disable-next-line complexity
   static createCustomGenerator(options = {}) {
     const { type = 'uuid', prefix = '', length = DEFAULT_ALPHANUMERIC_ID_LENGTH } = options;
+    const normalisedType = String(type).toLowerCase();
+    const generator = IdGenerator._resolveGenerator(normalisedType, { prefix, length });
 
-    switch (type.toLowerCase()) {
-      case 'uuid':
-        return () => IdGenerator.generateUUID();
-      case 'timestamp':
-        return () => IdGenerator.generateTimestampId(prefix);
-      case 'short':
-        return () => IdGenerator.generateShortId(length);
-      case 'alphanumeric':
-        return () => IdGenerator.generateAlphanumericId(length);
-      case 'numeric':
-        return () => IdGenerator.generateNumericId(length);
-      case 'objectid':
-        return () => IdGenerator.generateObjectId();
-      case 'sequential':
-        return () => IdGenerator.generateSequentialId(prefix);
-      case 'readable':
-        return () => IdGenerator.generateReadableId();
-      default:
-        throw new Error(`Unknown ID generator type: ${type}`);
+    if (!generator) {
+      throw new Error(`Unknown ID generator type: ${type}`);
     }
+
+    return generator;
+  }
+
+  /**
+   * Resolve the generator function for the given ID type.
+   * @param {string} type - Normalised ID type
+   * @param {Object} options - Options for generator configuration
+   * @param {string} options.prefix - Optional prefix
+   * @param {number} options.length - Length for applicable types
+   * @returns {Function|null} Generator function or null if unsupported
+   * @private
+   */
+  static _resolveGenerator(type, options) {
+    const { prefix, length } = options;
+    const generators = {
+      uuid: IdGenerator.generateUUID,
+      timestamp: IdGenerator.generateTimestampId.bind(IdGenerator, prefix),
+      short: IdGenerator.generateShortId.bind(IdGenerator, length),
+      alphanumeric: IdGenerator.generateAlphanumericId.bind(IdGenerator, length),
+      numeric: IdGenerator.generateNumericId.bind(IdGenerator, length),
+      objectid: IdGenerator.generateObjectId,
+      sequential: IdGenerator.generateSequentialId.bind(IdGenerator, prefix),
+      readable: IdGenerator.generateReadableId
+    };
+
+    return generators[type] || null;
   }
 }
 

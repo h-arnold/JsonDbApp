@@ -28,74 +28,103 @@ class CollectionMetadata {
    * @param {Object} [initialMetadata.lockStatus] - Lock status
    * @throws {InvalidArgumentError} For invalid metadata input
    */
-  // eslint-disable-next-line complexity
   constructor(nameOrInitialMetadata = {}, fileId = null, initialMetadata = {}) {
-    // Handle different constructor signatures
+    const resolvedInput = this._normaliseConstructorInputs(
+      nameOrInitialMetadata,
+      fileId,
+      initialMetadata
+    );
+
+    this._applyIdentifiers(resolvedInput.name, resolvedInput.fileId);
+    this._initialiseTimestamps(resolvedInput.metadata);
+    this._initialiseDocumentCount(resolvedInput.metadata);
+    this._initialiseModificationToken(resolvedInput.metadata);
+    this._initialiseLockStatus(resolvedInput.metadata);
+  }
+
+  /**
+   * Normalise constructor inputs for different invocation signatures.
+   * @param {string|Object} nameOrInitialMetadata - Collection name or metadata object
+   * @param {string|null} fileId - File ID input
+   * @param {Object} initialMetadata - Initial metadata input
+   * @returns {{name: string|null, fileId: string|null, metadata: Object}} Normalised inputs
+   * @private
+   */
+  _normaliseConstructorInputs(nameOrInitialMetadata, fileId, initialMetadata) {
     let name = null;
     let metadata = {};
+    let resolvedFileId = fileId;
 
     if (typeof nameOrInitialMetadata === 'string') {
-      // Constructor called with name parameter: new CollectionMetadata(name, fileId, initialMetadata)
-      name = nameOrInitialMetadata;
-
-      // Validate name
-      Validate.nonEmptyString(name, 'name');
-
-      // Validate fileId
+      Validate.nonEmptyString(nameOrInitialMetadata, 'name');
       Validate.optional(fileId, Validate.string, 'fileId');
-
+      name = nameOrInitialMetadata;
       metadata = initialMetadata || {};
     } else if (Validate.isPlainObject(nameOrInitialMetadata)) {
-      // Constructor called with legacy signature: new CollectionMetadata(initialMetadata)
       metadata = nameOrInitialMetadata;
       name = metadata.name || null;
-      fileId = metadata.fileId || null;
+      resolvedFileId = metadata.fileId || null;
     } else if (nameOrInitialMetadata !== null) {
-      // Invalid first parameter
       Validate.string(nameOrInitialMetadata, 'name');
     }
 
-    // Validate metadata is an object
     Validate.object(metadata, 'initialMetadata');
 
-    // Set name and fileId properties
+    return { name, fileId: resolvedFileId, metadata };
+  }
+
+  /**
+   * Apply and validate name and file ID.
+   * @param {string|null} name - Collection name
+   * @param {string|null} fileId - File ID
+   * @private
+   */
+  _applyIdentifiers(name, fileId) {
     this.name = name;
     this.fileId = fileId;
 
-    // Validate that both name and fileId are provided - required for usable metadata
     Validate.nonEmptyString(this.name, 'name');
     Validate.nonEmptyString(this.fileId, 'fileId');
+  }
 
-    // Use a single 'now' variable for both created and lastUpdated
+  /**
+   * Initialise created and lastUpdated timestamps.
+   * @param {Object} metadata - Metadata object
+   * @private
+   */
+  _initialiseTimestamps(metadata) {
     const now = new Date();
+    this.created = this._resolveDateValue(metadata.created, 'created', now);
+    this.lastUpdated = this._resolveDateValue(metadata.lastUpdated, 'lastUpdated', now);
+  }
 
-    // Set created timestamp
-    if (metadata.created !== undefined) {
-      Validate.required(metadata.created, 'created');
-      if (!(metadata.created instanceof Date) || isNaN(metadata.created.getTime())) {
-        throw new InvalidArgumentError('created', metadata.created, 'Must be a valid Date object');
-      }
-      this.created = new Date(metadata.created.getTime());
-    } else {
-      this.created = new Date(now.getTime());
+  /**
+   * Resolve a date value from metadata, falling back to the provided timestamp.
+   * @param {Date|undefined} value - Value to resolve
+   * @param {string} fieldName - Field name for error reporting
+   * @param {Date} fallback - Fallback date
+   * @returns {Date} Resolved date
+   * @private
+   */
+  _resolveDateValue(value, fieldName, fallback) {
+    if (value === undefined) {
+      return new Date(fallback.getTime());
     }
 
-    // Set lastUpdated timestamp
-    if (metadata.lastUpdated !== undefined) {
-      Validate.required(metadata.lastUpdated, 'lastUpdated');
-      if (!(metadata.lastUpdated instanceof Date) || isNaN(metadata.lastUpdated.getTime())) {
-        throw new InvalidArgumentError(
-          'lastUpdated',
-          metadata.lastUpdated,
-          'Must be a valid Date object'
-        );
-      }
-      this.lastUpdated = new Date(metadata.lastUpdated.getTime());
-    } else {
-      this.lastUpdated = new Date(now.getTime());
+    Validate.required(value, fieldName);
+    if (!(value instanceof Date) || isNaN(value.getTime())) {
+      throw new InvalidArgumentError(fieldName, value, 'Must be a valid Date object');
     }
 
-    // Set document count with validation
+    return new Date(value.getTime());
+  }
+
+  /**
+   * Initialise document count from metadata.
+   * @param {Object} metadata - Metadata object
+   * @private
+   */
+  _initialiseDocumentCount(metadata) {
     if (metadata.documentCount !== undefined) {
       Validate.integer(metadata.documentCount, 'documentCount');
       Validate.nonNegativeNumber(metadata.documentCount, 'documentCount');
@@ -103,8 +132,14 @@ class CollectionMetadata {
     } else {
       this.documentCount = 0;
     }
+  }
 
-    // Set modification token
+  /**
+   * Initialise modification token from metadata.
+   * @param {Object} metadata - Metadata object
+   * @private
+   */
+  _initialiseModificationToken(metadata) {
     if (metadata.modificationToken !== undefined) {
       if (metadata.modificationToken !== null) {
         Validate.nonEmptyString(metadata.modificationToken, 'modificationToken');
@@ -113,8 +148,14 @@ class CollectionMetadata {
     } else {
       this.modificationToken = null;
     }
+  }
 
-    // Set lock status
+  /**
+   * Initialise lock status from metadata.
+   * @param {Object} metadata - Metadata object
+   * @private
+   */
+  _initialiseLockStatus(metadata) {
     if (metadata.lockStatus !== undefined) {
       if (metadata.lockStatus !== null) {
         this._validateLockStatus(metadata.lockStatus);

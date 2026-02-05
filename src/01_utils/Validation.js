@@ -378,41 +378,110 @@ class Validate {
    * @param {boolean} options.forbidOperators - Whether operators are forbidden (default: false)
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When update structure is invalid
    */
-  // eslint-disable-next-line complexity
   static validateUpdateObject(update, paramName, options = {}) {
     this.object(update, paramName, false); // Don't allow empty objects
 
     const { allowMixed = false, requireOperators = false, forbidOperators = false } = options;
-
     const updateKeys = Object.keys(update);
-    const hasOperators = updateKeys.some((key) => key.startsWith('$'));
-    const hasNonOperators = updateKeys.some((key) => !key.startsWith('$'));
+    const operatorState = Validate._getUpdateOperatorState(updateKeys);
 
-    // Check for forbidden operators
-    if (forbidOperators && hasOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-        paramName,
-        update,
-        'cannot contain update operators'
-      );
-    }
+    Validate._validateUpdateOperatorRules(paramName, update, operatorState, {
+      allowMixed,
+      requireOperators,
+      forbidOperators
+    });
+  }
 
-    // Check for required operators
-    if (requireOperators && !hasOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-        paramName,
-        update,
-        'requires update operators (e.g. {$set: {field: value}})'
-      );
-    }
+  /**
+   * Determine whether update keys contain operator and non-operator fields.
+   * @param {string[]} keys - Update object keys
+   * @returns {{hasOperators: boolean, hasNonOperators: boolean}} Operator state
+   * @private
+   */
+  static _getUpdateOperatorState(keys) {
+    return {
+      hasOperators: keys.some((key) => key.startsWith('$')),
+      hasNonOperators: keys.some((key) => !key.startsWith('$'))
+    };
+  }
 
-    // Check for mixed operators and fields
-    if (!allowMixed && hasOperators && hasNonOperators) {
-      throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
-        paramName,
-        update,
-        'cannot mix update operators with document fields'
-      );
+  /**
+   * Validate update operator rules against the update object.
+   * @param {string} paramName - Parameter name for error messages
+   * @param {Object} update - Update object to validate
+   * @param {Object} operatorState - Operator state
+   * @param {boolean} operatorState.hasOperators - True when operator keys exist
+   * @param {boolean} operatorState.hasNonOperators - True when non-operator keys exist
+   * @param {Object} options - Validation options
+   * @param {boolean} options.allowMixed - Whether to allow mixing operators and fields
+   * @param {boolean} options.requireOperators - Whether operators are required
+   * @param {boolean} options.forbidOperators - Whether operators are forbidden
+   * @private
+   */
+  static _validateUpdateOperatorRules(paramName, update, operatorState, options) {
+    const { allowMixed, requireOperators, forbidOperators } = options;
+    const { hasOperators, hasNonOperators } = operatorState;
+
+    Validate._throwIfForbiddenOperators(paramName, update, forbidOperators, hasOperators);
+    Validate._throwIfMissingOperators(paramName, update, requireOperators, hasOperators);
+    Validate._throwIfMixedOperators(paramName, update, allowMixed, hasOperators, hasNonOperators);
+  }
+
+  /**
+   * Throw when operators are forbidden but present.
+   * @param {string} paramName - Parameter name
+   * @param {Object} update - Update object
+   * @param {boolean} forbidOperators - Whether operators are forbidden
+   * @param {boolean} hasOperators - Whether operators exist
+   * @private
+   */
+  static _throwIfForbiddenOperators(paramName, update, forbidOperators, hasOperators) {
+    if (!forbidOperators || !hasOperators) {
+      return;
     }
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+      paramName,
+      update,
+      'cannot contain update operators'
+    );
+  }
+
+  /**
+   * Throw when operators are required but missing.
+   * @param {string} paramName - Parameter name
+   * @param {Object} update - Update object
+   * @param {boolean} requireOperators - Whether operators are required
+   * @param {boolean} hasOperators - Whether operators exist
+   * @private
+   */
+  static _throwIfMissingOperators(paramName, update, requireOperators, hasOperators) {
+    if (!requireOperators || hasOperators) {
+      return;
+    }
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+      paramName,
+      update,
+      'requires update operators (e.g. {$set: {field: value}})'
+    );
+  }
+
+  /**
+   * Throw when operators and fields are mixed unexpectedly.
+   * @param {string} paramName - Parameter name
+   * @param {Object} update - Update object
+   * @param {boolean} allowMixed - Whether mixing is allowed
+   * @param {boolean} hasOperators - Whether operators exist
+   * @param {boolean} hasNonOperators - Whether non-operators exist
+   * @private
+   */
+  static _throwIfMixedOperators(paramName, update, allowMixed, hasOperators, hasNonOperators) {
+    if (allowMixed || !hasOperators || !hasNonOperators) {
+      return;
+    }
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+      paramName,
+      update,
+      'cannot mix update operators with document fields'
+    );
   }
 }
