@@ -1163,7 +1163,9 @@ console.log(`${replacedCount} document(s) replaced.`);
 
 ### Private Methods
 
-`DocumentOperations` also includes several private helper methods for validation and ID generation:
+`DocumentOperations` includes several private helper methods for validation, ID generation, and query orchestration:
+
+**Validation & ID Generation:**
 
 - `_generateDocumentId()`: Generates a unique ID for new documents.
 - `_validateDocument(doc)`: Validates the overall document structure and content.
@@ -1174,6 +1176,14 @@ console.log(`${replacedCount} document(s) replaced.`);
 - `_validateQuery(query)`: Basic validation for query objects.
 - `_validateUpdateOperators(updateOps)`: Basic validation for update operator objects.
 
-These private methods ensure data integrity and consistent error handling within the component.
+**Query Execution (D1 Refactoring):**
+
+- `_executeQuery(query, operation)`: Consolidates query validation, document retrieval, QueryEngine execution, and logging. Used by `findByQuery()`, `findMultipleByQuery()`, and `countByQuery()`.
+
+**Bulk Operations (D2 Refactoring):**
+
+- `_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)`: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by `updateDocumentByQuery()` and `replaceDocumentByQuery()`.
+
+These private methods ensure data integrity, consistent error handling, and DRY principles within the component.
 
 ---

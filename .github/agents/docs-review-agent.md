@@ -374,7 +374,7 @@ All code examples must:
 
 ```javascript
 // ✅ Good - Current API
-const collection = database.collection('users');
+const collection = database.getCollection('users');
 const user = collection.findOne({ email: 'test@example.com' });
 
 // ❌ Bad - Outdated API that changed

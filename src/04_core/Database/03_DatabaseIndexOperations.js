@@ -67,13 +67,7 @@ class DatabaseIndexOperations {
     const db = this._database;
     try {
       const indexData = this.loadIndex();
-      indexData.collections[name] = {
-        name: name,
-        fileId: driveFileId,
-        created: new Date(),
-        lastUpdated: new Date(),
-        documentCount: 0
-      };
+      indexData.collections[name] = db._buildCollectionMetadataPayload(name, driveFileId);
       indexData.lastUpdated = new Date();
       db._fileService.writeFile(db.indexFileId, indexData);
       db._logger.debug('Added collection to index', { name, driveFileId });

@@ -157,22 +157,31 @@ class MasterIndexConflictResolver {
    * @private
    */
   _applyLastWriteWins(collectionMetadata, newData) {
-    const updateKeys = Object.keys(newData);
+    this._applyMetadataUpdates(collectionMetadata, newData);
+    collectionMetadata.setModificationToken(this.generateModificationToken());
+    collectionMetadata.touch();
+  }
+
+  /**
+   * Apply metadata field updates to a collection.
+   * @param {CollectionMetadata} collectionMetadata - Target metadata instance
+   * @param {Object} updates - Update payload
+   * @private
+   */
+  _applyMetadataUpdates(collectionMetadata, updates) {
+    const updateKeys = Object.keys(updates);
     for (const key of updateKeys) {
       switch (key) {
         case 'documentCount':
-          collectionMetadata.setDocumentCount(newData[key]);
+          collectionMetadata.setDocumentCount(updates[key]);
           break;
         case 'lockStatus':
-          collectionMetadata.setLockStatus(newData[key]);
+          collectionMetadata.setLockStatus(updates[key]);
           break;
         default:
           break;
       }
     }
-
-    collectionMetadata.setModificationToken(this.generateModificationToken());
-    collectionMetadata.touch();
   }
 }
 

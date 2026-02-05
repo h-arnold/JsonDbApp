@@ -305,32 +305,16 @@ class QueryEngine {
       ? this._config.logicalOperators
       : getDefaultLogicalOperators();
 
-    if (this._hasDifferentSnapshot(currentOperators, this._supportedOperatorsSnapshot)) {
-      return true;
-    }
+    // Use fingerprint comparison: faster than element-by-element iteration
+    const supportedChanged =
+      currentOperators.length !== this._supportedOperatorsSnapshot.length ||
+      currentOperators.join('|') !== this._supportedOperatorsSnapshot.join('|');
 
-    return this._hasDifferentSnapshot(currentLogicalOperators, this._logicalOperatorsSnapshot);
-  }
+    const logicalChanged =
+      currentLogicalOperators.length !== this._logicalOperatorsSnapshot.length ||
+      currentLogicalOperators.join('|') !== this._logicalOperatorsSnapshot.join('|');
 
-  /**
-   * Compare arrays to determine if snapshot has changed.
-   * @param {Array} current - Current values
-   * @param {Array} snapshot - Cached snapshot
-   * @returns {boolean} True when arrays differ
-   * @private
-   */
-  _hasDifferentSnapshot(current, snapshot) {
-    if (snapshot.length !== current.length) {
-      return true;
-    }
-
-    for (let index = 0; index < current.length; index += 1) {
-      if (current[index] !== snapshot[index]) {
-        return true;
-      }
-    }
-
-    return false;
+    return supportedChanged || logicalChanged;
   }
 
   /**

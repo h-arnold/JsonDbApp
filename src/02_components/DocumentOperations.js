@@ -205,21 +205,7 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findByQuery(query) {
-    this._validateQuery(query);
-
-    // Get all documents as array for QueryEngine
-    const documents = this.findAllDocuments();
-
-    const queryEngine = this._getQueryEngine();
-
-    // Let QueryEngine handle all validation and execution
-    const results = queryEngine.executeQuery(documents, query);
-
-    this._logger.debug('Query executed by findByQuery', {
-      queryString: JSON.stringify(query),
-      resultCount: results.length
-    });
-
+    const results = this._executeQuery(query, 'findByQuery');
     return results.length > 0 ? results[0] : null;
   }
 
@@ -230,22 +216,7 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   findMultipleByQuery(query) {
-    this._validateQuery(query);
-
-    // Get all documents as array for QueryEngine
-    const documents = this.findAllDocuments();
-
-    const queryEngine = this._getQueryEngine();
-
-    // Let QueryEngine handle all validation and execution
-    const results = queryEngine.executeQuery(documents, query);
-
-    this._logger.debug('Query executed by findMultipleByQuery', {
-      queryString: JSON.stringify(query),
-      resultCount: results.length
-    });
-
-    return results;
+    return this._executeQuery(query, 'findMultipleByQuery');
   }
 
   /**
@@ -255,22 +226,30 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
    */
   countByQuery(query) {
+    const results = this._executeQuery(query, 'countByQuery');
+    return results.length;
+  }
+
+  /**
+   * Execute query using QueryEngine (shared helper)
+   * @private
+   * @param {Object} query - MongoDB-compatible query object
+   * @param {string} operation - Operation name for logging
+   * @returns {Array<Object>} Query results
+   * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   */
+  _executeQuery(query, operation) {
     this._validateQuery(query);
-
-    // Get all documents as array for QueryEngine
     const documents = this.findAllDocuments();
-
     const queryEngine = this._getQueryEngine();
-
-    // Let QueryEngine handle all validation and execution
     const results = queryEngine.executeQuery(documents, query);
 
-    this._logger.debug('Query executed by countByQuery', {
+    this._logger.debug(`Query executed by ${operation}`, {
       queryString: JSON.stringify(query),
       resultCount: results.length
     });
 
-    return results.length;
+    return results;
   }
 
   /**
@@ -385,18 +364,14 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND} When no documents match
    */
   updateDocumentByQuery(query, updateOps) {
-    // Validate parameters
     Validate.object(query, 'query');
     Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
 
-    // Find matches
-    const matches = this.findMultipleByQuery(query);
-    if (matches.length === 0) {
-      throw new ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND(query, this._collection.name);
-    }
-    // Apply updates
-    matches.forEach((doc) => this.updateDocumentWithOperators(doc._id, updateOps));
-    return matches.length;
+    return this._applyToMatchingDocuments(
+      query,
+      (doc) => this.updateDocumentWithOperators(doc._id, updateOps),
+      true // throwIfNoMatches
+    );
   }
 
   /**
@@ -435,18 +410,43 @@ class DocumentOperations {
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    */
   replaceDocumentByQuery(query, doc) {
-    // Validate parameters
     Validate.object(query, 'query');
     Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
 
-    // Find matches
+    return this._applyToMatchingDocuments(
+      query,
+      (matchedDoc) => this.replaceDocument(matchedDoc._id, doc).modifiedCount,
+      false // throwIfNoMatches
+    );
+  }
+
+  /**
+   * Apply an operation to all documents matching a query
+   * @private
+   * @param {Object} query - Filter criteria
+   * @param {Function} applyFn - Function to apply to each matched document
+   * @param {boolean} throwIfNoMatches - Whether to throw when no documents match
+   * @returns {number} Number of documents affected
+   * @throws {ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND} When throwIfNoMatches and no matches found
+   */
+  _applyToMatchingDocuments(query, applyFn, throwIfNoMatches) {
     const matches = this.findMultipleByQuery(query);
+
     if (matches.length === 0) {
+      if (throwIfNoMatches) {
+        throw new ErrorHandler.ErrorTypes.DOCUMENT_NOT_FOUND(query, this._collection.name);
+      }
       return 0;
     }
-    // Apply replacements
-    matches.forEach((d) => this.replaceDocument(d._id, doc));
-    return matches.length;
+
+    let affectedCount = 0;
+    for (const doc of matches) {
+      const result = applyFn(doc);
+      // Handle both result objects and direct counts
+      affectedCount += typeof result === 'number' ? result : result.modifiedCount || 0;
+    }
+
+    return affectedCount;
   }
 
   /**

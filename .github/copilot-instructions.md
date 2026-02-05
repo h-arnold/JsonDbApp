@@ -21,10 +21,12 @@
 - `docs/`: General and planning docs
 - `docs/developers/`: Feature and class docs
 - `src/01_utils/`: ComparisonUtils.js, ErrorHandler.js, JDbLogger.js, IdGenerator.js, ObjectUtils.js, Validation.js
-- `src/02_components/`: CollectionCoordinator.js, CollectionMetadata.js, DocumentOperations.js, FileOperations.js, QueryEngine.js, UpdateEngine.js
+- `src/02_components/`: CollectionCoordinator.js, CollectionMetadata.js, DocumentOperations.js, FileOperations.js
+  - `src/02_components/QueryEngine/`: 01_QueryEngineValidation.js, 02_QueryEngineMatcher.js, 99_QueryEngine.js (multi-file structure)
+  - `src/02_components/UpdateEngine/`: 01_UpdateEngineFieldOperators.js, 02_UpdateEngineArrayOperators.js, 03_UpdateEngineFieldPathAccess.js, 04_UpdateEngineValidation.js, 99_UpdateEngine.js (multi-file structure)
 - `src/03_services/`: DbLockService.js, FileService.js
 - `src/04_core/`: Database.js, DatabaseConfig.js, MasterIndex.js
-  - `src/04_core/Collection/`: 01_CollectionReadOperations.js, 02_CollectionWriteOperations.js, 99_Collection.js (composed into a single Collection class at runtime)
+  - `src/04_core/Collection/`: 01_CollectionReadOperations.js, 02_CollectionWriteOperations.js, 99_Collection.js (multi-file structure)
 - `tests/data/`: MockQueryData.js (and other mock data)
 - `tests/framework/`: 01_AssertionUtilities.js, 02_TestResult.js, 03_TestRunner.js, 04_TestSuite.js, 05_TestFramework.js
 - `tests/unit/`: Unit test suites by class/component:

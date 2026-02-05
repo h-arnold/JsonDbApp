@@ -8,7 +8,6 @@
     - [`executeQuery(documents, query)`](#executequerydocuments-query)
     - [`_matchDocument(document, query)`](#_matchdocumentdocument-query)
     - [`_matchField(document, fieldPath, queryValue)`](#_matchfielddocument-fieldpath-queryvalue)
-    - [`_compareValues(documentValue, queryValue, operator)`](#_comparevaluesdocumentvalue-queryvalue-operator)
     - [`_getFieldValue(document, fieldPath)`](#_getfieldvaluedocument-fieldpath)
     - [`_isOperatorObject(value)`](#_isoperatorobjectvalue)
     - [`_matchOperators(documentValue, operators)`](#_matchoperatorsdocumentvalue-operators)
@@ -144,24 +143,6 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: 'New York' });
 
 - `Boolean`: `true` if the field matches the query, `false` otherwise.
 
-### `_compareValues(documentValue, queryValue, operator)`
-
-(Private) Compares values using a specified operator such as `$eq`, `$gt`, or `$lt`.
-
-**Parameters:**
-
-- `documentValue` (\*): Value from document.
-- `queryValue` (\*): Value from query.
-- `operator` (String): Comparison operator (`$eq`, `$gt`, `$lt`).
-
-**Returns:**
-
-- `Boolean`: `true` if comparison succeeds, `false` otherwise.
-
-**Throws:**
-
-- `InvalidQueryError`: If an unsupported operator is encountered.
-
 ### `_getFieldValue(document, fieldPath)`
 
 (Private) Retrieves a value from a document using a dot-notation path. Handles nested objects.
@@ -202,13 +183,25 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: 'New York' });
 
 ### Shared Comparison Utilities
 
-`QueryEngine` delegates all equality and ordering logic to `ComparisonUtils`:
+`QueryEngine` delegates all equality and ordering logic to `ComparisonUtils` through the `COMPARISON_EVALUATORS` map:
 
-- Equality (`$eq` implicit or explicit) uses `ComparisonUtils.equals` with `arrayContainsScalar:true` enabling Mongo-like "array contains" semantics, so `{ tags: 'alpha' }` matches `{ tags:['alpha','beta'] }`.
-- `$gt` / `$lt` use `ComparisonUtils.compareOrdering` (supports numbers, strings, Dates; non-comparable -> non-match).
-- Operator object evaluation loops operators and dispatches to these shared helpers; unsupported operators raise `InvalidQueryError` during validation.
+**Operator Evaluation Architecture:**
 
-Benefits: single source of truth for comparison rules, consistent Date handling, simplified maintenance when new operators are added.
+The `QueryEngineMatcher` component uses dedicated evaluator functions mapped to operators:
+
+- `evaluateEquality($eq)`: Uses `ComparisonUtils.equals` with `arrayContainsScalar:true` for Mongo-like "array contains" semantics
+- `evaluateGreaterThan($gt)`: Uses `ComparisonUtils.compareOrdering` to check `> 0`
+- `evaluateLessThan($lt)`: Uses `ComparisonUtils.compareOrdering` to check `< 0`
+
+These functions are registered in the `COMPARISON_EVALUATORS` map, which provides a single source of truth for operator evaluation. The `_evaluateOperator` method looks up the appropriate evaluator and invokes it; unsupported operators raise `InvalidQueryError`.
+
+**Benefits:**
+
+- **Single source of truth**: All operator logic centralized in evaluator functions
+- **No duplication**: One evaluation path eliminates drift risk
+- **Consistent behavior**: Date handling, type coercion, and comparison rules unified
+- **Extensibility**: New operators can be added by registering evaluator functions
+- **Maintainability**: Changes to operator logic only need one update
 
 ### `_validateQuery(documents, query)`
 

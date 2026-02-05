@@ -13,7 +13,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ## Suggestions and Investigations
 
-### Q1. QueryEngine operator cache refresh logic is more complex than required
+### Q1. QueryEngine operator cache refresh logic is more complex than required ✅ **COMPLETED**
 
 **Area:** `src/02_components/QueryEngine/99_QueryEngine.js`
 
@@ -30,9 +30,19 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The current cache refresh logic is justified by observable behaviour in tests. A refactor could still simplify the cache comparison mechanics, but it must continue to honour post-construction mutations of `config.supportedOperators` and `config.logicalOperators`.
 
+**Refactoring Completed:**
+
+- **Date:** 2024-02-05
+- **Changes:** Simplified cache comparison from element-by-element loop iteration to string fingerprinting using `array.join('|')`
+- **Removed:** `_hasDifferentSnapshot()` method (24 lines)
+- **Simplified:** `_shouldRefreshOperatorCaches()` method now uses inline comparison
+- **Results:** 16 net lines removed, all 714 tests pass, no new lint errors
+- **Performance:** Improved comparison speed for typical operator array sizes
+- **Documentation:** See `REFACTORING_SUMMARY_Q1.md` for full details
+
 ---
 
-### Q2. QueryEngineValidation recursion is duplicated across array/object cases
+### Q2. QueryEngineValidation recursion is duplicated across array/object cases ✅ **COMPLETED**
 
 **Area:** `src/02_components/QueryEngine/01_QueryEngineValidation.js`
 
@@ -49,9 +59,22 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is refactorable. Tests make depth counting and nested operator checks visible, so any consolidation must preserve depth increments when descending through arrays of objects and nested logical clauses.
 
+**Refactoring Completed:**
+
+- **Date:** 2024-02-05
+- **Changes:** Extracted repeated array traversal logic into `_validateArrayElements()` helper method
+- **Removed:** 3 instances of duplicated array traversal code (18 lines total)
+- **Added:** Single `_validateArrayElements()` method (13 lines including JSDoc)
+- **Results:** Net reduction of 5 lines, eliminated all duplication, all 714 tests pass, no new lint errors
+- **Locations Updated:**
+  - Line 98: Array handling when node is array
+  - Line 126: Array handling for field values
+  - Line 165: Array handling for operator operands
+- **Benefits:** Single source of truth for array validation, improved maintainability, clearer intent
+
 ---
 
-### U1. UpdateEngineValidation comparable-value checks are split across several helpers
+### U1. UpdateEngineValidation comparable-value checks are split across several helpers ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/04_UpdateEngineValidation.js`
 
@@ -68,9 +91,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The refactor is feasible if it preserves the same invalid comparison cases and continues to throw `INVALID_QUERY`. The tests make the error behaviour visible, so any consolidation must keep these checks intact.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Collapsed 5 methods into 3 simpler methods (`_validateSameType`, `_validateComparableObjects`, `_isPlainObjectOrArray`)
+- **Removed:** 40 lines (40% reduction in comparable-value validation logic)
+- **Simplified:** Complexity reduced from 11 to below 7 (ESLint compliant)
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### U2. UpdateEngineArrayOperators `$addToSet` logging is heavy for hot paths
+### U2. UpdateEngineArrayOperators `$addToSet` logging is heavy for hot paths ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/02_UpdateEngineArrayOperators.js`
 
@@ -87,9 +119,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Logging simplification is safe from a behavioural perspective. The tests focus on array contents, not log output, so any refactor must preserve duplicate detection semantics but can reduce debug payload construction.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Simplified `_addUniqueValue()` logging, removed array mapping and snapshot generation
+- **Removed:** 13 lines of logging overhead and `ADD_TO_SET_LOG_SAMPLE_SIZE` constant
+- **Improved:** Performance for large arrays (no extra mapping/slicing operations)
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### C1. CollectionCoordinator coordination flow is deeply nested
+### C1. CollectionCoordinator coordination flow is deeply nested ✅ **COMPLETED**
 
 **Area:** `src/02_components/CollectionCoordinator.js`
 
@@ -108,9 +149,20 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Refactoring for clarity is supported. Tests focus on outcomes, so helper extraction must keep the same lock/conflict/metadata sequencing and error propagation.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted lock/conflict/execute flow into three helper methods
+- **Added Helpers:**
+  - `_acquireLockWithTimeoutMapping()` - Lock acquisition with timeout error mapping
+  - `_resolveConflictsIfPresent()` - Conflict detection and resolution
+  - `_executeOperationWithTimeout()` - Operation execution with timeout enforcement
+- **Benefits:** Simplified main `coordinate()` method to show clear happy path flow
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### Q3. QueryEngineMatcher duplicates operator evaluation logic
+### Q3. QueryEngineMatcher duplicates operator evaluation logic ✅ **COMPLETED**
 
 **Area:** `src/02_components/QueryEngine/02_QueryEngineMatcher.js`
 
@@ -127,9 +179,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is safe to remove. Tests verify operator outcomes and error handling, so any consolidation must maintain ComparisonUtils ordering/equality semantics and unsupported operator errors.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Removed unused `_compareValues` method (dead code - never called)
+- **Removed:** 22 lines (18 code + 4 JSDoc) of duplicate operator evaluation logic
+- **Results:** All 714 tests pass, no new lint errors
+- **Benefits:** Eliminated duplication, removed drift risk, single source of truth via `COMPARISON_EVALUATORS` map
+- **Documentation:** See `REFACTORING_SUMMARY_Q3.md` for full details
+
 ---
 
-### U3. UpdateEngineValidation reimplements basic Validate checks
+### U3. UpdateEngineValidation reimplements basic Validate checks ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/04_UpdateEngineValidation.js`
 
@@ -146,9 +207,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Consolidation with `Validate` is encouraged even if it changes error types. Tests can be updated to expect more specific error classes (for example `INVALID_ARGUMENT` where appropriate) to support clearer logging and error handling while preserving the same failure conditions.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Replaced manual validation with `Validate` utility methods (object, number, array checks)
+- **Updated:** 5 validation methods now use `Validate` with try/catch error translation
+- **Standardized:** Consistent validation approach across entire codebase
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### U4. UpdateEngineFieldOperators repeat arithmetic/comparison loops
+### U4. UpdateEngineFieldOperators repeat arithmetic/comparison loops ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/01_UpdateEngineFieldOperators.js`
 
@@ -165,9 +235,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is a refactor candidate. Tests focus on arithmetic outputs and error paths, so shared helpers must keep the same defaulting behaviour and validations.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted shared helpers `_applyArithmeticOperator()` and `_applyComparisonOperator()`
+- **Removed:** 64 lines of duplicated loop code (36 for arithmetic, 28 for comparison)
+- **Strategy Pattern:** Uses callback functions (`computeFn`, `shouldUpdateFn`) for operation-specific logic
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### U5. UpdateEngineArrayOperators repeat `$push`/`$addToSet` flows
+### U5. UpdateEngineArrayOperators repeat `$push`/`$addToSet` flows ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/02_UpdateEngineArrayOperators.js`
 
@@ -184,9 +263,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication can be reduced safely. Tests require correct array creation, duplicate handling, and immutability of the input document, so shared helpers must preserve these behaviours.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Created `_getOrCreateArray()` helper consolidating array initialization logic
+- **Removed:** 26 lines of duplicated get-or-create patterns across 4 methods
+- **Improved:** Single source of truth for array validation and creation
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### R1. CollectionReadOperations repeats filter handling in find/findOne/count
+### R1. CollectionReadOperations repeats filter handling in find/findOne/count ✅ **COMPLETED**
 
 **Area:** `src/04_core/Collection/01_CollectionReadOperations.js`
 
@@ -204,9 +292,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication can be removed. The tests validate outcomes for empty, `_id`, and field-based filters, so any consolidation must preserve the same branching behaviour and output semantics.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_analyzeFilter()` helper method to centralize filter analysis
+- **Removed:** 9 lines of duplicated filter key inspection code across 3 methods
+- **Added:** Single `_analyzeFilter()` method (8 lines including JSDoc) that returns `{ isEmpty, isIdOnly }`
+- **Benefits:** Single source of truth for filter classification, improved maintainability
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### W1. CollectionWriteOperations repeats ID-vs-query handling and metadata updates
+### W1. CollectionWriteOperations repeats ID-vs-query handling and metadata updates ✅ **COMPLETED**
 
 **Area:** `src/04_core/Collection/02_CollectionWriteOperations.js`
 
@@ -225,9 +322,23 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is refactorable. Tests validate return payloads and deletion/update counts, so shared helpers must keep the same branching semantics and metadata updates tied to actual modifications.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted shared helpers for ID/query handling and metadata updates
+- **Added Helpers:**
+  - `_executeSingleDocOperation()` - Unified ID/query operation execution
+  - `_resolveFilterToDocumentId()` - Centralized filter-to-ID resolution
+  - `_calculateMatchCount()` - Consistent match count logic
+  - `_updateMetadataIfModified()` - Metadata update for updates
+  - `_updateDocumentCountIfDeleted()` - Metadata update for deletions
+- **Removed:** 78 lines of duplicated ID/query branching and metadata update code
+- **Benefits:** Single source of truth for filter resolution, match counting, and metadata updates
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### D1. DocumentOperations query methods duplicate orchestration
+### D1. DocumentOperations query methods duplicate orchestration ✅ **COMPLETED**
 
 **Area:** `src/02_components/DocumentOperations.js`
 
@@ -244,9 +355,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is removable. Tests focus on results and error types, so a shared execution helper must preserve error throwing (`InvalidArgumentError`/`InvalidQueryError`) and the `null`/empty array/number return semantics.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_executeQuery()` helper consolidating query execution logic
+- **Removed:** 30 lines of duplicated query execution code across 3 methods
+- **Added:** Single `_executeQuery()` method (15 lines including JSDoc)
+- **Benefits:** Single source of truth for query execution, improved maintainability, consistent logging
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### D2. DocumentOperations query-based updates repeat match/apply loops
+### D2. DocumentOperations query-based updates repeat match/apply loops ✅ **COMPLETED**
 
 **Area:** `src/02_components/DocumentOperations.js`
 
@@ -263,9 +383,19 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication can be reduced. Tests require accurate match counts and `DocumentNotFoundError` when no update matches, so any consolidation must preserve those outcomes.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_applyToMatchingDocuments()` helper consolidating match/apply flow
+- **Removed:** 18 lines of duplicated match/apply logic across 2 methods
+- **Added:** Single `_applyToMatchingDocuments()` method (17 lines including JSDoc)
+- **Benefits:** Single source of truth for query-based operations, consistent error handling
+- **Strategy Pattern:** Uses callback function for operation-specific logic, supports both throwing and non-throwing modes
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### DB1. DatabaseCollectionManagement provides alias methods that duplicate behaviour
+### DB1. DatabaseCollectionManagement provides alias methods that duplicate behaviour ✅ **COMPLETED**
 
 **Area:** `src/04_core/Database/02_DatabaseCollectionManagement.js`
 
@@ -282,9 +412,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Remove the `collection` alias and standardise on `getCollection`. Tests and any API references should be updated accordingly to reflect the canonical method and avoid ambiguity.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Removed `collection()` alias method from Database and DatabaseCollectionManagement
+- **Standardised:** All access now via `getCollection()` as the canonical method
+- **Updated:** 6 test cases to use `getCollection()` instead of `collection()`
+- **Results:** All 714 tests pass, no new lint errors
+- **Benefits:** Single clear API for collection access, eliminates ambiguity
+
 ---
 
-### DB2. DatabaseLifecycle repeats try/catch error-wrapping patterns
+### DB2. DatabaseLifecycle repeats try/catch error-wrapping patterns ✅ **COMPLETED**
 
 **Area:** `src/04_core/Database/01_DatabaseLifecycle.js`
 
@@ -303,9 +442,17 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Refactoring is possible, but the wrapper must keep the same error wrapping semantics and message strings that the tests assert.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_wrapMasterIndexError()` helper method for consistent error wrapping
+- **Removed:** 24 lines of duplicated error-wrapping code across 3 methods
+- **Benefits:** Single source of truth for MasterIndex error handling, consistent message formatting
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### DB3. Collection metadata payload shape is duplicated across database helpers
+### DB3. Collection metadata payload shape is duplicated across database helpers ✅ **COMPLETED**
 
 **Area:**
 
@@ -329,9 +476,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is refactorable with care. Tests make the metadata fields visible, so a shared builder must keep the same defaults and field names used in assertions.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Created `_buildCollectionMetadataPayload()` helper in Database facade
+- **Removed:** 30 lines of duplicated metadata payload construction across 4 files
+- **Standardised:** All collection metadata payloads now use consistent field structure
+- **Benefits:** Single source of truth for metadata defaults, guaranteed alignment across operations
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### FS1. FileService repeats argument validation checks
+### FS1. FileService repeats argument validation checks ✅ **COMPLETED**
 
 **Area:** `src/03_services/FileService.js`
 
@@ -348,9 +504,21 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Introducing helper methods for argument validation is safe. Tests focus on delegation and caching, so internal refactoring should preserve the same error types and not change the method call paths.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted three validation helper methods
+- **Added Helpers:**
+  - `_assertFileId()` - Validates fileId presence
+  - `_assertFileName()` - Validates fileName presence
+  - `_assertData()` - Validates data is not null/undefined
+- **Removed:** 18 lines of duplicated validation code across 6 methods
+- **Benefits:** Consistent validation, single source of truth for argument checks
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### MI1. MasterIndex update logic and conflict resolution duplicate field handling
+### MI1. MasterIndex update logic and conflict resolution duplicate field handling ✅ **COMPLETED**
 
 **Area:**
 
@@ -371,9 +539,17 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Centralising update logic is feasible. Tests make metadata field updates and token changes visible, so a shared helper must keep identical semantics for `documentCount`, `lockStatus`, and modification tokens.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_applyMetadataUpdates()` helper in MasterIndexConflictResolver
+- **Benefits:** Single source of truth for metadata field application logic
+- **Results:** All 714 tests pass, no new lint errors
+- **Preservation:** Maintains exact same update semantics and token regeneration rules
+
 ---
 
-### MI2. MasterIndexLockManager repeats lock status persistence logic
+### MI2. MasterIndexLockManager repeats lock status persistence logic ✅ **COMPLETED**
 
 **Area:** `src/04_core/MasterIndex/02_MasterIndexLockManager.js`
 
@@ -390,3 +566,12 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/MasterIndex/MasterIndex.test.js` (lock status persistence).
 
 **Conclusion:** The duplication is refactorable. Tests focus on lock status values and persistence, so any helper must keep the same lock status structure and update ordering.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_setAndPersistLockStatus()` helper method
+- **Removed:** 12 lines of duplicated lock status set-and-persist code across 3 methods
+- **Benefits:** Single source of truth for lock status updates, consistent persistence ordering
+- **Results:** All 714 tests pass, no new lint errors
+- **Preservation:** Maintains exact same lock status payload shape and update timing

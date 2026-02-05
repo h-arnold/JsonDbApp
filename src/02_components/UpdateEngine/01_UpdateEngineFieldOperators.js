@@ -46,23 +46,7 @@ class UpdateEngineFieldOperators {
    */
   applyInc(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$inc');
-
-    for (const fieldPath in ops) {
-      const currentValue = this._fieldPaths.getValue(document, fieldPath);
-      const incrementValue = ops[fieldPath];
-
-      this._validation.validateNumericValue(incrementValue, fieldPath, '$inc');
-
-      if (currentValue !== undefined) {
-        this._validation.validateCurrentFieldNumeric(currentValue, fieldPath, '$inc');
-      }
-
-      const baseValue = currentValue !== undefined ? currentValue : 0;
-      const newValue = baseValue + incrementValue;
-
-      this._fieldPaths.setValue(document, fieldPath, newValue);
-    }
-
+    this._applyArithmeticOperator(document, ops, '$inc', (base, operand) => base + operand);
     return document;
   }
 
@@ -75,23 +59,7 @@ class UpdateEngineFieldOperators {
    */
   applyMul(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$mul');
-
-    for (const fieldPath in ops) {
-      const currentValue = this._fieldPaths.getValue(document, fieldPath);
-      const multiplyValue = ops[fieldPath];
-
-      this._validation.validateNumericValue(multiplyValue, fieldPath, '$mul');
-
-      if (currentValue !== undefined) {
-        this._validation.validateCurrentFieldNumeric(currentValue, fieldPath, '$mul');
-      }
-
-      const baseValue = currentValue !== undefined ? currentValue : 0;
-      const newValue = baseValue * multiplyValue;
-
-      this._fieldPaths.setValue(document, fieldPath, newValue);
-    }
-
+    this._applyArithmeticOperator(document, ops, '$mul', (base, operand) => base * operand);
     return document;
   }
 
@@ -105,20 +73,12 @@ class UpdateEngineFieldOperators {
    */
   applyMin(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$min');
-
-    for (const fieldPath in ops) {
-      const currentValue = this._fieldPaths.getValue(document, fieldPath);
-      const minValue = ops[fieldPath];
-
-      if (currentValue !== undefined) {
-        this._validation.validateComparableValues(currentValue, minValue, fieldPath, '$min');
-      }
-
-      if (currentValue === undefined || minValue < currentValue) {
-        this._fieldPaths.setValue(document, fieldPath, minValue);
-      }
-    }
-
+    this._applyComparisonOperator(
+      document,
+      ops,
+      '$min',
+      (current, candidate) => candidate < current
+    );
     return document;
   }
 
@@ -132,20 +92,12 @@ class UpdateEngineFieldOperators {
    */
   applyMax(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$max');
-
-    for (const fieldPath in ops) {
-      const currentValue = this._fieldPaths.getValue(document, fieldPath);
-      const maxValue = ops[fieldPath];
-
-      if (currentValue !== undefined) {
-        this._validation.validateComparableValues(currentValue, maxValue, fieldPath, '$max');
-      }
-
-      if (currentValue === undefined || maxValue > currentValue) {
-        this._fieldPaths.setValue(document, fieldPath, maxValue);
-      }
-    }
-
+    this._applyComparisonOperator(
+      document,
+      ops,
+      '$max',
+      (current, candidate) => candidate > current
+    );
     return document;
   }
 
@@ -163,6 +115,60 @@ class UpdateEngineFieldOperators {
     }
 
     return document;
+  }
+
+  /**
+   * Apply an arithmetic operation ($inc, $mul) to numeric fields.
+   * @private
+   * @param {Object} document - Document to modify
+   * @param {Object} ops - Operations mapping field paths to operands
+   * @param {string} operation - Operation name for error reporting
+   * @param {Function} computeFn - Function (base, operand) => result
+   */
+  _applyArithmeticOperator(document, ops, operation, computeFn) {
+    for (const fieldPath in ops) {
+      const currentValue = this._fieldPaths.getValue(document, fieldPath);
+      const operandValue = ops[fieldPath];
+
+      this._validation.validateNumericValue(operandValue, fieldPath, operation);
+
+      if (currentValue !== undefined) {
+        this._validation.validateCurrentFieldNumeric(currentValue, fieldPath, operation);
+      }
+
+      const baseValue = currentValue !== undefined ? currentValue : 0;
+      const newValue = computeFn(baseValue, operandValue);
+
+      this._fieldPaths.setValue(document, fieldPath, newValue);
+    }
+  }
+
+  /**
+   * Apply a comparison operation ($min, $max) to fields.
+   * @private
+   * @param {Object} document - Document to modify
+   * @param {Object} ops - Operations mapping field paths to candidate values
+   * @param {string} operation - Operation name for error reporting
+   * @param {Function} shouldUpdateFn - Function (current, candidate) => boolean
+   */
+  _applyComparisonOperator(document, ops, operation, shouldUpdateFn) {
+    for (const fieldPath in ops) {
+      const currentValue = this._fieldPaths.getValue(document, fieldPath);
+      const candidateValue = ops[fieldPath];
+
+      if (currentValue !== undefined) {
+        this._validation.validateComparableValues(
+          currentValue,
+          candidateValue,
+          fieldPath,
+          operation
+        );
+      }
+
+      if (currentValue === undefined || shouldUpdateFn(currentValue, candidateValue)) {
+        this._fieldPaths.setValue(document, fieldPath, candidateValue);
+      }
+    }
   }
 }
 

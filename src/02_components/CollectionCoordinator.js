@@ -50,60 +50,24 @@ class CollectionCoordinator {
 
     const opId = IdGenerator.generateUUID();
     const name = this._collection.getName();
-    let result;
     let lockAcquired = false;
-    // Start timer for coordination timeout
     const startTime = Date.now();
-    // coordinationEnabled config removed: always coordinate
+
     this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
-    // Acquire lock with timeout mapping
+
     try {
-      try {
-        this.acquireOperationLock(opId);
-        lockAcquired = true;
-      } catch (e) {
-        if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
-          this._logger.error('Lock acquisition timed out', {
-            collection: name,
-            operationId: opId,
-            timeout: this._config.lockTimeout
-          });
-          throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
-            operationName,
-            this._config.lockTimeout
-          );
-        }
-        throw e;
-      }
-
-      // Conflict detection and resolution
-      if (this.hasConflict()) {
-        this._logger.warn('Conflict detected, resolving', { collection: name });
-        this.resolveConflict();
-      }
-
-      // Perform operation
-      result = callback();
-      // Enforce coordination timeout on operation execution
-      const elapsed = Date.now() - startTime;
-      if (elapsed > this._config.lockTimeout) {
-        this._logger.error('Operation timed out', {
-          collection: name,
-          opId,
-          timeout: this._config.lockTimeout
-        });
-        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
-          operationName,
-          this._config.lockTimeout
-        );
-      }
-
-      // Persist metadata updates
+      lockAcquired = this._acquireLockWithTimeoutMapping(opId, operationName, name);
+      this._resolveConflictsIfPresent(name);
+      const result = this._executeOperationWithTimeout(
+        callback,
+        operationName,
+        opId,
+        name,
+        startTime
+      );
       this.updateMasterIndexMetadata();
-
       return result;
     } catch (e) {
-      // Log and rethrow
       this._logger.error(`Operation ${operationName} failed`, {
         collection: name,
         opId,
@@ -134,6 +98,76 @@ class CollectionCoordinator {
         `Modification token mismatch for collection: ${this._collection.getName()}`
       );
     }
+  }
+
+  /**
+   * Acquire lock with timeout mapping to coordination timeout error.
+   * @param {string} opId - Operation identifier
+   * @param {string} operationName - Operation name for error context
+   * @param {string} collectionName - Collection name for logging
+   * @returns {boolean} True when lock was acquired
+   * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When lock acquisition times out
+   * @throws {ErrorHandler.ErrorTypes.*} For other lock acquisition failures
+   * @private
+   */
+  _acquireLockWithTimeoutMapping(opId, operationName, collectionName) {
+    try {
+      this.acquireOperationLock(opId);
+      return true;
+    } catch (e) {
+      if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
+        this._logger.error('Lock acquisition timed out', {
+          collection: collectionName,
+          operationId: opId,
+          timeout: this._config.lockTimeout
+        });
+        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+          operationName,
+          this._config.lockTimeout
+        );
+      }
+      throw e;
+    }
+  }
+
+  /**
+   * Resolve conflicts if detected.
+   * @param {string} collectionName - Collection name for logging
+   * @private
+   */
+  _resolveConflictsIfPresent(collectionName) {
+    if (this.hasConflict()) {
+      this._logger.warn('Conflict detected, resolving', { collection: collectionName });
+      this.resolveConflict();
+    }
+  }
+
+  /**
+   * Execute operation callback with timeout enforcement.
+   * @param {Function} callback - Operation callback
+   * @param {string} operationName - Operation name for error context
+   * @param {string} opId - Operation identifier for logging
+   * @param {string} collectionName - Collection name for logging
+   * @param {number} startTime - Operation start timestamp
+   * @returns {*} Operation result
+   * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When operation exceeds timeout
+   * @private
+   */
+  _executeOperationWithTimeout(callback, operationName, opId, collectionName, startTime) {
+    const result = callback();
+    const elapsed = Date.now() - startTime;
+    if (elapsed > this._config.lockTimeout) {
+      this._logger.error('Operation timed out', {
+        collection: collectionName,
+        opId,
+        timeout: this._config.lockTimeout
+      });
+      throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+        operationName,
+        this._config.lockTimeout
+      );
+    }
+    return result;
   }
 
   /**

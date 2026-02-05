@@ -266,7 +266,7 @@ describe('Error Handling', () => {
     const { database } = setupInitialisedDatabase({ autoCreateCollections: false });
     const missingName = generateUniqueName('missing');
 
-    expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);
+    expect(() => database.getCollection(missingName)).toThrowError(/auto-create is disabled/);
   });
 });
 ```

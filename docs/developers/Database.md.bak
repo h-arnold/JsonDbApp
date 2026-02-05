@@ -97,14 +97,14 @@ Database (Orchestrator)
 
 ### Collection Access Protocol
 
-**UPDATED:** The `getCollection()` method validates the caller input, logs any sanitisation, and delegates to the shared `_resolveCollection(resolvedName, originalName)` helper for consistent caching and error messaging. (Note: The `collection()` alias was removed in v0.0.5.)
+**UPDATED:** Both `collection()` and `getCollection()` now validate the caller input, log any sanitisation, and delegate to the shared `_resolveCollection(resolvedName, originalName)` helper so the same caching and error messaging applies regardless of entry point:
 
-1. Public method sanitises and validate the name up front, logging when characters were stripped while keeping the unsanitised input for messaging
+1. Public methods sanitise and validate the name up front, logging when characters were stripped while keeping the unsanitised input for messaging
 2. `_resolveCollection()` checks the in-memory collections cache using the sanitised key
 3. If not cached, the helper queries MasterIndex (single source of truth)
 4. When the collection is still missing, `_resolveCollection()` auto-creates if permitted, otherwise it raises an error that includes the caller’s original name
 
-**Important:** `_resolveCollection()` ensures the caller sees the original name in error messages when auto-create is disabled, even if sanitisation adjusted the lookup key. The helper also short-circuits when the configuration forbids auto-creation
+**Important:** `_resolveCollection()` ensures the caller sees the original name in error messages when auto-create is disabled, even if sanitisation adjusted the lookup key. The helper also short-circuits when the configuration forbids auto-creation so the behaviour stays consistent between `collection()` and `getCollection()`.
 
 You can tune the behaviour by enabling `stripDisallowedCollectionNameCharacters` on `DatabaseConfig`. When enabled, the sanitised name is the one persisted in caches and the MasterIndex, yet `_resolveCollection()` keeps the unsanitised input for messaging parity so developers can reconcile errors with their original call site.
 
@@ -263,8 +263,7 @@ const db = new Database({
 3. Cache hit returns immediately; otherwise MasterIndex metadata is used to build the collection
 4. Auto-create (if enabled) creates the collection before returning; when disabled the helper throws with the caller's original name
 
-**Important:**
-
+**Important:** 
 - No longer falls back to Drive index file
 - When auto-create is disabled, `_resolveCollection()` raises an error that includes the caller's original name
 - The `collection()` alias was removed in v0.0.5 - use `getCollection()` as the canonical method
@@ -365,7 +364,7 @@ Lazily locates or creates the Drive-based index file. This helper is invoked whe
 
 #### `_resolveCollection(resolvedName, originalName)`
 
-Centralises collection resolution for `getCollection()` after the public wrapper sanitises the input.
+Centralises collection resolution for both `collection()` and `getCollection()` after the public wrapper sanitises the input.
 
 - **Parameters:**
   - `resolvedName` (String): Sanitised collection name used for cache and MasterIndex lookups
@@ -376,48 +375,6 @@ Centralises collection resolution for `getCollection()` after the public wrapper
   - Rehydrates a collection using MasterIndex metadata when available
   - Throws with the original caller input when auto-create is disabled and the collection is missing
   - Creates and caches new collections (via `createCollection(originalName)`) when auto-create is permitted
-
-#### `_buildCollectionMetadataPayload(name, fileId, documentCount = 0)` ⭐ NEW in v0.0.5
-
-**Added in:** DB3 refactoring
-
-Centralized helper for constructing collection metadata payloads with consistent field structure.
-
-- **Parameters:**
-  - `name` (String): Collection name
-  - `fileId` (String): Drive file ID for the collection
-  - `documentCount` (Number): Initial document count (default: 0)
-- **Returns:** `Object` - Metadata payload with standardized fields
-- **Structure:**
-  ```javascript
-  {
-    name: name,
-    fileId: fileId,
-    created: new Date(),
-    lastUpdated: new Date(),
-    documentCount: documentCount
-  }
-  ```
-- **Usage:** Used by `addCollectionToMasterIndex()`, `addCollectionToIndex()`, `_restoreCollectionFromBackup()`, and collection management operations
-- **Benefits:** Single source of truth for metadata structure, guaranteed field alignment
-
-#### `_wrapMasterIndexError(operation, error, messagePrefix)` ⭐ NEW in v0.0.5
-
-**Added in:** DB2 refactoring
-
-Wraps non-GASDB errors into MasterIndexError with consistent formatting.
-
-- **Parameters:**
-  - `operation` (String): Operation identifier for error context
-  - `error` (Error): Original error to wrap
-  - `messagePrefix` (String): Prefix for error message
-- **Returns:** `Error` - Original GASDB error or new MasterIndexError
-- **Behaviour:**
-  - Returns error unchanged if already a GASDB_ERROR
-  - Creates new MASTER_INDEX_ERROR for non-GASDB errors
-  - Formats message as: `${messagePrefix}: ${error.message}`
-- **Usage:** Used by `createDatabase()`, `initialise()`, `recoverDatabase()`
-- **Benefits:** Consistent error wrapping, preserves error types for tests
 
 #### `_createCollectionObject(name, driveFileId)`
 
@@ -509,7 +466,7 @@ console.log('Available collections:', db.listCollections());
 const users = db.createCollection('users');
 
 // Get existing collection (or auto-create if enabled)
-const posts = db.getCollection('posts');
+const posts = db.collection('posts');
 
 // List all collections
 const allCollections = db.listCollections();

@@ -207,27 +207,6 @@ class QueryEngineMatcher {
 
     return evaluator(documentValue, operand);
   }
-
-  /**
-   * Legacy comparison helper retained for compatibility with existing tests.
-   * @param {*} documentValue - Value from document.
-   * @param {*} queryValue - Value from query.
-   * @param {string} operator - Operator name.
-   * @returns {boolean} Result of comparison.
-   * @private
-   */
-  _compareValues(documentValue, queryValue, operator) {
-    switch (operator) {
-      case '$eq':
-        return ComparisonUtils.equals(documentValue, queryValue, { arrayContainsScalar: true });
-      case '$gt':
-        return ComparisonUtils.compareOrdering(documentValue, queryValue) > 0;
-      case '$lt':
-        return ComparisonUtils.compareOrdering(documentValue, queryValue) < 0;
-      default:
-        throw new InvalidQueryError(`Unsupported operator: ${operator}`);
-    }
-  }
 }
 
 if (typeof module !== 'undefined' && module.exports) {
