@@ -4,7 +4,7 @@
  * Provides setup and cleanup utilities for Database-focused tests.
  */
 
-import { afterEach } from 'vitest';
+import { afterEach, expect } from 'vitest';
 import { createMasterIndexKey, createTestFolder } from './collection-test-helpers.js';
 
 /**
@@ -143,6 +143,33 @@ export const cleanupDatabaseTests = () => {
  */
 export const generateUniqueName = (prefix) =>
   `${prefix}_${Date.now()}_${Math.random().toString(36).slice(2, 8)}`;
+
+/**
+ * Verifies that a collection has been persisted to the MasterIndex with expected metadata.
+ * @param {Object} databaseContext - Database context containing masterIndexKey and/or database.
+ * @param {string} databaseContext.masterIndexKey - The master index key for the database.
+ * @param {string} collectionName - The name of the collection to verify.
+ * @param {Object} expectedMetadata - Expected metadata for the collection.
+ * @param {string} expectedMetadata.fileId - Expected Drive file identifier for the collection.
+ * @param {number} [expectedMetadata.documentCount] - Expected document count (optional, defaults to 0 if not specified).
+ */
+export const expectCollectionPersisted = (databaseContext, collectionName, expectedMetadata) => {
+  const { masterIndexKey } = databaseContext;
+  const { fileId, documentCount = 0 } = expectedMetadata;
+
+  // Register the file for cleanup
+  registerDatabaseFile(fileId);
+
+  // Instantiate a new MasterIndex and read collection metadata
+  const masterIndex = new MasterIndex({ masterIndexKey });
+  const persistedMetadata = masterIndex.getCollection(collectionName);
+
+  // Assert that the collection exists with expected properties
+  expect(persistedMetadata).toBeInstanceOf(CollectionMetadata);
+  expect(persistedMetadata?.name).toBe(collectionName);
+  expect(persistedMetadata?.fileId).toBe(fileId);
+  expect(persistedMetadata?.documentCount).toBe(documentCount);
+};
 
 afterEach(() => {
   cleanupDatabaseTests();
