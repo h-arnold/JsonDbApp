@@ -9,13 +9,8 @@
  * - Edge cases (null vs number, undefined fields)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
-
-let testEnv;
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
 /**
  * Determines whether a value is null or undefined
@@ -26,18 +21,12 @@ function isNullish(value) {
   return value === null || value === undefined;
 }
 
-describe('$min Minimum Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$min Minimum Operator Tests', (getTestEnv) => {
   describe('Value comparison', () => {
     it('should replace field when new value is smaller', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.age;
@@ -55,6 +44,8 @@ describe('$min Minimum Operator Tests', () => {
 
     it('should not change field when current value is smaller', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person1' });
       const originalAge = original.age;
@@ -72,6 +63,8 @@ describe('$min Minimum Operator Tests', () => {
 
     it('should not change field when values are equal', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person3' });
       const originalAge = original.age;
@@ -89,6 +82,8 @@ describe('$min Minimum Operator Tests', () => {
 
     it('should handle mixed integer/float comparisons', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.score;
@@ -108,6 +103,8 @@ describe('$min Minimum Operator Tests', () => {
   describe('Field creation', () => {
     it('should create non-existent field with min value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.newMinField;
@@ -127,6 +124,8 @@ describe('$min Minimum Operator Tests', () => {
   describe('Type handling', () => {
     it('should handle Date comparisons correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const earlierDate = new Date('2025-06-01T00:00:00Z');
       const before = collection.findOne({ _id: 'person1' });
@@ -154,6 +153,8 @@ describe('$min Minimum Operator Tests', () => {
 
     it('should handle string comparisons lexicographically', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.name.first;
@@ -171,6 +172,8 @@ describe('$min Minimum Operator Tests', () => {
 
     it('should handle type mismatches appropriately', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -183,6 +186,8 @@ describe('$min Minimum Operator Tests', () => {
   describe('Edge cases', () => {
     it('should handle null vs number comparisons', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person2' });
       const original = before.lastLogin;
@@ -211,6 +216,8 @@ describe('$min Minimum Operator Tests', () => {
 
     it('should handle undefined field appropriately', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.undefinedField;

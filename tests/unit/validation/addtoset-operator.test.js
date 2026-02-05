@@ -10,26 +10,15 @@
  * - Type validation (non-array fields)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$addToSet Array Add to Set Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$addToSet Array Add to Set Operator Tests', (getTestEnv) => {
   describe('Adding unique values', () => {
     it('should add a value to a set if it is not already present', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -46,6 +35,8 @@ describe('$addToSet Array Add to Set Operator Tests', () => {
 
     it('should add a unique object to an array of objects', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const newAlert = { type: 'security-alert', level: 'high' };
 
@@ -62,6 +53,8 @@ describe('$addToSet Array Add to Set Operator Tests', () => {
   describe('Duplicate prevention', () => {
     it('should not add a value to a set if it is already present', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -79,6 +72,8 @@ describe('$addToSet Array Add to Set Operator Tests', () => {
 
     it('should not add a duplicate object to an array of objects', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const existingAlert = { type: 'low-stock', product: 'prod3', threshold: 10 };
 
@@ -113,6 +108,8 @@ describe('$addToSet Array Add to Set Operator Tests', () => {
   describe('$each modifier', () => {
     it('should add multiple unique values with $each', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -134,6 +131,8 @@ describe('$addToSet Array Add to Set Operator Tests', () => {
   describe('Array creation', () => {
     it('should create an array field if it does not exist', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -152,6 +151,8 @@ describe('$addToSet Array Add to Set Operator Tests', () => {
   describe('Type validation', () => {
     it('should throw an error when used on a non-array field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert

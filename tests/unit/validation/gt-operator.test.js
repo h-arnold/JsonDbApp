@@ -13,25 +13,14 @@
  * - Missing fields
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$gt Greater Than Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
+describeValidationOperatorSuite('$gt Greater Than Operator Tests', (getTestEnv) => {
   describe('Numeric comparisons', () => {
     it('should compare integers correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -47,6 +36,7 @@ describe('$gt Greater Than Operator Tests', () => {
 
     it('should compare floats correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -61,6 +51,7 @@ describe('$gt Greater Than Operator Tests', () => {
 
     it('should handle mixed integer and float comparison', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -74,6 +65,7 @@ describe('$gt Greater Than Operator Tests', () => {
 
     it('should handle negative numbers correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -87,6 +79,7 @@ describe('$gt Greater Than Operator Tests', () => {
 
     it('should handle zero boundary cases', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -103,6 +96,7 @@ describe('$gt Greater Than Operator Tests', () => {
   describe('Date comparisons', () => {
     it('should compare Date objects chronologically', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
       const cutoffDate = new Date('2025-06-20T00:00:00Z');
 
@@ -120,6 +114,7 @@ describe('$gt Greater Than Operator Tests', () => {
   describe('String comparisons', () => {
     it('should compare strings lexicographically', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -134,6 +129,7 @@ describe('$gt Greater Than Operator Tests', () => {
 
     it('should handle case sensitivity in string comparison', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -147,6 +143,7 @@ describe('$gt Greater Than Operator Tests', () => {
   describe('Type mixing errors', () => {
     it('should not compare number with string', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -160,6 +157,7 @@ describe('$gt Greater Than Operator Tests', () => {
   describe('Null/undefined handling', () => {
     it('should handle null values in comparison', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act
@@ -171,6 +169,7 @@ describe('$gt Greater Than Operator Tests', () => {
 
     it('should handle missing fields in comparison', () => {
       // Arrange
+      const testEnv = getTestEnv();
       const collection = testEnv.collections.persons;
 
       // Act

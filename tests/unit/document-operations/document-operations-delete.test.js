@@ -4,17 +4,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  setupTestEnvironment,
-  resetCollection
+  createDocumentOperationsContext,
+  assertAcknowledgedResult
 } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Delete Operations', () => {
-  let env, docOps;
+  let docOps, reload;
 
   beforeEach(() => {
-    env = setupTestEnvironment();
-    resetCollection(env.collection);
-    docOps = new DocumentOperations(env.collection);
+    ({ docOps, reload } = createDocumentOperationsContext());
   });
 
   it('should delete existing document by ID', () => {
@@ -23,24 +21,20 @@ describe('DocumentOperations Delete Operations', () => {
 
     const result = docOps.deleteDocument(insertedDoc._id);
 
-    expect(result).toBeDefined();
-    expect(result.acknowledged).toBe(true);
-    expect(result.deletedCount).toBe(1);
+    assertAcknowledgedResult(result, { deletedCount: 1 });
 
     const foundDoc = docOps.findDocumentById(insertedDoc._id);
     expect(foundDoc).toBeNull();
 
-    env.collection._loadData();
-    const savedDoc = env.collection._documents[insertedDoc._id];
+    const documents = reload();
+    const savedDoc = documents[insertedDoc._id];
     expect(savedDoc).toBeUndefined();
   });
 
   it('should return error result when deleting non-existent document', () => {
     const result = docOps.deleteDocument('non-existent-id-789');
 
-    expect(result).toBeDefined();
-    expect(result.acknowledged).toBe(true);
-    expect(result.deletedCount).toBe(0);
+    assertAcknowledgedResult(result, { deletedCount: 0 });
   });
 
   it('should throw error when deleting with invalid ID', () => {

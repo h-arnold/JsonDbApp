@@ -290,13 +290,15 @@ it('should insert', () => {
 
 ### Collection Test Helpers (`tests/helpers/collection-test-helpers.js`)
 
+- `assertAcknowledgedWrite(result, expectedCounts)` - Validates MongoDB-style write results with optional count assertions
+- `createIsolatedTestCollection(collectionName)` - Builds fresh environment and returns env, collection, and file ID
 - `createMasterIndexKey()` - Creates unique master index key with auto-cleanup
 - `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestFileWithContent(folderId, fileName, content)` - Creates file with custom content
 - `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
-- `createIsolatedTestCollection(collectionName)` - Builds fresh environment and returns env, collection, and file ID
 - `registerAndCreateCollection(env, collectionName, fileId, documentCount)` - Registers metadata and creates Collection
+- `seedStandardEmployees(collection)` - Seeds collection with standard employee test data (Alice, Bob, Charlie)
 - `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 
 ### Collection Coordinator Test Helpers (`tests/helpers/collection-coordinator-test-helpers.js`)
@@ -319,6 +321,8 @@ it('should insert', () => {
 - `cleanupDatabaseTests()` - Deletes registered master index keys and Drive files after each test
 - `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
 - `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects for Database tests
+- `expectCollectionPersisted(databaseContext, collectionName, expectedMetadata)` - Verifies that a collection has been persisted to the MasterIndex with expected metadata (fileId, documentCount). Automatically registers the file for cleanup and instantiates MasterIndex for assertions
+- `generateUniqueName(prefix)` - Generates unique names for artefacts
 - `registerDatabaseFile(fileId)` - Tracks Drive files created during Database tests for cleanup
 - `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
 - `setupDatabaseTestEnvironment(overrides)` - Constructs Database instances with isolated storage
@@ -326,11 +330,23 @@ it('should insert', () => {
 
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
 
-- Provides utilities for testing DocumentOperations component
+- `assertAcknowledgedResult(result, expectedCounts)` - Asserts that a DocumentOperations result is acknowledged and optionally checks modifiedCount/deletedCount
+- `cleanupTestResources()` - Cleanup function automatically registered with afterEach
+- `createDocumentOperationsContext()` - Creates complete test context with env, docOps, and reload helper (replaces beforeEach setup)
+- `createTestCollectionFile(folderId, collectionName)` - Creates a test collection file in the specified folder
+- `createTestFolder()` - Creates a test folder in mock Drive with auto-cleanup
+- `resetCollection(collection)` - Resets a collection to initial empty state
+- `setupTestEnvironment()` - Sets up complete test environment for DocumentOperations tests
 
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 
 - GAS API mocks tested separately to ensure correct behavior
+
+### Validation Test Helpers (`tests/helpers/validation-test-helpers.js`)
+
+- `cleanupValidationTests(env)` - Cleans up all validation test resources (files, folders, ScriptProperties)
+- `describeValidationOperatorSuite(description, callback)` - Creates a complete validation test suite with automatic setup/cleanup. Provides `getTestEnv()` function to access the test environment (database, collections, mock data)
+- `setupValidationTestEnvironment()` - Sets up a complete validation test environment with pre-populated collections and mock data
 
 ## GAS Mock Limitations & Skipped Tests
 

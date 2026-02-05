@@ -71,41 +71,40 @@
 
 - Use the **Test Review Agent** after refactoring because the change affects database test behaviour and helper usage across suites.
 
-## QueryEngine suite bootstrap duplication
+## QueryEngine suite bootstrap duplication - ✅ COMPLETED
 
-- Each describe block re-declares the same `beforeAll`, `beforeEach`, and `afterAll` scaffolding; see [tests/unit/QueryEngine/QueryEngine.test.js](tests/unit/QueryEngine/QueryEngine.test.js#L32-L47) and the repeated block starting at [tests/unit/QueryEngine/QueryEngine.test.js#L262](tests/unit/QueryEngine/QueryEngine.test.js#L262-L277).
-- Recommendation: wrap the setup in a helper like `withQueryEngineDataset(describeName, suiteFn)` or move the shared hooks to the top-level describe so individual sections inherit the same context without duplication.
+**Refactoring completed on 2026-02-05:**
 
-**Affected code to refactor (exact locations to change):**
+- Consolidated duplicate `beforeAll`, `beforeEach`, and `afterAll` hooks into a single top-level `describe('QueryEngine')` block
+- Four nested describe blocks now inherit the shared setup: Basic Functionality, Comparison Operators, Logical Operators, Error Handling
+- Edge Cases describe block retains its own `beforeAll` for `edgeCaseDocuments` while still inheriting `queryEngine` and `testUsers`
+- Eliminated ~45 lines of duplicated code
+- All 48 tests pass ✅
+- Zero lint errors/warnings ✅
 
-- `tests/unit/QueryEngine/QueryEngine.test.js`: consolidate the repeated `beforeAll`, `beforeEach`, and `afterAll` blocks into a single helper or top-level describe. Replace each repeated hook block with the helper call so all suites share the same `queryEngine` and `testUsers` setup. Keep the dataset bootstrapping (`MockQueryData.getAllTestDocuments()` and `.getEdgeCaseDocuments()`) in one place.
-- `tests/data/MockQueryData.js`: no logic changes expected, but any helper you add should continue to call the existing `MockQueryData` methods so data loading remains centralised.
+## Validation operator suite bootstrapping - ✅ COMPLETED
 
-**Search terms to locate affected test cases:**
+**Refactoring completed on 2026-02-05:**
 
-- Repeated hook blocks: `rg -n "beforeAll\\(|beforeEach\\(|afterAll\\(" tests/unit/QueryEngine/QueryEngine.test.js`
-- Data bootstrap: `rg -n "MockQueryData\\.get" tests/unit/QueryEngine/QueryEngine.test.js`
-
-**Agent to use for the affected test cases:**
-
-- Use the **Test Review Agent** after the refactor, because this is a structural change to the test file and must keep the same coverage and hook semantics.
-
-## Validation operator suite bootstrapping
-
-- Every validation operator file repeats the same global `testEnv` variable with `beforeAll`/`afterAll` to call `setupValidationTestEnvironment` and `cleanupValidationTests`; examples in [tests/unit/validation/gt-operator.test.js](tests/unit/validation/gt-operator.test.js#L24-L31) and [tests/unit/validation/addtoset-operator.test.js](tests/unit/validation/addtoset-operator.test.js#L24-L31).
-- Recommendation: add a `describeValidationOperatorSuite(description, callback)` helper that supplies the prepared `testEnv`, letting each operator file focus on scenarios while sharing lifecycle management.
-
-**Affected code to refactor (exact locations to change):**
-
-- `tests/helpers/validation-test-helpers.js`: add a `describeValidationOperatorSuite(description, callback)` helper that wraps `describe`, and internally sets up `testEnv` via `beforeAll` and cleans up via `afterAll`. The callback should receive `testEnv` so test files can destructure it without repeating setup code.
-- `tests/unit/validation/*.test.js`: replace the top-level `let testEnv; beforeAll(...); afterAll(...)` blocks with the shared helper. Affected files include `gt-operator.test.js`, `lt-operator.test.js`, `eq-operator.test.js`, `and-operator.test.js`, `or-operator.test.js`, `combined-logical-operators.test.js`, and the update operator suites (`set-operator`, `inc-operator`, `addtoset-operator`, `push-operator`, `pull-operator`, `min-operator`, `max-operator`, `mul-operator`, `unset-operator`). Keep any per-suite data seeding inside the callback.
-
-**Search terms to locate affected test cases:**
-
-- Shared lifecycle: `rg -n "setupValidationTestEnvironment|cleanupValidationTests" tests/unit/validation`
-- Global test env variable: `rg -n "let testEnv" tests/unit/validation`
-- Operator suite files: `rg -n "Operator Tests" tests/unit/validation`
-
-**Agent to use for the affected test cases:**
-
-- Use the **Test Review Agent** once the helper is adopted across operator suites, because this refactor touches many tests and needs a lint/structure review.
+- Added `describeValidationOperatorSuite(description, callback)` helper to `tests/helpers/validation-test-helpers.js`
+- Helper wraps `describe` and handles `beforeAll`/`afterAll` setup/cleanup automatically
+- Provides `getTestEnv()` callback function for accessing test environment in tests
+- Refactored all 15 validation operator test files to use the new helper:
+  - gt-operator.test.js
+  - lt-operator.test.js
+  - eq-operator.test.js
+  - and-operator.test.js
+  - or-operator.test.js
+  - combined-logical-operators.test.js
+  - set-operator.test.js
+  - inc-operator.test.js
+  - addtoset-operator.test.js
+  - push-operator.test.js
+  - pull-operator.test.js
+  - min-operator.test.js
+  - max-operator.test.js
+  - mul-operator.test.js
+  - unset-operator.test.js
+- Eliminated ~75 lines of duplicated setup/cleanup code
+- All 714 tests pass ✅
+- Zero lint errors/warnings ✅

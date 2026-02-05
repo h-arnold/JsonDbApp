@@ -208,6 +208,8 @@ describe('MasterIndex Persistence', () => {
 
 ### Test with Helper Functions
 
+**Database Test Helpers Example:**
+
 ```javascript
 import { describe, it, expect } from 'vitest';
 import {
@@ -226,6 +228,32 @@ describe('Database Collection Management', () => {
 
     expect(collection.name).toBe(name);
     expect(database.listCollections()).toContain(name);
+  });
+});
+```
+
+**Collection Test Helpers Example:**
+
+```javascript
+import { describe, it, expect } from 'vitest';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees,
+  assertAcknowledgedWrite
+} from '../../helpers/collection-test-helpers.js';
+
+describe('Collection Delete Operations', () => {
+  it('should delete a document by ID', () => {
+    // Arrange
+    const { collection } = createIsolatedTestCollection('deleteTest');
+    const { aliceId } = seedStandardEmployees(collection);
+
+    // Act
+    const result = collection.deleteOne({ _id: aliceId });
+
+    // Assert
+    assertAcknowledgedWrite(result, { deletedCount: 1 });
+    expect(collection.findOne({ _id: aliceId })).toBeNull();
   });
 });
 ```
@@ -310,26 +338,160 @@ Test helpers provide reusable setup and cleanup utilities:
 
 ([tests/helpers/database-test-helpers.js](../../tests/helpers/database-test-helpers.js))
 
-- `setupInitialisedDatabase(config)`: Creates isolated Database instance
+- `cleanupDatabaseTests()`: Removes Drive files and ScriptProperties keys created during Database tests
+- `createBackupIndexFile(rootFolderId, backupData, fileName)`: Creates a Drive backup file for recovery scenarios
+- `createDatabaseTestConfig(overrides)`: Builds isolated configuration objects for Database tests
+- `expectCollectionPersisted(databaseContext, collectionName, expectedMetadata)`: Verifies that a collection has been persisted to the MasterIndex with expected metadata (fileId, documentCount). Automatically registers the file for cleanup and instantiates MasterIndex for assertions
 - `generateUniqueName(prefix)`: Generates unique names for artefacts
 - `registerDatabaseFile(fileId)`: Tracks files for cleanup
+- `registerMasterIndexKey(masterIndexKey)`: Registers ScriptProperties keys for cleanup
+- `setupDatabaseTestEnvironment(overrides)`: Constructs Database instances with isolated storage
+- `setupInitialisedDatabase(overrides)`: Creates Database instances that already executed createDatabase() and initialise()
 
 ### Collection Helpers
 
 ([tests/helpers/collection-test-helpers.js](../../tests/helpers/collection-test-helpers.js))
 
-- `createTestCollection(database, name, options)`: Creates and configures test collection
-- `seedCollectionData(collection, documents)`: Pre-populates collection
+- `assertAcknowledgedWrite(result, expectedCounts)`: Validates MongoDB-style write results with optional count assertions (matchedCount, modifiedCount, deletedCount, insertedId)
+- `createIsolatedTestCollection(collectionName)`: Builds fresh environment and returns env, collection, and file ID
+- `createMasterIndexKey()`: Creates unique master index key with auto-cleanup
+- `createTestCollection(env, collectionName, options)`: Creates Collection instance with registration
+- `createTestCollectionFile(folderId, collectionName)`: Creates collection file
+- `createTestFileWithContent(folderId, fileName, content)`: Creates file with custom content
+- `createTestFolder()`: Creates test folder in mock Drive with auto-cleanup
+- `registerAndCreateCollection(env, collectionName, fileId, documentCount)`: Registers metadata and creates Collection
+- `seedStandardEmployees(collection)`: Seeds collection with standard employee test data (Alice, Bob, Charlie) and returns object containing insertedId values
+- `setupCollectionTestEnvironment()`: Complete environment setup (folder, master index, file service, database)
+
+### DocumentOperations Helpers
+
+([tests/helpers/document-operations-test-helpers.js](../../tests/helpers/document-operations-test-helpers.js))
+
+- `createDocumentOperationsContext()`: Creates complete test context with env, docOps, and reload helper (replaces beforeEach setup)
+- `setupTestEnvironment()`: Sets up complete test environment for DocumentOperations tests (returns env with folderId, fileId, collection, logger)
+- `resetCollection(collection)`: Resets a collection to initial empty state
+- `createTestFolder()`: Creates a test folder in mock Drive with auto-cleanup
+- `createTestCollectionFile(folderId, collectionName)`: Creates a test collection file in the specified folder
+- `assertAcknowledgedResult(result, expectedCounts)`: Asserts that a DocumentOperations result is acknowledged and optionally checks modifiedCount/deletedCount
+- `cleanupTestResources()`: Cleanup function automatically registered with afterEach
+
+**Usage Pattern:**
+
+The `createDocumentOperationsContext()` helper simplifies test setup by providing a complete context in one call:
+
+```javascript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createDocumentOperationsContext } from '../../helpers/document-operations-test-helpers.js';
+
+describe('DocumentOperations Tests', () => {
+  let docOps, reload;
+
+  beforeEach(() => {
+    ({ docOps, reload } = createDocumentOperationsContext());
+  });
+
+  it('should insert and persist document', () => {
+    // Arrange
+    const testDoc = { name: 'Test User', email: 'test@example.com' };
+
+    // Act
+    const result = docOps.insertDocument(testDoc);
+
+    // Assert
+    expect(result._id).toBeDefined();
+    expect(result.name).toBe(testDoc.name);
+
+    // Verify persistence
+    const documents = reload();
+    const savedDoc = documents[result._id];
+    expect(savedDoc).toBeDefined();
+    expect(savedDoc.name).toBe(testDoc.name);
+  });
+});
+```
+
+The `reload()` helper function (returned by `createDocumentOperationsContext()`) reloads collection data from disk and returns the current documents object, making it easy to verify persistence.
+
+### Validation Helpers
+
+([tests/helpers/validation-test-helpers.js](../../tests/helpers/validation-test-helpers.js))
+
+The `describeValidationOperatorSuite()` helper simplifies validation test setup by providing automatic environment setup and cleanup:
+
+```javascript
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
+
+describeValidationOperatorSuite('$eq Equality Operator Tests', (getTestEnv) => {
+  describe('Basic equality matching', () => {
+    it('should match string values exactly', () => {
+      // Arrange
+      const testEnv = getTestEnv();
+      const collection = testEnv.collections.persons;
+
+      // Act
+      const results = collection.find({ 'name.first': { $eq: 'Anna' } });
+
+      // Assert
+      expect(results).toHaveLength(1);
+      expect(results[0]._id).toBe('person1');
+    });
+  });
+});
+```
+
+The `getTestEnv()` helper function (provided by `describeValidationOperatorSuite()`) retrieves the test environment with pre-populated collections and ValidationMockData, making it easy to test query and update operators.
+
+### Database Helpers
+
+([tests/helpers/database-test-helpers.js](../../tests/helpers/database-test-helpers.js))
+
+The `expectCollectionPersisted()` helper verifies that collections are properly persisted to the MasterIndex:
+
+```javascript
+import { describe, it, expect } from 'vitest';
+import {
+  setupInitialisedDatabase,
+  expectCollectionPersisted
+} from '../../helpers/database-test-helpers.js';
+
+describe('Database Collection Management', () => {
+  it('should persist collection to master index', () => {
+    // Arrange
+    const { database, ...databaseContext } = setupInitialisedDatabase();
+    const collectionName = 'users';
+
+    // Act
+    const collection = database.createCollection(collectionName);
+
+    // Assert
+    expectCollectionPersisted(databaseContext, collectionName, {
+      fileId: collection.driveFileId,
+      documentCount: 0
+    });
+  });
+});
+```
+
+The `expectCollectionPersisted()` helper automatically registers the file for cleanup, instantiates a fresh MasterIndex, and verifies all metadata properties.
 
 ### MasterIndex Helpers
 
 ([tests/helpers/master-index-test-helpers.js](../../tests/helpers/master-index-test-helpers.js))
 
-- `createMasterIndexKey()`: Generates and registers a unique ScriptProperties key for tests
-- `registerMasterIndexKey(key)`: Adds an existing key to the tracked cleanup set
-- `createTestMasterIndex(config)`: Builds an isolated MasterIndex with automatic key tracking; accepts overrides such as `modificationHistoryLimit` so history trimming can be exercised deterministically
-- `seedMasterIndex(key, data)`: Serialises and stores master index payloads for fixtures; pair with CollectionMetadata instances when validating the metadata normaliser
 - `cleanupMasterIndexTests()`: Deletes all registered ScriptProperties keys after each test
+- `createMasterIndexKey()`: Generates and registers a unique ScriptProperties key for tests
+- `createTestMasterIndex(config)`: Builds an isolated MasterIndex with automatic key tracking; accepts overrides such as `modificationHistoryLimit` so history trimming can be exercised deterministically
+- `registerMasterIndexKey(key)`: Adds an existing key to the tracked cleanup set
+- `seedMasterIndex(key, data)`: Serialises and stores master index payloads for fixtures; pair with CollectionMetadata instances when validating the metadata normaliser
+
+### Validation Helpers
+
+([tests/helpers/validation-test-helpers.js](../../tests/helpers/validation-test-helpers.js))
+
+- `cleanupValidationTests(env)`: Cleans up all validation test resources (files, folders, ScriptProperties)
+- `describeValidationOperatorSuite(description, callback)`: Creates a complete validation test suite with automatic setup/cleanup. Provides `getTestEnv()` function to access the test environment (database, collections, mock data)
+- `setupValidationTestEnvironment()`: Sets up a complete validation test environment with pre-populated collections and mock data
 
 When writing MasterIndex suites, prefer the public API so the internal helpers (MasterIndexMetadataNormaliser and MasterIndexHistoryManager) are exercised end to end. This ensures metadata cloning, timestamp coercion, and modification history capping mirror production behaviour. For example:
 

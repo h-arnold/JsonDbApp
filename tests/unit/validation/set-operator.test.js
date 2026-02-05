@@ -9,26 +9,15 @@
  * - Edge cases (_id field, undefined vs null, empty string vs null)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$set Field Update Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$set Field Update Operator Tests', (getTestEnv) => {
   describe('Basic field setting - overwrite existing values', () => {
     it('should overwrite existing string values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -46,6 +35,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should overwrite existing numeric values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -60,6 +51,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should overwrite existing boolean values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -77,6 +70,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should overwrite existing array values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const newTags = ['updated', 'test', 'values'];
 
@@ -94,6 +89,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should overwrite existing object values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const newContact = { email: 'new.email@example.com', phones: ['999-111-2222'] };
 
@@ -110,6 +107,8 @@ describe('$set Field Update Operator Tests', () => {
   describe('Basic field setting - create new fields', () => {
     it('should create new top-level fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -127,6 +126,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should set nested fields using dot notation', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -144,6 +145,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should set deeply nested fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -163,6 +166,8 @@ describe('$set Field Update Operator Tests', () => {
   describe('Type changes', () => {
     it('should change string field to number', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
       collection.updateOne({ _id: 'order1' }, { $set: { stringField: 'text123' } });
 
@@ -178,6 +183,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should change number field to array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
       const newArray = [1, 2, 3, 'mixed', true];
 
@@ -193,6 +200,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should change object field to primitive', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
 
       // Act
@@ -207,6 +216,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should change null field to non-null value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -226,6 +237,8 @@ describe('$set Field Update Operator Tests', () => {
   describe('Object creation', () => {
     it('should create nested object structure via dot notation', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -248,6 +261,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should perform partial object updates', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -266,6 +281,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should handle mixed existing and new nested fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -292,6 +309,8 @@ describe('$set Field Update Operator Tests', () => {
   describe('Edge cases', () => {
     it('should not allow changing the _id field via $set', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person1' });
       expect(original).not.toBe(null);
@@ -314,6 +333,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should handle undefined vs null assignment', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -332,6 +353,8 @@ describe('$set Field Update Operator Tests', () => {
 
     it('should distinguish empty string from null assignment', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act

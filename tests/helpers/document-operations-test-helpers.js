@@ -4,7 +4,7 @@
  * Provides utilities for setting up and tearing down DocumentOperations tests.
  */
 
-import { afterEach } from 'vitest';
+import { afterEach, expect } from 'vitest';
 
 const testResources = {
   fileIds: new Set(),
@@ -182,6 +182,47 @@ export const resetCollection = (collection) => {
   };
   collection._isDirty = true;
   collection._saveData();
+};
+
+/**
+ * Creates a complete DocumentOperations test context with environment and helpers
+ * @returns {object} Context with env, docOps, and reload helper
+ */
+export const createDocumentOperationsContext = () => {
+  const env = setupTestEnvironment();
+  resetCollection(env.collection);
+  const docOps = new DocumentOperations(env.collection);
+
+  /**
+   * Reloads collection data from disk and returns documents
+   * @returns {object} Current documents after reload
+   */
+  const reload = () => {
+    env.collection._loadData();
+    return env.collection._documents;
+  };
+
+  return { env, docOps, reload };
+};
+
+/**
+ * Asserts that a DocumentOperations result is acknowledged and optionally checks counts
+ * @param {object} result - The result object to check
+ * @param {object} [expectedCounts] - Optional expected counts
+ * @param {number} [expectedCounts.modifiedCount] - Expected modified count
+ * @param {number} [expectedCounts.deletedCount] - Expected deleted count
+ */
+export const assertAcknowledgedResult = (result, expectedCounts = {}) => {
+  expect(result).toBeDefined();
+  expect(result.acknowledged).toBe(true);
+
+  if (expectedCounts.modifiedCount !== undefined) {
+    expect(result.modifiedCount).toBe(expectedCounts.modifiedCount);
+  }
+
+  if (expectedCounts.deletedCount !== undefined) {
+    expect(result.deletedCount).toBe(expectedCounts.deletedCount);
+  }
 };
 
 /**

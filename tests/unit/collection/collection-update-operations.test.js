@@ -14,7 +14,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createIsolatedTestCollection } from '../../helpers/collection-test-helpers.js';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees,
+  assertAcknowledgedWrite
+} from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Update Operations', () => {
   describe('updateOne by ID', () => {
@@ -34,9 +38,7 @@ describe('Collection Update Operations', () => {
       const updateResult = collection.updateOne({ _id: docId }, updateDoc);
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
     });
 
     it('updates a document using $set operator', () => {
@@ -52,9 +54,7 @@ describe('Collection Update Operations', () => {
       const updateResult = collection.updateOne({ _id: docId }, { $set: { name: 'Updated' } });
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify document was updated
       const updatedDoc = collection.findOne({ _id: docId });
@@ -76,9 +76,7 @@ describe('Collection Update Operations', () => {
       const updateResult = collection.updateOne({ name: 'Test' }, { name: 'Updated', value: 200 });
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify update worked
       const updatedDoc = collection.findOne({ name: 'Updated' });
@@ -89,10 +87,7 @@ describe('Collection Update Operations', () => {
     it('updates first matching document by single field filter', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('updateFieldFilterTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', salary: 75000 });
-      collection.insertOne({ name: 'Bob', department: 'Marketing', salary: 65000 });
-      collection.insertOne({ name: 'Charlie', department: 'Engineering', salary: 80000 });
+      seedStandardEmployees(collection);
 
       // Act
       const updateResult = collection.updateOne(
@@ -101,9 +96,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify only first matching document was updated
       const engineeringDocs = collection.find({ department: 'Engineering' });
@@ -118,21 +111,25 @@ describe('Collection Update Operations', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('updateMultiFieldFilterTestCollection');
 
+      // Seed with extended properties beyond standard employees
       collection.insertOne({
         name: 'Alice',
         department: 'Engineering',
+        salary: 75000,
         level: 'Senior',
         active: true
       });
       collection.insertOne({
         name: 'Bob',
-        department: 'Engineering',
+        department: 'Marketing',
+        salary: 65000,
         level: 'Junior',
         active: true
       });
       collection.insertOne({
         name: 'Charlie',
         department: 'Engineering',
+        salary: 80000,
         level: 'Senior',
         active: false
       });
@@ -144,8 +141,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify correct document was updated
       const promotedDoc = collection.findOne({ level: 'Principal' });
@@ -157,6 +153,7 @@ describe('Collection Update Operations', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('updateNestedFieldFilterTestCollection');
 
+      // Seed with nested profile data
       collection.insertOne({
         name: 'Alice',
         profile: { email: 'alice@company.com', team: 'Backend' },
@@ -179,8 +176,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify correct document was updated
       const updatedDoc = collection.findOne({ 'profile.email': 'alice.lead@company.com' });
@@ -192,6 +188,7 @@ describe('Collection Update Operations', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('updateComparisonFilterTestCollection');
 
+      // Seed with score and bonus data
       collection.insertOne({ name: 'Alice', score: 85, bonus: 1000 });
       collection.insertOne({ name: 'Bob', score: 92, bonus: 1500 });
       collection.insertOne({ name: 'Charlie', score: 78, bonus: 800 });
@@ -203,8 +200,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify correct document was updated
       const updatedDoc = collection.findOne({ bonus: 2000 });
@@ -215,9 +211,7 @@ describe('Collection Update Operations', () => {
     it('returns zero matches when filter matches no documents', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('updateNoMatchTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering' });
-      collection.insertOne({ name: 'Bob', department: 'Marketing' });
+      seedStandardEmployees(collection);
 
       // Act
       const updateResult = collection.updateOne(
@@ -226,9 +220,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(0);
-      expect(updateResult.modifiedCount).toBe(0);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 0, modifiedCount: 0 });
     });
   });
 
@@ -256,9 +248,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(1);
-      expect(updateResult.modifiedCount).toBe(1);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify all updates were applied
       const updatedDoc = collection.findOne({ _id: docId });
@@ -287,9 +277,7 @@ describe('Collection Update Operations', () => {
       );
 
       // Assert
-      expect(updateResult.matchedCount).toBe(3);
-      expect(updateResult.modifiedCount).toBe(3);
-      expect(updateResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(updateResult, { matchedCount: 3, modifiedCount: 3 });
     });
   });
 

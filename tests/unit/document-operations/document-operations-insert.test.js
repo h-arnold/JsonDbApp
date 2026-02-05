@@ -3,18 +3,13 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  setupTestEnvironment,
-  resetCollection
-} from '../../helpers/document-operations-test-helpers.js';
+import { createDocumentOperationsContext } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Insert Operations', () => {
-  let env, docOps;
+  let docOps, reload;
 
   beforeEach(() => {
-    env = setupTestEnvironment();
-    resetCollection(env.collection);
-    docOps = new DocumentOperations(env.collection);
+    ({ docOps, reload } = createDocumentOperationsContext());
   });
 
   it('should insert document with automatic ID generation', () => {
@@ -28,8 +23,8 @@ describe('DocumentOperations Insert Operations', () => {
     expect(result.name).toBe(testDoc.name);
     expect(result.email).toBe(testDoc.email);
 
-    env.collection._loadData();
-    const savedDoc = env.collection._documents[result._id];
+    const documents = reload();
+    const savedDoc = documents[result._id];
     expect(savedDoc).toBeDefined();
     expect(savedDoc.name).toBe(testDoc.name);
   });
@@ -42,8 +37,8 @@ describe('DocumentOperations Insert Operations', () => {
     expect(result._id).toBe(customId);
     expect(result.name).toBe(testDoc.name);
 
-    env.collection._loadData();
-    const savedDoc = env.collection._documents[customId];
+    const documents = reload();
+    const savedDoc = documents[customId];
     expect(savedDoc).toBeDefined();
   });
 

@@ -8,7 +8,7 @@
 
 import { describe, it, expect } from 'vitest';
 import {
-  registerDatabaseFile,
+  expectCollectionPersisted,
   setupInitialisedDatabase,
   generateUniqueName
 } from '../../helpers/database-test-helpers.js';
@@ -34,14 +34,13 @@ describe('Database collection management', () => {
 
     // Act - Create the collection
     const collection = database.createCollection(collectionName);
-    registerDatabaseFile(collection.driveFileId);
 
     // Assert - Collection metadata should be persisted and listable
     expect(collection.name).toBe(collectionName);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    const collections = masterIndex.getCollections();
-    expect(Object.keys(collections)).toContain(collectionName);
-    expect(collections[collectionName].fileId).toBe(collection.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, collectionName, {
+      fileId: collection.driveFileId,
+      documentCount: 0
+    });
     expect(database.listCollections()).toContain(collectionName);
   });
 
@@ -50,7 +49,10 @@ describe('Database collection management', () => {
     const { database, masterIndexKey } = setupInitialisedDatabase();
     const collectionName = generateUniqueName('cachedCollection');
     const createdCollection = database.createCollection(collectionName);
-    registerDatabaseFile(createdCollection.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, collectionName, {
+      fileId: createdCollection.driveFileId,
+      documentCount: 0
+    });
     database.collections.delete(collectionName);
 
     // Act - Reload the collection via Database.collection()
@@ -59,8 +61,6 @@ describe('Database collection management', () => {
     // Assert - Reloaded collection should match persisted metadata
     expect(reloadedCollection.name).toBe(collectionName);
     expect(reloadedCollection.driveFileId).toBe(createdCollection.driveFileId);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    expect(masterIndex.getCollections()[collectionName].fileId).toBe(createdCollection.driveFileId);
   });
 
   it('should access existing collections via getCollection when not cached in memory', () => {
@@ -68,7 +68,10 @@ describe('Database collection management', () => {
     const { database, masterIndexKey } = setupInitialisedDatabase();
     const collectionName = generateUniqueName('getCollectionReload');
     const createdCollection = database.createCollection(collectionName);
-    registerDatabaseFile(createdCollection.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, collectionName, {
+      fileId: createdCollection.driveFileId,
+      documentCount: 0
+    });
     database.collections.delete(collectionName);
 
     // Act - Reload the collection through Database.getCollection()
@@ -77,8 +80,6 @@ describe('Database collection management', () => {
     // Assert - Reloaded collection should match persisted metadata
     expect(reloadedCollection.name).toBe(collectionName);
     expect(reloadedCollection.driveFileId).toBe(createdCollection.driveFileId);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    expect(masterIndex.getCollection(collectionName).fileId).toBe(createdCollection.driveFileId);
   });
 
   it('should auto-create collections when autoCreateCollections is enabled', () => {
@@ -88,12 +89,13 @@ describe('Database collection management', () => {
 
     // Act - Access a non-existent collection, triggering auto creation
     const autoCreated = database.collection(targetName);
-    registerDatabaseFile(autoCreated.driveFileId);
 
     // Assert - Collection should exist in memory and MasterIndex
     expect(autoCreated.name).toBe(targetName);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    expect(Object.keys(masterIndex.getCollections())).toContain(targetName);
+    expectCollectionPersisted({ masterIndexKey }, targetName, {
+      fileId: autoCreated.driveFileId,
+      documentCount: 0
+    });
   });
 
   it('should auto-create collections via getCollection when autoCreateCollections is enabled', () => {
@@ -103,12 +105,13 @@ describe('Database collection management', () => {
 
     // Act - Access a missing collection through getCollection()
     const autoCreated = database.getCollection(targetName);
-    registerDatabaseFile(autoCreated.driveFileId);
 
     // Assert - Collection should be created and registered in the MasterIndex
     expect(autoCreated.name).toBe(targetName);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    expect(Object.keys(masterIndex.getCollections())).toContain(targetName);
+    expectCollectionPersisted({ masterIndexKey }, targetName, {
+      fileId: autoCreated.driveFileId,
+      documentCount: 0
+    });
   });
 
   it('should throw when accessing a missing collection with auto-create disabled', () => {
@@ -172,13 +175,19 @@ describe('Database collection management', () => {
 
   it('should list all collections that have been created', () => {
     // Arrange - Create two distinct collections
-    const { database } = setupInitialisedDatabase();
+    const { database, masterIndexKey } = setupInitialisedDatabase();
     const primaryName = generateUniqueName('primaryList');
     const secondaryName = generateUniqueName('secondaryList');
     const first = database.createCollection(primaryName);
     const second = database.createCollection(secondaryName);
-    registerDatabaseFile(first.driveFileId);
-    registerDatabaseFile(second.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, primaryName, {
+      fileId: first.driveFileId,
+      documentCount: 0
+    });
+    expectCollectionPersisted({ masterIndexKey }, secondaryName, {
+      fileId: second.driveFileId,
+      documentCount: 0
+    });
 
     // Act - Retrieve the collection list
     const collections = database.listCollections();
@@ -193,7 +202,10 @@ describe('Database collection management', () => {
     const { database, masterIndexKey } = setupInitialisedDatabase();
     const droppableName = generateUniqueName('droppable');
     const collection = database.createCollection(droppableName);
-    registerDatabaseFile(collection.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, droppableName, {
+      fileId: collection.driveFileId,
+      documentCount: 0
+    });
 
     // Act - Drop the collection
     const dropResult = database.dropCollection(droppableName);
@@ -240,16 +252,15 @@ describe('Database collection management', () => {
 
     // Act - Create the collection with an invalid character
     const sanitisedCollection = database.createCollection(originalName);
-    registerDatabaseFile(sanitisedCollection.driveFileId);
     const reaccessedCollection = database.collection(originalName);
 
     // Assert - Returned and persisted names should be sanitised
     expect(sanitisedCollection.name).toBe(expectedName);
     expect(reaccessedCollection.name).toBe(expectedName);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    const collections = masterIndex.getCollections();
-    expect(Object.keys(collections)).toContain(expectedName);
-    expect(collections[expectedName].fileId).toBe(sanitisedCollection.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, expectedName, {
+      fileId: sanitisedCollection.driveFileId,
+      documentCount: 0
+    });
   });
 
   it('should refuse reserved names even after sanitisation', () => {
@@ -265,7 +276,7 @@ describe('Database collection management', () => {
 
   it('should prevent duplicates when sanitised names collide', () => {
     // Arrange - Allow sanitisation so different inputs collapse to the same name
-    const { database } = setupInitialisedDatabase({
+    const { database, masterIndexKey } = setupInitialisedDatabase({
       stripDisallowedCollectionNameCharacters: true
     });
     const suffix = createUniqueSuffix();
@@ -274,7 +285,10 @@ describe('Database collection management', () => {
 
     // Act - Create the first collection and attempt a colliding second creation
     const firstCollection = database.createCollection(firstInput);
-    registerDatabaseFile(firstCollection.driveFileId);
+    expectCollectionPersisted({ masterIndexKey }, firstCollection.name, {
+      fileId: firstCollection.driveFileId,
+      documentCount: 0
+    });
 
     // Assert - Second creation should fail due to sanitised name collision
     expect(() => database.createCollection(secondInput)).toThrow(OperationError);

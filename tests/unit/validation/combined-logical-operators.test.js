@@ -11,26 +11,15 @@
  * - Error handling for invalid structures
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('Combined Logical Operations Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('Combined Logical Operations Tests', (getTestEnv) => {
   describe('$and containing $or clauses', () => {
     it('should handle $and containing $or clauses', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -57,6 +46,8 @@ describe('Combined Logical Operations Tests', () => {
   describe('$or containing $and clauses', () => {
     it('should handle $or containing $and clauses', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -79,6 +70,8 @@ describe('Combined Logical Operations Tests', () => {
   describe('Complex nested logical operations', () => {
     it('should handle complex nested logical operations', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -109,6 +102,8 @@ describe('Combined Logical Operations Tests', () => {
   describe('Implicit AND with explicit operators', () => {
     it('should handle implicit AND with explicit $and', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -130,6 +125,8 @@ describe('Combined Logical Operations Tests', () => {
 
     it('should handle implicit AND with explicit $or', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -152,6 +149,8 @@ describe('Combined Logical Operations Tests', () => {
   describe('Multiple fields with multiple logical operators', () => {
     it('should handle multiple fields with multiple logical operators', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -175,6 +174,8 @@ describe('Combined Logical Operations Tests', () => {
   describe('Error handling', () => {
     it('should throw error for invalid $and structure', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -185,6 +186,8 @@ describe('Combined Logical Operations Tests', () => {
 
     it('should throw error for invalid $or structure', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert

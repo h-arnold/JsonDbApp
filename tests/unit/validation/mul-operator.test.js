@@ -8,13 +8,8 @@
  * - Type validation (non-numeric fields, non-numeric multipliers)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
-
-let testEnv;
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
 /**
  * Determines whether two numeric values are within a tolerance range
@@ -28,18 +23,12 @@ function areNumbersClose(a, b, tolerance = 0.01) {
   return Math.abs(a - b) <= tolerance;
 }
 
-describe('$mul Multiply Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$mul Multiply Operator Tests', (getTestEnv) => {
   describe('Basic multiplication', () => {
     it('should multiply by positive integer', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.age;
@@ -57,6 +46,8 @@ describe('$mul Multiply Operator Tests', () => {
 
     it('should multiply by positive decimal', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.score;
@@ -74,6 +65,8 @@ describe('$mul Multiply Operator Tests', () => {
 
     it('should multiply by negative value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person4' });
       const original = before.age;
@@ -91,6 +84,8 @@ describe('$mul Multiply Operator Tests', () => {
 
     it('should set field to zero when multiplying by zero', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person3' });
       const original = before.score;
@@ -108,6 +103,8 @@ describe('$mul Multiply Operator Tests', () => {
 
     it('should multiply by fractional values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person6' });
       const original = before.balance;
@@ -127,6 +124,8 @@ describe('$mul Multiply Operator Tests', () => {
   describe('Field creation', () => {
     it('should create non-existent field as 0 when multiplied', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.nonExistentField;
@@ -144,6 +143,8 @@ describe('$mul Multiply Operator Tests', () => {
 
     it('should create nested non-existent field as 0', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person2' });
       const original = before.stats && before.stats.multipliedField;
@@ -167,6 +168,8 @@ describe('$mul Multiply Operator Tests', () => {
   describe('Type validation', () => {
     it('should error when multiplying non-numeric field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -177,6 +180,8 @@ describe('$mul Multiply Operator Tests', () => {
 
     it('should error with non-numeric multiplier', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert

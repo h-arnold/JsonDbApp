@@ -10,26 +10,15 @@
  * - No-op & count behaviour
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$pull Array Remove Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$pull Array Remove Operator Tests', (getTestEnv) => {
   describe('Basic value removal', () => {
     it('should remove a specific value from an array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -46,6 +35,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should remove all occurrences of a value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
 
       // Act
@@ -66,6 +57,8 @@ describe('$pull Array Remove Operator Tests', () => {
   describe('Edge cases', () => {
     it('should handle pulling from a non-array field gracefully', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -80,6 +73,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should handle pulling a non-existent value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person1' });
       const originalTags = original.preferences.tags;
@@ -98,6 +93,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should handle pulling from an empty array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -116,6 +113,8 @@ describe('$pull Array Remove Operator Tests', () => {
   describe('Operator predicates', () => {
     it('should remove numeric values matching operator object', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       collection.updateOne({ _id: 'person4' }, { $set: { numbers: [10, 60, 95] } });
 
@@ -133,6 +132,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should remove objects matching mixed field and operator predicates', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
 
       // Act
@@ -153,6 +154,8 @@ describe('$pull Array Remove Operator Tests', () => {
   describe('Exact object removal', () => {
     it('should remove exact matching object in array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const before = collection.findOne({ _id: 'inv1' });
       const toRemove = { type: 'low-stock', product: 'prod3', threshold: 10 };
@@ -172,6 +175,8 @@ describe('$pull Array Remove Operator Tests', () => {
   describe('Operator object edge cases', () => {
     it('should not match operator object against object element directly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const before = collection.findOne({ _id: 'inv3' });
       const beforeAlerts = before.alerts.slice();
@@ -187,6 +192,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should not match when predicate references missing field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const before = collection.findOne({ _id: 'inv1' });
 
@@ -204,6 +211,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should match null equality correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
       collection.updateOne({ _id: 'order2' }, { $push: { tags: null } });
 
@@ -218,6 +227,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should compare dates by timestamp for operator removal', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       collection.updateOne(
         { _id: 'inv2' },
@@ -239,6 +250,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should remove object using partial predicate', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const before = collection.findOne({ _id: 'inv3' });
       const originalLen = before.alerts.length;
@@ -261,6 +274,8 @@ describe('$pull Array Remove Operator Tests', () => {
   describe('No-op & count behaviour', () => {
     it('should report no modification when pulling from non-existent array field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.orders;
       const before = collection.findOne({ _id: 'order1' });
 
@@ -278,6 +293,8 @@ describe('$pull Array Remove Operator Tests', () => {
 
     it('should report no modification when operator predicate matches nothing', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       collection.updateOne({ _id: 'person4' }, { $set: { numbers: [10, 20, 30] } });
 
