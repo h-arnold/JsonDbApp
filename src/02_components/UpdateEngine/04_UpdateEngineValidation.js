@@ -20,7 +20,9 @@ class UpdateEngineValidation {
    * @param {Object} updateOps - Update operations to validate
    */
   validateApplyOperatorsInputs(document, updateOps) {
-    if (!document || typeof document !== 'object') {
+    try {
+      Validate.object(document, 'document');
+    } catch {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
         'document',
         document,
@@ -28,7 +30,9 @@ class UpdateEngineValidation {
       );
     }
 
-    if (!updateOps || typeof updateOps !== 'object') {
+    try {
+      Validate.object(updateOps, 'updateOps');
+    } catch {
       throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
         'updateOps',
         updateOps,
@@ -43,7 +47,9 @@ class UpdateEngineValidation {
    * @param {string} operatorName - Operator name for error reporting
    */
   validateOperationsNotEmpty(ops, operatorName) {
-    if (!ops || typeof ops !== 'object' || Object.keys(ops).length === 0) {
+    try {
+      Validate.object(ops, 'operations', false);
+    } catch {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
         'operations',
         ops,
@@ -74,7 +80,9 @@ class UpdateEngineValidation {
    * @param {string} operation - Operation name for error reporting
    */
   validateNumericValue(value, fieldPath, operation) {
-    if (typeof value !== 'number') {
+    try {
+      Validate.number(value, fieldPath);
+    } catch {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
         fieldPath,
         value,
@@ -90,7 +98,9 @@ class UpdateEngineValidation {
    * @param {string} operation - Operation name for error reporting
    */
   validateArrayValue(value, fieldPath, operation) {
-    if (!Array.isArray(value)) {
+    try {
+      Validate.array(value, fieldPath);
+    } catch {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
         fieldPath,
         value,
@@ -106,7 +116,9 @@ class UpdateEngineValidation {
    * @param {string} operation - Operation name for error reporting
    */
   validateCurrentFieldNumeric(value, fieldPath, operation) {
-    if (typeof value !== 'number') {
+    try {
+      Validate.number(value, fieldPath);
+    } catch {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
         fieldPath,
         value,
@@ -123,97 +135,64 @@ class UpdateEngineValidation {
    * @param {string} operation - Operation name for error reporting
    */
   validateComparableValues(currentValue, newValue, fieldPath, operation) {
-    const currentType = typeof currentValue;
-    const newType = typeof newValue;
+    this._validateSameType(currentValue, newValue, fieldPath, operation);
 
-    if (currentType !== newType) {
+    if (typeof currentValue === 'object') {
+      this._validateComparableObjects(currentValue, newValue, fieldPath, operation);
+    }
+  }
+
+  /**
+   * Validate that both values have the same type.
+   * @private
+   * @param {*} currentValue - Current field value
+   * @param {*} newValue - New value to compare
+   * @param {string} fieldPath - Field path for error reporting
+   * @param {string} operation - Operation name for error reporting
+   */
+  _validateSameType(currentValue, newValue, fieldPath, operation) {
+    if (typeof currentValue !== typeof newValue) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
         fieldPath,
         { currentValue, newValue },
         `${operation} operation requires comparable values of the same type`
       );
     }
-
-    if (currentType === 'object') {
-      this._validateComparableObjectValues(currentValue, newValue, fieldPath, operation);
-    }
   }
 
   /**
-   * Validate comparable object values for array/date comparisons.
+   * Validate object types can be compared (both Dates, not plain objects/arrays).
+   * @private
    * @param {*} currentValue - Current value
    * @param {*} newValue - New value
    * @param {string} fieldPath - Field path for error reporting
    * @param {string} operation - Operation name for error reporting
-   * @private
    */
-  _validateComparableObjectValues(currentValue, newValue, fieldPath, operation) {
-    const currentComparableType = this._resolveComparableObjectType(currentValue);
-    const newComparableType = this._resolveComparableObjectType(newValue);
+  _validateComparableObjects(currentValue, newValue, fieldPath, operation) {
+    const bothDates = currentValue instanceof Date && newValue instanceof Date;
 
-    if (this._isPlainComparableType(currentComparableType, newComparableType)) {
+    if (bothDates) {
+      return; // Date-to-Date comparison is allowed
+    }
+
+    // Check for plain objects or arrays (not allowed for comparison)
+    if (this._isPlainObjectOrArray(currentValue) || this._isPlainObjectOrArray(newValue)) {
       throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
         fieldPath,
         { currentValue, newValue },
         `${operation} operation cannot compare objects or arrays`
       );
     }
-
-    if (this._hasMismatchedComparableTypes(currentComparableType, newComparableType)) {
-      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
-        fieldPath,
-        { currentValue, newValue },
-        `${operation} operation cannot compare objects or arrays`
-      );
-    }
   }
 
   /**
-   * Check if either comparable type is plain object/array.
-   * @param {'date'|'plain'|null} currentType - Current comparable type
-   * @param {'date'|'plain'|null} newType - New comparable type
-   * @returns {boolean} True when a plain object or array is involved
+   * Check if value is a plain object or array (not Date, not null).
    * @private
+   * @param {*} value - Value to check
+   * @returns {boolean} True if value is plain object or array
    */
-  _isPlainComparableType(currentType, newType) {
-    return currentType === 'plain' || newType === 'plain';
-  }
-
-  /**
-   * Check for mismatched comparable types.
-   * @param {'date'|'plain'|null} currentType - Current comparable type
-   * @param {'date'|'plain'|null} newType - New comparable type
-   * @returns {boolean} True when both types exist and differ
-   * @private
-   */
-  _hasMismatchedComparableTypes(currentType, newType) {
-    return currentType !== null && newType !== null && currentType !== newType;
-  }
-
-  /**
-   * Identify whether an object value is comparable (Date) or a plain/array object.
-   * @private
-   * @param {*} value - Value to classify
-   * @returns {'date'|'plain'|null} Comparable category or null for nullish values
-   */
-  _resolveComparableObjectType(value) {
-    if (value === null || value === undefined) {
-      return null;
-    }
-
-    if (value instanceof Date) {
-      return 'date';
-    }
-
-    if (Array.isArray(value)) {
-      return 'plain';
-    }
-
-    if (typeof value === 'object') {
-      return 'plain';
-    }
-
-    return null;
+  _isPlainObjectOrArray(value) {
+    return value !== null && (Array.isArray(value) || !(value instanceof Date));
   }
 
   /**

@@ -1,8 +1,6 @@
 /**
  * 02_UpdateEngineArrayOperators.js - Handles array update operators ($push, $pull, $addToSet)
  */
-const ADD_TO_SET_LOG_SAMPLE_SIZE = 5;
-
 /* exported UpdateEngineArrayOperators */
 /**
  * Groups MongoDB-style array update operators for the UpdateEngine facade.
@@ -144,14 +142,10 @@ class UpdateEngineArrayOperators {
   _applyPushEach(document, fieldPath, items) {
     this._validation.validateArrayValue(items, fieldPath, '$push');
 
-    const current = this._fieldPaths.getValue(document, fieldPath);
-    if (current === undefined) {
-      this._fieldPaths.setValue(document, fieldPath, items.slice());
-      return;
+    const current = this._getOrCreateArray(document, fieldPath, '$push', items.slice());
+    if (current !== undefined) {
+      items.forEach((item) => current.push(item));
     }
-
-    this._validation.validateArrayValue(current, fieldPath, '$push');
-    items.forEach((item) => current.push(item));
   }
 
   /**
@@ -162,15 +156,10 @@ class UpdateEngineArrayOperators {
    * @param {*} value - Value to append
    */
   _applyPushSingle(document, fieldPath, value) {
-    const current = this._fieldPaths.getValue(document, fieldPath);
-
-    if (current === undefined) {
-      this._fieldPaths.setValue(document, fieldPath, [value]);
-      return;
+    const current = this._getOrCreateArray(document, fieldPath, '$push', [value]);
+    if (current !== undefined) {
+      current.push(value);
     }
-
-    this._validation.validateArrayValue(current, fieldPath, '$push');
-    current.push(value);
   }
 
   /**
@@ -195,7 +184,9 @@ class UpdateEngineArrayOperators {
   _applyAddToSetEach(document, fieldPath, current, items, comparator) {
     this._validation.validateArrayValue(items, fieldPath, '$addToSet');
 
-    if (current === undefined) {
+    const targetArray = this._getOrCreateArray(document, fieldPath, '$addToSet');
+    if (targetArray === undefined) {
+      // Field was created, build unique values
       const uniqueValues = [];
       items.forEach((item) => {
         const existsInBatch = uniqueValues.some((entry) => comparator(entry, item));
@@ -209,11 +200,10 @@ class UpdateEngineArrayOperators {
         }
       });
       this._fieldPaths.setValue(document, fieldPath, uniqueValues);
-      return;
+    } else {
+      // Field exists, add items one by one
+      items.forEach((item) => this._addUniqueValue(targetArray, fieldPath, comparator, item));
     }
-
-    this._validation.validateArrayValue(current, fieldPath, '$addToSet');
-    items.forEach((item) => this._addUniqueValue(current, fieldPath, comparator, item));
   }
 
   /**
@@ -226,13 +216,10 @@ class UpdateEngineArrayOperators {
    * @param {Function} comparator - Equality comparator
    */
   _applyAddToSetSingle(document, fieldPath, current, value, comparator) {
-    if (current === undefined) {
-      this._fieldPaths.setValue(document, fieldPath, [value]);
-      return;
+    const targetArray = this._getOrCreateArray(document, fieldPath, '$addToSet', [value]);
+    if (targetArray !== undefined) {
+      this._addUniqueValue(targetArray, fieldPath, comparator, value);
     }
-
-    this._validation.validateArrayValue(current, fieldPath, '$addToSet');
-    this._addUniqueValue(current, fieldPath, comparator, value);
   }
 
   /**
@@ -333,28 +320,42 @@ class UpdateEngineArrayOperators {
       return;
     }
 
-    const comparisons = targetArray.map((item, idx) => ({
-      idx,
-      equals: comparator(item, candidate),
-      item
-    }));
-    const exists = comparisons.some((entry) => entry.equals);
-    const snapshot = targetArray.slice(0, ADD_TO_SET_LOG_SAMPLE_SIZE);
+    const exists = targetArray.some((item) => comparator(item, candidate));
 
     this._logger.debug('AddToSet duplicate check', {
       fieldPath,
       exists,
       currentLength: targetArray.length
     });
-    this._logger.debug('AddToSet compare details', { candidate, sample: snapshot, comparisons });
 
     if (exists) {
-      this._logger.debug('AddToSet skipped duplicate', { fieldPath, skipped: candidate });
       return;
     }
 
     targetArray.push(candidate);
-    this._logger.debug('AddToSet appended value', { fieldPath, appended: candidate });
+  }
+
+  /**
+   * Get existing array or create a new one when the field is absent.
+   * @private
+   * @param {Object} document - Target document
+   * @param {string} fieldPath - Field path being updated
+   * @param {string} operation - Operation name for error reporting
+   * @param {Array} defaultValue - Default array to create (optional)
+   * @returns {Array|undefined} Existing array or undefined if field was created
+   */
+  _getOrCreateArray(document, fieldPath, operation, defaultValue = undefined) {
+    const current = this._fieldPaths.getValue(document, fieldPath);
+
+    if (current === undefined) {
+      if (defaultValue !== undefined) {
+        this._fieldPaths.setValue(document, fieldPath, defaultValue);
+      }
+      return undefined;
+    }
+
+    this._validation.validateArrayValue(current, fieldPath, operation);
+    return current;
   }
 }
 

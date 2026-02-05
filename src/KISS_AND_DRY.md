@@ -74,7 +74,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### U1. UpdateEngineValidation comparable-value checks are split across several helpers
+### U1. UpdateEngineValidation comparable-value checks are split across several helpers ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/04_UpdateEngineValidation.js`
 
@@ -91,9 +91,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The refactor is feasible if it preserves the same invalid comparison cases and continues to throw `INVALID_QUERY`. The tests make the error behaviour visible, so any consolidation must keep these checks intact.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Collapsed 5 methods into 3 simpler methods (`_validateSameType`, `_validateComparableObjects`, `_isPlainObjectOrArray`)
+- **Removed:** 40 lines (40% reduction in comparable-value validation logic)
+- **Simplified:** Complexity reduced from 11 to below 7 (ESLint compliant)
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### U2. UpdateEngineArrayOperators `$addToSet` logging is heavy for hot paths
+### U2. UpdateEngineArrayOperators `$addToSet` logging is heavy for hot paths ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/02_UpdateEngineArrayOperators.js`
 
@@ -109,6 +118,15 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/UpdateEngine/UpdateEngine.test.js` (`$addToSet` tests for duplicates and `$each`).
 
 **Conclusion:** Logging simplification is safe from a behavioural perspective. The tests focus on array contents, not log output, so any refactor must preserve duplicate detection semantics but can reduce debug payload construction.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Simplified `_addUniqueValue()` logging, removed array mapping and snapshot generation
+- **Removed:** 13 lines of logging overhead and `ADD_TO_SET_LOG_SAMPLE_SIZE` constant
+- **Improved:** Performance for large arrays (no extra mapping/slicing operations)
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
 
 ---
 
@@ -161,7 +179,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### U3. UpdateEngineValidation reimplements basic Validate checks
+### U3. UpdateEngineValidation reimplements basic Validate checks ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/04_UpdateEngineValidation.js`
 
@@ -178,9 +196,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Consolidation with `Validate` is encouraged even if it changes error types. Tests can be updated to expect more specific error classes (for example `INVALID_ARGUMENT` where appropriate) to support clearer logging and error handling while preserving the same failure conditions.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Replaced manual validation with `Validate` utility methods (object, number, array checks)
+- **Updated:** 5 validation methods now use `Validate` with try/catch error translation
+- **Standardized:** Consistent validation approach across entire codebase
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### U4. UpdateEngineFieldOperators repeat arithmetic/comparison loops
+### U4. UpdateEngineFieldOperators repeat arithmetic/comparison loops ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/01_UpdateEngineFieldOperators.js`
 
@@ -197,9 +224,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is a refactor candidate. Tests focus on arithmetic outputs and error paths, so shared helpers must keep the same defaulting behaviour and validations.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted shared helpers `_applyArithmeticOperator()` and `_applyComparisonOperator()`
+- **Removed:** 64 lines of duplicated loop code (36 for arithmetic, 28 for comparison)
+- **Strategy Pattern:** Uses callback functions (`computeFn`, `shouldUpdateFn`) for operation-specific logic
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
+
 ---
 
-### U5. UpdateEngineArrayOperators repeat `$push`/`$addToSet` flows
+### U5. UpdateEngineArrayOperators repeat `$push`/`$addToSet` flows ✅ **COMPLETED**
 
 **Area:** `src/02_components/UpdateEngine/02_UpdateEngineArrayOperators.js`
 
@@ -215,6 +251,15 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/UpdateEngine/UpdateEngine.test.js` (push, push `$each`, add-to-set, and duplicate handling).
 
 **Conclusion:** The duplication can be reduced safely. Tests require correct array creation, duplicate handling, and immutability of the input document, so shared helpers must preserve these behaviours.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Created `_getOrCreateArray()` helper consolidating array initialization logic
+- **Removed:** 26 lines of duplicated get-or-create patterns across 4 methods
+- **Improved:** Single source of truth for array validation and creation
+- **Results:** All 714 tests pass, no new lint errors
+- **Documentation:** See `REFACTORING_SUMMARY_U1-U5.md` for full details
 
 ---
 
