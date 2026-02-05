@@ -357,6 +357,55 @@ Test helpers provide reusable setup and cleanup utilities:
 - `seedStandardEmployees(collection)`: Seeds collection with standard employee test data (Alice, Bob, Charlie) and returns object containing insertedId values
 - `setupCollectionTestEnvironment()`: Complete environment setup (folder, master index, file service, database)
 
+### DocumentOperations Helpers
+
+([tests/helpers/document-operations-test-helpers.js](../../tests/helpers/document-operations-test-helpers.js))
+
+- `createDocumentOperationsContext()`: Creates complete test context with env, docOps, and reload helper (replaces beforeEach setup)
+- `setupTestEnvironment()`: Sets up complete test environment for DocumentOperations tests (returns env with folderId, fileId, collection, logger)
+- `resetCollection(collection)`: Resets a collection to initial empty state
+- `createTestFolder()`: Creates a test folder in mock Drive with auto-cleanup
+- `createTestCollectionFile(folderId, collectionName)`: Creates a test collection file in the specified folder
+- `assertAcknowledgedResult(result, expectedCounts)`: Asserts that a DocumentOperations result is acknowledged and optionally checks modifiedCount/deletedCount
+- `cleanupTestResources()`: Cleanup function automatically registered with afterEach
+
+**Usage Pattern:**
+
+The `createDocumentOperationsContext()` helper simplifies test setup by providing a complete context in one call:
+
+```javascript
+import { describe, it, expect, beforeEach } from 'vitest';
+import { createDocumentOperationsContext } from '../../helpers/document-operations-test-helpers.js';
+
+describe('DocumentOperations Tests', () => {
+  let docOps, reload;
+
+  beforeEach(() => {
+    ({ docOps, reload } = createDocumentOperationsContext());
+  });
+
+  it('should insert and persist document', () => {
+    // Arrange
+    const testDoc = { name: 'Test User', email: 'test@example.com' };
+
+    // Act
+    const result = docOps.insertDocument(testDoc);
+
+    // Assert
+    expect(result._id).toBeDefined();
+    expect(result.name).toBe(testDoc.name);
+
+    // Verify persistence
+    const documents = reload();
+    const savedDoc = documents[result._id];
+    expect(savedDoc).toBeDefined();
+    expect(savedDoc.name).toBe(testDoc.name);
+  });
+});
+```
+
+The `reload()` helper function (returned by `createDocumentOperationsContext()`) reloads collection data from disk and returns the current documents object, making it easy to verify persistence.
+
 ### MasterIndex Helpers
 
 ([tests/helpers/master-index-test-helpers.js](../../tests/helpers/master-index-test-helpers.js))
