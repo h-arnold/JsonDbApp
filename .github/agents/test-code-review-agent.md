@@ -328,7 +328,13 @@ it('should insert', () => {
 
 ### Document Operations Test Helpers (`tests/helpers/document-operations-test-helpers.js`)
 
-- Provides utilities for testing DocumentOperations component
+- `assertAcknowledgedResult(result, expectedCounts)` - Asserts that a DocumentOperations result is acknowledged and optionally checks modifiedCount/deletedCount
+- `cleanupTestResources()` - Cleanup function automatically registered with afterEach
+- `createDocumentOperationsContext()` - Creates complete test context with env, docOps, and reload helper (replaces beforeEach setup)
+- `createTestCollectionFile(folderId, collectionName)` - Creates a test collection file in the specified folder
+- `createTestFolder()` - Creates a test folder in mock Drive with auto-cleanup
+- `resetCollection(collection)` - Resets a collection to initial empty state
+- `setupTestEnvironment()` - Sets up complete test environment for DocumentOperations tests
 
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 
