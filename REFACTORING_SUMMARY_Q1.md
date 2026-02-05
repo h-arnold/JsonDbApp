@@ -7,12 +7,15 @@ Simplify the snapshot-based cache refresh logic in `QueryEngine` while preservin
 ## Changes Made
 
 ### File Modified
+
 - `src/02_components/QueryEngine/99_QueryEngine.js`
 
 ### Code Changes
 
 #### Removed Method: `_hasDifferentSnapshot`
+
 **Before:**
+
 ```javascript
 /**
  * Compare arrays to determine if snapshot has changed.
@@ -39,7 +42,9 @@ _hasDifferentSnapshot(current, snapshot) {
 **Rationale:** This method performed element-by-element array comparison with explicit loop iteration. While functional, it added unnecessary complexity and an extra method call for each comparison.
 
 #### Simplified Method: `_shouldRefreshOperatorCaches`
+
 **Before:**
+
 ```javascript
 _shouldRefreshOperatorCaches() {
   const currentOperators = Array.isArray(this._config.supportedOperators)
@@ -58,6 +63,7 @@ _shouldRefreshOperatorCaches() {
 ```
 
 **After:**
+
 ```javascript
 _shouldRefreshOperatorCaches() {
   const currentOperators = Array.isArray(this._config.supportedOperators)
@@ -85,17 +91,20 @@ _shouldRefreshOperatorCaches() {
 ## Performance Characteristics
 
 ### Before
+
 - **Two method calls** to `_hasDifferentSnapshot`
 - **Element-by-element iteration** with index-based access
 - **Two separate loop iterations** for the two operator arrays
 
 ### After
+
 - **No additional method calls** - logic inlined
 - **String comparison** using native `join()` and `===` operators
 - **Length fast-path** short-circuits when array sizes differ
 - **Clearer intent** with descriptive variable names
 
 ### Performance Notes
+
 - For small operator arrays (typical case: 5-15 operators), the fingerprint approach is faster
 - `Array.join()` is heavily optimized in modern JavaScript engines
 - Reduced call stack depth improves readability in debuggers
@@ -110,7 +119,9 @@ _shouldRefreshOperatorCaches() {
 ## Test Evidence
 
 ### Critical Test: `should respect supported operator pruning after construction`
+
 This test:
+
 1. Creates a QueryEngine instance
 2. Retrieves the config via `getConfig()`
 3. Splices `$eq` out of `config.supportedOperators`
@@ -120,6 +131,7 @@ This test:
 **Result:** ✅ Test passes with refactored code
 
 ### Full Test Suite Results
+
 ```
 ✓ unit/QueryEngine/QueryEngine.test.js (48 tests) 54ms
 ```
@@ -137,6 +149,7 @@ All 714 tests across the entire test suite pass.
 ## Migration Notes
 
 This refactoring is **100% backward compatible**. No changes required to:
+
 - Public API
 - Test code
 - Calling code
@@ -147,6 +160,7 @@ This refactoring is **100% backward compatible**. No changes required to:
 The refactoring successfully simplifies the cache comparison mechanics from a manual loop-based approach to a fingerprint-based approach, reducing complexity while maintaining all required behaviors including post-construction mutation detection.
 
 **Metrics:**
+
 - Lines removed: 28
 - Methods removed: 1 (`_hasDifferentSnapshot`)
 - Methods simplified: 1 (`_shouldRefreshOperatorCaches`)
