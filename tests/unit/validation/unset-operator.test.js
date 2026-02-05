@@ -8,26 +8,15 @@
  * - Edge cases (non-existent field, _id field, non-existent parent object)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$unset Field Removal Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$unset Field Removal Operator Tests', (getTestEnv) => {
   describe('Basic field removal', () => {
     it('should remove top-level fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       collection.updateOne({ _id: 'person1' }, { $set: { tempField: 'temporary' } });
       const doc = collection.findOne({ _id: 'person1' });
@@ -45,6 +34,8 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should remove multiple top-level fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       collection.updateOne(
         { _id: 'person1' },
@@ -64,6 +55,8 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should remove nested fields using dot notation', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -81,6 +74,8 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should remove deeply nested fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -100,6 +95,8 @@ describe('$unset Field Removal Operator Tests', () => {
   describe('Object structure preservation', () => {
     it('should leave parent object when removing field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -115,6 +112,8 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should leave empty object when removing all fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -134,6 +133,8 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should maintain object hierarchy when removing nested field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -155,6 +156,8 @@ describe('$unset Field Removal Operator Tests', () => {
   describe('Edge cases', () => {
     it('should handle unsetting non-existent field gracefully', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person1' });
       expect(original).not.toBe(null);
@@ -175,6 +178,8 @@ describe('$unset Field Removal Operator Tests', () => {
     });
 
     it('should handle _id field unset appropriately', () => {
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       try {
@@ -193,6 +198,8 @@ describe('$unset Field Removal Operator Tests', () => {
 
     it('should handle unsetting field in non-existent parent object', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act

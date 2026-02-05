@@ -8,13 +8,8 @@
  * - Boundary testing (maximum safe integer, date ranges)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
-
-let testEnv;
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
 /**
  * Determines whether a value is null or undefined
@@ -25,18 +20,12 @@ function isNullish(value) {
   return value === null || value === undefined;
 }
 
-describe('$max Maximum Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$max Maximum Operator Tests', (getTestEnv) => {
   describe('Value comparison', () => {
     it('should replace field when new value is larger', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.age;
@@ -54,6 +43,8 @@ describe('$max Maximum Operator Tests', () => {
 
     it('should not change field when current value is larger', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person6' });
       const originalAge = original.age;
@@ -71,6 +62,8 @@ describe('$max Maximum Operator Tests', () => {
 
     it('should not change field when values are equal', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person3' });
       const originalAge = original.age;
@@ -88,6 +81,8 @@ describe('$max Maximum Operator Tests', () => {
 
     it('should handle mixed integer/float comparisons', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person2' });
       const original = before.score;
@@ -107,6 +102,8 @@ describe('$max Maximum Operator Tests', () => {
   describe('Field creation', () => {
     it('should create non-existent field with max value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.newMaxField;
@@ -126,6 +123,8 @@ describe('$max Maximum Operator Tests', () => {
   describe('Boundary testing', () => {
     it('should handle maximum safe integer values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.age;
@@ -149,6 +148,8 @@ describe('$max Maximum Operator Tests', () => {
 
     it('should handle date range maximums', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const futureDate = new Date('2030-12-31T23:59:59Z');
       const before = collection.findOne({ _id: 'person1' });

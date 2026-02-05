@@ -11,26 +11,15 @@
  * - Contradictory conditions
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$and Logical AND Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$and Logical AND Operator Tests', (getTestEnv) => {
   describe('Basic conjunction', () => {
     it('should match documents satisfying both field conditions', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -52,6 +41,8 @@ describe('$and Logical AND Operator Tests', () => {
   describe('Multiple field conditions', () => {
     it('should match documents satisfying multiple field conditions', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -74,6 +65,8 @@ describe('$and Logical AND Operator Tests', () => {
   describe('Mix of comparison operators', () => {
     it('should work with mixed comparison operators', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -91,6 +84,8 @@ describe('$and Logical AND Operator Tests', () => {
   describe('Nested $and operations', () => {
     it('should handle nested $and operations', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -118,6 +113,8 @@ describe('$and Logical AND Operator Tests', () => {
   describe('Edge cases', () => {
     it('should match all documents with empty $and array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -129,6 +126,8 @@ describe('$and Logical AND Operator Tests', () => {
 
     it('should handle single condition in $and', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -149,6 +148,8 @@ describe('$and Logical AND Operator Tests', () => {
   describe('Contradictory conditions', () => {
     it('should return no results for contradictory conditions', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act

@@ -5,6 +5,7 @@
  * These tests validate MongoDB-compatible operators against realistic datasets.
  */
 
+import { describe, beforeAll, afterAll } from 'vitest';
 import { ValidationMockData } from '../data/ValidationMockData.js';
 
 /**
@@ -263,4 +264,31 @@ export const cleanupValidationTests = (env) => {
       // Folder may already be deleted, ignore
     }
   }
+};
+
+/**
+ * Wraps a describe block with automatic validation test environment setup and cleanup
+ * @param {string} description - Test suite description
+ * @param {Function} callback - Test suite callback that receives a getTestEnv function
+ */
+export const describeValidationOperatorSuite = (description, callback) => {
+  describe(description, () => {
+    let testEnv;
+
+    beforeAll(() => {
+      testEnv = setupValidationTestEnvironment();
+    });
+
+    afterAll(() => {
+      cleanupValidationTests(testEnv);
+    });
+
+    /**
+     * Retrieves the test environment for use in tests
+     * @returns {object} Test environment with database, collections, and mock data
+     */
+    const getTestEnv = () => testEnv;
+
+    callback(getTestEnv);
+  });
 };

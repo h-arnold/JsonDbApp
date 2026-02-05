@@ -29,7 +29,7 @@ const cleanupQueryEngineTestEnvironment = () => {
   // No teardown required for current mock data
 };
 
-describe('QueryEngine Basic Functionality', () => {
+describe('QueryEngine', () => {
   let queryEngine;
   let testUsers;
 
@@ -46,579 +46,523 @@ describe('QueryEngine Basic Functionality', () => {
     cleanupQueryEngineTestEnvironment();
   });
 
-  it('should have QueryEngine class available', () => {
-    expect(typeof QueryEngine).toBe('function');
-  });
-
-  it('should create QueryEngine instance', () => {
-    expect(queryEngine).toBeInstanceOf(QueryEngine);
-  });
-
-  it('should use DatabaseConfig defaults for query engine configuration', () => {
-    const config = queryEngine.getConfig();
-    const defaults = new DatabaseConfig();
-
-    expect(config.maxNestedDepth).toBe(defaults.queryEngineMaxNestedDepth);
-    expect(config.supportedOperators).toEqual(defaults.queryEngineSupportedOperators);
-  });
-
-  it('should have executeQuery method', () => {
-    expect(typeof queryEngine.executeQuery).toBe('function');
-  });
-
-  it('should match all documents with empty query', () => {
-    const sampleDocs = testUsers.slice(0, 3);
-    const results = queryEngine.executeQuery(sampleDocs, {});
-
-    expect(results).not.toBeNull();
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(sampleDocs.length);
-  });
-
-  it('should match documents by simple field equality', () => {
-    const query = { name: 'John Smith' };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('John Smith');
-    expect(results[0]._id).toBe('user1');
-  });
-
-  it('should match documents by numeric field equality', () => {
-    const query = { age: 30 };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(1);
-    expect(results[0].age).toBe(30);
-  });
-
-  it('should match documents by boolean field equality', () => {
-    const query = { active: true };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.active).toBe(true);
+  describe('Basic Functionality', () => {
+    it('should have QueryEngine class available', () => {
+      expect(typeof QueryEngine).toBe('function');
     });
-  });
 
-  it('should match documents by nested field access', () => {
-    const query = { 'profile.department': 'Engineering' };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.profile.department).toBe('Engineering');
+    it('should create QueryEngine instance', () => {
+      expect(queryEngine).toBeInstanceOf(QueryEngine);
     });
-  });
 
-  it('should match documents by deeply nested field access', () => {
-    const query = { 'settings.notifications.email': true };
-    const results = queryEngine.executeQuery(testUsers, query);
+    it('should use DatabaseConfig defaults for query engine configuration', () => {
+      const config = queryEngine.getConfig();
+      const defaults = new DatabaseConfig();
 
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      if (doc.settings && doc.settings.notifications) {
-        expect(doc.settings.notifications.email).toBe(true);
-      }
+      expect(config.maxNestedDepth).toBe(defaults.queryEngineMaxNestedDepth);
+      expect(config.supportedOperators).toEqual(defaults.queryEngineSupportedOperators);
     });
-  });
 
-  it('should return empty array for non-matching query', () => {
-    const query = { name: 'Non Existent User' };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results).not.toBeNull();
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(0);
-  });
-
-  it('should handle null and undefined field values', () => {
-    const query = { lastLogin: null };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results).not.toBeNull();
-    expect(Array.isArray(results)).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.lastLogin).toBe(null);
+    it('should have executeQuery method', () => {
+      expect(typeof queryEngine.executeQuery).toBe('function');
     });
-  });
 
-  it('should handle documents with missing fields', () => {
-    const query = { orders: undefined };
-    const results = queryEngine.executeQuery(testUsers, query);
+    it('should match all documents with empty query', () => {
+      const sampleDocs = testUsers.slice(0, 3);
+      const results = queryEngine.executeQuery(sampleDocs, {});
 
-    expect(results).not.toBeNull();
-    expect(Array.isArray(results)).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.orders === undefined).toBe(true);
+      expect(results).not.toBeNull();
+      expect(Array.isArray(results)).toBe(true);
+      expect(results.length).toBe(sampleDocs.length);
     });
-  });
-});
 
-describe('QueryEngine Comparison Operators', () => {
-  let queryEngine;
-  let testUsers;
+    it('should match documents by simple field equality', () => {
+      const query = { name: 'John Smith' };
+      const results = queryEngine.executeQuery(testUsers, query);
 
-  beforeAll(() => {
-    setupQueryEngineTestEnvironment();
-  });
-
-  beforeEach(() => {
-    queryEngine = new QueryEngine();
-    testUsers = MockQueryData.getTestUsers();
-  });
-
-  afterAll(() => {
-    cleanupQueryEngineTestEnvironment();
-  });
-
-  it('should support explicit $eq operator with strings', () => {
-    const query = { name: { $eq: 'John Smith' } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(1);
-    expect(results[0].name).toBe('John Smith');
-  });
-
-  it('should support explicit $eq operator with numbers', () => {
-    const query = { age: { $eq: 25 } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(1);
-    expect(results[0].age).toBe(25);
-  });
-
-  it('should support explicit $eq operator with booleans', () => {
-    const query = { active: { $eq: false } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.active).toBe(false);
+      expect(results.length).toBe(1);
+      expect(results[0].name).toBe('John Smith');
+      expect(results[0]._id).toBe('user1');
     });
-  });
 
-  it('should support $gt operator with numbers', () => {
-    const query = { age: { $gt: 25 } };
-    const results = queryEngine.executeQuery(testUsers, query);
+    it('should match documents by numeric field equality', () => {
+      const query = { age: 30 };
+      const results = queryEngine.executeQuery(testUsers, query);
 
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.age > 25).toBe(true);
+      expect(results.length).toBe(1);
+      expect(results[0].age).toBe(30);
     });
-  });
 
-  it('should support $lt operator with numbers', () => {
-    const query = { age: { $lt: 30 } };
-    const results = queryEngine.executeQuery(testUsers, query);
+    it('should match documents by boolean field equality', () => {
+      const query = { active: true };
+      const results = queryEngine.executeQuery(testUsers, query);
 
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.age < 30).toBe(true);
-    });
-  });
-
-  it('should support $gt operator with dates', () => {
-    const cutoffDate = new Date('2021-01-01T00:00:00Z');
-    const query = { registeredOn: { $gt: cutoffDate } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.registeredOn > cutoffDate).toBe(true);
-    });
-  });
-
-  it('should support $lt operator with dates', () => {
-    const cutoffDate = new Date('2021-01-01T00:00:00Z');
-    const query = { registeredOn: { $lt: cutoffDate } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.registeredOn < cutoffDate).toBe(true);
-    });
-  });
-
-  it('should support comparison operators with nested fields', () => {
-    const query = { 'profile.yearsOfService': { $gt: 3 } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.profile.yearsOfService > 3).toBe(true);
-    });
-  });
-
-  it('should handle comparison operators with non-matching values', () => {
-    const query = { age: { $gt: 100 } };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(0);
-  });
-});
-
-describe('QueryEngine Logical Operators', () => {
-  let queryEngine;
-  let testUsers;
-
-  beforeAll(() => {
-    setupQueryEngineTestEnvironment();
-  });
-
-  beforeEach(() => {
-    queryEngine = new QueryEngine();
-    testUsers = MockQueryData.getTestUsers();
-  });
-
-  afterAll(() => {
-    cleanupQueryEngineTestEnvironment();
-  });
-
-  it('should support explicit $and operator', () => {
-    const query = {
-      $and: [{ active: true }, { age: { $gt: 25 } }]
-    };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.active).toBe(true);
-      expect(doc.age > 25).toBe(true);
-    });
-  });
-
-  it('should support $or operator', () => {
-    const query = {
-      $or: [{ age: { $lt: 25 } }, { age: { $gt: 35 } }]
-    };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.age < 25 || doc.age > 35).toBe(true);
-    });
-  });
-
-  it('should support implicit AND with multiple fields', () => {
-    const query = {
-      active: true,
-      'profile.department': 'Engineering'
-    };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.active).toBe(true);
-      expect(doc.profile.department).toBe('Engineering');
-    });
-  });
-
-  it('should support nested logical operators', () => {
-    const query = {
-      $and: [
-        { active: true },
-        {
-          $or: [{ 'profile.department': 'Engineering' }, { 'profile.department': 'Product' }]
-        }
-      ]
-    };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.active).toBe(true);
-      expect(doc.profile.department === 'Engineering' || doc.profile.department === 'Product').toBe(
-        true
-      );
-    });
-  });
-
-  it('should support $or with comparison operators', () => {
-    const query = {
-      $or: [{ age: { $lt: 25 } }, { score: { $gt: 90 } }]
-    };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length > 0).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.age < 25 || doc.score > 90).toBe(true);
-    });
-  });
-
-  it('should handle empty $and conditions', () => {
-    const query = { $and: [] };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(testUsers.length);
-  });
-
-  it('should handle empty $or conditions', () => {
-    const query = { $or: [] };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    expect(results.length).toBe(0);
-  });
-
-  it('should support complex multi-field implicit AND', () => {
-    const query = {
-      active: true,
-      age: { $gt: 25 },
-      'profile.department': 'Engineering',
-      'settings.theme': 'dark'
-    };
-    const results = queryEngine.executeQuery(testUsers, query);
-
-    results.forEach((doc) => {
-      expect(doc.active).toBe(true);
-      expect(doc.age > 25).toBe(true);
-      expect(doc.profile.department).toBe('Engineering');
-      expect(doc.settings.theme).toBe('dark');
-    });
-  });
-});
-
-describe('QueryEngine Error Handling', () => {
-  let queryEngine;
-  let testUsers;
-
-  beforeAll(() => {
-    setupQueryEngineTestEnvironment();
-  });
-
-  beforeEach(() => {
-    queryEngine = new QueryEngine();
-    testUsers = MockQueryData.getTestUsers();
-  });
-
-  afterAll(() => {
-    cleanupQueryEngineTestEnvironment();
-  });
-
-  it('should throw InvalidQueryError for invalid query structure', () => {
-    const invalidQuery = 'invalid query string';
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, invalidQuery);
-    }).toThrow();
-  });
-
-  it('should throw InvalidQueryError for unsupported operators', () => {
-    const queryWithUnsupportedOp = { age: { $regex: 'pattern' } };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, queryWithUnsupportedOp);
-    }).toThrow();
-  });
-
-  it('should respect supported operator pruning after construction', () => {
-    const config = queryEngine.getConfig();
-    const eqIndex = config.supportedOperators.indexOf('$eq');
-
-    expect(eqIndex).toBeGreaterThan(-1);
-
-    config.supportedOperators.splice(eqIndex, 1);
-
-    expect(queryEngine.isOperatorSupported('$eq')).toBe(false);
-
-    const queryUsingEq = { age: { $eq: 30 } };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, queryUsingEq);
-    }).toThrow();
-  });
-
-  it('should reject unsupported operators nested within logical arrays', () => {
-    const queryWithNestedUnsupported = {
-      $and: [{ age: { $regex: 'pattern' } }]
-    };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
-    }).toThrow();
-  });
-
-  it('should throw error for null or undefined documents array', () => {
-    const query = { name: 'John' };
-
-    expect(() => {
-      queryEngine.executeQuery(null, query);
-    }).toThrow();
-
-    expect(() => {
-      queryEngine.executeQuery(undefined, query);
-    }).toThrow();
-  });
-
-  it('should handle malformed logical operators gracefully', () => {
-    const malformedQuery = { $and: 'not an array' };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, malformedQuery);
-    }).toThrow();
-  });
-
-  it('should enforce maximum query depth within logical clauses', () => {
-    const limitedEngine = new QueryEngine({ maxNestedDepth: 2 });
-    const deepQuery = {
-      $and: [{ level1: { level2: { level3: 'value' } } }]
-    };
-
-    expect(() => {
-      limitedEngine.executeQuery(testUsers, deepQuery);
-    }).toThrow();
-  });
-
-  it('should throw InvalidQueryError when logical operator conditions are not objects', () => {
-    const queryWithPrimitiveClause = { $or: ['not an object'] };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, queryWithPrimitiveClause);
-    }).toThrow();
-  });
-
-  it('should provide clear error messages for query validation failures', () => {
-    const invalidQuery = { $unknownOperator: { field: 'value' } };
-
-    let errorMessage = '';
-    try {
-      queryEngine.executeQuery(testUsers, invalidQuery);
-    } catch (error) {
-      errorMessage = error.message;
-    }
-
-    expect(errorMessage.length > 0).toBe(true);
-    expect(
-      errorMessage.includes('query') ||
-        errorMessage.includes('operator') ||
-        errorMessage.includes('invalid')
-    ).toBe(true);
-  });
-
-  it('should reject unsupported operators nested within field arrays', () => {
-    const queryWithNestedUnsupported = {
-      tags: [{ $eq: 'matched' }, { $unsupported: true }]
-    };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
-    }).toThrow();
-  });
-
-  it('should enforce depth limits when arrays contain nested query objects', () => {
-    const limitedEngine = new QueryEngine({ maxNestedDepth: 1 });
-    const deepArrayQuery = {
-      nested: [
-        {
-          child: [{ grandChild: 'value' }]
-        }
-      ]
-    };
-
-    expect(() => {
-      limitedEngine.executeQuery(testUsers, deepArrayQuery);
-    }).toThrow();
-  });
-
-  it('should throw when logical operators receive malformed values within field expressions', () => {
-    const malformedLogicalValue = {
-      status: {
-        $and: 1
-      }
-    };
-
-    expect(() => {
-      queryEngine.executeQuery(testUsers, malformedLogicalValue);
-    }).toThrow();
-  });
-});
-
-describe('QueryEngine Edge Cases', () => {
-  let queryEngine;
-  let edgeCaseDocuments;
-
-  beforeAll(() => {
-    setupQueryEngineTestEnvironment();
-    edgeCaseDocuments = MockQueryData.getEdgeCaseDocuments();
-  });
-
-  beforeEach(() => {
-    queryEngine = new QueryEngine();
-  });
-
-  afterAll(() => {
-    cleanupQueryEngineTestEnvironment();
-  });
-
-  it('should handle empty documents array', () => {
-    const emptyDocs = [];
-    const results = queryEngine.executeQuery(emptyDocs, { name: 'John' });
-
-    expect(results).not.toBeNull();
-    expect(Array.isArray(results)).toBe(true);
-    expect(results.length).toBe(0);
-  });
-
-  it('should handle documents with null values', () => {
-    const docsWithNulls = [
-      { _id: 'doc1', name: null, value: 42 },
-      { _id: 'doc2', name: 'John', value: null },
-      { _id: 'doc3', name: 'Jane', value: 24 }
-    ];
-    const results = queryEngine.executeQuery(docsWithNulls, { name: null });
-
-    expect(results.length).toBe(1);
-    expect(results[0]._id).toBe('doc1');
-  });
-
-  it('should handle documents with deeply nested null values', () => {
-    const query = { 'nestedEmpty.null': null };
-    const results = queryEngine.executeQuery(edgeCaseDocuments, query);
-
-    expect(results.length >= 0).toBe(true);
-  });
-
-  it('should handle very deeply nested field access', () => {
-    const query = { 'deeplyNested.level1.level2.level3.level4.value': 'deeply nested value' };
-    const results = queryEngine.executeQuery(edgeCaseDocuments, query);
-
-    expect(results.length > 0).toBe(true);
-    expect(results[0].deeplyNested.level1.level2.level3.level4.value).toBe('deeply nested value');
-  });
-
-  it('should handle numeric field names and special characters', () => {
-    const docsWithSpecialFields = [
-      { _id: 'doc1', 123: 'numeric field', 'special@field': 'value' },
-      { _id: 'doc2', 123: 'another value', 'special@field': 'different' }
-    ];
-    const results = queryEngine.executeQuery(docsWithSpecialFields, { 123: 'numeric field' });
-
-    expect(results.length).toBe(1);
-    expect(results[0]._id).toBe('doc1');
-  });
-
-  it('should handle large number of documents efficiently', () => {
-    const largeDocs = [];
-    for (let i = 0; i < 1000; i++) {
-      largeDocs.push({
-        _id: `doc${i}`,
-        index: i,
-        group: i % 10,
-        active: i % 3 === 0
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.active).toBe(true);
       });
-    }
-    const query = { group: 5, active: true };
+    });
 
-    const startTime = Date.now();
-    const results = queryEngine.executeQuery(largeDocs, query);
-    const executionTime = Date.now() - startTime;
+    it('should match documents by nested field access', () => {
+      const query = { 'profile.department': 'Engineering' };
+      const results = queryEngine.executeQuery(testUsers, query);
 
-    expect(results.length > 0).toBe(true);
-    expect(executionTime < 1000).toBe(true);
-    results.forEach((doc) => {
-      expect(doc.group).toBe(5);
-      expect(doc.active).toBe(true);
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.profile.department).toBe('Engineering');
+      });
+    });
+
+    it('should match documents by deeply nested field access', () => {
+      const query = { 'settings.notifications.email': true };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        if (doc.settings && doc.settings.notifications) {
+          expect(doc.settings.notifications.email).toBe(true);
+        }
+      });
+    });
+
+    it('should return empty array for non-matching query', () => {
+      const query = { name: 'Non Existent User' };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results).not.toBeNull();
+      expect(Array.isArray(results)).toBe(true);
+      expect(results.length).toBe(0);
+    });
+
+    it('should handle null and undefined field values', () => {
+      const query = { lastLogin: null };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results).not.toBeNull();
+      expect(Array.isArray(results)).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.lastLogin).toBe(null);
+      });
+    });
+
+    it('should handle documents with missing fields', () => {
+      const query = { orders: undefined };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results).not.toBeNull();
+      expect(Array.isArray(results)).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.orders === undefined).toBe(true);
+      });
+    });
+  });
+
+  describe('Comparison Operators', () => {
+    it('should support explicit $eq operator with strings', () => {
+      const query = { name: { $eq: 'John Smith' } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length).toBe(1);
+      expect(results[0].name).toBe('John Smith');
+    });
+
+    it('should support explicit $eq operator with numbers', () => {
+      const query = { age: { $eq: 25 } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length).toBe(1);
+      expect(results[0].age).toBe(25);
+    });
+
+    it('should support explicit $eq operator with booleans', () => {
+      const query = { active: { $eq: false } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.active).toBe(false);
+      });
+    });
+
+    it('should support $gt operator with numbers', () => {
+      const query = { age: { $gt: 25 } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.age > 25).toBe(true);
+      });
+    });
+
+    it('should support $lt operator with numbers', () => {
+      const query = { age: { $lt: 30 } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.age < 30).toBe(true);
+      });
+    });
+
+    it('should support $gt operator with dates', () => {
+      const cutoffDate = new Date('2021-01-01T00:00:00Z');
+      const query = { registeredOn: { $gt: cutoffDate } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.registeredOn > cutoffDate).toBe(true);
+      });
+    });
+
+    it('should support $lt operator with dates', () => {
+      const cutoffDate = new Date('2021-01-01T00:00:00Z');
+      const query = { registeredOn: { $lt: cutoffDate } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.registeredOn < cutoffDate).toBe(true);
+      });
+    });
+
+    it('should support comparison operators with nested fields', () => {
+      const query = { 'profile.yearsOfService': { $gt: 3 } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.profile.yearsOfService > 3).toBe(true);
+      });
+    });
+
+    it('should handle comparison operators with non-matching values', () => {
+      const query = { age: { $gt: 100 } };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length).toBe(0);
+    });
+  });
+
+  describe('Logical Operators', () => {
+    it('should support explicit $and operator', () => {
+      const query = {
+        $and: [{ active: true }, { age: { $gt: 25 } }]
+      };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.active).toBe(true);
+        expect(doc.age > 25).toBe(true);
+      });
+    });
+
+    it('should support $or operator', () => {
+      const query = {
+        $or: [{ age: { $lt: 25 } }, { age: { $gt: 35 } }]
+      };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.age < 25 || doc.age > 35).toBe(true);
+      });
+    });
+
+    it('should support implicit AND with multiple fields', () => {
+      const query = {
+        active: true,
+        'profile.department': 'Engineering'
+      };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.active).toBe(true);
+        expect(doc.profile.department).toBe('Engineering');
+      });
+    });
+
+    it('should support nested logical operators', () => {
+      const query = {
+        $and: [
+          { active: true },
+          {
+            $or: [{ 'profile.department': 'Engineering' }, { 'profile.department': 'Product' }]
+          }
+        ]
+      };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.active).toBe(true);
+        expect(
+          doc.profile.department === 'Engineering' || doc.profile.department === 'Product'
+        ).toBe(true);
+      });
+    });
+
+    it('should support $or with comparison operators', () => {
+      const query = {
+        $or: [{ age: { $lt: 25 } }, { score: { $gt: 90 } }]
+      };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length > 0).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.age < 25 || doc.score > 90).toBe(true);
+      });
+    });
+
+    it('should handle empty $and conditions', () => {
+      const query = { $and: [] };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length).toBe(testUsers.length);
+    });
+
+    it('should handle empty $or conditions', () => {
+      const query = { $or: [] };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      expect(results.length).toBe(0);
+    });
+
+    it('should support complex multi-field implicit AND', () => {
+      const query = {
+        active: true,
+        age: { $gt: 25 },
+        'profile.department': 'Engineering',
+        'settings.theme': 'dark'
+      };
+      const results = queryEngine.executeQuery(testUsers, query);
+
+      results.forEach((doc) => {
+        expect(doc.active).toBe(true);
+        expect(doc.age > 25).toBe(true);
+        expect(doc.profile.department).toBe('Engineering');
+        expect(doc.settings.theme).toBe('dark');
+      });
+    });
+  });
+
+  describe('Error Handling', () => {
+    it('should throw InvalidQueryError for invalid query structure', () => {
+      const invalidQuery = 'invalid query string';
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, invalidQuery);
+      }).toThrow();
+    });
+
+    it('should throw InvalidQueryError for unsupported operators', () => {
+      const queryWithUnsupportedOp = { age: { $regex: 'pattern' } };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, queryWithUnsupportedOp);
+      }).toThrow();
+    });
+
+    it('should respect supported operator pruning after construction', () => {
+      const config = queryEngine.getConfig();
+      const eqIndex = config.supportedOperators.indexOf('$eq');
+
+      expect(eqIndex).toBeGreaterThan(-1);
+
+      config.supportedOperators.splice(eqIndex, 1);
+
+      expect(queryEngine.isOperatorSupported('$eq')).toBe(false);
+
+      const queryUsingEq = { age: { $eq: 30 } };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, queryUsingEq);
+      }).toThrow();
+    });
+
+    it('should reject unsupported operators nested within logical arrays', () => {
+      const queryWithNestedUnsupported = {
+        $and: [{ age: { $regex: 'pattern' } }]
+      };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
+      }).toThrow();
+    });
+
+    it('should throw error for null or undefined documents array', () => {
+      const query = { name: 'John' };
+
+      expect(() => {
+        queryEngine.executeQuery(null, query);
+      }).toThrow();
+
+      expect(() => {
+        queryEngine.executeQuery(undefined, query);
+      }).toThrow();
+    });
+
+    it('should handle malformed logical operators gracefully', () => {
+      const malformedQuery = { $and: 'not an array' };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, malformedQuery);
+      }).toThrow();
+    });
+
+    it('should enforce maximum query depth within logical clauses', () => {
+      const limitedEngine = new QueryEngine({ maxNestedDepth: 2 });
+      const deepQuery = {
+        $and: [{ level1: { level2: { level3: 'value' } } }]
+      };
+
+      expect(() => {
+        limitedEngine.executeQuery(testUsers, deepQuery);
+      }).toThrow();
+    });
+
+    it('should throw InvalidQueryError when logical operator conditions are not objects', () => {
+      const queryWithPrimitiveClause = { $or: ['not an object'] };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, queryWithPrimitiveClause);
+      }).toThrow();
+    });
+
+    it('should provide clear error messages for query validation failures', () => {
+      const invalidQuery = { $unknownOperator: { field: 'value' } };
+
+      let errorMessage = '';
+      try {
+        queryEngine.executeQuery(testUsers, invalidQuery);
+      } catch (error) {
+        errorMessage = error.message;
+      }
+
+      expect(errorMessage.length > 0).toBe(true);
+      expect(
+        errorMessage.includes('query') ||
+          errorMessage.includes('operator') ||
+          errorMessage.includes('invalid')
+      ).toBe(true);
+    });
+
+    it('should reject unsupported operators nested within field arrays', () => {
+      const queryWithNestedUnsupported = {
+        tags: [{ $eq: 'matched' }, { $unsupported: true }]
+      };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, queryWithNestedUnsupported);
+      }).toThrow();
+    });
+
+    it('should enforce depth limits when arrays contain nested query objects', () => {
+      const limitedEngine = new QueryEngine({ maxNestedDepth: 1 });
+      const deepArrayQuery = {
+        nested: [
+          {
+            child: [{ grandChild: 'value' }]
+          }
+        ]
+      };
+
+      expect(() => {
+        limitedEngine.executeQuery(testUsers, deepArrayQuery);
+      }).toThrow();
+    });
+
+    it('should throw when logical operators receive malformed values within field expressions', () => {
+      const malformedLogicalValue = {
+        status: {
+          $and: 1
+        }
+      };
+
+      expect(() => {
+        queryEngine.executeQuery(testUsers, malformedLogicalValue);
+      }).toThrow();
+    });
+  });
+
+  describe('Edge Cases', () => {
+    let edgeCaseDocuments;
+
+    beforeAll(() => {
+      edgeCaseDocuments = MockQueryData.getEdgeCaseDocuments();
+    });
+
+    it('should handle empty documents array', () => {
+      const emptyDocs = [];
+      const results = queryEngine.executeQuery(emptyDocs, { name: 'John' });
+
+      expect(results).not.toBeNull();
+      expect(Array.isArray(results)).toBe(true);
+      expect(results.length).toBe(0);
+    });
+
+    it('should handle documents with null values', () => {
+      const docsWithNulls = [
+        { _id: 'doc1', name: null, value: 42 },
+        { _id: 'doc2', name: 'John', value: null },
+        { _id: 'doc3', name: 'Jane', value: 24 }
+      ];
+      const results = queryEngine.executeQuery(docsWithNulls, { name: null });
+
+      expect(results.length).toBe(1);
+      expect(results[0]._id).toBe('doc1');
+    });
+
+    it('should handle documents with deeply nested null values', () => {
+      const query = { 'nestedEmpty.null': null };
+      const results = queryEngine.executeQuery(edgeCaseDocuments, query);
+
+      expect(results.length >= 0).toBe(true);
+    });
+
+    it('should handle very deeply nested field access', () => {
+      const query = { 'deeplyNested.level1.level2.level3.level4.value': 'deeply nested value' };
+      const results = queryEngine.executeQuery(edgeCaseDocuments, query);
+
+      expect(results.length > 0).toBe(true);
+      expect(results[0].deeplyNested.level1.level2.level3.level4.value).toBe('deeply nested value');
+    });
+
+    it('should handle numeric field names and special characters', () => {
+      const docsWithSpecialFields = [
+        { _id: 'doc1', 123: 'numeric field', 'special@field': 'value' },
+        { _id: 'doc2', 123: 'another value', 'special@field': 'different' }
+      ];
+      const results = queryEngine.executeQuery(docsWithSpecialFields, { 123: 'numeric field' });
+
+      expect(results.length).toBe(1);
+      expect(results[0]._id).toBe('doc1');
+    });
+
+    it('should handle large number of documents efficiently', () => {
+      const largeDocs = [];
+      for (let i = 0; i < 1000; i++) {
+        largeDocs.push({
+          _id: `doc${i}`,
+          index: i,
+          group: i % 10,
+          active: i % 3 === 0
+        });
+      }
+      const query = { group: 5, active: true };
+
+      const startTime = Date.now();
+      const results = queryEngine.executeQuery(largeDocs, query);
+      const executionTime = Date.now() - startTime;
+
+      expect(results.length > 0).toBe(true);
+      expect(executionTime < 1000).toBe(true);
+      results.forEach((doc) => {
+        expect(doc.group).toBe(5);
+        expect(doc.active).toBe(true);
+      });
     });
   });
 });

@@ -13,25 +13,15 @@
  * - Non-existent paths
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$eq Equality Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
+describeValidationOperatorSuite('$eq Equality Operator Tests', (getTestEnv) => {
   describe('Basic equality matching', () => {
     it('should match string values exactly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -44,6 +34,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match numeric values exactly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -56,6 +48,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match zero values correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -68,6 +62,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match boolean values exactly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -82,6 +78,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match null values correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -96,6 +94,8 @@ describe('$eq Equality Operator Tests', () => {
   describe('Date object equality', () => {
     it('should match Date objects by exact timestamp', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const targetDate = new Date('2025-06-20T10:30:00Z');
 
@@ -111,6 +111,8 @@ describe('$eq Equality Operator Tests', () => {
   describe('Nested object equality', () => {
     it('should match nested objects exactly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -125,6 +127,8 @@ describe('$eq Equality Operator Tests', () => {
   describe('Edge cases', () => {
     it('should distinguish empty string from null', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -141,6 +145,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should distinguish zero from false', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -160,6 +166,8 @@ describe('$eq Equality Operator Tests', () => {
   describe('Case sensitivity for strings', () => {
     it('should be case sensitive for strings', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -175,6 +183,8 @@ describe('$eq Equality Operator Tests', () => {
   describe('Nested field equality with dot notation', () => {
     it('should match nested fields with dot notation', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -187,6 +197,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should match deep nested fields', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -203,6 +215,8 @@ describe('$eq Equality Operator Tests', () => {
 
     it('should handle non-existent nested paths', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act

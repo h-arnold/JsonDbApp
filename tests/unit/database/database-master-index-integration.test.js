@@ -1,4 +1,4 @@
-/* global Database, MasterIndex, CollectionMetadata, JDbLogger, FileOperations, FileService */
+/* global Database, MasterIndex, JDbLogger, FileOperations, FileService */
 
 /**
  * Database Master Index Integration Tests
@@ -9,6 +9,7 @@
 import { describe, it, expect } from 'vitest';
 import {
   createDatabaseTestConfig,
+  expectCollectionPersisted,
   registerDatabaseFile,
   setupInitialisedDatabase,
   generateUniqueName
@@ -64,14 +65,11 @@ describe('Database master index integration', () => {
 
     // Act - Create the new collection through the Database API
     const createdCollection = database.createCollection(collectionName);
-    registerDatabaseFile(createdCollection.driveFileId);
-    const masterIndex = new MasterIndex({ masterIndexKey });
-    const persistedMetadata = masterIndex.getCollection(collectionName);
 
     // Assert - The MasterIndex entry should be populated with the collection metadata
-    expect(persistedMetadata).toBeInstanceOf(CollectionMetadata);
-    expect(persistedMetadata?.name).toBe(collectionName);
-    expect(persistedMetadata?.fileId).toBe(createdCollection.driveFileId);
-    expect(persistedMetadata?.documentCount).toBe(0);
+    expectCollectionPersisted({ masterIndexKey }, collectionName, {
+      fileId: createdCollection.driveFileId,
+      documentCount: 0
+    });
   });
 });

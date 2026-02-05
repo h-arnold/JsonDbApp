@@ -9,26 +9,15 @@
  * - $each modifier (multiple values, empty arrays, object arrays)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$push Array Append Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$push Array Append Operator Tests', (getTestEnv) => {
   describe('Basic array appending', () => {
     it('should append a single value to an existing array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -45,6 +34,8 @@ describe('$push Array Append Operator Tests', () => {
 
     it('should append an object value to an array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const newAlert = { type: 'high-temp', value: 30 };
 
@@ -62,6 +53,8 @@ describe('$push Array Append Operator Tests', () => {
   describe('Array creation', () => {
     it('should create array when pushing to a non-existent field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -78,6 +71,8 @@ describe('$push Array Append Operator Tests', () => {
 
     it('should create array when pushing to a nested non-existent field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -96,6 +91,8 @@ describe('$push Array Append Operator Tests', () => {
   describe('Type validation', () => {
     it('should throw error when pushing to a non-array field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -108,6 +105,8 @@ describe('$push Array Append Operator Tests', () => {
   describe('$each modifier', () => {
     it('should push multiple values with $each modifier', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -125,6 +124,8 @@ describe('$push Array Append Operator Tests', () => {
 
     it('should handle empty array with $each modifier', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person5' });
       const originalTags = original.preferences.tags;
@@ -143,6 +144,8 @@ describe('$push Array Append Operator Tests', () => {
 
     it('should push array of objects with $each', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.inventory;
       const newAlerts = [
         { type: 'audit', user: 'system' },

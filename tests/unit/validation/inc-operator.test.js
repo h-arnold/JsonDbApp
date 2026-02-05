@@ -9,13 +9,8 @@
  * - Boundary testing (large numbers, floating point precision, max safe integer)
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
-
-let testEnv;
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
 /**
  * Determines whether two numeric values are within a tolerance range
@@ -29,18 +24,12 @@ function areNumbersClose(a, b, tolerance = 0.0001) {
   return Math.abs(a - b) <= tolerance;
 }
 
-describe('$inc Increment Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$inc Increment Operator Tests', (getTestEnv) => {
   describe('Basic incrementation', () => {
     it('should increment positive integer values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.age;
@@ -58,6 +47,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should increment positive decimal values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.score;
@@ -75,6 +66,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should decrement with negative increment values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person4' });
       const originalAge = before.age;
@@ -96,6 +89,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should handle zero increment as no-op', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const original = collection.findOne({ _id: 'person3' });
       const originalAge = original.age;
@@ -113,6 +108,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should handle fractional increments correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.balance;
@@ -132,6 +129,8 @@ describe('$inc Increment Operator Tests', () => {
   describe('Field creation', () => {
     it('should create non-existent field with increment value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.newCounterField;
@@ -150,6 +149,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should create non-existent decimal field with increment value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person2' });
       const original = before.newRatingField;
@@ -168,6 +169,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should create nested object structure when incrementing nested field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.stats && before.stats.loginCount;
@@ -189,6 +192,8 @@ describe('$inc Increment Operator Tests', () => {
   describe('Type validation', () => {
     it('should error when incrementing non-numeric field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -199,6 +204,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should error when incrementing boolean field', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -209,6 +216,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should error with non-numeric increment value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -219,6 +228,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should error with boolean increment value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -229,6 +240,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should error with null increment value', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act & Assert
@@ -241,6 +254,8 @@ describe('$inc Increment Operator Tests', () => {
   describe('Boundary testing', () => {
     it('should handle large number increments', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const largeIncrement = 1000000;
       const before = collection.findOne({ _id: 'person6' });
@@ -262,6 +277,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should maintain floating point precision', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const before = collection.findOne({ _id: 'person1' });
       const original = before.score;
@@ -279,6 +296,8 @@ describe('$inc Increment Operator Tests', () => {
 
     it('should handle near-maximum safe integer values', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       collection.updateOne(
         { _id: 'person1' },

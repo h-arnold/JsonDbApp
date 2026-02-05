@@ -11,26 +11,15 @@
  * - Duplicate conditions
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$or Logical OR Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
-
+describeValidationOperatorSuite('$or Logical OR Operator Tests', (getTestEnv) => {
   describe('Basic disjunction', () => {
     it('should match documents satisfying either field condition', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -51,6 +40,8 @@ describe('$or Logical OR Operator Tests', () => {
   describe('Multiple field conditions', () => {
     it('should match documents satisfying any of multiple conditions', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -76,6 +67,8 @@ describe('$or Logical OR Operator Tests', () => {
   describe('Mix of comparison operators', () => {
     it('should work with mixed comparison operators', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -97,6 +90,8 @@ describe('$or Logical OR Operator Tests', () => {
   describe('Nested $or operations', () => {
     it('should handle nested $or operations', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -121,6 +116,8 @@ describe('$or Logical OR Operator Tests', () => {
   describe('Edge cases', () => {
     it('should match no documents with empty $or array', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -132,6 +129,8 @@ describe('$or Logical OR Operator Tests', () => {
 
     it('should handle single condition in $or', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -150,6 +149,8 @@ describe('$or Logical OR Operator Tests', () => {
   describe('Duplicate conditions', () => {
     it('should handle duplicate conditions in $or', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act

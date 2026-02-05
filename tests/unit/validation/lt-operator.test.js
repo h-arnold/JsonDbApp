@@ -14,25 +14,15 @@
  * - Missing fields
  */
 
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import {
-  setupValidationTestEnvironment,
-  cleanupValidationTests
-} from '../../helpers/validation-test-helpers.js';
+import { describe, it, expect } from 'vitest';
+import { describeValidationOperatorSuite } from '../../helpers/validation-test-helpers.js';
 
-let testEnv;
-
-describe('$lt Less Than Operator Tests', () => {
-  beforeAll(() => {
-    testEnv = setupValidationTestEnvironment();
-  });
-
-  afterAll(() => {
-    cleanupValidationTests(testEnv);
-  });
+describeValidationOperatorSuite('$lt Less Than Operator Tests', (getTestEnv) => {
   describe('Basic numeric comparisons', () => {
     it('should compare integers correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -48,6 +38,8 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should compare floats correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -62,6 +54,8 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle negative number boundaries', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -74,6 +68,8 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle zero boundary cases', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -88,6 +84,8 @@ describe('$lt Less Than Operator Tests', () => {
   describe('Date comparisons', () => {
     it('should compare Date objects chronologically', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
       const cutoffDate = new Date('2025-06-20T00:00:00Z');
 
@@ -105,6 +103,8 @@ describe('$lt Less Than Operator Tests', () => {
   describe('String comparisons', () => {
     it('should compare strings lexicographically', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -122,6 +122,8 @@ describe('$lt Less Than Operator Tests', () => {
   describe('Boundary testing with extreme values', () => {
     it('should handle large number boundaries', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -133,6 +135,8 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle floating point precision', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -148,6 +152,8 @@ describe('$lt Less Than Operator Tests', () => {
   describe('Type mixing and null handling', () => {
     it('should handle null in less than comparison', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
@@ -162,6 +168,8 @@ describe('$lt Less Than Operator Tests', () => {
 
     it('should handle missing fields correctly', () => {
       // Arrange
+      const testEnv = getTestEnv();
+
       const collection = testEnv.collections.persons;
 
       // Act
