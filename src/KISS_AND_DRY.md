@@ -307,7 +307,12 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ### DB3. Collection metadata payload shape is duplicated across database helpers
 
-**Area:** `src/04_core/Database/02_DatabaseCollectionManagement.js`, `03_DatabaseIndexOperations.js`, `04_DatabaseMasterIndexOperations.js`, `01_DatabaseLifecycle.js`
+**Area:**
+
+- `src/04_core/Database/02_DatabaseCollectionManagement.js`
+- `src/04_core/Database/03_DatabaseIndexOperations.js`
+- `src/04_core/Database/04_DatabaseMasterIndexOperations.js`
+- `src/04_core/Database/01_DatabaseLifecycle.js`
 
 **Suggestion:** Provide a single metadata payload builder to keep defaults aligned.
 
