@@ -95,11 +95,7 @@ class QueryEngineValidation {
     }
 
     if (Array.isArray(node)) {
-      node.forEach((element) => {
-        if (Validate.isPlainObject(element) || Array.isArray(element)) {
-          this._validateNode(element, depth + 1);
-        }
-      });
+      this._validateArrayElements(node, depth);
       return;
     }
 
@@ -127,11 +123,7 @@ class QueryEngineValidation {
       }
 
       if (Array.isArray(value)) {
-        value.forEach((element) => {
-          if (Validate.isPlainObject(element) || Array.isArray(element)) {
-            this._validateNode(element, depth + 1);
-          }
-        });
+        this._validateArrayElements(value, depth);
       }
     });
   }
@@ -170,12 +162,22 @@ class QueryEngineValidation {
     }
 
     if (Array.isArray(value)) {
-      value.forEach((element) => {
-        if (Validate.isPlainObject(element) || Array.isArray(element)) {
-          this._validateNode(element, depth + 1);
-        }
-      });
+      this._validateArrayElements(value, depth);
     }
+  }
+
+  /**
+   * Validate array elements by recursing into nested objects and arrays.
+   * @param {Array<*>} array - Array to validate.
+   * @param {number} depth - Current traversal depth.
+   * @private
+   */
+  _validateArrayElements(array, depth) {
+    array.forEach((element) => {
+      if (Validate.isPlainObject(element) || Array.isArray(element)) {
+        this._validateNode(element, depth + 1);
+      }
+    });
   }
 
   /**

@@ -42,7 +42,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### Q2. QueryEngineValidation recursion is duplicated across array/object cases
+### Q2. QueryEngineValidation recursion is duplicated across array/object cases ✅ **COMPLETED**
 
 **Area:** `src/02_components/QueryEngine/01_QueryEngineValidation.js`
 
@@ -58,6 +58,19 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/QueryEngine/QueryEngine.test.js` (Error Handling: depth enforcement and nested array operator validation).
 
 **Conclusion:** The duplication is refactorable. Tests make depth counting and nested operator checks visible, so any consolidation must preserve depth increments when descending through arrays of objects and nested logical clauses.
+
+**Refactoring Completed:**
+
+- **Date:** 2024-02-05
+- **Changes:** Extracted repeated array traversal logic into `_validateArrayElements()` helper method
+- **Removed:** 3 instances of duplicated array traversal code (18 lines total)
+- **Added:** Single `_validateArrayElements()` method (13 lines including JSDoc)
+- **Results:** Net reduction of 5 lines, eliminated all duplication, all 714 tests pass, no new lint errors
+- **Locations Updated:**
+  - Line 98: Array handling when node is array
+  - Line 126: Array handling for field values
+  - Line 165: Array handling for operator operands
+- **Benefits:** Single source of truth for array validation, improved maintainability, clearer intent
 
 ---
 
