@@ -204,6 +204,12 @@ it('should perform operation correctly', () => {
 
 - GAS API mocks are tested separately to ensure they work correctly
 
+### Validation Test Helpers (`tests/helpers/validation-test-helpers.js`)
+
+- `cleanupValidationTests(env)` - Cleans up all validation test resources (files, folders, ScriptProperties)
+- `describeValidationOperatorSuite(description, callback)` - Creates a complete validation test suite with automatic setup/cleanup. Provides `getTestEnv()` function to access the test environment (database, collections, mock data)
+- `setupValidationTestEnvironment()` - Sets up a complete validation test environment with pre-populated collections and mock data
+
 ## GAS Mock Limitations & Test Skipping
 
 ### When GAS Mocks Are Inadequate

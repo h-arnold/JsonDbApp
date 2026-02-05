@@ -321,7 +321,8 @@ it('should insert', () => {
 - `cleanupDatabaseTests()` - Deletes registered master index keys and Drive files after each test
 - `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
 - `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects for Database tests
-- `expectCollectionPersisted(databaseContext, collectionName, expectedMetadata)` - Validates that a collection is properly persisted in the MasterIndex with expected metadata (fileId, documentCount). Automatically registers the file for cleanup
+- `expectCollectionPersisted(databaseContext, collectionName, expectedMetadata)` - Verifies that a collection has been persisted to the MasterIndex with expected metadata (fileId, documentCount). Automatically registers the file for cleanup and instantiates MasterIndex for assertions
+- `generateUniqueName(prefix)` - Generates unique names for artefacts
 - `registerDatabaseFile(fileId)` - Tracks Drive files created during Database tests for cleanup
 - `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
 - `setupDatabaseTestEnvironment(overrides)` - Constructs Database instances with isolated storage
@@ -340,6 +341,12 @@ it('should insert', () => {
 ### Gas Mocks (`tests/helpers/gas-mocks/`)
 
 - GAS API mocks tested separately to ensure correct behavior
+
+### Validation Test Helpers (`tests/helpers/validation-test-helpers.js`)
+
+- `cleanupValidationTests(env)` - Cleans up all validation test resources (files, folders, ScriptProperties)
+- `describeValidationOperatorSuite(description, callback)` - Creates a complete validation test suite with automatic setup/cleanup. Provides `getTestEnv()` function to access the test environment (database, collections, mock data)
+- `setupValidationTestEnvironment()` - Sets up a complete validation test environment with pre-populated collections and mock data
 
 ## GAS Mock Limitations & Skipped Tests
 
