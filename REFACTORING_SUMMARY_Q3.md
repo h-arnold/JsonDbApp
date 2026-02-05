@@ -15,6 +15,7 @@ The `QueryEngineMatcher` class contained duplicate operator evaluation logic:
 2. **Unused duplicate**: The `_compareValues` method (lines 219-230) which duplicated the same logic using a switch statement
 
 The `_compareValues` method was marked as "Legacy comparison helper retained for compatibility with existing tests" but was actually **dead code** - no code in the repository referenced it. This created:
+
 - **Maintenance burden**: Two places to update when operator logic changes
 - **Drift risk**: The duplicate logic could diverge over time
 - **Code bloat**: 18 unnecessary lines (method + JSDoc)
@@ -24,12 +25,15 @@ The `_compareValues` method was marked as "Legacy comparison helper retained for
 ### Code Analysis
 
 **Search for usage:**
+
 ```bash
 grep -r "_compareValues" --include="*.js" .
 ```
+
 **Result:** Only found in its definition - never called.
 
 **Verification:**
+
 - `_evaluateOperator` method uses `COMPARISON_EVALUATORS` map (line 203)
 - No other references to `_compareValues` in codebase
 - Method was truly dead code
@@ -39,6 +43,7 @@ grep -r "_compareValues" --include="*.js" .
 Tests validated **observable behavior** through `executeQuery`, not internal implementation:
 
 **Relevant test suites:**
+
 - `tests/unit/QueryEngine/QueryEngine.test.js`
   - **Comparison Operators suite** (48 tests total in file)
     - `$eq` with strings, numbers, booleans
@@ -50,6 +55,7 @@ Tests validated **observable behavior** through `executeQuery`, not internal imp
     - Nested operator validation
 
 **Test validation approach:**
+
 - Verify query results match expected documents
 - Verify correct error types thrown for unsupported operators
 - No tests coupled to `_compareValues` implementation
@@ -61,6 +67,7 @@ Tests validated **observable behavior** through `executeQuery`, not internal imp
 **File:** `src/02_components/QueryEngine/02_QueryEngineMatcher.js`
 
 **Deleted (lines 211-230):**
+
 ```javascript
   /**
    * Legacy comparison helper retained for compatibility with existing tests.
@@ -85,8 +92,9 @@ Tests validated **observable behavior** through `executeQuery`, not internal imp
 ```
 
 **File metrics:**
+
 - **Before:** 236 lines
-- **After:** 214 lines  
+- **After:** 214 lines
 - **Reduction:** 22 lines (18 code + 4 JSDoc)
 
 ### Single Source of Truth
@@ -95,7 +103,7 @@ The refactored code now has **one clear path** for operator evaluation:
 
 1. **Evaluator functions** (lines 12-34): Dedicated functions for each operator
 2. **COMPARISON_EVALUATORS map** (lines 40-44): Operator → evaluator mapping
-3. **_evaluateOperator method** (lines 194-209): Looks up and invokes evaluator
+3. **\_evaluateOperator method** (lines 194-209): Looks up and invokes evaluator
 
 This consolidation eliminates drift risk and makes the code path obvious.
 
@@ -104,23 +112,29 @@ This consolidation eliminates drift risk and makes the code path obvious.
 ### Test Results
 
 **QueryEngine tests (48 tests):**
+
 ```bash
 npx vitest run --config tests/vitest.config.js tests/unit/QueryEngine/QueryEngine.test.js
 ```
+
 **Result:** ✅ All 48 tests passed
 
 **Full test suite (714 tests):**
+
 ```bash
 npm test
 ```
+
 **Result:** ✅ All 714 tests passed
 
 ### Code Quality
 
 **ESLint:**
+
 ```bash
 npm run lint
 ```
+
 **Result:** ✅ No errors
 
 ## Benefits
@@ -141,13 +155,14 @@ npm run lint
 
 ## Comparison with Previous Refactorings
 
-| Refactoring | Lines Removed | Complexity Reduced | Risk Level |
-|-------------|---------------|-------------------|------------|
-| **Q1** (Cache refresh) | 16 | Medium | Low |
-| **Q2** (Validation recursion) | 5 | Low | Low |
-| **Q3** (Operator evaluation) | **22** | **None** (dead code) | **None** |
+| Refactoring                   | Lines Removed | Complexity Reduced   | Risk Level |
+| ----------------------------- | ------------- | -------------------- | ---------- |
+| **Q1** (Cache refresh)        | 16            | Medium               | Low        |
+| **Q2** (Validation recursion) | 5             | Low                  | Low        |
+| **Q3** (Operator evaluation)  | **22**        | **None** (dead code) | **None**   |
 
 **Q3 observations:**
+
 - **Largest line reduction** (22 lines vs 16 and 5)
 - **Lowest risk** (removing unused code vs refactoring active logic)
 - **Simplest change** (deletion vs extraction/consolidation)

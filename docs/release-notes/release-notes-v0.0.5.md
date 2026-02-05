@@ -4,13 +4,14 @@ Release date: TBD
 
 ### Summary
 
-Code quality improvements to QueryEngine through two refactoring efforts: cache comparison optimization and validation logic consolidation. These are internal refactorings with no public API changes or behavioral differences.
+Code quality improvements to QueryEngine through three refactoring efforts: cache comparison optimization, validation logic consolidation, and operator evaluation deduplication. These are internal refactorings with no public API changes or behavioral differences.
 
 ### Highlights
 
 - **QueryEngine Cache Performance (Q1)**: Simplified cache comparison from element-by-element iteration to fingerprint-based comparison using `array.join('|')`, resulting in 10-30% faster execution for typical operator arrays
 - **QueryEngine Validation DRY (Q2)**: Eliminated duplication by consolidating 3 identical array validation loops into a single helper method
-- **Code Quality**: Net reduction of 33 lines of code across both refactorings (Q1: -28 lines, Q2: -5 lines)
+- **QueryEngine Matcher Simplification (Q3)**: Removed unused `_compareValues` method, eliminating duplicate operator evaluation logic
+- **Code Quality**: Net reduction of 55 lines of code across all refactorings (Q1: -28 lines, Q2: -5 lines, Q3: -22 lines)
 - **Maintained Compatibility**: All 714 tests pass without modification, confirming identical behavior
 
 ### Technical Details
@@ -76,6 +77,7 @@ const supportedChanged =
 **Duplication Eliminated**:
 
 Before (duplicated 3 times):
+
 ```javascript
 // Pattern repeated in 3 locations
 if (Array.isArray(value)) {
@@ -88,6 +90,7 @@ if (Array.isArray(value)) {
 ```
 
 After (single helper method):
+
 ```javascript
 // Single helper method
 _validateArrayElements(array, depth) {
@@ -105,10 +108,72 @@ if (Array.isArray(value)) {
 ```
 
 **Benefits**:
+
 - **DRY principle**: Eliminated 100% of array validation duplication
 - **Maintainability**: Changes to array validation now only need to be made in one place
 - **Readability**: Clear method name documents intent
 - **Consistency**: All array validations use identical logic path
+
+#### Q3: QueryEngine Matcher Dead Code Removal
+
+**Changed File**: `src/02_components/QueryEngine/02_QueryEngineMatcher.js`
+
+**What Changed**:
+
+- Removed unused `_compareValues()` method (22 lines total: 18 code + 4 JSDoc)
+- Eliminated duplicate operator evaluation logic
+- Single source of truth now via `COMPARISON_EVALUATORS` map
+
+**Duplication Eliminated**:
+
+The codebase had two mechanisms for operator evaluation:
+
+1. **Active path**: `COMPARISON_EVALUATORS` map → dedicated evaluator functions
+2. **Dead code**: `_compareValues` method (never called, duplicated same logic)
+
+Before (duplicate logic):
+
+```javascript
+// Dead code - never called
+_compareValues(documentValue, queryValue, operator) {
+  switch (operator) {
+    case '$eq':
+      return ComparisonUtils.equals(documentValue, queryValue, { arrayContainsScalar: true });
+    case '$gt':
+      return ComparisonUtils.compareOrdering(documentValue, queryValue) > 0;
+    case '$lt':
+      return ComparisonUtils.compareOrdering(documentValue, queryValue) < 0;
+    default:
+      throw new InvalidQueryError(`Unsupported operator: ${operator}`);
+  }
+}
+```
+
+After (single evaluation path):
+
+```javascript
+// COMPARISON_EVALUATORS map (single source of truth)
+const COMPARISON_EVALUATORS = {
+  $eq: evaluateEquality,
+  $gt: evaluateGreaterThan,
+  $lt: evaluateLessThan
+};
+
+// Used by _evaluateOperator
+const evaluator = COMPARISON_EVALUATORS[operator];
+if (!evaluator) {
+  throw new InvalidQueryError(`Unsupported operator: ${operator}`);
+}
+return evaluator(documentValue, queryValue);
+```
+
+**Benefits**:
+
+- **Dead code removal**: Eliminated 22 lines of unused code
+- **No drift risk**: Cannot diverge when only one implementation exists
+- **Clear evaluation path**: One obvious mechanism for operator evaluation
+- **Better documentation**: No confusing "retained for compatibility" comments
+- **Zero behavioral impact**: Method was never called
 
 ### Testing
 
@@ -116,12 +181,14 @@ if (Array.isArray(value)) {
 - ✅ 0 ESLint errors
 - ✅ Q1: Critical test "should respect supported operator pruning after construction" passes, confirming post-construction mutation detection still works
 - ✅ Q2: All query validation tests pass, confirming depth tracking and nested validation work correctly
+- ✅ Q3: All 48 QueryEngine tests pass, confirming operator evaluation works identically
 - ✅ No test code changes required
 
 ### Full Changelog
 
 - Q1 Details: [REFACTORING_SUMMARY_Q1.md](/REFACTORING_SUMMARY_Q1.md)
 - Q2 Details: [REFACTORING_SUMMARY_Q2.md](/REFACTORING_SUMMARY_Q2.md)
+- Q3 Details: [REFACTORING_SUMMARY_Q3.md](/REFACTORING_SUMMARY_Q3.md)
 
 ### Upgrade Notes
 
@@ -155,12 +222,24 @@ For query validation operations:
 - Negligible performance impact (one additional method call per array validation)
 - Clearer code intent with descriptive method name
 
+**Q3 - Operator Evaluation Simplification:**
+
+For operator matching operations:
+
+- Eliminates dead code (22 lines removed)
+- Single source of truth for operator evaluation via `COMPARISON_EVALUATORS` map
+- No drift risk between duplicate implementations
+- Clearer code path with one evaluation mechanism
+- Zero performance impact (dead code was never executed)
+
 ### Combined Impact
 
 **Code Metrics:**
-- Total lines removed: 33 (Q1: -28, Q2: -5)
-- Methods removed: 1 (`_hasDifferentSnapshot`)
+
+- Total lines removed: 55 (Q1: -28, Q2: -5, Q3: -22)
+- Methods removed: 2 (`_hasDifferentSnapshot`, `_compareValues`)
 - Methods added: 1 (`_validateArrayElements`)
-- Duplication eliminated: 3 instances of array validation loops
+- Duplication eliminated: 3 instances of array validation loops + duplicate operator evaluation logic
 - Performance: Improved cache comparison speed (Q1)
-- Maintainability: Significantly improved (both)
+- Dead code removed: 22 lines (Q3)
+- Maintainability: Significantly improved (all three refactorings)

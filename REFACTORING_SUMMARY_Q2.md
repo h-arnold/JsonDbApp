@@ -33,6 +33,7 @@ _validateArrayElements(array, depth) {
 ```
 
 **Rationale:** Three separate locations in the validation code contained identical array traversal logic. Extracting this into a named helper method:
+
 - Eliminates duplication (DRY principle)
 - Improves readability with descriptive method name
 - Centralizes array validation logic for easier maintenance
@@ -43,6 +44,7 @@ _validateArrayElements(array, depth) {
 **Location 1: `_validateNode` - Direct array handling**
 
 Before:
+
 ```javascript
 if (Array.isArray(node)) {
   node.forEach((element) => {
@@ -55,6 +57,7 @@ if (Array.isArray(node)) {
 ```
 
 After:
+
 ```javascript
 if (Array.isArray(node)) {
   this._validateArrayElements(node, depth);
@@ -65,6 +68,7 @@ if (Array.isArray(node)) {
 **Location 2: `_validateNode` - Field value array handling**
 
 Before:
+
 ```javascript
 if (Array.isArray(value)) {
   value.forEach((element) => {
@@ -76,6 +80,7 @@ if (Array.isArray(value)) {
 ```
 
 After:
+
 ```javascript
 if (Array.isArray(value)) {
   this._validateArrayElements(value, depth);
@@ -85,6 +90,7 @@ if (Array.isArray(value)) {
 **Location 3: `_validateOperatorOperand` - Operator operand array handling**
 
 Before:
+
 ```javascript
 if (Array.isArray(value)) {
   value.forEach((element) => {
@@ -96,6 +102,7 @@ if (Array.isArray(value)) {
 ```
 
 After:
+
 ```javascript
 if (Array.isArray(value)) {
   this._validateArrayElements(value, depth);
@@ -119,12 +126,12 @@ if (Array.isArray(value)) {
 
 ### Duplication Elimination
 
-| Metric | Before | After | Change |
-|--------|--------|-------|--------|
-| Duplicated forEach loops | 3 | 0 | -3 instances |
-| Lines of duplicated code | 15 | 0 | -15 lines |
-| Lines with helper | N/A | 13 | +13 lines (10 method + 3 calls) |
-| Net reduction | - | - | -5 lines |
+| Metric                   | Before | After | Change                          |
+| ------------------------ | ------ | ----- | ------------------------------- |
+| Duplicated forEach loops | 3      | 0     | -3 instances                    |
+| Lines of duplicated code | 15     | 0     | -15 lines                       |
+| Lines with helper        | N/A    | 13    | +13 lines (10 method + 3 calls) |
+| Net reduction            | -      | -     | -5 lines                        |
 
 ## Preserved Behaviors
 
@@ -213,11 +220,11 @@ The refactoring successfully eliminates duplication in array validation logic by
 
 **Before/After Comparison:**
 
-| Aspect | Before | After |
-|--------|--------|-------|
-| Array validation locations | 3 separate loops | 1 helper method |
-| Duplication | 15 lines duplicated | 0 lines duplicated |
-| Total file lines | 177 | 172 |
-| Method count | 6 | 7 |
-| Maintainability | Must update 3 locations | Update 1 location |
-| Readability | Loop logic repeated | Clear method name |
+| Aspect                     | Before                  | After              |
+| -------------------------- | ----------------------- | ------------------ |
+| Array validation locations | 3 separate loops        | 1 helper method    |
+| Duplication                | 15 lines duplicated     | 0 lines duplicated |
+| Total file lines           | 177                     | 172                |
+| Method count               | 6                       | 7                  |
+| Maintainability            | Must update 3 locations | Update 1 location  |
+| Readability                | Loop logic repeated     | Clear method name  |
