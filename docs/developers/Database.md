@@ -17,7 +17,7 @@
       - [`createDatabase()`](#createdatabase)
       - [`initialise()`](#initialise)
       - [`recoverDatabase(backupFileId)`](#recoverdatabasebackupfileid)
-      - [`collection(name)`](#collectionname)
+      - [`getCollection(name)`](#getcollectionname)
       - [`createCollection(name)`](#createcollectionname)
       - [`listCollections()`](#listcollections)
       - [`dropCollection(name)`](#dropcollectionname)
@@ -63,7 +63,7 @@ The `Database` class is the main entry point for GAS DB operations, providing hi
 - `MasterIndex`: Single source of truth for collection metadata
 - `FileService`: Drive API operations and caching
 - `DatabaseConfig`: Configuration management
-- `GASDBLogger`: Logging and monitoring
+- `JDbLogger`: Logging and monitoring
 
 ## Architecture & MasterIndex Integration
 
@@ -161,7 +161,11 @@ db.initialise(); // Loads from restored MasterIndex
 ## Constructor
 
 ```javascript
-constructor((config = {}));
+class Database {
+  constructor(config = {}) {
+    // ...
+  }
+}
 ```
 
 **Parameters:**
@@ -541,7 +545,7 @@ if (backupSuccess) {
 
 ```javascript
 try {
-  const collection = db.collection('invalid/name');
+  const collection = db.getCollection('invalid/name');
 } catch (error) {
   if (error.message.includes('invalid characters')) {
     console.error('Collection name validation failed');

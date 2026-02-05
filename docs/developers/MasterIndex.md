@@ -162,7 +162,11 @@ Prevents concurrent modifications across script instances:
 ## Constructor
 
 ```javascript
-constructor((config = {}));
+class MasterIndex {
+  constructor(config = {}) {
+    // ...
+  }
+}
 ```
 
 **Parameters:**
@@ -189,7 +193,7 @@ Adds collection to master index. Called by `Database.createCollection()` during 
 
 #### `getCollection(name)` / `getCollections()`
 
-Retrieves collection metadata. Used by `Database.collection()` and `Database.listCollections()` to access collection information.
+Retrieves collection metadata. Used by `Database.getCollection()` and `Database.listCollections()` to access collection information.
 
 - **Returns:** Collection object or collections map
 - **Database Integration:** Called by Database class methods to check for existing collections before creation or access
@@ -268,7 +272,7 @@ const collection = masterIndex.addCollection('users', {
   documentCount: 0
 });
 
-// Database.collection() and Database.listCollections() use:
+// Database.getCollection() and Database.listCollections() use:
 const users = masterIndex.getCollection('users');
 
 // Collection operations trigger metadata updates:
@@ -320,7 +324,7 @@ The `MasterIndex` serves as the primary source of truth for collection metadata,
 
 **Access Flow:**
 
-1. `Database.collection()` checks in-memory cache first
+1. `Database.getCollection()` checks in-memory cache first
 2. If not cached, Database calls `MasterIndex.getCollection()`
 3. If not in MasterIndex, Database falls back to Drive index file
 4. Auto-creation triggers if enabled and collection doesn't exist
