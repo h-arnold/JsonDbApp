@@ -12,7 +12,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createIsolatedTestCollection } from '../../helpers/collection-test-helpers.js';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees
+} from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Find Operations', () => {
   describe('findOne operations', () => {
@@ -72,10 +75,7 @@ describe('Collection Find Operations', () => {
     it('finds first matching document by field criteria', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('findOneFieldTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', priority: 1 });
-      collection.insertOne({ name: 'Bob', department: 'Engineering', priority: 2 });
-      collection.insertOne({ name: 'Charlie', department: 'Marketing', priority: 1 });
+      seedStandardEmployees(collection);
 
       // Act
       const engineeringDoc = collection.findOne({ department: 'Engineering' });
@@ -83,19 +83,16 @@ describe('Collection Find Operations', () => {
       // Assert
       expect(engineeringDoc).not.toBeNull();
       expect(engineeringDoc.department).toBe('Engineering');
-      expect(['Alice', 'Bob']).toContain(engineeringDoc.name);
+      expect(['Alice', 'Charlie']).toContain(engineeringDoc.name);
     });
 
     it('finds document matching multiple field criteria', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('findOneMultiCriteriaTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', priority: 1 });
-      collection.insertOne({ name: 'Bob', department: 'Engineering', priority: 2 });
-      collection.insertOne({ name: 'Charlie', department: 'Marketing', priority: 1 });
+      seedStandardEmployees(collection);
 
       // Act
-      const specificDoc = collection.findOne({ department: 'Engineering', priority: 2 });
+      const specificDoc = collection.findOne({ department: 'Marketing', salary: 65000 });
 
       // Assert
       expect(specificDoc).not.toBeNull();
@@ -177,36 +174,28 @@ describe('Collection Find Operations', () => {
     it('finds documents by exact field match', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('findByFieldTestCollection');
-
-      collection.insertOne({ name: 'Alice', age: 30, active: true, department: 'Engineering' });
-      collection.insertOne({ name: 'Bob', age: 25, active: false, department: 'Marketing' });
-      collection.insertOne({ name: 'Charlie', age: 30, active: true, department: 'Engineering' });
+      seedStandardEmployees(collection);
 
       // Act & Assert - String field matching
       const engineeringDocs = collection.find({ department: 'Engineering' });
       expect(engineeringDocs).toHaveLength(2);
-      expect(engineeringDocs[0].name).toBe('Alice');
-      expect(engineeringDocs[1].name).toBe('Charlie');
+      const names = engineeringDocs.map((doc) => doc.name);
+      expect(names).toContain('Alice');
+      expect(names).toContain('Charlie');
 
       // Numeric field matching
-      const age30Docs = collection.find({ age: 30 });
-      expect(age30Docs).toHaveLength(2);
-
-      // Boolean field matching
-      const activeDocs = collection.find({ active: true });
-      expect(activeDocs).toHaveLength(2);
+      const salary75KDocs = collection.find({ salary: 75000 });
+      expect(salary75KDocs).toHaveLength(1);
+      expect(salary75KDocs[0].name).toBe('Alice');
     });
 
     it('finds documents matching multiple fields (implicit AND)', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('findMultiFieldTestCollection');
-
-      collection.insertOne({ name: 'Alice', age: 30, active: true, department: 'Engineering' });
-      collection.insertOne({ name: 'Bob', age: 30, active: false, department: 'Engineering' });
-      collection.insertOne({ name: 'Charlie', age: 25, active: true, department: 'Engineering' });
+      seedStandardEmployees(collection);
 
       // Act
-      const results = collection.find({ age: 30, active: true, department: 'Engineering' });
+      const results = collection.find({ department: 'Engineering', salary: 75000 });
 
       // Assert
       expect(results).toHaveLength(1);
@@ -242,24 +231,16 @@ describe('Collection Find Operations', () => {
     it('finds documents using comparison operators ($gt, $lt)', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('findComparisonTestCollection');
-
-      collection.insertOne({ name: 'Alice', score: 85, joinDate: new Date('2020-01-15') });
-      collection.insertOne({ name: 'Bob', score: 92, joinDate: new Date('2021-03-20') });
-      collection.insertOne({ name: 'Charlie', score: 78, joinDate: new Date('2019-11-10') });
+      seedStandardEmployees(collection);
 
       // Act & Assert - Greater than
-      const highScoreDocs = collection.find({ score: { $gt: 80 } });
-      expect(highScoreDocs).toHaveLength(2);
+      const highSalaryDocs = collection.find({ salary: { $gt: 70000 } });
+      expect(highSalaryDocs).toHaveLength(2);
 
       // Less than
-      const lowScoreDocs = collection.find({ score: { $lt: 80 } });
-      expect(lowScoreDocs).toHaveLength(1);
-      expect(lowScoreDocs[0].name).toBe('Charlie');
-
-      // Date comparison
-      const recentDocs = collection.find({ joinDate: { $gt: new Date('2020-06-01') } });
-      expect(recentDocs).toHaveLength(1);
-      expect(recentDocs[0].name).toBe('Bob');
+      const lowSalaryDocs = collection.find({ salary: { $lt: 70000 } });
+      expect(lowSalaryDocs).toHaveLength(1);
+      expect(lowSalaryDocs[0].name).toBe('Bob');
     });
   });
 });

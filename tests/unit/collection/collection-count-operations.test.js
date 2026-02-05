@@ -12,7 +12,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createIsolatedTestCollection } from '../../helpers/collection-test-helpers.js';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees
+} from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Count Operations', () => {
   describe('countDocuments - basic operations', () => {
@@ -76,29 +79,22 @@ describe('Collection Count Operations', () => {
     it('counts documents by department field', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('countFieldFilterTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
-      collection.insertOne({ name: 'Bob', department: 'Marketing', status: 'active' });
-      collection.insertOne({ name: 'Charlie', department: 'Engineering', status: 'inactive' });
-      collection.insertOne({ name: 'David', department: 'Engineering', status: 'active' });
+      seedStandardEmployees(collection);
 
       // Act & Assert
-      expect(collection.countDocuments({ department: 'Engineering' })).toBe(3);
+      expect(collection.countDocuments({ department: 'Engineering' })).toBe(2);
       expect(collection.countDocuments({ department: 'Marketing' })).toBe(1);
     });
 
-    it('counts documents by status field', () => {
+    it('counts documents by salary field', () => {
       // Arrange
-      const { collection } = createIsolatedTestCollection('countStatusFieldTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
-      collection.insertOne({ name: 'Bob', department: 'Marketing', status: 'active' });
-      collection.insertOne({ name: 'Charlie', department: 'Engineering', status: 'inactive' });
-      collection.insertOne({ name: 'David', department: 'Engineering', status: 'active' });
+      const { collection } = createIsolatedTestCollection('countSalaryFieldTestCollection');
+      seedStandardEmployees(collection);
 
       // Act & Assert
-      expect(collection.countDocuments({ status: 'active' })).toBe(3);
-      expect(collection.countDocuments({ status: 'inactive' })).toBe(1);
+      expect(collection.countDocuments({ salary: 75000 })).toBe(1);
+      expect(collection.countDocuments({ salary: 65000 })).toBe(1);
+      expect(collection.countDocuments({ salary: 80000 })).toBe(1);
     });
   });
 
@@ -224,44 +220,32 @@ describe('Collection Count Operations', () => {
     it('counts documents using $gt operator', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('countComparisonFilterTestCollection');
-
-      collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
-      collection.insertOne({ name: 'Bob', score: 92, experience: 3 });
-      collection.insertOne({ name: 'Charlie', score: 78, experience: 7 });
-      collection.insertOne({ name: 'David', score: 88, experience: 2 });
+      seedStandardEmployees(collection);
 
       // Act & Assert
-      expect(collection.countDocuments({ score: { $gt: 85 } })).toBe(2);
-      expect(collection.countDocuments({ experience: { $gt: 4 } })).toBe(2);
+      expect(collection.countDocuments({ salary: { $gt: 70000 } })).toBe(2);
+      expect(collection.countDocuments({ salary: { $gt: 75000 } })).toBe(1);
     });
 
     it('counts documents using $lt operator', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('countLessThanTestCollection');
-
-      collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
-      collection.insertOne({ name: 'Bob', score: 92, experience: 3 });
-      collection.insertOne({ name: 'Charlie', score: 78, experience: 7 });
-      collection.insertOne({ name: 'David', score: 88, experience: 2 });
+      seedStandardEmployees(collection);
 
       // Act & Assert
-      expect(collection.countDocuments({ score: { $lt: 80 } })).toBe(1);
+      expect(collection.countDocuments({ salary: { $lt: 70000 } })).toBe(1);
     });
 
     it('counts documents using $eq operator', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('countEqualsTestCollection');
-
-      collection.insertOne({ name: 'Alice', score: 85, experience: 5 });
-      collection.insertOne({ name: 'Bob', score: 92, experience: 3 });
-      collection.insertOne({ name: 'Charlie', score: 78, experience: 7 });
-      collection.insertOne({ name: 'David', score: 88, experience: 2 });
+      seedStandardEmployees(collection);
 
       // Act
-      const exactScoreCount = collection.countDocuments({ score: { $eq: 88 } });
+      const exactSalaryCount = collection.countDocuments({ salary: { $eq: 75000 } });
 
       // Assert
-      expect(exactScoreCount).toBe(1);
+      expect(exactSalaryCount).toBe(1);
     });
   });
 

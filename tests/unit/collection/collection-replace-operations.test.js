@@ -11,7 +11,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createIsolatedTestCollection } from '../../helpers/collection-test-helpers.js';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees,
+  assertAcknowledgedWrite
+} from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Replace Operations', () => {
   describe('replaceOne by ID', () => {
@@ -36,9 +40,7 @@ describe('Collection Replace Operations', () => {
       const replaceResult = collection.replaceOne({ _id: docId }, replacementDoc);
 
       // Assert
-      expect(replaceResult.matchedCount).toBe(1);
-      expect(replaceResult.modifiedCount).toBe(1);
-      expect(replaceResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(replaceResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify document was completely replaced (old fields gone, new fields present)
       const replacedDoc = collection.findOne({ _id: docId });
@@ -55,31 +57,20 @@ describe('Collection Replace Operations', () => {
     it('replaces first matching document by field filter', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('replaceOneByFilterTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', role: 'Developer' });
-      collection.insertOne({ name: 'Bob', department: 'Engineering', role: 'Manager' });
-      collection.insertOne({ name: 'Charlie', department: 'Marketing', role: 'Analyst' });
+      seedStandardEmployees(collection);
 
       // Act
-      const replacementDoc = {
-        name: 'Alice Smith',
-        department: 'Product',
-        role: 'Product Manager',
-        startDate: new Date()
-      };
+      const replacementDoc = { name: 'Alice Smith', department: 'Product', salary: 100000 };
       const replaceResult = collection.replaceOne({ name: 'Alice' }, replacementDoc);
 
       // Assert
-      expect(replaceResult.matchedCount).toBe(1);
-      expect(replaceResult.modifiedCount).toBe(1);
-      expect(replaceResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(replaceResult, { matchedCount: 1, modifiedCount: 1 });
 
-      // Verify correct document was replaced
+      // Verify correct document was replaced (old fields removed, new fields present)
       const replacedDoc = collection.findOne({ name: 'Alice Smith' });
       expect(replacedDoc).not.toBeNull();
       expect(replacedDoc.department).toBe('Product');
-      expect(replacedDoc.role).toBe('Product Manager');
-      expect(replacedDoc.startDate).not.toBeNull();
+      expect(replacedDoc.salary).toBe(100000);
     });
 
     it('replaces only the specific matching document', () => {
@@ -100,8 +91,7 @@ describe('Collection Replace Operations', () => {
       const replaceResult = collection.replaceOne({ name: 'Alice', age: 30 }, replacementDoc);
 
       // Assert
-      expect(replaceResult.matchedCount).toBe(1);
-      expect(replaceResult.modifiedCount).toBe(1);
+      assertAcknowledgedWrite(replaceResult, { matchedCount: 1, modifiedCount: 1 });
 
       // Verify correct document was replaced
       const replacedDoc = collection.findOne({ name: 'Alice Senior' });

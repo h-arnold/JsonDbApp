@@ -13,7 +13,11 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createIsolatedTestCollection } from '../../helpers/collection-test-helpers.js';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees,
+  assertAcknowledgedWrite
+} from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Delete Operations', () => {
   describe('deleteOne by ID', () => {
@@ -28,8 +32,7 @@ describe('Collection Delete Operations', () => {
       const deleteResult = collection.deleteOne({ _id: doc1.insertedId });
 
       // Assert - MongoDB-compatible return format
-      expect(deleteResult.deletedCount).toBe(1);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 1 });
     });
   });
 
@@ -47,8 +50,7 @@ describe('Collection Delete Operations', () => {
       const deleteResult = collection.deleteOne({ name: 'Test' });
 
       // Assert
-      expect(deleteResult.deletedCount).toBe(1);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 1 });
 
       // Verify delete worked
       const remainingDocs = collection.find({});
@@ -59,17 +61,13 @@ describe('Collection Delete Operations', () => {
     it('deletes first matching document by single field filter', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('deleteFieldFilterTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering', status: 'active' });
-      collection.insertOne({ name: 'Bob', department: 'Marketing', status: 'active' });
-      collection.insertOne({ name: 'Charlie', department: 'Engineering', status: 'inactive' });
+      seedStandardEmployees(collection);
 
       // Act
       const deleteResult = collection.deleteOne({ department: 'Engineering' });
 
       // Assert - MongoDB-compatible return format
-      expect(deleteResult.deletedCount).toBe(1);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 1 });
 
       // Verify correct document was deleted (one Engineering doc should remain)
       const remainingDocs = collection.find({});
@@ -110,8 +108,7 @@ describe('Collection Delete Operations', () => {
       });
 
       // Assert
-      expect(deleteResult.deletedCount).toBe(1);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 1 });
 
       // Verify correct document was deleted
       const remainingDocs = collection.find({ department: 'Engineering' });
@@ -146,8 +143,7 @@ describe('Collection Delete Operations', () => {
       const deleteResult = collection.deleteOne({ 'profile.team': 'Frontend' });
 
       // Assert
-      expect(deleteResult.deletedCount).toBe(1);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 1 });
 
       // Verify correct document was deleted
       const remainingDocs = collection.find({});
@@ -169,8 +165,7 @@ describe('Collection Delete Operations', () => {
       const deleteResult = collection.deleteOne({ score: { $lt: 80 } });
 
       // Assert
-      expect(deleteResult.deletedCount).toBe(1);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 1 });
 
       // Verify correct document was deleted
       const remainingDocs = collection.find({});
@@ -183,20 +178,17 @@ describe('Collection Delete Operations', () => {
     it('returns zero deletions when filter matches no documents', () => {
       // Arrange
       const { collection } = createIsolatedTestCollection('deleteNoMatchTestCollection');
-
-      collection.insertOne({ name: 'Alice', department: 'Engineering' });
-      collection.insertOne({ name: 'Bob', department: 'Marketing' });
+      seedStandardEmployees(collection);
 
       // Act
       const deleteResult = collection.deleteOne({ department: 'NonExistent' });
 
       // Assert
-      expect(deleteResult.deletedCount).toBe(0);
-      expect(deleteResult.acknowledged).toBe(true);
+      assertAcknowledgedWrite(deleteResult, { deletedCount: 0 });
 
       // Verify no documents were deleted
       const remainingDocs = collection.find({});
-      expect(remainingDocs.length).toBe(2);
+      expect(remainingDocs.length).toBe(3);
     });
   });
 });

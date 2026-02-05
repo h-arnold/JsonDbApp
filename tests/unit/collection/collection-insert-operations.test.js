@@ -6,7 +6,10 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { createIsolatedTestCollection } from '../../helpers/collection-test-helpers.js';
+import {
+  createIsolatedTestCollection,
+  assertAcknowledgedWrite
+} from '../../helpers/collection-test-helpers.js';
 
 describe('Collection Insert Operations', () => {
   it('inserts a single document and returns MongoDB-compatible result', () => {
@@ -20,9 +23,8 @@ describe('Collection Insert Operations', () => {
     const result = collection.insertOne(testDoc);
 
     // Assert - Verify MongoDB-compatible return format
+    assertAcknowledgedWrite(result);
     expect(result).toHaveProperty('insertedId');
-    expect(result).toHaveProperty('acknowledged');
-    expect(result.acknowledged).toBe(true);
     expect(result.insertedId).not.toBeNull();
   });
 
@@ -37,7 +39,6 @@ describe('Collection Insert Operations', () => {
     const result = collection.insertOne(testDoc);
 
     // Assert
-    expect(result.insertedId).toBe('explicit-id-123');
-    expect(result.acknowledged).toBe(true);
+    assertAcknowledgedWrite(result, { insertedId: 'explicit-id-123' });
   });
 });
