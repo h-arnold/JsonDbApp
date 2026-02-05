@@ -208,6 +208,8 @@ describe('MasterIndex Persistence', () => {
 
 ### Test with Helper Functions
 
+**Database Test Helpers Example:**
+
 ```javascript
 import { describe, it, expect } from 'vitest';
 import {
@@ -226,6 +228,32 @@ describe('Database Collection Management', () => {
 
     expect(collection.name).toBe(name);
     expect(database.listCollections()).toContain(name);
+  });
+});
+```
+
+**Collection Test Helpers Example:**
+
+```javascript
+import { describe, it, expect } from 'vitest';
+import {
+  createIsolatedTestCollection,
+  seedStandardEmployees,
+  assertAcknowledgedWrite
+} from '../../helpers/collection-test-helpers.js';
+
+describe('Collection Delete Operations', () => {
+  it('should delete a document by ID', () => {
+    // Arrange
+    const { collection } = createIsolatedTestCollection('deleteTest');
+    const { aliceId } = seedStandardEmployees(collection);
+
+    // Act
+    const result = collection.deleteOne({ _id: aliceId });
+
+    // Assert
+    assertAcknowledgedWrite(result, { deletedCount: 1 });
+    expect(collection.findOne({ _id: aliceId })).toBeNull();
   });
 });
 ```
@@ -318,8 +346,16 @@ Test helpers provide reusable setup and cleanup utilities:
 
 ([tests/helpers/collection-test-helpers.js](../../tests/helpers/collection-test-helpers.js))
 
-- `createTestCollection(database, name, options)`: Creates and configures test collection
-- `seedCollectionData(collection, documents)`: Pre-populates collection
+- `assertAcknowledgedWrite(result, expectedCounts)`: Validates MongoDB-style write results with optional count assertions (matchedCount, modifiedCount, deletedCount, insertedId)
+- `createIsolatedTestCollection(collectionName)`: Builds fresh environment and returns env, collection, and file ID
+- `createMasterIndexKey()`: Creates unique master index key with auto-cleanup
+- `createTestCollection(env, collectionName, options)`: Creates Collection instance with registration
+- `createTestCollectionFile(folderId, collectionName)`: Creates collection file
+- `createTestFileWithContent(folderId, fileName, content)`: Creates file with custom content
+- `createTestFolder()`: Creates test folder in mock Drive with auto-cleanup
+- `registerAndCreateCollection(env, collectionName, fileId, documentCount)`: Registers metadata and creates Collection
+- `seedStandardEmployees(collection)`: Seeds collection with standard employee test data (Alice, Bob, Charlie) and returns object containing insertedId values
+- `setupCollectionTestEnvironment()`: Complete environment setup (folder, master index, file service, database)
 
 ### MasterIndex Helpers
 
