@@ -133,7 +133,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### Q3. QueryEngineMatcher duplicates operator evaluation logic
+### Q3. QueryEngineMatcher duplicates operator evaluation logic ✅ **COMPLETED**
 
 **Area:** `src/02_components/QueryEngine/02_QueryEngineMatcher.js`
 
@@ -149,6 +149,15 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/QueryEngine/QueryEngine.test.js` (Comparison Operators and Error Handling suites).
 
 **Conclusion:** The duplication is safe to remove. Tests verify operator outcomes and error handling, so any consolidation must maintain ComparisonUtils ordering/equality semantics and unsupported operator errors.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Removed unused `_compareValues` method (dead code - never called)
+- **Removed:** 22 lines (18 code + 4 JSDoc) of duplicate operator evaluation logic
+- **Results:** All 714 tests pass, no new lint errors
+- **Benefits:** Eliminated duplication, removed drift risk, single source of truth via `COMPARISON_EVALUATORS` map
+- **Documentation:** See `REFACTORING_SUMMARY_Q3.md` for full details
 
 ---
 
