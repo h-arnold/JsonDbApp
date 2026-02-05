@@ -3,9 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach } from 'vitest';
-import {
-  createDocumentOperationsContext
-} from '../../helpers/document-operations-test-helpers.js';
+import { createDocumentOperationsContext } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Insert Operations', () => {
   let docOps, reload;
