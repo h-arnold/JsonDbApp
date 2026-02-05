@@ -4,7 +4,7 @@
  * Provides utilities for setting up and tearing down Collection tests in the Vitest environment.
  */
 
-import { afterEach } from 'vitest';
+import { afterEach, expect } from 'vitest';
 
 /**
  * Tracks created Drive resources for cleanup
@@ -206,6 +206,63 @@ export const createIsolatedTestCollection = (collectionName) => {
   const env = setupCollectionTestEnvironment();
   const { collection, fileId } = createTestCollection(env, collectionName);
   return { env, collection, fileId };
+};
+
+/**
+ * Seeds a collection with standard test employee data
+ * @param {object} collection - Collection instance to seed
+ * @returns {object} Object containing inserted document IDs { aliceId, bobId, charlieId }
+ */
+export const seedStandardEmployees = (collection) => {
+  const aliceResult = collection.insertOne({
+    name: 'Alice',
+    department: 'Engineering',
+    salary: 75000
+  });
+  const bobResult = collection.insertOne({ name: 'Bob', department: 'Marketing', salary: 65000 });
+  const charlieResult = collection.insertOne({
+    name: 'Charlie',
+    department: 'Engineering',
+    salary: 80000
+  });
+
+  return {
+    aliceId: aliceResult.insertedId,
+    bobId: bobResult.insertedId,
+    charlieId: charlieResult.insertedId
+  };
+};
+
+/**
+ * Validates MongoDB-style write result objects
+ * @param {object} result - Write operation result to validate
+ * @param {object} [expectedCounts] - Optional object with expected count properties
+ * @param {number} [expectedCounts.matchedCount] - Expected number of matched documents
+ * @param {number} [expectedCounts.modifiedCount] - Expected number of modified documents
+ * @param {number} [expectedCounts.deletedCount] - Expected number of deleted documents
+ * @param {string} [expectedCounts.insertedId] - Expected inserted document ID
+ */
+export const assertAcknowledgedWrite = (result, expectedCounts = {}) => {
+  // Basic assertions
+  expect(result).toBeDefined();
+  expect(result.acknowledged).toBe(true);
+
+  // Optional count assertions
+  if (expectedCounts.matchedCount !== undefined) {
+    expect(result.matchedCount).toBe(expectedCounts.matchedCount);
+  }
+
+  if (expectedCounts.modifiedCount !== undefined) {
+    expect(result.modifiedCount).toBe(expectedCounts.modifiedCount);
+  }
+
+  if (expectedCounts.deletedCount !== undefined) {
+    expect(result.deletedCount).toBe(expectedCounts.deletedCount);
+  }
+
+  if (expectedCounts.insertedId !== undefined) {
+    expect(result.insertedId).toBe(expectedCounts.insertedId);
+  }
 };
 
 /**
