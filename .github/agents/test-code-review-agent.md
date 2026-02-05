@@ -290,13 +290,15 @@ it('should insert', () => {
 
 ### Collection Test Helpers (`tests/helpers/collection-test-helpers.js`)
 
+- `assertAcknowledgedWrite(result, expectedCounts)` - Validates MongoDB-style write results with optional count assertions
+- `createIsolatedTestCollection(collectionName)` - Builds fresh environment and returns env, collection, and file ID
 - `createMasterIndexKey()` - Creates unique master index key with auto-cleanup
 - `createTestCollection(env, collectionName, options)` - Creates Collection instance with registration
 - `createTestCollectionFile(folderId, collectionName)` - Creates collection file
 - `createTestFileWithContent(folderId, fileName, content)` - Creates file with custom content
 - `createTestFolder()` - Creates test folder in mock Drive with auto-cleanup
-- `createIsolatedTestCollection(collectionName)` - Builds fresh environment and returns env, collection, and file ID
 - `registerAndCreateCollection(env, collectionName, fileId, documentCount)` - Registers metadata and creates Collection
+- `seedStandardEmployees(collection)` - Seeds collection with standard employee test data (Alice, Bob, Charlie)
 - `setupCollectionTestEnvironment()` - Complete environment setup (folder, master index, file service, database)
 
 ### Collection Coordinator Test Helpers (`tests/helpers/collection-coordinator-test-helpers.js`)
