@@ -637,7 +637,7 @@ For each issue found:
 
 ### Format
 
-```
+````
 ## Issue: [Brief description]
 **File:** [path/to/file.js:lineNumber](path/to/file.js#LlineNumber)
 **Severity:** Critical/High/Medium/Low
@@ -646,7 +646,7 @@ For each issue found:
 **Evidence:**
 ```javascript
 [Code snippet showing the issue]
-```
+````
 
 **Fix:** [Specific recommendation]
 **Impact:** [Why this matters]
@@ -685,7 +685,7 @@ if (!doc || typeof doc !== 'object') {
 **Fix:** Extract validation to private method `_validateDocument(doc, context)` and call from all three methods.
 **Impact:** Reduces maintenance burden and ensures consistent validation across methods.
 
-```
+````
 
 ## Common Anti-Patterns
 
@@ -702,7 +702,7 @@ class Collection {
   // Index updates
   // ...
 }
-```
+````
 
 ✅ **Right**: Split into focused components
 
