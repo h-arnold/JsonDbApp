@@ -4,17 +4,15 @@
 
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
-  setupTestEnvironment,
-  resetCollection
+  createDocumentOperationsContext,
+  assertAcknowledgedResult
 } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Update Operations', () => {
-  let env, docOps;
+  let docOps, reload;
 
   beforeEach(() => {
-    env = setupTestEnvironment();
-    resetCollection(env.collection);
-    docOps = new DocumentOperations(env.collection);
+    ({ docOps, reload } = createDocumentOperationsContext());
   });
 
   it('should update existing document by ID', () => {
@@ -24,9 +22,7 @@ describe('DocumentOperations Update Operations', () => {
 
     const result = docOps.updateDocument(insertedDoc._id, updatedData);
 
-    expect(result).toBeDefined();
-    expect(result.acknowledged).toBe(true);
-    expect(result.modifiedCount).toBe(1);
+    assertAcknowledgedResult(result, { modifiedCount: 1 });
 
     const foundDoc = docOps.findDocumentById(insertedDoc._id);
     expect(foundDoc.name).toBe(updatedData.name);
@@ -34,17 +30,15 @@ describe('DocumentOperations Update Operations', () => {
     expect(foundDoc.status).toBe(updatedData.status);
     expect(foundDoc._id).toBe(insertedDoc._id);
 
-    env.collection._loadData();
-    const savedDoc = env.collection._documents[insertedDoc._id];
+    const documents = reload();
+    const savedDoc = documents[insertedDoc._id];
     expect(savedDoc.name).toBe(updatedData.name);
   });
 
   it('should return error result when updating non-existent document', () => {
     const result = docOps.updateDocument('non-existent-id-456', { name: 'Updated User' });
 
-    expect(result).toBeDefined();
-    expect(result.acknowledged).toBe(true);
-    expect(result.modifiedCount).toBe(0);
+    assertAcknowledgedResult(result, { modifiedCount: 0 });
   });
 
   it('should throw error when updating with invalid parameters', () => {
@@ -61,17 +55,15 @@ describe('DocumentOperations Update Operations', () => {
 
     const result = docOps.updateDocumentWithOperators(inserted._id, ops);
 
-    expect(result).toBeDefined();
-    expect(result.acknowledged).toBe(true);
-    expect(result.modifiedCount).toBe(1);
+    assertAcknowledgedResult(result, { modifiedCount: 1 });
 
     const updated = docOps.findDocumentById(inserted._id);
     expect(updated.age).toBe(35);
     expect(Array.isArray(updated.tags)).toBe(true);
     expect(updated.tags).toContain('admin');
 
-    env.collection._loadData();
-    const saved = env.collection._documents[inserted._id];
+    const documents = reload();
+    const saved = documents[inserted._id];
     expect(saved.age).toBe(35);
     expect(saved.tags).toContain('admin');
   });
@@ -115,8 +107,7 @@ describe('DocumentOperations Update Operations', () => {
 
     const result = docOps.replaceDocument(orig._id, replacement);
 
-    expect(result.acknowledged).toBe(true);
-    expect(result.modifiedCount).toBe(1);
+    assertAcknowledgedResult(result, { modifiedCount: 1 });
 
     const found = docOps.findDocumentById(orig._id);
     expect(found.a).toBe(9);
