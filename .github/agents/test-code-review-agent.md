@@ -321,6 +321,7 @@ it('should insert', () => {
 - `cleanupDatabaseTests()` - Deletes registered master index keys and Drive files after each test
 - `createBackupIndexFile(rootFolderId, backupData, fileName)` - Creates a Drive backup file for recovery scenarios
 - `createDatabaseTestConfig(overrides)` - Builds isolated configuration objects for Database tests
+- `expectCollectionPersisted(databaseContext, collectionName, expectedMetadata)` - Validates that a collection is properly persisted in the MasterIndex with expected metadata (fileId, documentCount). Automatically registers the file for cleanup
 - `registerDatabaseFile(fileId)` - Tracks Drive files created during Database tests for cleanup
 - `registerMasterIndexKey(masterIndexKey)` - Registers ScriptProperties keys for cleanup
 - `setupDatabaseTestEnvironment(overrides)` - Constructs Database instances with isolated storage
