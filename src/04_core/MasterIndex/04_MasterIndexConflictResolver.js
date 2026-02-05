@@ -26,6 +26,25 @@ class MasterIndexConflictResolver {
    * @param {Object} dependencies.ErrorHandler - Error handler module
    */
   constructor(masterIndex, dependencies = {}) {
+    const { CollectionMetadata, Validate, ErrorHandler } = this._validateDependencies(
+      masterIndex,
+      dependencies
+    );
+
+    this._masterIndex = masterIndex;
+    this._CollectionMetadata = CollectionMetadata;
+    this._Validate = Validate;
+    this._ErrorHandler = ErrorHandler;
+  }
+
+  /**
+   * Validate dependency inputs for the resolver.
+   * @param {MasterIndex} masterIndex - MasterIndex instance
+   * @param {Object} dependencies - Dependency collection
+   * @returns {{CollectionMetadata: Function, Validate: Object, ErrorHandler: Object}} Validated deps
+   * @private
+   */
+  _validateDependencies(masterIndex, dependencies) {
     const { CollectionMetadata, Validate, ErrorHandler } = dependencies;
     if (!CollectionMetadata || !Validate || !ErrorHandler) {
       if (ErrorHandler && ErrorHandler.ErrorTypes && ErrorHandler.ErrorTypes.INVALID_ARGUMENT) {
@@ -39,10 +58,8 @@ class MasterIndexConflictResolver {
     }
 
     Validate.required(masterIndex, 'masterIndex');
-    this._masterIndex = masterIndex;
-    this._CollectionMetadata = CollectionMetadata;
-    this._Validate = Validate;
-    this._ErrorHandler = ErrorHandler;
+
+    return { CollectionMetadata, Validate, ErrorHandler };
   }
 
   /**

@@ -305,22 +305,27 @@ class QueryEngine {
       ? this._config.logicalOperators
       : getDefaultLogicalOperators();
 
-    if (this._supportedOperatorsSnapshot.length !== currentOperators.length) {
+    if (this._hasDifferentSnapshot(currentOperators, this._supportedOperatorsSnapshot)) {
       return true;
     }
 
-    for (let index = 0; index < currentOperators.length; index += 1) {
-      if (currentOperators[index] !== this._supportedOperatorsSnapshot[index]) {
-        return true;
-      }
-    }
+    return this._hasDifferentSnapshot(currentLogicalOperators, this._logicalOperatorsSnapshot);
+  }
 
-    if (this._logicalOperatorsSnapshot.length !== currentLogicalOperators.length) {
+  /**
+   * Compare arrays to determine if snapshot has changed.
+   * @param {Array} current - Current values
+   * @param {Array} snapshot - Cached snapshot
+   * @returns {boolean} True when arrays differ
+   * @private
+   */
+  _hasDifferentSnapshot(current, snapshot) {
+    if (snapshot.length !== current.length) {
       return true;
     }
 
-    for (let index = 0; index < currentLogicalOperators.length; index += 1) {
-      if (currentLogicalOperators[index] !== this._logicalOperatorsSnapshot[index]) {
+    for (let index = 0; index < current.length; index += 1) {
+      if (current[index] !== snapshot[index]) {
         return true;
       }
     }

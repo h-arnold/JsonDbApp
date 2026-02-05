@@ -239,56 +239,95 @@ class CollectionWriteOperations {
    */
   replaceOne(filterOrId, doc) {
     return this._coordinator.coordinate('replaceOne', () => {
-      this._collection._ensureLoaded();
+      return this._replaceOneOperation(filterOrId, doc);
+    });
+  }
 
-      // Use Validate for doc validation - disallow empty objects
-      Validate.object(doc, 'doc', false);
+  /**
+   * Execute the replaceOne operation logic.
+   * @param {string|Object} filterOrId - Document ID or filter criteria
+   * @param {Object} doc - Replacement document
+   * @returns {Object} Replace result
+   * @private
+   */
+  _replaceOneOperation(filterOrId, doc) {
+    this._collection._ensureLoaded();
+    this._validateReplacementDocument(doc);
 
-      // Validate that replacement document contains no operators
-      Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
-
-      // Determine if this is a filter or ID
-      const isIdFilter = typeof filterOrId === 'string';
-      const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
-
-      if (!isIdFilter) {
-        this._collection._validateFilter(filter, 'replaceOne');
-      }
-
-      const filterKeys = Object.keys(filter);
-
-      if (filterKeys.length === 1 && filterKeys[0] === '_id') {
-        // ID-based replacement
-        const result = this._collection._documentOperations.replaceDocument(filter._id, doc);
-
-        if (result.modifiedCount > 0) {
-          this._collection._updateMetadata();
-          this._collection._markDirty();
-        }
-
-        return {
-          matchedCount: result.modifiedCount > 0 ? 1 : 0,
-          modifiedCount: result.modifiedCount,
-          acknowledged: true
-        };
-      }
-
-      // Field-based filter replacement
+    const filter = this._normaliseReplaceFilter(filterOrId);
+    if (!this._isIdFilter(filter)) {
       const matchingDoc = this._collection._documentOperations.findByQuery(filter);
-
       if (!matchingDoc) {
         return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
       }
+      return this._applyReplacement(matchingDoc._id, doc, true);
+    }
 
-      const result = this._collection._documentOperations.replaceDocument(matchingDoc._id, doc);
+    return this._applyReplacement(filter._id, doc, false);
+  }
 
-      if (result.modifiedCount > 0) {
-        this._collection._updateMetadata();
-        this._collection._markDirty();
-      }
+  /**
+   * Validate replacement document for replaceOne.
+   * @param {Object} doc - Replacement document
+   * @private
+   */
+  _validateReplacementDocument(doc) {
+    Validate.object(doc, 'doc', false);
+    Validate.validateUpdateObject(doc, 'doc', { forbidOperators: true });
+  }
 
+  /**
+   * Normalise replace filter input.
+   * @param {string|Object} filterOrId - Filter or ID
+   * @returns {Object} Normalised filter
+   * @private
+   */
+  _normaliseReplaceFilter(filterOrId) {
+    const isIdFilter = typeof filterOrId === 'string';
+    const filter = isIdFilter ? { _id: filterOrId } : filterOrId;
+
+    if (!isIdFilter) {
+      this._collection._validateFilter(filter, 'replaceOne');
+    }
+
+    return filter;
+  }
+
+  /**
+   * Determine whether the filter is an ID-only filter.
+   * @param {Object} filter - Normalised filter
+   * @returns {boolean} True when filter is only _id
+   * @private
+   */
+  _isIdFilter(filter) {
+    const filterKeys = Object.keys(filter);
+    return filterKeys.length === 1 && filterKeys[0] === '_id';
+  }
+
+  /**
+   * Apply a replacement and update metadata when required.
+   * @param {string} documentId - Document ID
+   * @param {Object} doc - Replacement document
+   * @param {boolean} isQueryFilter - True when replacement is query-based
+   * @returns {Object} Replace result
+   * @private
+   */
+  _applyReplacement(documentId, doc, isQueryFilter) {
+    const result = this._collection._documentOperations.replaceDocument(documentId, doc);
+    if (result.modifiedCount > 0) {
+      this._collection._updateMetadata();
+      this._collection._markDirty();
+    }
+
+    if (isQueryFilter) {
       return { matchedCount: 1, modifiedCount: result.modifiedCount, acknowledged: true };
-    });
+    }
+
+    return {
+      matchedCount: result.modifiedCount > 0 ? 1 : 0,
+      modifiedCount: result.modifiedCount,
+      acknowledged: true
+    };
   }
 
   /**

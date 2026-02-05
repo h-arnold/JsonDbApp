@@ -135,29 +135,59 @@ class UpdateEngineValidation {
     }
 
     if (currentType === 'object') {
-      const currentComparableType = this._resolveComparableObjectType(currentValue);
-      const newComparableType = this._resolveComparableObjectType(newValue);
-
-      if (currentComparableType === 'plain' || newComparableType === 'plain') {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
-          fieldPath,
-          { currentValue, newValue },
-          `${operation} operation cannot compare objects or arrays`
-        );
-      }
-
-      if (
-        currentComparableType !== null &&
-        newComparableType !== null &&
-        currentComparableType !== newComparableType
-      ) {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
-          fieldPath,
-          { currentValue, newValue },
-          `${operation} operation cannot compare objects or arrays`
-        );
-      }
+      this._validateComparableObjectValues(currentValue, newValue, fieldPath, operation);
     }
+  }
+
+  /**
+   * Validate comparable object values for array/date comparisons.
+   * @param {*} currentValue - Current value
+   * @param {*} newValue - New value
+   * @param {string} fieldPath - Field path for error reporting
+   * @param {string} operation - Operation name for error reporting
+   * @private
+   */
+  _validateComparableObjectValues(currentValue, newValue, fieldPath, operation) {
+    const currentComparableType = this._resolveComparableObjectType(currentValue);
+    const newComparableType = this._resolveComparableObjectType(newValue);
+
+    if (this._isPlainComparableType(currentComparableType, newComparableType)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        { currentValue, newValue },
+        `${operation} operation cannot compare objects or arrays`
+      );
+    }
+
+    if (this._hasMismatchedComparableTypes(currentComparableType, newComparableType)) {
+      throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+        fieldPath,
+        { currentValue, newValue },
+        `${operation} operation cannot compare objects or arrays`
+      );
+    }
+  }
+
+  /**
+   * Check if either comparable type is plain object/array.
+   * @param {'date'|'plain'|null} currentType - Current comparable type
+   * @param {'date'|'plain'|null} newType - New comparable type
+   * @returns {boolean} True when a plain object or array is involved
+   * @private
+   */
+  _isPlainComparableType(currentType, newType) {
+    return currentType === 'plain' || newType === 'plain';
+  }
+
+  /**
+   * Check for mismatched comparable types.
+   * @param {'date'|'plain'|null} currentType - Current comparable type
+   * @param {'date'|'plain'|null} newType - New comparable type
+   * @returns {boolean} True when both types exist and differ
+   * @private
+   */
+  _hasMismatchedComparableTypes(currentType, newType) {
+    return currentType !== null && newType !== null && currentType !== newType;
   }
 
   /**

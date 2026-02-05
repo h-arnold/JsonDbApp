@@ -45,40 +45,9 @@ class ComparisonUtils {
     const { arrayContainsScalar = false } = options;
 
     if (a === b) return true; // covers primitives, reference equality
-    if (a === null || a === undefined || b === null || b === undefined) {
-      return a === b; // one nullish -> only equal if both
-    }
+    if (ComparisonUtils._isEitherNullish(a, b)) return false;
 
-    // Date equality
-    if (a instanceof Date && b instanceof Date) {
-      return a.getTime() === b.getTime();
-    }
-
-    // Array membership semantics (only when enabled & a is array & b not array)
-    if (arrayContainsScalar && Array.isArray(a) && !Array.isArray(b)) {
-      // Use strict equality for membership (mirrors original QueryEngine.includes behaviour)
-      return a.indexOf(b) !== NEGATIVE_ONE;
-    }
-
-    // Type mismatch (after membership consideration) -> not equal
-    if (typeof a !== typeof b) return false;
-
-    // Arrays deep equality
-    if (Array.isArray(a) && Array.isArray(b)) {
-      if (a.length !== b.length) return false;
-      for (let i = 0; i < a.length; i++) {
-        if (!ComparisonUtils.equals(a[i], b[i], { arrayContainsScalar: false })) return false;
-      }
-      return true;
-    }
-
-    // Objects (plain or otherwise) deep equality (exclude Dates handled earlier, arrays already handled)
-    if (Validate.isPlainObject(a) && Validate.isPlainObject(b)) {
-      return ObjectUtils.deepEqual(a, b);
-    }
-
-    // Fallback strict equality (covers numbers, strings, booleans, symbols, functions)
-    return false; // at this point a !== b and not deeply equal
+    return ComparisonUtils._compareEqualityByType(a, b, arrayContainsScalar);
   }
 
   /**
@@ -88,15 +57,46 @@ class ComparisonUtils {
    * @returns {number} positive if a>b, negative if a<b, 0 if equal or not comparable
    */
   static compareOrdering(a, b) {
-    if (a === null || a === undefined || b === null || b === undefined) return 0;
-    if (a instanceof Date && b instanceof Date) return a.getTime() - b.getTime();
-    if (typeof a === 'number' && typeof b === 'number') return a - b;
-    if (typeof a === 'string' && typeof b === 'string') {
-      if (a === b) return 0;
-      if (a > b) return 1;
-      return NEGATIVE_ONE;
-    }
+    if (ComparisonUtils._isEitherNullish(a, b)) return 0;
+
+    const dateComparison = ComparisonUtils._compareDateOrdering(a, b);
+    if (dateComparison !== null) return dateComparison;
+
+    const numberComparison = ComparisonUtils._compareNumberOrdering(a, b);
+    if (numberComparison !== null) return numberComparison;
+
+    const stringComparison = ComparisonUtils._compareStringOrdering(a, b);
+    if (stringComparison !== null) return stringComparison;
+
     return 0; // Not comparable (different types or unsupported)
+  }
+
+  /**
+   * Compare values by type-specific equality rules.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @param {boolean} arrayContainsScalar - Whether to treat arrays as scalar containers
+   * @returns {boolean} True when values are equal
+   * @private
+   */
+  static _compareEqualityByType(a, b, arrayContainsScalar) {
+    const dateEquality = ComparisonUtils._compareDateEquality(a, b);
+    if (dateEquality !== null) return dateEquality;
+
+    const arrayMembership = ComparisonUtils._compareArrayMembership(a, b, arrayContainsScalar);
+    if (arrayMembership !== null) return arrayMembership;
+
+    if (typeof a !== typeof b) return false;
+
+    if (ComparisonUtils._areArrays(a, b)) {
+      return ComparisonUtils._compareArrays(a, b);
+    }
+
+    if (ComparisonUtils._arePlainObjects(a, b)) {
+      return ObjectUtils.deepEqual(a, b);
+    }
+
+    return false;
   }
 
   /**
@@ -123,29 +123,12 @@ class ComparisonUtils {
         throw new InvalidQueryError(`Unsupported operator: ${op}`);
       }
       const expected = operatorObject[op];
-      switch (op) {
-        case '$eq':
-          if (
-            !ComparisonUtils.equals(actual, expected, {
-              arrayContainsScalar: arrayContainsScalarForEq
-            })
-          )
-            return false;
-          break;
-        case '$gt': {
-          const cmp = ComparisonUtils.compareOrdering(actual, expected);
-          if (!(cmp > 0)) return false;
-          break;
-        }
-        case '$lt': {
-          const cmp = ComparisonUtils.compareOrdering(actual, expected);
-          if (!(cmp < 0)) return false;
-          break;
-        }
-        default:
-          // Exhaustive safeguard
-          throw new InvalidQueryError(`Unsupported operator: ${op}`);
-      }
+      if (
+        !ComparisonUtils._applyOperator(actual, expected, op, {
+          arrayContainsScalarForEq
+        })
+      )
+        return false;
     }
     return true;
   }
@@ -175,9 +158,7 @@ class ComparisonUtils {
 
     // Direct operator object against primitive / Date candidate
     if (ComparisonUtils.isOperatorObject(predicate)) {
-      // Only support primitive / Date; if candidate is object, return false (documented simplification)
-      if (Validate.isPlainObject(candidate)) return false;
-      return ComparisonUtils.applyOperators(candidate, predicate);
+      return ComparisonUtils._matchOperatorPredicate(candidate, predicate);
     }
 
     // Non-object / null predicate: fall back to equality
@@ -188,14 +169,196 @@ class ComparisonUtils {
     // Candidate must be object for field subset semantics
     if (!Validate.isPlainObject(candidate)) return false;
 
+    return ComparisonUtils._matchObjectPredicate(candidate, predicate, operatorSupport);
+  }
+
+  /**
+   * Check if either value is nullish (null or undefined).
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean} True when either value is nullish
+   * @private
+   */
+  static _isEitherNullish(a, b) {
+    return ComparisonUtils._isNullish(a) || ComparisonUtils._isNullish(b);
+  }
+
+  /**
+   * Check if a value is nullish (null or undefined).
+   * @param {*} value - Value to check
+   * @returns {boolean} True when nullish
+   * @private
+   */
+  static _isNullish(value) {
+    return value === null || value === undefined;
+  }
+
+  /**
+   * Compare dates for equality.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean|null} True/false when both are dates, null otherwise
+   * @private
+   */
+  static _compareDateEquality(a, b) {
+    if (!(a instanceof Date && b instanceof Date)) {
+      return null;
+    }
+    return a.getTime() === b.getTime();
+  }
+
+  /**
+   * Compare dates for ordering.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {number|null} Comparison result or null if not dates
+   * @private
+   */
+  static _compareDateOrdering(a, b) {
+    if (!(a instanceof Date && b instanceof Date)) {
+      return null;
+    }
+    return a.getTime() - b.getTime();
+  }
+
+  /**
+   * Compare numbers for ordering.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {number|null} Comparison result or null if not numbers
+   * @private
+   */
+  static _compareNumberOrdering(a, b) {
+    if (!(typeof a === 'number' && typeof b === 'number')) {
+      return null;
+    }
+    return a - b;
+  }
+
+  /**
+   * Compare strings for ordering.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {number|null} Comparison result or null if not strings
+   * @private
+   */
+  static _compareStringOrdering(a, b) {
+    if (!(typeof a === 'string' && typeof b === 'string')) {
+      return null;
+    }
+    if (a === b) return 0;
+    if (a > b) return 1;
+    return NEGATIVE_ONE;
+  }
+
+  /**
+   * Compare array membership equality when enabled.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @param {boolean} arrayContainsScalar - Whether to use membership checks
+   * @returns {boolean|null} True/false when membership applies, null otherwise
+   * @private
+   */
+  static _compareArrayMembership(a, b, arrayContainsScalar) {
+    if (!arrayContainsScalar || !Array.isArray(a) || Array.isArray(b)) {
+      return null;
+    }
+    return a.indexOf(b) !== NEGATIVE_ONE;
+  }
+
+  /**
+   * Compare arrays element-by-element.
+   * @param {Array} a - First array
+   * @param {Array} b - Second array
+   * @returns {boolean} True when equal
+   * @private
+   */
+  static _compareArrays(a, b) {
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!ComparisonUtils.equals(a[i], b[i], { arrayContainsScalar: false })) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Check whether both values are arrays.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean} True when both are arrays
+   * @private
+   */
+  static _areArrays(a, b) {
+    return Array.isArray(a) && Array.isArray(b);
+  }
+
+  /**
+   * Check whether both values are plain objects.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean} True when both are plain objects
+   * @private
+   */
+  static _arePlainObjects(a, b) {
+    return Validate.isPlainObject(a) && Validate.isPlainObject(b);
+  }
+
+  /**
+   * Apply a specific operator check.
+   * @param {*} actual - Actual value
+   * @param {*} expected - Expected value
+   * @param {string} operator - Operator name
+   * @param {Object} options - Evaluation options
+   * @param {boolean} options.arrayContainsScalarForEq - Array membership toggle for $eq
+   * @returns {boolean} True when operator matches
+   * @throws {InvalidQueryError} When unsupported operator used
+   * @private
+   */
+  static _applyOperator(actual, expected, operator, options = {}) {
+    const { arrayContainsScalarForEq = true } = options;
+    switch (operator) {
+      case '$eq':
+        return ComparisonUtils.equals(actual, expected, {
+          arrayContainsScalar: arrayContainsScalarForEq
+        });
+      case '$gt':
+        return ComparisonUtils.compareOrdering(actual, expected) > 0;
+      case '$lt':
+        return ComparisonUtils.compareOrdering(actual, expected) < 0;
+      default:
+        throw new InvalidQueryError(`Unsupported operator: ${operator}`);
+    }
+  }
+
+  /**
+   * Match an operator object against a candidate.
+   * @param {*} candidate - Value being tested
+   * @param {Object} predicate - Operator object
+   * @returns {boolean} True when candidate matches
+   * @private
+   */
+  static _matchOperatorPredicate(candidate, predicate) {
+    if (Validate.isPlainObject(candidate)) return false;
+    return ComparisonUtils.applyOperators(candidate, predicate);
+  }
+
+  /**
+   * Match a plain object predicate against a candidate object.
+   * @param {Object} candidate - Candidate object
+   * @param {Object} predicate - Predicate object
+   * @param {boolean} operatorSupport - Whether operator objects are allowed
+   * @returns {boolean} True when candidate matches
+   * @private
+   */
+  static _matchObjectPredicate(candidate, predicate, operatorSupport) {
     for (const key of Object.keys(predicate)) {
       const expected = predicate[key];
       const actual = candidate[key];
 
       if (operatorSupport && ComparisonUtils.isOperatorObject(expected)) {
         if (!ComparisonUtils.applyOperators(actual, expected)) return false;
-      } else {
-        if (!ComparisonUtils.equals(actual, expected, { arrayContainsScalar: false })) return false;
+      } else if (!ComparisonUtils.equals(actual, expected, { arrayContainsScalar: false })) {
+        return false;
       }
     }
     return true;

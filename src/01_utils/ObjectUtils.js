@@ -53,51 +53,27 @@ class ObjectUtils {
    * @returns {*} Object with ISO date strings converted to Date instances
    */
   static convertDateStringsToObjects(obj) {
-    // Handle primitives and null/undefined
-    if (obj === null || obj === undefined) {
+    if (ObjectUtils._isNullish(obj)) {
       return obj;
     }
 
-    // Handle string primitives - check if they're ISO date strings
     if (typeof obj === 'string') {
-      if (ObjectUtils._isISODateString(obj)) {
-        return new Date(obj);
-      }
-      return obj;
+      return ObjectUtils._convertStringToDate(obj);
     }
 
-    // Handle non-object types (numbers, booleans, etc.)
     if (typeof obj !== 'object') {
       return obj;
     }
 
-    // Handle Date objects (already converted)
     if (obj instanceof Date) {
       return obj;
     }
 
-    // Handle arrays
     if (Array.isArray(obj)) {
-      obj.forEach((item, index) => {
-        obj[index] = ObjectUtils.convertDateStringsToObjects(item);
-      });
-      return obj;
+      return ObjectUtils._convertArrayDateStrings(obj);
     }
 
-    // Handle objects
-    Object.keys(obj).forEach((key) => {
-      const value = obj[key];
-
-      // Check if it's an ISO date string
-      if (typeof value === 'string' && ObjectUtils._isISODateString(value)) {
-        obj[key] = new Date(value);
-      } else if (value && typeof value === 'object') {
-        // Recursively process nested objects/arrays
-        obj[key] = ObjectUtils.convertDateStringsToObjects(value);
-      }
-    });
-
-    return obj;
+    return ObjectUtils._convertObjectDateStrings(obj);
   }
 
   /**
@@ -177,49 +153,152 @@ class ObjectUtils {
    * @returns {boolean} True if values are deeply equal, false otherwise.
    */
   static deepEqual(a, b) {
-    // Strict equality check for primitives and same-instance objects
     if (a === b) return true;
+    if (ObjectUtils._isEitherNullish(a, b)) return false;
 
-    // If one is null/undefined, they must both be so
-    if (a === null || a === undefined || b === null || b === undefined) return a === b;
+    const dateEquality = ObjectUtils._compareDateEquality(a, b);
+    if (dateEquality !== null) return dateEquality;
 
-    // Handle Dates
-    if (a instanceof Date && b instanceof Date) {
-      return a.getTime() === b.getTime();
-    }
-
-    // Types must be the same
     if (typeof a !== 'object' || typeof b !== 'object') return false;
 
-    // Handle arrays
-    if (Array.isArray(a) && Array.isArray(b)) {
-      // Arrays with different lengths are not equal
-      if (a.length !== b.length) return false;
-      // Recursively compare each element
-      for (let i = 0; i < a.length; i++) {
-        if (!ObjectUtils.deepEqual(a[i], b[i])) return false;
+    return ObjectUtils._compareStructuredEquality(a, b);
+  }
+
+  /**
+   * Check if a value is null or undefined.
+   * @param {*} value - Value to inspect
+   * @returns {boolean} True when nullish
+   * @private
+   */
+  static _isNullish(value) {
+    return value === null || value === undefined;
+  }
+
+  /**
+   * Check if either value is null or undefined.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean} True when either value is nullish
+   * @private
+   */
+  static _isEitherNullish(a, b) {
+    return ObjectUtils._isNullish(a) || ObjectUtils._isNullish(b);
+  }
+
+  /**
+   * Convert a string to a Date if it is ISO formatted.
+   * @param {string} value - String value
+   * @returns {string|Date} Converted value
+   * @private
+   */
+  static _convertStringToDate(value) {
+    if (ObjectUtils._isISODateString(value)) {
+      return new Date(value);
+    }
+    return value;
+  }
+
+  /**
+   * Convert ISO date strings inside an array.
+   * @param {Array} array - Array to process
+   * @returns {Array} Updated array
+   * @private
+   */
+  static _convertArrayDateStrings(array) {
+    array.forEach((item, index) => {
+      array[index] = ObjectUtils.convertDateStringsToObjects(item);
+    });
+    return array;
+  }
+
+  /**
+   * Convert ISO date strings inside an object.
+   * @param {Object} obj - Object to process
+   * @returns {Object} Updated object
+   * @private
+   */
+  static _convertObjectDateStrings(obj) {
+    Object.keys(obj).forEach((key) => {
+      const value = obj[key];
+
+      if (typeof value === 'string') {
+        obj[key] = ObjectUtils._convertStringToDate(value);
+        return;
       }
-      return true;
+
+      if (value && typeof value === 'object') {
+        obj[key] = ObjectUtils.convertDateStringsToObjects(value);
+      }
+    });
+
+    return obj;
+  }
+
+  /**
+   * Compare date equality when both values are dates.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean|null} True/false for dates, null otherwise
+   * @private
+   */
+  static _compareDateEquality(a, b) {
+    if (!(a instanceof Date && b instanceof Date)) {
+      return null;
+    }
+    return a.getTime() === b.getTime();
+  }
+
+  /**
+   * Compare array equality, handling mismatched array types.
+   * @param {*} a - First value
+   * @param {*} b - Second value
+   * @returns {boolean} True when equal arrays
+   * @private
+   */
+  static _compareArraysForEquality(a, b) {
+    if (!(Array.isArray(a) && Array.isArray(b))) {
+      return false;
+    }
+    if (a.length !== b.length) return false;
+    for (let i = 0; i < a.length; i++) {
+      if (!ObjectUtils.deepEqual(a[i], b[i])) return false;
+    }
+    return true;
+  }
+
+  /**
+   * Compare structured values (arrays or objects).
+   * @param {Object|Array} a - First value
+   * @param {Object|Array} b - Second value
+   * @returns {boolean} True when equal
+   * @private
+   */
+  static _compareStructuredEquality(a, b) {
+    if (Array.isArray(a) || Array.isArray(b)) {
+      return ObjectUtils._compareArraysForEquality(a, b);
     }
 
-    // If one is an array and the other is not, they are not equal
-    if (Array.isArray(a) || Array.isArray(b)) return false;
+    return ObjectUtils._compareObjectsForEquality(a, b);
+  }
 
-    // Handle objects
+  /**
+   * Compare object equality by keys and values.
+   * @param {Object} a - First object
+   * @param {Object} b - Second object
+   * @returns {boolean} True when equal
+   * @private
+   */
+  static _compareObjectsForEquality(a, b) {
     const keysA = Object.keys(a);
     const keysB = Object.keys(b);
 
-    // Objects with different number of keys are not equal
     if (keysA.length !== keysB.length) return false;
 
     for (const key of keysA) {
-      // If a key from A is not in B, they are not equal
       if (!Object.prototype.hasOwnProperty.call(b, key)) return false;
-      // Recursively compare the values of each key
       if (!ObjectUtils.deepEqual(a[key], b[key])) return false;
     }
 
-    // If all keys and values match, the objects are equal
     return true;
   }
 }

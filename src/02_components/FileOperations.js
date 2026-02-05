@@ -300,27 +300,15 @@ class FileOperations {
       error: errorMessage
     });
 
-    // Check for specific Drive API error types
-    if (
-      errorMessage.includes('File not found') ||
-      errorMessage.includes('Requested entity was not found')
-    ) {
+    if (this._isDriveFileNotFound(errorMessage)) {
       throw new FileNotFoundError(fileId);
     }
 
-    if (
-      errorMessage.includes('Permission denied') ||
-      errorMessage.includes('Access denied') ||
-      errorMessage.includes('Insufficient permission')
-    ) {
+    if (this._isDrivePermissionError(errorMessage)) {
       throw new PermissionDeniedError(fileId, operation);
     }
 
-    if (
-      errorMessage.includes('Quota exceeded') ||
-      errorMessage.includes('Rate limit exceeded') ||
-      errorMessage.includes('Too many requests')
-    ) {
+    if (this._isDriveQuotaError(errorMessage)) {
       throw new QuotaExceededError(operation, 'Drive API');
     }
 
@@ -344,25 +332,13 @@ class FileOperations {
       } catch (error) {
         lastError = error;
 
-        // Don't retry on certain error types
-        if (
-          error instanceof ErrorHandler.ErrorTypes.FILE_NOT_FOUND ||
-          error instanceof ErrorHandler.ErrorTypes.PERMISSION_DENIED ||
-          error instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT ||
-          error instanceof ErrorHandler.ErrorTypes.INVALID_ARGUMENT
-        ) {
+        if (this._isNonRetryableError(error)) {
           throw error;
         }
 
         if (attempt < this._maxRetries) {
-          const delay = this._retryDelayMs * Math.pow(this._retryBackoffBase, attempt - 1);
-          this._logger.warn(`Operation ${operationName} failed, retrying in ${delay}ms`, {
-            attempt,
-            maxRetries: this._maxRetries,
-            error: error.message
-          });
-
-          Utilities.sleep(delay);
+          this._logRetry(operationName, attempt, error);
+          Utilities.sleep(this._calculateRetryDelay(attempt));
         }
       }
     }
@@ -372,5 +348,87 @@ class FileOperations {
     });
 
     throw lastError;
+  }
+
+  /**
+   * Check whether the error indicates a missing file.
+   * @param {string} errorMessage - Error message
+   * @returns {boolean} True when file not found
+   * @private
+   */
+  _isDriveFileNotFound(errorMessage) {
+    return (
+      errorMessage.includes('File not found') ||
+      errorMessage.includes('Requested entity was not found')
+    );
+  }
+
+  /**
+   * Check whether the error indicates insufficient permissions.
+   * @param {string} errorMessage - Error message
+   * @returns {boolean} True when permission denied
+   * @private
+   */
+  _isDrivePermissionError(errorMessage) {
+    return (
+      errorMessage.includes('Permission denied') ||
+      errorMessage.includes('Access denied') ||
+      errorMessage.includes('Insufficient permission')
+    );
+  }
+
+  /**
+   * Check whether the error indicates a quota or rate limit failure.
+   * @param {string} errorMessage - Error message
+   * @returns {boolean} True when quota exceeded
+   * @private
+   */
+  _isDriveQuotaError(errorMessage) {
+    return (
+      errorMessage.includes('Quota exceeded') ||
+      errorMessage.includes('Rate limit exceeded') ||
+      errorMessage.includes('Too many requests')
+    );
+  }
+
+  /**
+   * Determine if an error should not be retried.
+   * @param {Error} error - Error instance
+   * @returns {boolean} True when retry should be skipped
+   * @private
+   */
+  _isNonRetryableError(error) {
+    return (
+      error instanceof ErrorHandler.ErrorTypes.FILE_NOT_FOUND ||
+      error instanceof ErrorHandler.ErrorTypes.PERMISSION_DENIED ||
+      error instanceof ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT ||
+      error instanceof ErrorHandler.ErrorTypes.INVALID_ARGUMENT
+    );
+  }
+
+  /**
+   * Calculate retry delay with exponential backoff.
+   * @param {number} attempt - Attempt index
+   * @returns {number} Delay in milliseconds
+   * @private
+   */
+  _calculateRetryDelay(attempt) {
+    return this._retryDelayMs * Math.pow(this._retryBackoffBase, attempt - 1);
+  }
+
+  /**
+   * Log retry attempts for failed operations.
+   * @param {string} operationName - Operation name
+   * @param {number} attempt - Attempt number
+   * @param {Error} error - Error instance
+   * @private
+   */
+  _logRetry(operationName, attempt, error) {
+    const delay = this._calculateRetryDelay(attempt);
+    this._logger.warn(`Operation ${operationName} failed, retrying in ${delay}ms`, {
+      attempt,
+      maxRetries: this._maxRetries,
+      error: error.message
+    });
   }
 }
