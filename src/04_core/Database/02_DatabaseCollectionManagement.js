@@ -26,16 +26,6 @@ class DatabaseCollectionManagement {
    * @param {string} originalName - Original collection name supplied by caller
    * @returns {Collection} Collection instance
    */
-  collection(resolvedName, originalName) {
-    return this._resolveCollection(resolvedName, originalName);
-  }
-
-  /**
-   * Retrieve an existing collection or auto-create when enabled (API alias).
-   * @param {string} resolvedName - Sanitised collection name for lookup
-   * @param {string} originalName - Original collection name supplied by caller
-   * @returns {Collection} Collection instance
-   */
   getCollection(resolvedName, originalName) {
     return this._resolveCollection(resolvedName, originalName);
   }

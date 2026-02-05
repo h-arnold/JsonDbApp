@@ -60,10 +60,8 @@ class MasterIndexLockManager {
         lockedAt: now,
         lockTimeout: timeout
       };
-      collection.setLockStatus(newLockStatus);
-      this._masterIndex._updateCollectionMetadataInternal(collectionName, {
-        lockStatus: collection.getLockStatus()
-      });
+
+      this._setAndPersistLockStatus(collectionName, collection, newLockStatus);
 
       this._masterIndex._logger.info('Collection lock acquired.', {
         collectionName,
@@ -104,15 +102,14 @@ class MasterIndexLockManager {
         return false;
       }
 
-      collection.setLockStatus({
+      const clearedLockStatus = {
         isLocked: false,
         lockedBy: null,
         lockedAt: null,
         lockTimeout: null
-      });
-      this._masterIndex._updateCollectionMetadataInternal(collectionName, {
-        lockStatus: collection.getLockStatus()
-      });
+      };
+
+      this._setAndPersistLockStatus(collectionName, collection, clearedLockStatus);
 
       this._masterIndex._logger.info('Collection lock released.', { collectionName, operationId });
       return true;
@@ -165,13 +162,24 @@ class MasterIndexLockManager {
             this._masterIndex._logger.info('Cleaning up expired lock.', {
               collectionName: name
             });
-            collection.setLockStatus(null);
-            this._masterIndex._updateCollectionMetadataInternal(name, {
-              lockStatus: null
-            });
+            this._setAndPersistLockStatus(name, collection, null);
           }
         }
       }
+    });
+  }
+
+  /**
+   * Set lock status on collection and persist to MasterIndex.
+   * @param {string} collectionName - Collection name
+   * @param {CollectionMetadata} collection - Collection metadata instance
+   * @param {Object|null} lockStatus - Lock status payload or null to clear
+   * @private
+   */
+  _setAndPersistLockStatus(collectionName, collection, lockStatus) {
+    collection.setLockStatus(lockStatus);
+    this._masterIndex._updateCollectionMetadataInternal(collectionName, {
+      lockStatus: collection.getLockStatus()
     });
   }
 }

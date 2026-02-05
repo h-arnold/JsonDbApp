@@ -73,7 +73,12 @@ class UpdateEngineFieldOperators {
    */
   applyMin(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$min');
-    this._applyComparisonOperator(document, ops, '$min', (current, candidate) => candidate < current);
+    this._applyComparisonOperator(
+      document,
+      ops,
+      '$min',
+      (current, candidate) => candidate < current
+    );
     return document;
   }
 
@@ -87,7 +92,12 @@ class UpdateEngineFieldOperators {
    */
   applyMax(document, ops) {
     this._validation.validateOperationsNotEmpty(ops, '$max');
-    this._applyComparisonOperator(document, ops, '$max', (current, candidate) => candidate > current);
+    this._applyComparisonOperator(
+      document,
+      ops,
+      '$max',
+      (current, candidate) => candidate > current
+    );
     return document;
   }
 
@@ -147,7 +157,12 @@ class UpdateEngineFieldOperators {
       const candidateValue = ops[fieldPath];
 
       if (currentValue !== undefined) {
-        this._validation.validateComparableValues(currentValue, candidateValue, fieldPath, operation);
+        this._validation.validateComparableValues(
+          currentValue,
+          candidateValue,
+          fieldPath,
+          operation
+        );
       }
 
       if (currentValue === undefined || shouldUpdateFn(currentValue, candidateValue)) {

@@ -55,8 +55,8 @@ describe('Database collection management', () => {
     });
     database.collections.delete(collectionName);
 
-    // Act - Reload the collection via Database.collection()
-    const reloadedCollection = database.collection(collectionName);
+    // Act - Reload the collection via Database.getCollection()
+    const reloadedCollection = database.getCollection(collectionName);
 
     // Assert - Reloaded collection should match persisted metadata
     expect(reloadedCollection.name).toBe(collectionName);
@@ -88,7 +88,7 @@ describe('Database collection management', () => {
     const targetName = generateUniqueName('autoCreated');
 
     // Act - Access a non-existent collection, triggering auto creation
-    const autoCreated = database.collection(targetName);
+    const autoCreated = database.getCollection(targetName);
 
     // Assert - Collection should exist in memory and MasterIndex
     expect(autoCreated.name).toBe(targetName);
@@ -121,7 +121,7 @@ describe('Database collection management', () => {
 
     // Act & Assert - Accessing should fail with an informative message
     try {
-      database.collection(missingName);
+      database.getCollection(missingName);
       throw new Error('Expected OperationError to be thrown for missing collection');
     } catch (error) {
       expect(error).toBeInstanceOf(OperationError);
@@ -139,7 +139,7 @@ describe('Database collection management', () => {
 
     // Act & Assert - Resolution failure should surface the original unsanitised name
     try {
-      database.collection(unsanitisedName);
+      database.getCollection(unsanitisedName);
       throw new Error(
         'Expected OperationError when sanitised lookup fails with auto-create disabled'
       );
@@ -252,7 +252,7 @@ describe('Database collection management', () => {
 
     // Act - Create the collection with an invalid character
     const sanitisedCollection = database.createCollection(originalName);
-    const reaccessedCollection = database.collection(originalName);
+    const reaccessedCollection = database.getCollection(originalName);
 
     // Assert - Returned and persisted names should be sanitised
     expect(sanitisedCollection.name).toBe(expectedName);
@@ -292,7 +292,7 @@ describe('Database collection management', () => {
 
     // Assert - Second creation should fail due to sanitised name collision
     expect(() => database.createCollection(secondInput)).toThrow(OperationError);
-    const existingCollection = database.collection(secondInput);
+    const existingCollection = database.getCollection(secondInput);
     expect(existingCollection.name).toBe(firstCollection.name);
     expect(existingCollection.driveFileId).toBe(firstCollection.driveFileId);
   });

@@ -130,7 +130,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### C1. CollectionCoordinator coordination flow is deeply nested
+### C1. CollectionCoordinator coordination flow is deeply nested ✅ **COMPLETED**
 
 **Area:** `src/02_components/CollectionCoordinator.js`
 
@@ -148,6 +148,17 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/collection-coordinator/collection-coordinator-update-master-index.test.js` (metadata updates).
 
 **Conclusion:** Refactoring for clarity is supported. Tests focus on outcomes, so helper extraction must keep the same lock/conflict/metadata sequencing and error propagation.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted lock/conflict/execute flow into three helper methods
+- **Added Helpers:**
+  - `_acquireLockWithTimeoutMapping()` - Lock acquisition with timeout error mapping
+  - `_resolveConflictsIfPresent()` - Conflict detection and resolution
+  - `_executeOperationWithTimeout()` - Operation execution with timeout enforcement
+- **Benefits:** Simplified main `coordinate()` method to show clear happy path flow
+- **Results:** All 714 tests pass, no new lint errors
 
 ---
 
@@ -384,7 +395,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### DB1. DatabaseCollectionManagement provides alias methods that duplicate behaviour
+### DB1. DatabaseCollectionManagement provides alias methods that duplicate behaviour ✅ **COMPLETED**
 
 **Area:** `src/04_core/Database/02_DatabaseCollectionManagement.js`
 
@@ -401,9 +412,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Remove the `collection` alias and standardise on `getCollection`. Tests and any API references should be updated accordingly to reflect the canonical method and avoid ambiguity.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Removed `collection()` alias method from Database and DatabaseCollectionManagement
+- **Standardised:** All access now via `getCollection()` as the canonical method
+- **Updated:** 6 test cases to use `getCollection()` instead of `collection()`
+- **Results:** All 714 tests pass, no new lint errors
+- **Benefits:** Single clear API for collection access, eliminates ambiguity
+
 ---
 
-### DB2. DatabaseLifecycle repeats try/catch error-wrapping patterns
+### DB2. DatabaseLifecycle repeats try/catch error-wrapping patterns ✅ **COMPLETED**
 
 **Area:** `src/04_core/Database/01_DatabaseLifecycle.js`
 
@@ -422,9 +442,17 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Refactoring is possible, but the wrapper must keep the same error wrapping semantics and message strings that the tests assert.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_wrapMasterIndexError()` helper method for consistent error wrapping
+- **Removed:** 24 lines of duplicated error-wrapping code across 3 methods
+- **Benefits:** Single source of truth for MasterIndex error handling, consistent message formatting
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### DB3. Collection metadata payload shape is duplicated across database helpers
+### DB3. Collection metadata payload shape is duplicated across database helpers ✅ **COMPLETED**
 
 **Area:**
 
@@ -448,9 +476,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is refactorable with care. Tests make the metadata fields visible, so a shared builder must keep the same defaults and field names used in assertions.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Created `_buildCollectionMetadataPayload()` helper in Database facade
+- **Removed:** 30 lines of duplicated metadata payload construction across 4 files
+- **Standardised:** All collection metadata payloads now use consistent field structure
+- **Benefits:** Single source of truth for metadata defaults, guaranteed alignment across operations
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### FS1. FileService repeats argument validation checks
+### FS1. FileService repeats argument validation checks ✅ **COMPLETED**
 
 **Area:** `src/03_services/FileService.js`
 
@@ -467,9 +504,21 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Introducing helper methods for argument validation is safe. Tests focus on delegation and caching, so internal refactoring should preserve the same error types and not change the method call paths.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted three validation helper methods
+- **Added Helpers:**
+  - `_assertFileId()` - Validates fileId presence
+  - `_assertFileName()` - Validates fileName presence
+  - `_assertData()` - Validates data is not null/undefined
+- **Removed:** 18 lines of duplicated validation code across 6 methods
+- **Benefits:** Consistent validation, single source of truth for argument checks
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### MI1. MasterIndex update logic and conflict resolution duplicate field handling
+### MI1. MasterIndex update logic and conflict resolution duplicate field handling ✅ **COMPLETED**
 
 **Area:**
 
@@ -490,9 +539,17 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** Centralising update logic is feasible. Tests make metadata field updates and token changes visible, so a shared helper must keep identical semantics for `documentCount`, `lockStatus`, and modification tokens.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_applyMetadataUpdates()` helper in MasterIndexConflictResolver
+- **Benefits:** Single source of truth for metadata field application logic
+- **Results:** All 714 tests pass, no new lint errors
+- **Preservation:** Maintains exact same update semantics and token regeneration rules
+
 ---
 
-### MI2. MasterIndexLockManager repeats lock status persistence logic
+### MI2. MasterIndexLockManager repeats lock status persistence logic ✅ **COMPLETED**
 
 **Area:** `src/04_core/MasterIndex/02_MasterIndexLockManager.js`
 
@@ -509,3 +566,13 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/MasterIndex/MasterIndex.test.js` (lock status persistence).
 
 **Conclusion:** The duplication is refactorable. Tests focus on lock status values and persistence, so any helper must keep the same lock status structure and update ordering.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_setAndPersistLockStatus()` helper method
+- **Removed:** 12 lines of duplicated lock status set-and-persist code across 3 methods
+- **Benefits:** Single source of truth for lock status updates, consistent persistence ordering
+- **Results:** All 714 tests pass, no new lint errors
+- **Preservation:** Maintains exact same lock status payload shape and update timing
+

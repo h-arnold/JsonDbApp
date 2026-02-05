@@ -137,8 +137,7 @@ class CollectionWriteOperations {
     const isIdOnly = filterKeys.length === 1 && filterKeys[0] === '_id';
 
     if (isIdOnly) {
-      const docExists =
-        this._collection._documentOperations.findDocumentById(filter._id) !== null;
+      const docExists = this._collection._documentOperations.findDocumentById(filter._id) !== null;
       return { isIdOnly: true, documentId: docExists ? filter._id : null };
     }
 

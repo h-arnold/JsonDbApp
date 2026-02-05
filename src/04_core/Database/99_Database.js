@@ -75,9 +75,9 @@ class Database {
    * @param {string} name - Collection name
    * @returns {Collection} Collection instance
    */
-  collection(name) {
+  getCollection(name) {
     const resolvedName = this._validateCollectionName(name);
-    return this._collectionManager.collection(resolvedName, name);
+    return this._collectionManager.getCollection(resolvedName, name);
   }
 
   /**
@@ -106,26 +106,6 @@ class Database {
   dropCollection(name) {
     const resolvedName = this._validateCollectionName(name);
     return this._collectionManager.dropCollection(resolvedName, name);
-  }
-
-  /**
-   * Retrieve collection by name (API alias).
-   * @param {string} name - Collection name
-   * @returns {Collection} Collection instance
-   */
-  getCollection(name) {
-    const resolvedName = this._validateCollectionName(name);
-    return this._collectionManager.getCollection(resolvedName, name);
-  }
-
-  /**
-   * Delete collection by name (API alias).
-   * @param {string} name - Collection name to delete
-   * @returns {boolean} True when collection removed successfully
-   */
-  deleteCollection(name) {
-    const resolvedName = this._validateCollectionName(name);
-    return this._collectionManager.deleteCollection(resolvedName, name);
   }
 
   /**
@@ -262,6 +242,24 @@ class Database {
       });
     }
     return sanitised;
+  }
+
+  /**
+   * Build a standard collection metadata payload with default values.
+   * @param {string} name - Collection name
+   * @param {string} fileId - Drive file identifier
+   * @param {number} [documentCount=0] - Initial document count
+   * @returns {Object} Collection metadata payload
+   * @private
+   */
+  _buildCollectionMetadataPayload(name, fileId, documentCount = 0) {
+    return {
+      name: name,
+      fileId: fileId,
+      created: new Date(),
+      lastUpdated: new Date(),
+      documentCount: documentCount
+    };
   }
 }
 

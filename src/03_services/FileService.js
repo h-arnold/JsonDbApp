@@ -51,9 +51,7 @@ class FileService {
    * @throws {InvalidFileFormatError} When file contains invalid JSON
    */
   readFile(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    this._assertFileId(fileId);
 
     this._logger.debug('Reading file through FileService', { fileId });
 
@@ -82,12 +80,8 @@ class FileService {
    * @throws {PermissionDeniedError} When write access is denied
    */
   writeFile(fileId, data) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
-    if (data === null || data === undefined) {
-      throw new InvalidArgumentError('data is required');
-    }
+    this._assertFileId(fileId);
+    this._assertData(data);
 
     this._logger.debug('Writing file through FileService', { fileId });
 
@@ -109,12 +103,8 @@ class FileService {
    * @throws {PermissionDeniedError} When folder access is denied
    */
   createFile(fileName, data, folderId = null) {
-    if (!fileName) {
-      throw new InvalidArgumentError('fileName is required');
-    }
-    if (data === null || data === undefined) {
-      throw new InvalidArgumentError('data is required');
-    }
+    this._assertFileName(fileName);
+    this._assertData(data);
 
     this._logger.debug('Creating file through FileService', { fileName, folderId });
 
@@ -141,9 +131,7 @@ class FileService {
    * @throws {PermissionDeniedError} When delete access is denied
    */
   deleteFile(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    this._assertFileId(fileId);
 
     this._logger.debug('Deleting file through FileService', { fileId });
 
@@ -164,9 +152,7 @@ class FileService {
    * @returns {boolean} True if file exists and is accessible
    */
   fileExists(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    this._assertFileId(fileId);
 
     this._logger.debug('Checking file existence through FileService', { fileId });
 
@@ -187,9 +173,7 @@ class FileService {
    * @throws {PermissionDeniedError} When access is denied
    */
   getFileMetadata(fileId) {
-    if (!fileId) {
-      throw new InvalidArgumentError('fileId is required');
-    }
+    this._assertFileId(fileId);
 
     this._logger.debug('Getting file metadata through FileService', { fileId });
 
@@ -326,5 +310,41 @@ class FileService {
       fileId,
       cacheSize: this._cache.size
     });
+  }
+
+  /**
+   * Assert that fileId is provided and non-empty.
+   * @param {string} fileId - File ID to validate
+   * @throws {InvalidArgumentError} When fileId is missing or empty
+   * @private
+   */
+  _assertFileId(fileId) {
+    if (!fileId) {
+      throw new InvalidArgumentError('fileId is required');
+    }
+  }
+
+  /**
+   * Assert that fileName is provided and non-empty.
+   * @param {string} fileName - File name to validate
+   * @throws {InvalidArgumentError} When fileName is missing or empty
+   * @private
+   */
+  _assertFileName(fileName) {
+    if (!fileName) {
+      throw new InvalidArgumentError('fileName is required');
+    }
+  }
+
+  /**
+   * Assert that data is provided (not null or undefined).
+   * @param {*} data - Data to validate
+   * @throws {InvalidArgumentError} When data is null or undefined
+   * @private
+   */
+  _assertData(data) {
+    if (data === null || data === undefined) {
+      throw new InvalidArgumentError('data is required');
+    }
   }
 }

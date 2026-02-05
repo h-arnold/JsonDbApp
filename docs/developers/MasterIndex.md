@@ -66,6 +66,46 @@ The `Database` class delegates collection operations to `MasterIndex`:
 
 Encapsulates the transformation of incoming metadata into `CollectionMetadata` instances. The normaliser clamps timestamps, clones lock status payloads, and ensures modification tokens are generated when missing. This keeps `_addCollectionInternal` and bulk operations lean while guaranteeing consistent metadata regardless of input type (plain object or existing `CollectionMetadata`).
 
+### MasterIndexLockManager Helper Methods ⭐ NEW in v0.0.5
+
+**Location:** [src/04_core/MasterIndex/02_MasterIndexLockManager.js](../../src/04_core/MasterIndex/02_MasterIndexLockManager.js)
+
+**Added in:** MI2 refactoring
+
+#### `_setAndPersistLockStatus(collectionName, collection, lockStatus)`
+
+Centralized helper for setting and persisting lock status with guaranteed ordering.
+
+- **Parameters:**
+  - `collectionName` (String): Name of collection to update
+  - `collection` (CollectionMetadata): Collection metadata object
+  - `lockStatus` (Object|null): Lock status to apply
+- **Behaviour:**
+  1. Sets lock status on collection metadata
+  2. Persists to MasterIndex via `_updateCollectionMetadataInternal()`
+- **Usage:** Used by `acquireCollectionLock()`, `releaseCollectionLock()`, `cleanupExpiredLocks()`
+- **Benefits:** Single source of truth for lock persistence, guaranteed update ordering
+
+### MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5
+
+**Location:** [src/04_core/MasterIndex/04_MasterIndexConflictResolver.js](../../src/04_core/MasterIndex/04_MasterIndexConflictResolver.js)
+
+**Added in:** MI1 refactoring
+
+#### `_applyMetadataUpdates(collectionMetadata, updates)`
+
+Centralized helper for applying metadata field updates during conflict resolution.
+
+- **Parameters:**
+  - `collectionMetadata` (CollectionMetadata): Metadata object to update
+  - `updates` (Object): Map of field names to values
+- **Behaviour:**
+  - Iterates through update keys
+  - Applies known fields (`documentCount`, `lockStatus`) via setter methods
+  - Ignores unknown fields
+- **Usage:** Used by `_applyLastWriteWins()` for conflict resolution
+- **Benefits:** Single source of truth for metadata updates, consistent update semantics, easier to extend
+
 ## Core Workflow
 
 ### Collection Access Protocol
@@ -73,7 +113,7 @@ Encapsulates the transformation of incoming metadata into `CollectionMetadata` i
 Database class collection access follows this protocol when delegating to MasterIndex:
 
 ```javascript
-// 1. Database.collection() or Database.createCollection() delegates to MasterIndex
+// 1. Database.getCollection() or Database.createCollection() delegates to MasterIndex
 // 2. Acquire virtual lock for thread safety
 const acquired = masterIndex.acquireLock('users', operationId);
 

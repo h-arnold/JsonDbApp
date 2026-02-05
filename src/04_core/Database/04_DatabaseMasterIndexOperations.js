@@ -26,13 +26,8 @@ class DatabaseMasterIndexOperations {
   addCollectionToMasterIndex(name, driveFileId) {
     const db = this._database;
     try {
-      db._masterIndex.addCollection(name, {
-        name: name,
-        fileId: driveFileId,
-        created: new Date(),
-        lastUpdated: new Date(),
-        documentCount: 0
-      });
+      const metadata = db._buildCollectionMetadataPayload(name, driveFileId);
+      db._masterIndex.addCollection(name, metadata);
 
       db._logger.debug('Added collection to master index', { name, driveFileId });
     } catch (error) {

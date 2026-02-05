@@ -50,15 +50,7 @@ class DatabaseLifecycle {
       });
     } catch (error) {
       db._logger.error('Failed to create database', { error: error.message });
-      if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
-        throw error;
-      }
-      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
-        'createDatabase',
-        error.message
-      );
-      masterIndexError.message = 'Database creation failed: ' + error.message;
-      throw masterIndexError;
+      throw this._wrapMasterIndexError('createDatabase', error, 'Database creation failed');
     }
   }
 
@@ -82,15 +74,7 @@ class DatabaseLifecycle {
       });
     } catch (error) {
       db._logger.error('Database initialisation failed', { error: error.message });
-      if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
-        throw error;
-      }
-      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
-        'initialise',
-        error.message
-      );
-      masterIndexError.message = 'Database initialisation failed: ' + error.message;
-      throw masterIndexError;
+      throw this._wrapMasterIndexError('initialise', error, 'Database initialisation failed');
     }
   }
 
@@ -121,16 +105,29 @@ class DatabaseLifecycle {
       return recoveredCollections;
     } catch (error) {
       db._logger.error('Database recovery failed', { error: error.message });
-      if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
-        throw error;
-      }
-      const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
-        'recoverDatabase',
-        error.message
-      );
-      masterIndexError.message = 'Database recovery failed: ' + error.message;
-      throw masterIndexError;
+      throw this._wrapMasterIndexError('recoverDatabase', error, 'Database recovery failed');
     }
+  }
+
+  /**
+   * Wrap MasterIndex errors with appropriate error type and message.
+   * @param {string} operation - Operation name for error context
+   * @param {Error} error - Original error
+   * @param {string} messagePrefix - Message prefix for wrapped error
+   * @returns {Error} Wrapped error
+   * @throws {ErrorHandler.ErrorTypes.GASDB_ERROR} When error is already a GASDB error
+   * @private
+   */
+  _wrapMasterIndexError(operation, error, messagePrefix) {
+    if (error instanceof ErrorHandler.ErrorTypes.GASDB_ERROR) {
+      return error;
+    }
+    const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
+      operation,
+      error.message
+    );
+    masterIndexError.message = messagePrefix + ': ' + error.message;
+    return masterIndexError;
   }
 
   /**
@@ -275,13 +272,15 @@ class DatabaseLifecycle {
       return false;
     }
 
-    db._masterIndex.addCollection(name, {
-      name: name,
-      fileId: collectionData.fileId,
-      created: collectionData.created || new Date(),
-      lastUpdated: collectionData.lastUpdated || new Date(),
-      documentCount: collectionData.documentCount || 0
-    });
+    const metadata = db._buildCollectionMetadataPayload(
+      name,
+      collectionData.fileId,
+      collectionData.documentCount || 0
+    );
+    metadata.created = collectionData.created || new Date();
+    metadata.lastUpdated = collectionData.lastUpdated || new Date();
+
+    db._masterIndex.addCollection(name, metadata);
 
     return true;
   }
