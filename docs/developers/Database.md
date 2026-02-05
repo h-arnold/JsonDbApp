@@ -104,7 +104,7 @@ Database (Orchestrator)
 3. If not cached, the helper queries MasterIndex (single source of truth)
 4. When the collection is still missing, `_resolveCollection()` auto-creates if permitted, otherwise it raises an error that includes the caller’s original name
 
-**Important:** `_resolveCollection()` ensures the caller sees the original name in error messages when auto-create is disabled, even if sanitisation adjusted the lookup key. The helper also short-circuits when the configuration forbids auto-creation 
+**Important:** `_resolveCollection()` ensures the caller sees the original name in error messages when auto-create is disabled, even if sanitisation adjusted the lookup key. The helper also short-circuits when the configuration forbids auto-creation
 
 You can tune the behaviour by enabling `stripDisallowedCollectionNameCharacters` on `DatabaseConfig`. When enabled, the sanitised name is the one persisted in caches and the MasterIndex, yet `_resolveCollection()` keeps the unsanitised input for messaging parity so developers can reconcile errors with their original call site.
 
@@ -263,7 +263,8 @@ const db = new Database({
 3. Cache hit returns immediately; otherwise MasterIndex metadata is used to build the collection
 4. Auto-create (if enabled) creates the collection before returning; when disabled the helper throws with the caller's original name
 
-**Important:** 
+**Important:**
+
 - No longer falls back to Drive index file
 - When auto-create is disabled, `_resolveCollection()` raises an error that includes the caller's original name
 - The `collection()` alias was removed in v0.0.5 - use `getCollection()` as the canonical method

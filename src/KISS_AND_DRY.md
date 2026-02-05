@@ -575,4 +575,3 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - **Benefits:** Single source of truth for lock status updates, consistent persistence ordering
 - **Results:** All 714 tests pass, no new lint errors
 - **Preservation:** Maintains exact same lock status payload shape and update timing
-

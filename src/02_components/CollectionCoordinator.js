@@ -58,7 +58,13 @@ class CollectionCoordinator {
     try {
       lockAcquired = this._acquireLockWithTimeoutMapping(opId, operationName, name);
       this._resolveConflictsIfPresent(name);
-      const result = this._executeOperationWithTimeout(callback, operationName, opId, name, startTime);
+      const result = this._executeOperationWithTimeout(
+        callback,
+        operationName,
+        opId,
+        name,
+        startTime
+      );
       this.updateMasterIndexMetadata();
       return result;
     } catch (e) {

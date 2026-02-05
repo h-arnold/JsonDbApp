@@ -9,6 +9,7 @@
 ## Summary
 
 Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI2) that:
+
 - Removed 154 lines of duplicated code
 - Added 12 helper methods
 - Removed 1 API alias method (`database.collection()`)
@@ -23,6 +24,7 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 **File:** `docs/release-notes/release-notes-v0.0.5.md`
 
 **Changes:**
+
 - Added C1-MI2 refactorings to release highlights
 - Updated code metrics to include Database/Infrastructure improvements
 - Added detailed sections for each refactoring (C1, DB1, DB2, DB3, FS1, MI1, MI2)
@@ -82,21 +84,26 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 **Changes:**
 
 **Line 100:** Updated Collection Access Protocol
+
 - **Before:** "Both `collection()` and `getCollection()` now validate..."
 - **After:** "The `getCollection()` method validates..." (added note about alias removal)
 
 **Line 102:** Fixed grammar (singular form)
+
 - **Before:** "Public methods sanitise..."
 - **After:** "Public method sanitises..."
 
 **Line 107:** Removed reference to removed alias
+
 - **Before:** "...so the behaviour stays consistent between `collection()` and `getCollection()`."
 - **After:** Removed sentence (no longer relevant)
 
 **Line 250:** Updated `getCollection()` method documentation
+
 - Added note: "The `collection()` alias was removed in v0.0.5 - use `getCollection()` as the canonical method"
 
 **Line 365-377:** Updated `_resolveCollection()` documentation
+
 - Removed reference to "both `collection()` and `getCollection()`"
 - Now states: "for `getCollection()` after the public wrapper sanitises the input"
 
@@ -115,6 +122,7 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
    - Benefits: Preserves error types, consistent formatting
 
 **Line 469:** Updated usage example
+
 - **Before:** `const posts = db.collection('posts');`
 - **After:** `const posts = db.getCollection('posts');`
 
@@ -141,6 +149,7 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
    - Used by `_applyLastWriteWins()` for conflict resolution
 
 **Line 76:** Updated code example comment
+
 - **Before:** `// 1. Database.collection() or Database.createCollection() delegates to MasterIndex`
 - **After:** `// 1. Database.getCollection() or Database.createCollection() delegates to MasterIndex`
 
@@ -153,6 +162,7 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 **Changes:**
 
 **Line 269:** Updated test example
+
 - **Before:** `expect(() => database.collection(missingName)).toThrowError(/auto-create is disabled/);`
 - **After:** `expect(() => database.getCollection(missingName)).toThrowError(/auto-create is disabled/);`
 
@@ -167,6 +177,7 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 **Changes:**
 
 **Line 377:** Updated example code
+
 - **Before:** `const collection = database.collection('users');`
 - **After:** `const collection = database.getCollection('users');`
 
@@ -193,19 +204,23 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 ### ✅ Helper Methods Documented
 
 **Database (`src/04_core/Database/`):**
+
 - [x] `_buildCollectionMetadataPayload()` (DB3) - Documented in Database.md
 - [x] `_wrapMasterIndexError()` (DB2) - Documented in Database.md
 
 **MasterIndex (`src/04_core/MasterIndex/`):**
+
 - [x] `_setAndPersistLockStatus()` (MI2) - Documented in MasterIndex.md
 - [x] `_applyMetadataUpdates()` (MI1) - Documented in MasterIndex.md
 
 **FileService (`src/03_services/FileService.js`):**
+
 - [x] `_assertFileId()` (FS1) - Internal helper, not user-facing (no docs needed)
 - [x] `_assertFileName()` (FS1) - Internal helper, not user-facing (no docs needed)
 - [x] `_assertData()` (FS1) - Internal helper, not user-facing (no docs needed)
 
 **CollectionCoordinator (`src/02_components/CollectionCoordinator.js`):**
+
 - [x] `_acquireLockWithTimeoutMapping()` (C1) - Internal helper, not user-facing (no docs needed)
 - [x] `_resolveConflictsIfPresent()` (C1) - Internal helper, not user-facing (no docs needed)
 - [x] `_executeOperationWithTimeout()` (C1) - Internal helper, not user-facing (no docs needed)
@@ -217,12 +232,14 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 ## Documentation Quality Checks
 
 ### ✅ Accuracy
+
 - [x] All method signatures match current code
 - [x] All API examples use current methods (`getCollection()`)
 - [x] All helper references are correct
 - [x] All file paths are valid
 
 ### ✅ Completeness
+
 - [x] All new public helpers documented (Database, MasterIndex)
 - [x] Breaking change (DB1) clearly marked and documented
 - [x] Migration path provided for `collection()` → `getCollection()`
@@ -230,12 +247,14 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 - [x] Test results updated to include C1-MI2
 
 ### ✅ Consistency
+
 - [x] Terminology consistent across all docs
 - [x] Formatting consistent with existing documentation
 - [x] Cross-references validated
 - [x] Naming conventions followed (⭐ NEW markers)
 
 ### ✅ Clarity
+
 - [x] Examples are concrete and runnable
 - [x] Breaking changes clearly marked
 - [x] Helper purposes clearly explained
@@ -248,24 +267,28 @@ Documentation updated to reflect 7 refactoring efforts (C1, DB1-DB3, FS1, MI1-MI
 ### Breaking Change: database.collection() Removed
 
 **Affected Code:**
+
 ```javascript
 // ❌ Old API (removed in v0.0.5)
 const users = database.collection('users');
 ```
 
 **Migration:**
+
 ```javascript
 // ✅ New API (canonical method)
 const users = database.getCollection('users');
 ```
 
 **Find and Replace:**
+
 - Find: `database.collection(`
 - Replace: `database.getCollection(`
 
 **Scope:** All application code using JsonDbApp
 
-**Rationale:** 
+**Rationale:**
+
 - Single canonical method improves API clarity
 - `getCollection()` is more descriptive and explicit
 - Eliminates ambiguity between alias methods
@@ -275,14 +298,17 @@ const users = database.getCollection('users');
 ## Internal Helper Documentation Strategy
 
 **Documented in Developer Docs:**
+
 - Database helpers (user-facing component)
 - MasterIndex helpers (architectural component)
 
 **Documented Only in Release Notes:**
+
 - FileService validation helpers (internal service)
 - CollectionCoordinator flow helpers (internal coordination)
 
 **Rationale:**
+
 - User-facing components need comprehensive docs
 - Internal helpers documented in refactoring summaries
 - Keeps developer docs focused on public APIs
@@ -292,12 +318,14 @@ const users = database.getCollection('users');
 ## Verification Commands
 
 ### Find References to Removed Alias
+
 ```bash
 grep -r "database\.collection(" docs/ .github/ --include="*.md"
 # Expected: No results (all updated)
 ```
 
 ### Verify Helper Documentation
+
 ```bash
 grep -r "_buildCollectionMetadataPayload" docs/
 grep -r "_wrapMasterIndexError" docs/
@@ -307,6 +335,7 @@ grep -r "_applyMetadataUpdates" docs/
 ```
 
 ### Check Cross-References
+
 ```bash
 grep -r "v0.0.5" docs/release-notes/
 grep -r "REFACTORING_SUMMARY_C1" docs/
