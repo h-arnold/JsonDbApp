@@ -79,59 +79,11 @@ class CollectionWriteOperations {
    * @returns {Object} Update result
    */
   _updateOneWithOperators(filter, update) {
-    const filterKeys = Object.keys(filter);
-
-    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
-      // ID-based update with operators
-      const docExists = this._collection._documentOperations.findDocumentById(filter._id) !== null;
-
-      if (!docExists) {
-        return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
-      }
-
-      const result = this._collection._documentOperations.updateDocumentWithOperators(
-        filter._id,
-        update
-      );
-
-      if (result.modifiedCount > 0) {
-        this._collection._updateMetadata();
-        this._collection._markDirty();
-      }
-
-      return {
-        matchedCount: 1,
-        modifiedCount: result.modifiedCount,
-        acknowledged: true
-      };
-    } else {
-      // Field-based filter update with operators
-      const matchingDoc = this._collection._documentOperations.findByQuery(filter);
-
-      if (!matchingDoc) {
-        return {
-          matchedCount: 0,
-          modifiedCount: 0,
-          acknowledged: true
-        };
-      }
-
-      const result = this._collection._documentOperations.updateDocumentWithOperators(
-        matchingDoc._id,
-        update
-      );
-
-      if (result.modifiedCount > 0) {
-        this._collection._updateMetadata();
-        this._collection._markDirty();
-      }
-
-      return {
-        matchedCount: 1,
-        modifiedCount: result.modifiedCount,
-        acknowledged: true
-      };
-    }
+    return this._executeSingleDocOperation(
+      filter,
+      (docId) => this._collection._documentOperations.updateDocumentWithOperators(docId, update),
+      true // isIdMatchCountedOnce
+    );
   }
 
   /**
@@ -142,46 +94,82 @@ class CollectionWriteOperations {
    * @returns {Object} Update result
    */
   _updateOneWithReplacement(filter, update) {
+    return this._executeSingleDocOperation(
+      filter,
+      (docId) => this._collection._documentOperations.updateDocument(docId, update),
+      false // matchedCount depends on modifiedCount for ID-based replacements
+    );
+  }
+
+  /**
+   * Execute a single document operation with unified ID/query handling
+   * @private
+   * @param {Object} filter - Query filter
+   * @param {Function} operationFn - Function to execute on document ID
+   * @param {boolean} isIdMatchCountedOnce - Whether ID-based operations count match even without modification
+   * @returns {Object} Operation result
+   */
+  _executeSingleDocOperation(filter, operationFn, isIdMatchCountedOnce) {
+    const { isIdOnly, documentId } = this._resolveFilterToDocumentId(filter);
+
+    if (!documentId) {
+      return { matchedCount: 0, modifiedCount: 0, acknowledged: true };
+    }
+
+    const result = operationFn(documentId);
+    this._updateMetadataIfModified(result.modifiedCount);
+
+    return {
+      matchedCount: this._calculateMatchCount(isIdOnly, isIdMatchCountedOnce, result.modifiedCount),
+      modifiedCount: result.modifiedCount,
+      acknowledged: true
+    };
+  }
+
+  /**
+   * Resolve filter to a single document ID (ID-based or query-based)
+   * @private
+   * @param {Object} filter - Query filter
+   * @returns {Object} { isIdOnly: boolean, documentId: string|null }
+   */
+  _resolveFilterToDocumentId(filter) {
     const filterKeys = Object.keys(filter);
+    const isIdOnly = filterKeys.length === 1 && filterKeys[0] === '_id';
 
-    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
-      // ID-based document replacement
-      const result = this._collection._documentOperations.updateDocument(filter._id, update);
+    if (isIdOnly) {
+      const docExists =
+        this._collection._documentOperations.findDocumentById(filter._id) !== null;
+      return { isIdOnly: true, documentId: docExists ? filter._id : null };
+    }
 
-      if (result.modifiedCount > 0) {
-        this._collection._updateMetadata();
-        this._collection._markDirty();
-      }
+    const matchingDoc = this._collection._documentOperations.findByQuery(filter);
+    return { isIdOnly: false, documentId: matchingDoc ? matchingDoc._id : null };
+  }
 
-      return {
-        matchedCount: result.modifiedCount > 0 ? 1 : 0,
-        modifiedCount: result.modifiedCount,
-        acknowledged: true
-      };
-    } else {
-      // Field-based filter document replacement
-      const matchingDoc = this._collection._documentOperations.findByQuery(filter);
+  /**
+   * Calculate matched count based on operation context
+   * @private
+   * @param {boolean} isIdOnly - Whether filter is ID-only
+   * @param {boolean} isIdMatchCountedOnce - Whether ID-based operations count match even without modification
+   * @param {number} modifiedCount - Number of documents modified
+   * @returns {number} Matched count
+   */
+  _calculateMatchCount(isIdOnly, isIdMatchCountedOnce, modifiedCount) {
+    if (isIdOnly && !isIdMatchCountedOnce) {
+      return modifiedCount > 0 ? 1 : 0;
+    }
+    return modifiedCount > 0 || isIdOnly ? 1 : 0;
+  }
 
-      if (!matchingDoc) {
-        return {
-          matchedCount: 0,
-          modifiedCount: 0,
-          acknowledged: true
-        };
-      }
-
-      const result = this._collection._documentOperations.updateDocument(matchingDoc._id, update);
-
-      if (result.modifiedCount > 0) {
-        this._collection._updateMetadata();
-        this._collection._markDirty();
-      }
-
-      return {
-        matchedCount: 1,
-        modifiedCount: result.modifiedCount,
-        acknowledged: true
-      };
+  /**
+   * Update metadata and mark dirty if documents were modified
+   * @private
+   * @param {number} modifiedCount - Number of documents modified
+   */
+  _updateMetadataIfModified(modifiedCount) {
+    if (modifiedCount > 0) {
+      this._collection._updateMetadata();
+      this._collection._markDirty();
     }
   }
 
@@ -340,38 +328,31 @@ class CollectionWriteOperations {
     return this._coordinator.coordinate('deleteOne', () => {
       this._collection._ensureLoaded();
       this._collection._validateFilter(filter, 'deleteOne');
+
       const filterKeys = Object.keys(filter);
+
       // Empty filter {} - no op
       if (filterKeys.length === 0) {
         return { deletedCount: 0, acknowledged: true };
       }
+
       // ID filter
       if (filterKeys.length === 1 && filterKeys[0] === '_id') {
         const result = this._collection._documentOperations.deleteDocument(filter._id);
-        if (result.deletedCount > 0) {
-          this._collection._updateMetadata({
-            documentCount: Object.keys(this._collection._documents).length
-          });
-          this._collection._markDirty();
-        }
+        this._updateDocumentCountIfDeleted(result.deletedCount);
         return { deletedCount: result.deletedCount, acknowledged: true };
       }
+
       // Field-based - only delete the FIRST matching document
       const matchingDocs = this._collection._documentOperations.findMultipleByQuery(filter);
       if (matchingDocs.length === 0) {
         return { deletedCount: 0, acknowledged: true };
       }
-      // Only delete the first matching document for deleteOne()
+
       const firstDoc = matchingDocs[0];
       const res = this._collection._documentOperations.deleteDocument(firstDoc._id);
-      const deletedCount = res.deletedCount;
-      if (deletedCount > 0) {
-        this._collection._updateMetadata({
-          documentCount: Object.keys(this._collection._documents).length
-        });
-        this._collection._markDirty();
-      }
-      return { deletedCount, acknowledged: true };
+      this._updateDocumentCountIfDeleted(res.deletedCount);
+      return { deletedCount: res.deletedCount, acknowledged: true };
     });
   }
 
@@ -385,22 +366,39 @@ class CollectionWriteOperations {
     return this._coordinator.coordinate('deleteMany', () => {
       this._collection._ensureLoaded();
       this._collection._validateFilter(filter, 'deleteMany');
+
       const filterKeys = Object.keys(filter);
-      if (filterKeys.length === 0) return { deletedCount: 0, acknowledged: true };
+      if (filterKeys.length === 0) {
+        return { deletedCount: 0, acknowledged: true };
+      }
+
       const matchingDocs = this._collection._documentOperations.findMultipleByQuery(filter);
-      if (matchingDocs.length === 0) return { deletedCount: 0, acknowledged: true };
+      if (matchingDocs.length === 0) {
+        return { deletedCount: 0, acknowledged: true };
+      }
+
       let deletedCount = 0;
       for (const doc of matchingDocs) {
         const res = this._collection._documentOperations.deleteDocument(doc._id);
         deletedCount += res.deletedCount;
       }
-      if (deletedCount > 0) {
-        this._collection._updateMetadata({
-          documentCount: Object.keys(this._collection._documents).length
-        });
-        this._collection._markDirty();
-      }
+
+      this._updateDocumentCountIfDeleted(deletedCount);
       return { deletedCount, acknowledged: true };
     });
+  }
+
+  /**
+   * Update document count metadata if documents were deleted
+   * @private
+   * @param {number} deletedCount - Number of documents deleted
+   */
+  _updateDocumentCountIfDeleted(deletedCount) {
+    if (deletedCount > 0) {
+      this._collection._updateMetadata({
+        documentCount: Object.keys(this._collection._documents).length
+      });
+      this._collection._markDirty();
+    }
   }
 }

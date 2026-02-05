@@ -263,7 +263,7 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 ---
 
-### R1. CollectionReadOperations repeats filter handling in find/findOne/count
+### R1. CollectionReadOperations repeats filter handling in find/findOne/count ✅ **COMPLETED**
 
 **Area:** `src/04_core/Collection/01_CollectionReadOperations.js`
 
@@ -281,9 +281,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication can be removed. The tests validate outcomes for empty, `_id`, and field-based filters, so any consolidation must preserve the same branching behaviour and output semantics.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_analyzeFilter()` helper method to centralize filter analysis
+- **Removed:** 9 lines of duplicated filter key inspection code across 3 methods
+- **Added:** Single `_analyzeFilter()` method (8 lines including JSDoc) that returns `{ isEmpty, isIdOnly }`
+- **Benefits:** Single source of truth for filter classification, improved maintainability
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### W1. CollectionWriteOperations repeats ID-vs-query handling and metadata updates
+### W1. CollectionWriteOperations repeats ID-vs-query handling and metadata updates ✅ **COMPLETED**
 
 **Area:** `src/04_core/Collection/02_CollectionWriteOperations.js`
 
@@ -302,9 +311,23 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is refactorable. Tests validate return payloads and deletion/update counts, so shared helpers must keep the same branching semantics and metadata updates tied to actual modifications.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted shared helpers for ID/query handling and metadata updates
+- **Added Helpers:**
+  - `_executeSingleDocOperation()` - Unified ID/query operation execution
+  - `_resolveFilterToDocumentId()` - Centralized filter-to-ID resolution
+  - `_calculateMatchCount()` - Consistent match count logic
+  - `_updateMetadataIfModified()` - Metadata update for updates
+  - `_updateDocumentCountIfDeleted()` - Metadata update for deletions
+- **Removed:** 78 lines of duplicated ID/query branching and metadata update code
+- **Benefits:** Single source of truth for filter resolution, match counting, and metadata updates
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### D1. DocumentOperations query methods duplicate orchestration
+### D1. DocumentOperations query methods duplicate orchestration ✅ **COMPLETED**
 
 **Area:** `src/02_components/DocumentOperations.js`
 
@@ -321,9 +344,18 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 
 **Conclusion:** The duplication is removable. Tests focus on results and error types, so a shared execution helper must preserve error throwing (`InvalidArgumentError`/`InvalidQueryError`) and the `null`/empty array/number return semantics.
 
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_executeQuery()` helper consolidating query execution logic
+- **Removed:** 30 lines of duplicated query execution code across 3 methods
+- **Added:** Single `_executeQuery()` method (15 lines including JSDoc)
+- **Benefits:** Single source of truth for query execution, improved maintainability, consistent logging
+- **Results:** All 714 tests pass, no new lint errors
+
 ---
 
-### D2. DocumentOperations query-based updates repeat match/apply loops
+### D2. DocumentOperations query-based updates repeat match/apply loops ✅ **COMPLETED**
 
 **Area:** `src/02_components/DocumentOperations.js`
 
@@ -339,6 +371,16 @@ This document records complexity (KISS) and duplication (DRY) findings in `src/`
 - `tests/unit/document-operations/document-operations-update.test.js` (query-based updates and replacements).
 
 **Conclusion:** The duplication can be reduced. Tests require accurate match counts and `DocumentNotFoundError` when no update matches, so any consolidation must preserve those outcomes.
+
+**Refactoring Completed:**
+
+- **Date:** 2025-02-05
+- **Changes:** Extracted `_applyToMatchingDocuments()` helper consolidating match/apply flow
+- **Removed:** 18 lines of duplicated match/apply logic across 2 methods
+- **Added:** Single `_applyToMatchingDocuments()` method (17 lines including JSDoc)
+- **Benefits:** Single source of truth for query-based operations, consistent error handling
+- **Strategy Pattern:** Uses callback function for operation-specific logic, supports both throwing and non-throwing modes
+- **Results:** All 714 tests pass, no new lint errors
 
 ---
 

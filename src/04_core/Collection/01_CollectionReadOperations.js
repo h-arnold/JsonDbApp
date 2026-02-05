@@ -26,16 +26,16 @@ class CollectionReadOperations {
     this._collection._ensureLoaded();
     this._collection._validateFilter(filter, 'findOne');
 
-    const filterKeys = Object.keys(filter);
+    const { isEmpty, isIdOnly } = this._analyzeFilter(filter);
 
     // Empty filter {} - return first document
-    if (filterKeys.length === 0) {
+    if (isEmpty) {
       const allDocs = this._collection._documentOperations.findAllDocuments();
       return allDocs.length > 0 ? allDocs[0] : null;
     }
 
     // ID filter {_id: "id"} - use direct lookup for performance
-    if (filterKeys.length === 1 && filterKeys[0] === '_id') {
+    if (isIdOnly) {
       return this._collection._documentOperations.findDocumentById(filter._id);
     }
 
@@ -53,10 +53,10 @@ class CollectionReadOperations {
     this._collection._ensureLoaded();
     this._collection._validateFilter(filter, 'find');
 
-    const filterKeys = Object.keys(filter);
+    const { isEmpty } = this._analyzeFilter(filter);
 
     // Empty filter {} - return all documents
-    if (filterKeys.length === 0) {
+    if (isEmpty) {
       return this._collection._documentOperations.findAllDocuments();
     }
 
@@ -74,16 +74,30 @@ class CollectionReadOperations {
     this._collection._ensureLoaded();
     this._collection._validateFilter(filter, 'countDocuments');
 
-    const filterKeys = Object.keys(filter);
+    const { isEmpty } = this._analyzeFilter(filter);
 
     // Empty filter {} - count all documents
-    if (filterKeys.length === 0) {
+    if (isEmpty) {
       return Object.keys(this._collection._documents).length;
     }
 
     // Field-based or complex queries - use QueryEngine
     const matchingDocs = this._collection._documentOperations.findMultipleByQuery(filter);
     return matchingDocs.length;
+  }
+
+  /**
+   * Analyze filter to determine execution strategy
+   * @private
+   * @param {Object} filter - Query filter
+   * @returns {Object} Filter analysis { isEmpty: boolean, isIdOnly: boolean }
+   */
+  _analyzeFilter(filter) {
+    const filterKeys = Object.keys(filter);
+    return {
+      isEmpty: filterKeys.length === 0,
+      isIdOnly: filterKeys.length === 1 && filterKeys[0] === '_id'
+    };
   }
 
   /**
