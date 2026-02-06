@@ -1,0 +1,3187 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A document database implemented in Google Apps Script using the Google Drive API">
+      
+      
+        <meta name="author" content="h-arnold">
+      
+      
+        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/developers/Database/">
+      
+      
+        <link rel="prev" href="../">
+      
+      
+        <link rel="next" href="../DatabaseConfig/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Database - JsonDbApp Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#database-developer-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="JsonDbApp Documentation" class="md-header__button md-logo" aria-label="JsonDbApp Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            JsonDbApp Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Database
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/h-arnold/JsonDbApp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    h-arnold/JsonDbApp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Quick_Start/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Querying/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  Developer Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../release-notes/release-notes-v0.0.4/" class="md-tabs__link">
+          
+  
+  
+  Release Notes
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="JsonDbApp Documentation" class="md-nav__button md-logo" aria-label="JsonDbApp Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    JsonDbApp Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/h-arnold/JsonDbApp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    h-arnold/JsonDbApp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Quick_Start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Querying/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-masterindex-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture &amp; MasterIndex Integration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture &amp; MasterIndex Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#refactored-design-single-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactored Design (Single Source of Truth)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collection-access-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection Access Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database-initialization-and-recovery-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Initialization and Recovery Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database Initialization and Recovery Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-time-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        First-Time Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normal-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normal Initialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disaster-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disaster Recovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benefits-of-new-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benefits of New Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#createdatabase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        createDatabase()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        initialise()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recoverdatabasebackupfileid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        recoverDatabase(backupFileId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getCollection(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#createcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        createCollection(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#listcollections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        listCollections()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dropcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dropCollection(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loadindex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        loadIndex()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backupindextodrive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        backupIndexToDrive()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Private Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Private Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_findexistingindexfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _findExistingIndexFile()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_createindexfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _createIndexFile()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensureindexfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ensureIndexFile()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_resolvecollectionresolvedname-originalname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _resolveCollection(resolvedName, originalName)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_buildcollectionmetadatapayloadname-fileid-documentcount-0-new-in-v005" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _buildCollectionMetadataPayload(name, fileId, documentCount = 0) ⭐ NEW in v0.0.5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_wrapmasterindexerroroperation-error-messageprefix-new-in-v005" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _wrapMasterIndexError(operation, error, messagePrefix) ⭐ NEW in v0.0.5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_createcollectionobjectname-drivefileid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _createCollectionObject(name, driveFileId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_normaliseindexdatarawdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _normaliseIndexData(rawData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_assertindexobjectindexcandidate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _assertIndexObject(indexCandidate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_ensurecollectionsmapindexdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _ensureCollectionsMap(indexData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_ensurelastupdatedindexdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _ensureLastUpdated(indexData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validatecollectionnamename" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateCollectionName(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-database-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Database Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collection-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#index-file-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index File Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-masterindex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with MasterIndex
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with MasterIndex">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#collection-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Synchronization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backup Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DatabaseConfig/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DatabaseConfig
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MasterIndex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MasterIndex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QueryEngine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QueryEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UpdateEngine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UpdateEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Collection_Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Infrastructure_Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Testing_Framework/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagrams
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Diagrams
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Class_Diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Class Diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.0.4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.0.4
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.0.3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.0.3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-masterindex-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Architecture &amp; MasterIndex Integration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture &amp; MasterIndex Integration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#refactored-design-single-source-of-truth" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Refactored Design (Single Source of Truth)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-sources" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Sources
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collection-access-protocol" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection Access Protocol
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#database-initialization-and-recovery-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Database Initialization and Recovery Workflow
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Database Initialization and Recovery Workflow">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#first-time-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        First-Time Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#normal-initialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Normal Initialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#disaster-recovery" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Disaster Recovery
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benefits-of-new-workflow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benefits of New Workflow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Core Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#createdatabase" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        createDatabase()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#initialise" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        initialise()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#recoverdatabasebackupfileid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        recoverDatabase(backupFileId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#getcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        getCollection(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#createcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        createCollection(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#listcollections" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        listCollections()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#dropcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        dropCollection(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#loadindex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        loadIndex()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backupindextodrive" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        backupIndexToDrive()
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Private Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Private Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_findexistingindexfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _findExistingIndexFile()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_createindexfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _createIndexFile()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#ensureindexfile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        ensureIndexFile()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_resolvecollectionresolvedname-originalname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _resolveCollection(resolvedName, originalName)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_buildcollectionmetadatapayloadname-fileid-documentcount-0-new-in-v005" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _buildCollectionMetadataPayload(name, fileId, documentCount = 0) ⭐ NEW in v0.0.5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_wrapmasterindexerroroperation-error-messageprefix-new-in-v005" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _wrapMasterIndexError(operation, error, messagePrefix) ⭐ NEW in v0.0.5
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_createcollectionobjectname-drivefileid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _createCollectionObject(name, driveFileId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_normaliseindexdatarawdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _normaliseIndexData(rawData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_assertindexobjectindexcandidate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _assertIndexObject(indexCandidate)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_ensurecollectionsmapindexdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _ensureCollectionsMap(indexData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_ensurelastupdatedindexdata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _ensureLastUpdated(indexData)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validatecollectionnamename" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateCollectionName(name)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-database-setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Database Setup
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#collection-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection Management
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#index-file-operations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index File Operations
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-handling" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Handling
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-masterindex" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with MasterIndex
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Integration with MasterIndex">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#collection-lifecycle" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Collection Lifecycle
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#data-synchronization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Data Synchronization
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#backup-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Backup Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#error-types" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Types
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="database-developer-documentation">Database Developer Documentation<a class="headerlink" href="#database-developer-documentation" title="Permanent link">&para;</a></h1>
+<ul>
+<li><a href="#database-developer-documentation">Database Developer Documentation</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#architecture--masterindex-integration">Architecture \&amp; MasterIndex Integration</a><ul>
+<li><a href="#refactored-design-single-source-of-truth">Refactored Design (Single Source of Truth)</a></li>
+<li><a href="#data-sources">Data Sources</a></li>
+<li><a href="#collection-access-protocol">Collection Access Protocol</a></li>
+</ul>
+</li>
+<li><a href="#database-initialization-and-recovery-workflow">Database Initialization and Recovery Workflow</a><ul>
+<li><a href="#first-time-setup">First-Time Setup</a></li>
+<li><a href="#normal-initialization">Normal Initialization</a></li>
+<li><a href="#disaster-recovery">Disaster Recovery</a></li>
+<li><a href="#benefits-of-new-workflow">Benefits of New Workflow</a></li>
+</ul>
+</li>
+<li><a href="#constructor">Constructor</a></li>
+<li><a href="#api-reference">API Reference</a><ul>
+<li><a href="#core-methods">Core Methods</a></li>
+<li><a href="#createdatabase"><code>createDatabase()</code></a></li>
+<li><a href="#initialise"><code>initialise()</code></a></li>
+<li><a href="#recoverdatabasebackupfileid"><code>recoverDatabase(backupFileId)</code></a></li>
+<li><a href="#getcollectionname"><code>getCollection(name)</code></a></li>
+<li><a href="#createcollectionname"><code>createCollection(name)</code></a></li>
+<li><a href="#listcollections"><code>listCollections()</code></a></li>
+<li><a href="#dropcollectionname"><code>dropCollection(name)</code></a></li>
+<li><a href="#loadindex"><code>loadIndex()</code></a></li>
+<li><a href="#backupindextodrive"><code>backupIndexToDrive()</code></a></li>
+<li><a href="#private-methods">Private Methods</a></li>
+<li><a href="#_findexistingindexfile"><code>_findExistingIndexFile()</code></a></li>
+<li><a href="#_createindexfile"><code>_createIndexFile()</code></a></li>
+<li><a href="#ensureindexfile"><code>ensureIndexFile()</code></a></li>
+<li><a href="#_resolvecollectionresolvedname-originalname"><code>_resolveCollection(resolvedName, originalName)</code></a></li>
+<li><a href="#_createcollectionobjectname-drivefileid"><code>_createCollectionObject(name, driveFileId)</code></a></li>
+<li><a href="#_normaliseindexdatarawdata"><code>_normaliseIndexData(rawData)</code></a></li>
+<li><a href="#_assertindexobjectindexcandidate"><code>_assertIndexObject(indexCandidate)</code></a></li>
+<li><a href="#_ensurecollectionsmapindexdata"><code>_ensureCollectionsMap(indexData)</code></a></li>
+<li><a href="#_ensurelastupdatedindexdata"><code>_ensureLastUpdated(indexData)</code></a></li>
+<li><a href="#_validatecollectionnamename"><code>_validateCollectionName(name)</code></a></li>
+</ul>
+</li>
+<li><a href="#usage-examples">Usage Examples</a><ul>
+<li><a href="#basic-database-setup">Basic Database Setup</a></li>
+<li><a href="#collection-management">Collection Management</a></li>
+<li><a href="#index-file-operations">Index File Operations</a></li>
+<li><a href="#error-handling">Error Handling</a></li>
+</ul>
+</li>
+<li><a href="#integration-with-masterindex">Integration with MasterIndex</a><ul>
+<li><a href="#collection-lifecycle">Collection Lifecycle</a></li>
+<li><a href="#data-synchronization">Data Synchronization</a></li>
+<li><a href="#backup-strategy">Backup Strategy</a></li>
+</ul>
+</li>
+<li><a href="#error-types">Error Types</a></li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ul>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The <code>Database</code> class is the main entry point for GAS DB operations, providing high-level database management and collection coordination. It serves as an orchestrator that delegates collection metadata management to <code>MasterIndex</code> while maintaining Drive-based index files for backup and migration purposes.</p>
+<p><strong>Key Responsibilities:</strong></p>
+<ul>
+<li>Database creation, initialization, and recovery</li>
+<li>Collection creation, access, and deletion</li>
+<li>MasterIndex as single source of truth for metadata</li>
+<li>Drive index file backup operations</li>
+<li>High-level database operations and error handling</li>
+</ul>
+<p><strong>Dependencies:</strong></p>
+<ul>
+<li><code>MasterIndex</code>: Single source of truth for collection metadata</li>
+<li><code>FileService</code>: Drive API operations and caching</li>
+<li><code>DatabaseConfig</code>: Configuration management</li>
+<li><code>JDbLogger</code>: Logging and monitoring</li>
+</ul>
+<h2 id="architecture-masterindex-integration">Architecture &amp; MasterIndex Integration<a class="headerlink" href="#architecture-masterindex-integration" title="Permanent link">&para;</a></h2>
+<h3 id="refactored-design-single-source-of-truth">Refactored Design (Single Source of Truth)<a class="headerlink" href="#refactored-design-single-source-of-truth" title="Permanent link">&para;</a></h3>
+<p>Following the initialization refactoring, the Database class now enforces MasterIndex as the single source of truth:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Database (Orchestrator)
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── MasterIndex (Single source of truth - ScriptProperties)
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── Drive Index File (Backup only)
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>├── FileService (Drive operations)
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>└── Collections Map (In-memory cache)
+</code></pre></div>
+<h3 id="data-sources">Data Sources<a class="headerlink" href="#data-sources" title="Permanent link">&para;</a></h3>
+<p><strong>Single Source of Truth - MasterIndex:</strong></p>
+<ul>
+<li>Fast access via ScriptProperties</li>
+<li>Authoritative for all collection metadata</li>
+<li>Virtual locking and conflict detection</li>
+<li>Cross-instance coordination</li>
+<li>Used for all normal operations</li>
+</ul>
+<p><strong>Backup Only - Drive Index File:</strong></p>
+<ul>
+<li>Backup and durability</li>
+<li>Migration and recovery scenarios</li>
+<li>Explicit synchronization via <code>backupIndexToDrive()</code></li>
+</ul>
+<h3 id="collection-access-protocol">Collection Access Protocol<a class="headerlink" href="#collection-access-protocol" title="Permanent link">&para;</a></h3>
+<p><strong>UPDATED:</strong> The <code>getCollection()</code> method validates the caller input, logs any sanitisation, and delegates to the shared <code>_resolveCollection(resolvedName, originalName)</code> helper for consistent caching and error messaging. (Note: The <code>collection()</code> alias was removed in v0.0.5.)</p>
+<ol>
+<li>Public method sanitises and validate the name up front, logging when characters were stripped while keeping the unsanitised input for messaging</li>
+<li><code>_resolveCollection()</code> checks the in-memory collections cache using the sanitised key</li>
+<li>If not cached, the helper queries MasterIndex (single source of truth)</li>
+<li>When the collection is still missing, <code>_resolveCollection()</code> auto-creates if permitted, otherwise it raises an error that includes the caller’s original name</li>
+</ol>
+<p><strong>Important:</strong> <code>_resolveCollection()</code> ensures the caller sees the original name in error messages when auto-create is disabled, even if sanitisation adjusted the lookup key. The helper also short-circuits when the configuration forbids auto-creation</p>
+<p>You can tune the behaviour by enabling <code>stripDisallowedCollectionNameCharacters</code> on <code>DatabaseConfig</code>. When enabled, the sanitised name is the one persisted in caches and the MasterIndex, yet <code>_resolveCollection()</code> keeps the unsanitised input for messaging parity so developers can reconcile errors with their original call site.</p>
+<h2 id="database-initialization-and-recovery-workflow">Database Initialization and Recovery Workflow<a class="headerlink" href="#database-initialization-and-recovery-workflow" title="Permanent link">&para;</a></h2>
+<p><strong>NEW:</strong> The Database class now enforces a clear separation between creation, initialization, and recovery:</p>
+<h3 id="first-time-setup">First-Time Setup<a class="headerlink" href="#first-time-setup" title="Permanent link">&para;</a></h3>
+<p>Using the public API (recommended for Apps Script library consumers):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">createAndInitialiseDatabase</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span><span class="w"> </span><span class="c1">// Creates MasterIndex + initialises</span>
+</code></pre></div>
+<p>Or using the class directly (within this project):</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nx">db</span><span class="p">.</span><span class="nx">createDatabase</span><span class="p">();</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="nx">db</span><span class="p">.</span><span class="nx">initialise</span><span class="p">();</span>
+</code></pre></div>
+<h3 id="normal-initialization">Normal Initialization<a class="headerlink" href="#normal-initialization" title="Permanent link">&para;</a></h3>
+<p>Using the public API:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">loadDatabase</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span><span class="w"> </span><span class="c1">// initialises from existing MasterIndex</span>
+</code></pre></div>
+<p>Or directly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="nx">db</span><span class="p">.</span><span class="nx">initialise</span><span class="p">();</span>
+</code></pre></div>
+<h3 id="disaster-recovery">Disaster Recovery<a class="headerlink" href="#disaster-recovery" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="nx">db</span><span class="p">.</span><span class="nx">recoverDatabase</span><span class="p">(</span><span class="nx">backupFileId</span><span class="p">);</span><span class="w"> </span><span class="c1">// Restores from backup to MasterIndex</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="nx">db</span><span class="p">.</span><span class="nx">initialise</span><span class="p">();</span><span class="w"> </span><span class="c1">// Loads from restored MasterIndex</span>
+</code></pre></div>
+<h3 id="benefits-of-new-workflow">Benefits of New Workflow<a class="headerlink" href="#benefits-of-new-workflow" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Single Source of Truth:</strong> MasterIndex is the authoritative source, eliminating race conditions</li>
+<li><strong>Clear Separation:</strong> Distinct operations for creation, initialization, and recovery</li>
+<li><strong>Fail-Fast:</strong> Explicit errors when MasterIndex is missing or corrupted</li>
+<li><strong>Simplified Operations:</strong> No dual-source complexity in collection methods</li>
+</ul>
+<h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Database</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>config</code> (Object|DatabaseConfig): Database configuration object or DatabaseConfig instance</li>
+</ul>
+<p><strong>Behaviour:</strong></p>
+<ul>
+<li>Validates and normalizes configuration via DatabaseConfig</li>
+<li>initialises logging, file services, and MasterIndex</li>
+<li>Creates in-memory collections map</li>
+<li>Does NOT automatically initialise - call <code>initialise()</code> explicitly</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">({</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-folder-id&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="p">});</span>
+</code></pre></div>
+<h2 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h2>
+<h3 id="core-methods">Core Methods<a class="headerlink" href="#core-methods" title="Permanent link">&para;</a></h3>
+<h4 id="createdatabase"><code>createDatabase()</code><a class="headerlink" href="#createdatabase" title="Permanent link">&para;</a></h4>
+<p><strong>NEW:</strong> Creates a new database for first-time setup.</p>
+<ul>
+<li><strong>Returns:</strong> <code>void</code></li>
+<li><strong>Throws:</strong> <code>Error</code> when MasterIndex already exists or creation fails</li>
+<li><strong>Use Cases:</strong></li>
+<li>First-time database setup</li>
+<li>Clean database creation for new projects</li>
+</ul>
+<p><strong>Process:</strong></p>
+<ol>
+<li>Check if MasterIndex already exists in ScriptProperties</li>
+<li>If exists, throw error directing user to recovery process</li>
+<li>Create fresh MasterIndex with empty collections</li>
+<li>Persist to ScriptProperties</li>
+</ol>
+<h4 id="initialise"><code>initialise()</code><a class="headerlink" href="#initialise" title="Permanent link">&para;</a></h4>
+<p><strong>REFACTORED:</strong> initialises the database from MasterIndex only (single source of truth).</p>
+<ul>
+<li><strong>Returns:</strong> <code>void</code></li>
+<li><strong>Throws:</strong> <code>Error</code> when MasterIndex is missing, corrupted, or initialization fails</li>
+<li><strong>Side Effects:</strong></li>
+<li>Loads collections from MasterIndex into memory</li>
+<li>When <code>backupOnInitialise</code> is <code>true</code>, ensures a Drive-based index file exists for backups</li>
+<li>When <code>backupOnInitialise</code> is <code>true</code>, backs up the MasterIndex to the Drive index file</li>
+</ul>
+<p><strong>Process:</strong></p>
+<ol>
+<li>Verify MasterIndex exists and is valid</li>
+<li>Load existing collections from MasterIndex (single source of truth)</li>
+<li>When <code>backupOnInitialise</code> is <code>true</code>, create or find the Drive-based index file used for backups</li>
+<li>When <code>backupOnInitialise</code> is <code>true</code> and collections exist, back up the MasterIndex to the Drive index file</li>
+<li>Populate in-memory collections cache</li>
+</ol>
+<p><strong>Important:</strong> No longer falls back to Drive index file. If MasterIndex is missing or corrupted, use <code>createDatabase()</code> for fresh setup or <code>recoverDatabase()</code> for recovery.</p>
+<h4 id="recoverdatabasebackupfileid"><code>recoverDatabase(backupFileId)</code><a class="headerlink" href="#recoverdatabasebackupfileid" title="Permanent link">&para;</a></h4>
+<p><strong>NEW:</strong> Recovers database from a backup index file.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>backupFileId</code> (String): Drive file ID of backup index file</li>
+<li><strong>Returns:</strong> <code>Array&lt;String&gt;</code> - Names of recovered collections</li>
+<li><strong>Throws:</strong> <code>Error</code> when recovery fails or backup file is invalid</li>
+<li><strong>Use Cases:</strong></li>
+<li>Disaster recovery when MasterIndex is lost or corrupted</li>
+<li>Migration from old backup files</li>
+<li>Data restoration scenarios</li>
+</ul>
+<p><strong>Process:</strong></p>
+<ol>
+<li>Load and validate backup index file structure</li>
+<li>Create fresh MasterIndex for recovery</li>
+<li>Restore collections from backup to MasterIndex</li>
+<li>Persist restored MasterIndex to ScriptProperties</li>
+</ol>
+<h4 id="getcollectionname"><code>getCollection(name)</code><a class="headerlink" href="#getcollectionname" title="Permanent link">&para;</a></h4>
+<p><strong>UPDATED:</strong> Gets or creates a collection (MasterIndex only).</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>name</code> (String): Collection name</li>
+<li><strong>Returns:</strong> <code>Object</code> - Collection object</li>
+<li><strong>Throws:</strong> <code>Error</code> for invalid names or when collection doesn't exist and auto-create is disabled</li>
+</ul>
+<p><strong>Access Path:</strong></p>
+<ol>
+<li>Public method sanitises and validates the name, logging adjustments</li>
+<li><code>_resolveCollection()</code> uses the sanitised name for cache and MasterIndex lookups</li>
+<li>Cache hit returns immediately; otherwise MasterIndex metadata is used to build the collection</li>
+<li>Auto-create (if enabled) creates the collection before returning; when disabled the helper throws with the caller's original name</li>
+</ol>
+<p><strong>Important:</strong></p>
+<ul>
+<li>No longer falls back to Drive index file</li>
+<li>When auto-create is disabled, <code>_resolveCollection()</code> raises an error that includes the caller's original name</li>
+<li>The <code>collection()</code> alias was removed in v0.0.5 - use <code>getCollection()</code> as the canonical method</li>
+</ul>
+<h4 id="createcollectionname"><code>createCollection(name)</code><a class="headerlink" href="#createcollectionname" title="Permanent link">&para;</a></h4>
+<p>Explicitly creates a new collection.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>name</code> (String): Collection name</li>
+<li><strong>Returns:</strong> <code>Object</code> - Created collection object</li>
+<li><strong>Throws:</strong> <code>Error</code> for invalid names or if collection already exists</li>
+</ul>
+<p><strong>Process:</strong></p>
+<ol>
+<li>Validate collection name</li>
+<li>Check for existing collection in MasterIndex and memory</li>
+<li>Create Drive file with initial collection data</li>
+<li>Add to MasterIndex (primary)</li>
+<li>Add to Drive index file (backup)</li>
+<li>Add to in-memory cache</li>
+</ol>
+<h4 id="listcollections"><code>listCollections()</code><a class="headerlink" href="#listcollections" title="Permanent link">&para;</a></h4>
+<p><strong>UPDATED:</strong> Lists all collection names from MasterIndex only.</p>
+<ul>
+<li><strong>Returns:</strong> <code>Array&lt;String&gt;</code> - Collection names</li>
+<li><strong>Data Source:</strong> MasterIndex (single source of truth)</li>
+</ul>
+<p><strong>Important:</strong> No longer falls back to Drive index file.</p>
+<h4 id="dropcollectionname"><code>dropCollection(name)</code><a class="headerlink" href="#dropcollectionname" title="Permanent link">&para;</a></h4>
+<p><strong>UPDATED:</strong> Deletes a collection and its data (MasterIndex only).</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>name</code> (String): Collection name to delete</li>
+<li><strong>Returns:</strong> <code>Boolean</code> - Success status</li>
+<li><strong>Throws:</strong> <code>Error</code> for invalid collection names</li>
+</ul>
+<p><strong>Process:</strong></p>
+<ol>
+<li>Find collection in MasterIndex (single source of truth)</li>
+<li>Delete collection Drive file</li>
+<li>Remove from in-memory cache</li>
+<li>Remove from MasterIndex</li>
+<li>Remove from Drive index file (backup updates occur only when Drive backups are enabled)</li>
+</ol>
+<p><strong>Important:</strong> No longer falls back to Drive index file.</p>
+<h4 id="loadindex"><code>loadIndex()</code><a class="headerlink" href="#loadindex" title="Permanent link">&para;</a></h4>
+<p>Loads and validates Drive-based index file data.</p>
+<ul>
+<li><strong>Returns:</strong> <code>Object</code> - Index file data with structure validation</li>
+<li><strong>Throws:</strong> <code>ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT</code> for corrupted or structurally invalid payloads, <code>ErrorHandler.ErrorTypes.FILE_IO_ERROR</code> when Drive reads fail</li>
+</ul>
+<p><strong>Validation &amp; Repair:</strong></p>
+<ul>
+<li><code>_normaliseIndexData()</code> ensures the parsed value is an object, applying default envelopes and surfacing <code>INVALID_FILE_FORMAT</code> errors when validation fails</li>
+<li><code>_assertIndexObject()</code> rejects malformed payloads (including top-level arrays) using <code>ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT</code></li>
+<li><code>_ensureCollectionsMap()</code> guarantees <code>collections</code> is a map, repairing missing entries and raising <code>INVALID_FILE_FORMAT</code> when an existing value has the wrong type</li>
+<li><code>_ensureLastUpdated()</code> backfills timestamps when absent</li>
+</ul>
+<p>These helpers are also used by index mutation utilities so that validation and repair logic remains centralised. Before reading the Drive index file, <code>loadIndex()</code> calls <code>ensureIndexFile()</code> so the file is only created or touched when backups are enabled (<code>backupOnInitialise: true</code>) or when an explicit index operation needs it.</p>
+<p>Regression suites cover array payload rejection and timestamp preservation so that future changes retain these guarantees.</p>
+<h4 id="backupindextodrive"><code>backupIndexToDrive()</code><a class="headerlink" href="#backupindextodrive" title="Permanent link">&para;</a></h4>
+<p>Explicitly backs up MasterIndex data to Drive-based index file.</p>
+<ul>
+<li><strong>Returns:</strong> <code>Boolean</code> - Success status</li>
+<li><strong>Use Cases:</strong></li>
+<li>Periodic backups</li>
+<li>Before major operations</li>
+<li>Data migration scenarios</li>
+</ul>
+<h3 id="private-methods">Private Methods<a class="headerlink" href="#private-methods" title="Permanent link">&para;</a></h3>
+<h4 id="_findexistingindexfile"><code>_findExistingIndexFile()</code><a class="headerlink" href="#_findexistingindexfile" title="Permanent link">&para;</a></h4>
+<p>Searches root folder for existing database index files.</p>
+<ul>
+<li><strong>Returns:</strong> <code>String|null</code> - File ID if found</li>
+<li><strong>Search Pattern:</strong> Files containing 'database_index' and ending with '.json'</li>
+</ul>
+<h4 id="_createindexfile"><code>_createIndexFile()</code><a class="headerlink" href="#_createindexfile" title="Permanent link">&para;</a></h4>
+<p>Creates a new Drive-based index file with initial structure.</p>
+<ul>
+<li><strong>Side Effects:</strong> Sets <code>this.indexFileId</code></li>
+<li><strong>Initial Structure:</strong> Empty collections, timestamps, version</li>
+</ul>
+<h4 id="ensureindexfile"><code>ensureIndexFile()</code><a class="headerlink" href="#ensureindexfile" title="Permanent link">&para;</a></h4>
+<p>Lazily locates or creates the Drive-based index file. This helper is invoked when <code>backupOnInitialise</code> is <code>true</code> during <code>initialise()</code> and before any other Drive index operations so unnecessary Drive writes are avoided when backups are disabled.</p>
+<h4 id="_resolvecollectionresolvedname-originalname"><code>_resolveCollection(resolvedName, originalName)</code><a class="headerlink" href="#_resolvecollectionresolvedname-originalname" title="Permanent link">&para;</a></h4>
+<p>Centralises collection resolution for <code>getCollection()</code> after the public wrapper sanitises the input.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>resolvedName</code> (String): Sanitised collection name used for cache and MasterIndex lookups</li>
+<li><code>originalName</code> (String): Caller-supplied name used for error messaging and auto-create delegations</li>
+<li><strong>Returns:</strong> <code>Object</code> - Collection object from cache or newly constructed via MasterIndex metadata</li>
+<li><strong>Behaviour:</strong></li>
+<li>Checks cache before contacting MasterIndex</li>
+<li>Rehydrates a collection using MasterIndex metadata when available</li>
+<li>Throws with the original caller input when auto-create is disabled and the collection is missing</li>
+<li>Creates and caches new collections (via <code>createCollection(originalName)</code>) when auto-create is permitted</li>
+</ul>
+<h4 id="_buildcollectionmetadatapayloadname-fileid-documentcount-0-new-in-v005"><code>_buildCollectionMetadataPayload(name, fileId, documentCount = 0)</code> ⭐ NEW in v0.0.5<a class="headerlink" href="#_buildcollectionmetadatapayloadname-fileid-documentcount-0-new-in-v005" title="Permanent link">&para;</a></h4>
+<p><strong>Added in:</strong> DB3 refactoring</p>
+<p>Centralized helper for constructing collection metadata payloads with consistent field structure.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>name</code> (String): Collection name</li>
+<li><code>fileId</code> (String): Drive file ID for the collection</li>
+<li><code>documentCount</code> (Number): Initial document count (default: 0)</li>
+<li><strong>Returns:</strong> <code>Object</code> - Metadata payload with standardized fields</li>
+<li><strong>Structure:</strong>
+  <div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="w">  </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="nx">fileId</span><span class="p">,</span>
+<a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">  </span><span class="nx">created</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(),</span>
+<a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">  </span><span class="nx">lastUpdated</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(),</span>
+<a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a><span class="w">  </span><span class="nx">documentCount</span><span class="o">:</span><span class="w"> </span><span class="nx">documentCount</span>
+<a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="p">}</span>
+</code></pre></div></li>
+<li><strong>Usage:</strong> Used by <code>addCollectionToMasterIndex()</code>, <code>addCollectionToIndex()</code>, <code>_restoreCollectionFromBackup()</code>, and collection management operations</li>
+<li><strong>Benefits:</strong> Single source of truth for metadata structure, guaranteed field alignment</li>
+</ul>
+<h4 id="_wrapmasterindexerroroperation-error-messageprefix-new-in-v005"><code>_wrapMasterIndexError(operation, error, messagePrefix)</code> ⭐ NEW in v0.0.5<a class="headerlink" href="#_wrapmasterindexerroroperation-error-messageprefix-new-in-v005" title="Permanent link">&para;</a></h4>
+<p><strong>Added in:</strong> DB2 refactoring</p>
+<p>Wraps non-GASDB errors into MasterIndexError with consistent formatting.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>operation</code> (String): Operation identifier for error context</li>
+<li><code>error</code> (Error): Original error to wrap</li>
+<li><code>messagePrefix</code> (String): Prefix for error message</li>
+<li><strong>Returns:</strong> <code>Error</code> - Original GASDB error or new MasterIndexError</li>
+<li><strong>Behaviour:</strong></li>
+<li>Returns error unchanged if already a GASDB_ERROR</li>
+<li>Creates new MASTER_INDEX_ERROR for non-GASDB errors</li>
+<li>Formats message as: <code>${messagePrefix}: ${error.message}</code></li>
+<li><strong>Usage:</strong> Used by <code>createDatabase()</code>, <code>initialise()</code>, <code>recoverDatabase()</code></li>
+<li><strong>Benefits:</strong> Consistent error wrapping, preserves error types for tests</li>
+</ul>
+<h4 id="_createcollectionobjectname-drivefileid"><code>_createCollectionObject(name, driveFileId)</code><a class="headerlink" href="#_createcollectionobjectname-drivefileid" title="Permanent link">&para;</a></h4>
+<p>Creates a minimal collection object (placeholder for full Collection class).</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>name</code> (String): Collection name</li>
+<li><code>driveFileId</code> (String): Drive file ID</li>
+<li><strong>Returns:</strong> <code>Object</code> - Collection object</li>
+<li><strong>Note:</strong> Currently returns minimal object; will integrate with full Collection class in Section 5</li>
+</ul>
+<h4 id="_normaliseindexdatarawdata"><code>_normaliseIndexData(rawData)</code><a class="headerlink" href="#_normaliseindexdatarawdata" title="Permanent link">&para;</a></h4>
+<p>Prepares parsed index content for validation and repair.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>rawData</code> (any): Value returned by <code>JSON.parse</code></li>
+<li><strong>Behaviour:</strong></li>
+<li>Delegates to <code>_assertIndexObject()</code> to reject anything other than a plain object whilst expecting callers to supply an object-shaped payload</li>
+<li>Does <strong>not</strong> coerce primitives, arrays, or <code>null</code> into objects; it simply verifies the input already meets the contract</li>
+<li>Ensures the collections map and <code>lastUpdated</code> timestamp exist by calling <code>_ensureCollectionsMap()</code> and <code>_ensureLastUpdated()</code></li>
+<li>Returns the original object reference so callers persist a repaired but familiar structure</li>
+</ul>
+<h4 id="_assertindexobjectindexcandidate"><code>_assertIndexObject(indexCandidate)</code><a class="headerlink" href="#_assertindexobjectindexcandidate" title="Permanent link">&para;</a></h4>
+<p>Guarantees the index payload has an object shape.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>indexCandidate</code> (any): Value from <code>_normaliseIndexData()</code></li>
+<li><strong>Throws:</strong> <code>ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT</code> when the payload is not a plain object (rejects arrays, primitives, <code>null</code>, dates, etc.)</li>
+<li><strong>Behaviour:</strong></li>
+<li>Rejects unsupported payloads early so Drive corruption surfaces immediately</li>
+<li>Returns the candidate unchanged when it is a plain object</li>
+</ul>
+<h4 id="_ensurecollectionsmapindexdata"><code>_ensureCollectionsMap(indexData)</code><a class="headerlink" href="#_ensurecollectionsmapindexdata" title="Permanent link">&para;</a></h4>
+<p>Ensures <code>collections</code> exists and has the expected type.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>indexData</code> (Object): Index data returned by <code>_assertIndexObject()</code></li>
+<li><strong>Behaviour:</strong></li>
+<li>Repairs a missing <code>collections</code> property by seeding an empty map</li>
+<li>Throws <code>ErrorHandler.ErrorTypes.INVALID_FILE_FORMAT</code> when an existing <code>collections</code> value is not an object map</li>
+<li>Preserves valid maps so timestamp comparisons remain stable</li>
+</ul>
+<h4 id="_ensurelastupdatedindexdata"><code>_ensureLastUpdated(indexData)</code><a class="headerlink" href="#_ensurelastupdatedindexdata" title="Permanent link">&para;</a></h4>
+<p>Ensures the index metadata has a <code>lastUpdated</code> timestamp.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>indexData</code> (Object): Index object returned by <code>_assertIndexObject()</code></li>
+<li><strong>Behaviour:</strong></li>
+<li>Adds a timestamp when missing or invalid</li>
+<li>Keeps existing timestamps intact so tests can assert stability</li>
+</ul>
+<h4 id="_validatecollectionnamename"><code>_validateCollectionName(name)</code><a class="headerlink" href="#_validatecollectionnamename" title="Permanent link">&para;</a></h4>
+<p>Validates collection name according to GAS DB rules.</p>
+<ul>
+<li><strong>Parameters:</strong></li>
+<li><code>name</code> (String): Name to validate</li>
+<li><strong>Throws:</strong> <code>Error</code> for invalid names</li>
+<li><strong>Rules:</strong></li>
+<li>Must be non-empty string</li>
+<li>No invalid filesystem characters (<code>[\/\\:*?"&lt;&gt;|]</code>). When <code>stripDisallowedCollectionNameCharacters</code> is enabled on the configuration, the characters are removed before the checks below, and any modification is logged for diagnostics.</li>
+<li>Not reserved names (index, master, system, admin). The reserved-name check is applied after sanitisation so <code>index/</code> will still be rejected even though the slash is removed.</li>
+</ul>
+<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="basic-database-setup">Basic Database Setup<a class="headerlink" href="#basic-database-setup" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-drive-folder-id&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INFO&#39;</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="p">});</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">config</span><span class="p">);</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="k">await</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">initialise</span><span class="p">();</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Available collections:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">listCollections</span><span class="p">());</span>
+</code></pre></div>
+<h3 id="collection-management">Collection Management<a class="headerlink" href="#collection-management" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">// Create collection explicitly</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">users</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">createCollection</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">);</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>
+<a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="c1">// Get existing collection (or auto-create if enabled)</span>
+<a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">posts</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">getCollection</span><span class="p">(</span><span class="s1">&#39;posts&#39;</span><span class="p">);</span>
+<a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
+<a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="c1">// List all collections</span>
+<a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">allCollections</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">listCollections</span><span class="p">();</span>
+<a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Collections:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">allCollections</span><span class="p">);</span>
+<a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a>
+<a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="c1">// Drop collection</span>
+<a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">success</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">dropCollection</span><span class="p">(</span><span class="s1">&#39;temp_collection&#39;</span><span class="p">);</span>
+</code></pre></div>
+<h3 id="index-file-operations">Index File Operations<a class="headerlink" href="#index-file-operations" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// Load index file data</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">indexData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">loadIndex</span><span class="p">();</span>
+<a id="__codelineno-11-4" name="__codelineno-11-4" href="#__codelineno-11-4"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Index contains:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">Object</span><span class="p">.</span><span class="nx">keys</span><span class="p">(</span><span class="nx">indexData</span><span class="p">.</span><span class="nx">collections</span><span class="p">));</span>
+<a id="__codelineno-11-5" name="__codelineno-11-5" href="#__codelineno-11-5"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-6" name="__codelineno-11-6" href="#__codelineno-11-6"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Index file corrupted:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<a id="__codelineno-11-7" name="__codelineno-11-7" href="#__codelineno-11-7"></a><span class="p">}</span>
+<a id="__codelineno-11-8" name="__codelineno-11-8" href="#__codelineno-11-8"></a>
+<a id="__codelineno-11-9" name="__codelineno-11-9" href="#__codelineno-11-9"></a><span class="c1">// Backup MasterIndex to Drive</span>
+<a id="__codelineno-11-10" name="__codelineno-11-10" href="#__codelineno-11-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">backupSuccess</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">backupIndexToDrive</span><span class="p">();</span>
+<a id="__codelineno-11-11" name="__codelineno-11-11" href="#__codelineno-11-11"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">backupSuccess</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-11-12" name="__codelineno-11-12" href="#__codelineno-11-12"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Backup completed successfully&#39;</span><span class="p">);</span>
+<a id="__codelineno-11-13" name="__codelineno-11-13" href="#__codelineno-11-13"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="error-handling">Error Handling<a class="headerlink" href="#error-handling" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">collection</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">db</span><span class="p">.</span><span class="nx">getCollection</span><span class="p">(</span><span class="s1">&#39;invalid/name&#39;</span><span class="p">);</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-4" name="__codelineno-12-4" href="#__codelineno-12-4"></a><span class="w">  </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">.</span><span class="nx">includes</span><span class="p">(</span><span class="s1">&#39;invalid characters&#39;</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-5" name="__codelineno-12-5" href="#__codelineno-12-5"></a><span class="w">    </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Collection name validation failed&#39;</span><span class="p">);</span>
+<a id="__codelineno-12-6" name="__codelineno-12-6" href="#__codelineno-12-6"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-12-7" name="__codelineno-12-7" href="#__codelineno-12-7"></a><span class="p">}</span>
+<a id="__codelineno-12-8" name="__codelineno-12-8" href="#__codelineno-12-8"></a>
+<a id="__codelineno-12-9" name="__codelineno-12-9" href="#__codelineno-12-9"></a><span class="c1">// Handle initialization errors</span>
+<a id="__codelineno-12-10" name="__codelineno-12-10" href="#__codelineno-12-10"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-11" name="__codelineno-12-11" href="#__codelineno-12-11"></a><span class="w">  </span><span class="nx">db</span><span class="p">.</span><span class="nx">initialise</span><span class="p">();</span>
+<a id="__codelineno-12-12" name="__codelineno-12-12" href="#__codelineno-12-12"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-12-13" name="__codelineno-12-13" href="#__codelineno-12-13"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Database initialization failed:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<a id="__codelineno-12-14" name="__codelineno-12-14" href="#__codelineno-12-14"></a><span class="w">  </span><span class="c1">// Implement recovery logic</span>
+<a id="__codelineno-12-15" name="__codelineno-12-15" href="#__codelineno-12-15"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="integration-with-masterindex">Integration with MasterIndex<a class="headerlink" href="#integration-with-masterindex" title="Permanent link">&para;</a></h2>
+<h3 id="collection-lifecycle">Collection Lifecycle<a class="headerlink" href="#collection-lifecycle" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// Collection Creation Flow</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="nx">db</span><span class="p">.</span><span class="nx">createCollection</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">);</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="c1">// 1. Validate name</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="c1">// 2. Create Drive file</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="c1">// 3. Add to MasterIndex (primary)</span>
+<a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="c1">// 4. Add to Drive index (backup)</span>
+<a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="c1">// 5. Cache in memory</span>
+</code></pre></div>
+<h3 id="data-synchronization">Data Synchronization<a class="headerlink" href="#data-synchronization" title="Permanent link">&para;</a></h3>
+<p>The Database class maintains consistency between data sources:</p>
+<ul>
+<li><strong>MasterIndex → Memory:</strong> On initialization and collection access</li>
+<li><strong>Index File → MasterIndex:</strong> When collections found only in index file</li>
+<li><strong>MasterIndex → Index File:</strong> Via explicit <code>backupIndexToDrive()</code></li>
+</ul>
+<h3 id="backup-strategy">Backup Strategy<a class="headerlink" href="#backup-strategy" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Periodic backup pattern</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="nx">setInterval</span><span class="p">(</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">db</span><span class="p">.</span><span class="nx">backupIndexToDrive</span><span class="p">())</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="w">      </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Periodic backup completed&#39;</span><span class="p">);</span>
+<a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-14-8" name="__codelineno-14-8" href="#__codelineno-14-8"></a><span class="w">  </span><span class="mf">30</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">60</span><span class="w"> </span><span class="o">*</span><span class="w"> </span><span class="mf">1000</span>
+<a id="__codelineno-14-9" name="__codelineno-14-9" href="#__codelineno-14-9"></a><span class="p">);</span><span class="w"> </span><span class="c1">// Every 30 minutes</span>
+</code></pre></div>
+<h2 id="error-types">Error Types<a class="headerlink" href="#error-types" title="Permanent link">&para;</a></h2>
+<ul>
+<li><strong>Invalid Configuration:</strong> Configuration validation failures</li>
+<li><strong>Collection Name Validation:</strong> Invalid characters or reserved names</li>
+<li><strong>Collection Already Exists:</strong> Duplicate collection creation</li>
+<li><strong>Collection Not Found:</strong> Accessing non-existent collections</li>
+<li><strong>Index File Corruption:</strong> JSON parsing or structure validation errors</li>
+<li><strong>Drive API Errors:</strong> File operation failures</li>
+<li><strong>Initialization Errors:</strong> Database setup failures</li>
+</ul>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Always initialise explicitly:</strong> Call <code>initialise()</code> after constructor</li>
+<li><strong>Handle collection name validation:</strong> Use try-catch for collection operations</li>
+<li><strong>Implement periodic backups:</strong> Use <code>backupIndexToDrive()</code> regularly</li>
+<li><strong>Monitor index file health:</strong> Check for corruption and implement recovery</li>
+<li><strong>Use proper error handling:</strong> Different error types require different recovery strategies</li>
+<li><strong>Leverage auto-create judiciously:</strong> Enable for development, consider disabling for production</li>
+<li><strong>Cache collection references:</strong> Store collection objects to avoid repeated lookups</li>
+<li><strong>Clean up properly:</strong> Use <code>dropCollection()</code> to remove unused collections</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../" class="md-footer__link md-footer__link--prev" aria-label="Previous: Overview">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Overview
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../DatabaseConfig/" class="md-footer__link md-footer__link--next" aria-label="Next: DatabaseConfig">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                DatabaseConfig
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/h-arnold/JsonDbApp" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

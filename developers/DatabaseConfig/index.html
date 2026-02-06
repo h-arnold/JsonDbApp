@@ -1,0 +1,2906 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A document database implemented in Google Apps Script using the Google Drive API">
+      
+      
+        <meta name="author" content="h-arnold">
+      
+      
+        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/developers/DatabaseConfig/">
+      
+      
+        <link rel="prev" href="../Database/">
+      
+      
+        <link rel="next" href="../MasterIndex/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>DatabaseConfig - JsonDbApp Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#databaseconfig-developer-documentation" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="JsonDbApp Documentation" class="md-header__button md-logo" aria-label="JsonDbApp Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            JsonDbApp Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              DatabaseConfig
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/h-arnold/JsonDbApp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    h-arnold/JsonDbApp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Quick_Start/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Querying/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  Developer Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../release-notes/release-notes-v0.0.4/" class="md-tabs__link">
+          
+  
+  
+  Release Notes
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="JsonDbApp Documentation" class="md-nav__button md-logo" aria-label="JsonDbApp Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    JsonDbApp Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/h-arnold/JsonDbApp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    h-arnold/JsonDbApp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Quick_Start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Querying/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DatabaseConfig
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DatabaseConfig
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Properties
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clone()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tojson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        toJSON()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fromjsonobj" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fromJSON(obj)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Private Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Private Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_initialisegeneraldefaultsconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseGeneralDefaults(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_initialiseretryconfigconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseRetryConfig(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_initialisequeryengineconfigconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseQueryEngineConfig(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_initialisebooleanflagsconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseBooleanFlags(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_getdefaultrootfolder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _getDefaultRootFolder()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validateconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateConfig()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validatequeryoperators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateQueryOperators()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateOperatorArray(configKey, operators, rawValue, wasProvided)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validation Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#property-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Property Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Scenarios
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#development-vs-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development vs Production
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-cloning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Cloning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with Database
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-level-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component-Level Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component-Level Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#queryengine-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QueryEngine Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fileoperations-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FileOperations Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#index-backup-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Backup Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MasterIndex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MasterIndex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QueryEngine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QueryEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UpdateEngine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UpdateEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Collection_Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Infrastructure_Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Testing_Framework/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagrams
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Diagrams
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Class_Diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Class Diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.0.4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.0.4
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.0.3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.0.3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constants" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constants
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Properties
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration Properties">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#core-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Core Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#optional-properties" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Optional Properties
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#constructor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Constructor
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#api-reference" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        API Reference
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="API Reference">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#public-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Public Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Public Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#clone" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        clone()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tojson" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        toJSON()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fromjsonobj" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        fromJSON(obj)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#private-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Private Methods
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Private Methods">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#_initialisegeneraldefaultsconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseGeneralDefaults(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_initialiseretryconfigconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseRetryConfig(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_initialisequeryengineconfigconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseQueryEngineConfig(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_initialisebooleanflagsconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _initialiseBooleanFlags(config)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_getdefaultrootfolder" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _getDefaultRootFolder()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validateconfig" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateConfig()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validatequeryoperators" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateQueryOperators()
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        _validateOperatorArray(configKey, operators, rawValue, wasProvided)
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#validation-rules" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Validation Rules
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Validation Rules">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#property-validation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Property Validation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#error-scenarios" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Error Scenarios
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Usage Examples
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Usage Examples">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#basic-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Basic Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#development-vs-production" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Development vs Production
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-cloning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Cloning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#configuration-serialization" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Configuration Serialization
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#integration-with-database" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Integration with Database
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#component-level-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Component-Level Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Component-Level Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#queryengine-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        QueryEngine Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fileoperations-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FileOperations Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#index-backup-strategy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Index Backup Strategy
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<h1 id="databaseconfig-developer-documentation">DatabaseConfig Developer Documentation<a class="headerlink" href="#databaseconfig-developer-documentation" title="Permanent link">&para;</a></h1>
+<ul>
+<li><a href="#databaseconfig-developer-documentation">DatabaseConfig Developer Documentation</a></li>
+<li><a href="#overview">Overview</a></li>
+<li><a href="#constants">Constants</a></li>
+<li><a href="#configuration-properties">Configuration Properties</a><ul>
+<li><a href="#core-properties">Core Properties</a></li>
+<li><a href="#optional-properties">Optional Properties</a></li>
+</ul>
+</li>
+<li><a href="#constructor">Constructor</a></li>
+<li><a href="#api-reference">API Reference</a><ul>
+<li><a href="#public-methods">Public Methods</a></li>
+<li><a href="#clone"><code>clone()</code></a></li>
+<li><a href="#tojson"><code>toJSON()</code></a></li>
+<li><a href="#fromjsonobj"><code>fromJSON(obj)</code></a></li>
+<li><a href="#private-methods">Private Methods</a></li>
+<li><a href="#_initialisegeneraldefaultsconfig"><code>_initialiseGeneralDefaults(config)</code></a></li>
+<li><a href="#_initialiseretryconfigconfig"><code>_initialiseRetryConfig(config)</code></a></li>
+<li><a href="#_initialisequeryengineconfigconfig"><code>_initialiseQueryEngineConfig(config)</code></a></li>
+<li><a href="#_initialisebooleanflagsconfig"><code>_initialiseBooleanFlags(config)</code></a></li>
+<li><a href="#_getdefaultrootfolder"><code>_getDefaultRootFolder()</code></a></li>
+<li><a href="#_validateconfig"><code>_validateConfig()</code></a></li>
+<li><a href="#_validatequeryoperators"><code>_validateQueryOperators()</code></a></li>
+<li><a href="#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided"><code>_validateOperatorArray(configKey, operators, rawValue, wasProvided)</code></a></li>
+</ul>
+</li>
+<li><a href="#validation-rules">Validation Rules</a><ul>
+<li><a href="#property-validation">Property Validation</a></li>
+<li><a href="#error-scenarios">Error Scenarios</a></li>
+</ul>
+</li>
+<li><a href="#usage-examples">Usage Examples</a><ul>
+<li><a href="#basic-configuration">Basic Configuration</a></li>
+<li><a href="#development-vs-production">Development vs Production</a></li>
+<li><a href="#configuration-cloning">Configuration Cloning</a></li>
+<li><a href="#configuration-serialization">Configuration Serialization</a></li>
+</ul>
+</li>
+<li><a href="#integration-with-database">Integration with Database</a></li>
+<li><a href="#component-level-configuration">Component-Level Configuration</a><ul>
+<li><a href="#queryengine-configuration">QueryEngine Configuration</a></li>
+<li><a href="#fileoperations-configuration">FileOperations Configuration</a></li>
+<li><a href="#index-backup-strategy">Index Backup Strategy</a></li>
+</ul>
+</li>
+<li><a href="#best-practices">Best Practices</a></li>
+</ul>
+<h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
+<p>The <code>DatabaseConfig</code> class manages database configuration settings with validation and defaults. It provides a standardized configuration object for Database instances, ensuring all settings are validated and properly formatted before use.</p>
+<p><strong>Key Responsibilities:</strong></p>
+<ul>
+<li>Configuration validation and normalization</li>
+<li>Default value management</li>
+<li>Type checking and constraint enforcement</li>
+<li>Configuration cloning and serialization</li>
+</ul>
+<p><strong>Design Principles:</strong></p>
+<ul>
+<li>Fail-fast validation in constructor</li>
+<li>Configuration intended to be treated as immutable after creation</li>
+<li>Clear error messages for invalid settings</li>
+<li>Sensible defaults for all properties</li>
+</ul>
+<h2 id="constants">Constants<a class="headerlink" href="#constants" title="Permanent link">&para;</a></h2>
+<p><code>DatabaseConfig</code> internally defines shared constants for log handling so the configuration stays in sync with <code>JDbLogger</code> behaviour. These are implementation details used for validation and are <strong>not</strong> exposed as public static properties or part of the public API:</p>
+<ul>
+<li><code>LOG_LEVELS</code>: ordered array of accepted level names (<code>['DEBUG','INFO','WARN','ERROR']</code>) used during validation.</li>
+<li><code>DEFAULT_LOG_LEVEL</code>: default value (<code>'INFO'</code>) applied when no explicit level is supplied.</li>
+</ul>
+<h2 id="configuration-properties">Configuration Properties<a class="headerlink" href="#configuration-properties" title="Permanent link">&para;</a></h2>
+<h3 id="core-properties">Core Properties<a class="headerlink" href="#core-properties" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rootFolderId</code></td>
+<td>String</td>
+<td>Drive root folder</td>
+<td>Root Drive folder for database files</td>
+</tr>
+<tr>
+<td><code>masterIndexKey</code></td>
+<td>String</td>
+<td>'GASDB_MASTER_INDEX'</td>
+<td>ScriptProperties key for master index</td>
+</tr>
+</tbody>
+</table>
+<h3 id="optional-properties">Optional Properties<a class="headerlink" href="#optional-properties" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Property</th>
+<th>Type</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>autoCreateCollections</code></td>
+<td>Boolean</td>
+<td><code>true</code></td>
+<td>Auto-create collections when accessed</td>
+</tr>
+<tr>
+<td><code>lockTimeout</code></td>
+<td>Number</td>
+<td><code>30000</code></td>
+<td>Lock timeout in milliseconds</td>
+</tr>
+<tr>
+<td><code>retryAttempts</code></td>
+<td>Number</td>
+<td><code>3</code></td>
+<td>Lock acquisition retry attempts</td>
+</tr>
+<tr>
+<td><code>retryDelayMs</code></td>
+<td>Number</td>
+<td><code>1000</code></td>
+<td>Delay between lock retries</td>
+</tr>
+<tr>
+<td><code>lockRetryBackoffBase</code></td>
+<td>Number</td>
+<td><code>2</code></td>
+<td>Exponential backoff base for lock retries</td>
+</tr>
+<tr>
+<td><code>cacheEnabled</code></td>
+<td>Boolean</td>
+<td><code>true</code></td>
+<td>Enable file caching</td>
+</tr>
+<tr>
+<td><code>logLevel</code></td>
+<td>String</td>
+<td><code>DEFAULT_LOG_LEVEL</code> ('INFO')</td>
+<td>Log level constrained to the values declared in <code>LOG_LEVELS</code></td>
+</tr>
+<tr>
+<td><code>fileRetryAttempts</code></td>
+<td>Number</td>
+<td><code>3</code></td>
+<td>File operation retry attempts</td>
+</tr>
+<tr>
+<td><code>fileRetryDelayMs</code></td>
+<td>Number</td>
+<td><code>1000</code></td>
+<td>Delay between file retries</td>
+</tr>
+<tr>
+<td><code>fileRetryBackoffBase</code></td>
+<td>Number</td>
+<td><code>2</code></td>
+<td>Exponential backoff base for file retries</td>
+</tr>
+<tr>
+<td><code>queryEngineMaxNestedDepth</code></td>
+<td>Number</td>
+<td><code>10</code></td>
+<td>Maximum allowed query nesting depth</td>
+</tr>
+<tr>
+<td><code>queryEngineSupportedOperators</code></td>
+<td>String[]</td>
+<td><code>['$eq','$gt','$lt','$and','$or']</code></td>
+<td>Operators permitted by the QueryEngine</td>
+</tr>
+<tr>
+<td><code>queryEngineLogicalOperators</code></td>
+<td>String[]</td>
+<td><code>['$and','$or']</code></td>
+<td>Logical operators recognised by the QueryEngine</td>
+</tr>
+<tr>
+<td><code>backupOnInitialise</code></td>
+<td>Boolean</td>
+<td><code>false</code></td>
+<td>If true, <code>Database.initialise()</code> will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when <code>loadIndex()</code> is called.</td>
+</tr>
+<tr>
+<td><code>stripDisallowedCollectionNameCharacters</code></td>
+<td>Boolean</td>
+<td><code>false</code></td>
+<td>When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks.</td>
+</tr>
+</tbody>
+</table>
+<h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="kd">class</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">    </span><span class="c1">// ...</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+</code></pre></div>
+<p><strong>Parameters:</strong></p>
+<ul>
+<li><code>config</code> (Object): Configuration options object</li>
+</ul>
+<p><strong>Behaviour:</strong></p>
+<ul>
+<li>Delegates to grouped helpers (<code>_initialiseGeneralDefaults</code>, <code>_initialiseRetryConfig</code>, <code>_initialiseQueryEngineConfig</code>, <code>_initialiseBooleanFlags</code>) so each concern applies defaults consistently.</li>
+<li>Uses nullish coalescing (<code>??</code>) to normalise nullish overrides while keeping explicit falsy values intact.</li>
+<li>Sets default values for all properties</li>
+<li>Validates all configuration parameters</li>
+<li>Throws errors immediately for invalid settings</li>
+<li>Automatically determines root folder if not provided</li>
+</ul>
+<p><strong>Example:</strong></p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;your-folder-id&#39;</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">});</span>
+</code></pre></div>
+<h2 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h2>
+<h3 id="public-methods">Public Methods<a class="headerlink" href="#public-methods" title="Permanent link">&para;</a></h3>
+<h4 id="clone"><code>clone()</code><a class="headerlink" href="#clone" title="Permanent link">&para;</a></h4>
+<p>Creates a deep copy of the configuration.</p>
+<ul>
+<li><strong>Returns:</strong> <code>DatabaseConfig</code> - New configuration instance</li>
+<li><strong>Use Cases:</strong></li>
+<li>Creating modified configurations</li>
+<li>Immutable configuration management</li>
+<li>Testing with variations</li>
+</ul>
+<h4 id="tojson"><code>toJSON()</code><a class="headerlink" href="#tojson" title="Permanent link">&para;</a></h4>
+<p>Converts configuration to a serialisable plain object with a <code>__type</code> tag.</p>
+<ul>
+<li><strong>Returns:</strong> <code>Object</code> - Plain object suitable for JSON serialisation</li>
+<li><strong>Use Cases:</strong></li>
+<li>Serialisation</li>
+<li>Debugging and logging</li>
+<li>Configuration comparison</li>
+</ul>
+<h4 id="fromjsonobj"><code>fromJSON(obj)</code><a class="headerlink" href="#fromjsonobj" title="Permanent link">&para;</a></h4>
+<p>Creates a <code>DatabaseConfig</code> from an object produced by <code>toJSON()</code>.</p>
+<ul>
+<li><strong>Parameters:</strong> <code>obj</code> (<code>Object</code>) - A deserialised config object containing <code>__type: 'DatabaseConfig'</code></li>
+<li><strong>Returns:</strong> <code>DatabaseConfig</code></li>
+<li><strong>Throws:</strong> <code>InvalidArgumentError</code> if the object is not a valid <code>DatabaseConfig</code> serialisation</li>
+</ul>
+<h3 id="private-methods">Private Methods<a class="headerlink" href="#private-methods" title="Permanent link">&para;</a></h3>
+<h4 id="_initialisegeneraldefaultsconfig"><code>_initialiseGeneralDefaults(config)</code><a class="headerlink" href="#_initialisegeneraldefaultsconfig" title="Permanent link">&para;</a></h4>
+<p>Applies root folder, lock timeout, log level (via <code>DEFAULT_LOG_LEVEL</code>), and master index defaults.</p>
+<h4 id="_initialiseretryconfigconfig"><code>_initialiseRetryConfig(config)</code><a class="headerlink" href="#_initialiseretryconfigconfig" title="Permanent link">&para;</a></h4>
+<p>Normalises retry-related options (lock and file retries) with grouped defaults.</p>
+<h4 id="_initialisequeryengineconfigconfig"><code>_initialiseQueryEngineConfig(config)</code><a class="headerlink" href="#_initialisequeryengineconfigconfig" title="Permanent link">&para;</a></h4>
+<p>Clones provided operator arrays when supplied and records raw values for validation while restoring defaults when omitted.</p>
+<h4 id="_initialisebooleanflagsconfig"><code>_initialiseBooleanFlags(config)</code><a class="headerlink" href="#_initialisebooleanflagsconfig" title="Permanent link">&para;</a></h4>
+<p>Initialises boolean feature toggles such as <code>autoCreateCollections</code> and <code>backupOnInitialise</code>.</p>
+<h4 id="_getdefaultrootfolder"><code>_getDefaultRootFolder()</code><a class="headerlink" href="#_getdefaultrootfolder" title="Permanent link">&para;</a></h4>
+<p>Determines the default root folder ID.</p>
+<ul>
+<li><strong>Returns:</strong> <code>String</code> - Drive root folder ID</li>
+<li><strong>Throws:</strong> <code>Error</code> if unable to access Drive</li>
+<li><strong>Behaviour:</strong> Uses <code>DriveApp.getRootFolder().getId()</code></li>
+</ul>
+<h4 id="_validateconfig"><code>_validateConfig()</code><a class="headerlink" href="#_validateconfig" title="Permanent link">&para;</a></h4>
+<p>Validates all configuration properties according to rules.</p>
+<ul>
+<li><strong>Throws:</strong> <code>Error</code> for any validation failure</li>
+<li><strong>Validation Order:</strong></li>
+<li>Type checking</li>
+<li>Range validation</li>
+<li>Format validation</li>
+<li>Constraint checking</li>
+</ul>
+<h4 id="_validatequeryoperators"><code>_validateQueryOperators()</code><a class="headerlink" href="#_validatequeryoperators" title="Permanent link">&para;</a></h4>
+<p>Ensures logical operators are a subset of supported operators and raises <code>INVALID_ARGUMENT</code> when alignment fails.</p>
+<h4 id="_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided"><code>_validateOperatorArray(configKey, operators, rawValue, wasProvided)</code><a class="headerlink" href="#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided" title="Permanent link">&para;</a></h4>
+<p>Validates optional operator arrays against type constraints and preserves the original error context.</p>
+<h2 id="validation-rules">Validation Rules<a class="headerlink" href="#validation-rules" title="Permanent link">&para;</a></h2>
+<h3 id="property-validation">Property Validation<a class="headerlink" href="#property-validation" title="Permanent link">&para;</a></h3>
+<p><strong>lockTimeout:</strong></p>
+<ul>
+<li>Must be a number of at least 500ms</li>
+<li>Recommended range: 5000-60000ms</li>
+<li>Zero is invalid because the minimum is enforced during validation</li>
+</ul>
+<p><strong>retryAttempts / retryDelayMs / lockRetryBackoffBase:</strong></p>
+<ul>
+<li><code>retryAttempts</code> must be a positive integer</li>
+<li><code>retryDelayMs</code> must be a non-negative number</li>
+<li><code>lockRetryBackoffBase</code> must be a positive number</li>
+</ul>
+<p><strong>logLevel:</strong></p>
+<ul>
+<li>Must be one of the entries in <code>LOG_LEVELS</code> (currently 'DEBUG', 'INFO', 'WARN', 'ERROR')</li>
+<li>Case-sensitive validation</li>
+<li>Defaults to <code>DEFAULT_LOG_LEVEL</code> to remain consistent with <code>JDbLogger</code></li>
+<li>Affects logging verbosity across the system</li>
+</ul>
+<p><strong>rootFolderId:</strong></p>
+<ul>
+<li>Must be a valid string if provided</li>
+<li>Auto-detected if not specified</li>
+<li>Should correspond to accessible Drive folder</li>
+<li>Default root folder lookups are cached after first access to avoid repeated Drive API calls</li>
+</ul>
+<p><strong>Boolean Properties:</strong></p>
+<ul>
+<li><code>autoCreateCollections</code>: Must be true or false</li>
+<li><code>cacheEnabled</code>: Must be true or false</li>
+<li>Type coercion not performed</li>
+<li><code>stripDisallowedCollectionNameCharacters</code>: Must be true or false; default <code>false</code> enforces strict rejection of invalid names, while <code>true</code> enables sanitisation.</li>
+</ul>
+<p><strong>masterIndexKey:</strong></p>
+<ul>
+<li>Must be a non-empty string</li>
+<li>Used as ScriptProperties key</li>
+<li>Should be unique per database instance</li>
+</ul>
+<p><strong>File retry settings:</strong></p>
+<ul>
+<li><code>fileRetryAttempts</code> must be a positive integer</li>
+<li><code>fileRetryDelayMs</code> must be a non-negative number</li>
+<li><code>fileRetryBackoffBase</code> must be a positive number</li>
+</ul>
+<p><strong>QueryEngine settings:</strong></p>
+<ul>
+<li><code>queryEngineMaxNestedDepth</code> must be an integer greater than or equal to zero</li>
+<li><code>queryEngineSupportedOperators</code> must be a non-empty array of non-empty strings</li>
+<li><code>queryEngineLogicalOperators</code> must be a non-empty array of non-empty strings, each present in <code>queryEngineSupportedOperators</code></li>
+</ul>
+<h3 id="error-scenarios">Error Scenarios<a class="headerlink" href="#error-scenarios" title="Permanent link">&para;</a></h3>
+<p>Common validation errors and their meanings:</p>
+<table>
+<thead>
+<tr>
+<th>Error Message</th>
+<th>Cause</th>
+<th>Solution</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>"Lock timeout must be a number"</td>
+<td>Invalid timeout value</td>
+<td>Use a number of at least 500ms</td>
+</tr>
+<tr>
+<td>"Log level must be one of: DEBUG, INFO, WARN, ERROR"</td>
+<td>Invalid log level</td>
+<td>Use exact string match</td>
+</tr>
+<tr>
+<td>"Auto create collections must be a boolean"</td>
+<td>Non-boolean value</td>
+<td>Use true or false explicitly</td>
+</tr>
+<tr>
+<td>"Failed to get default root folder"</td>
+<td>Drive access issue</td>
+<td>Check permissions and authentication</td>
+</tr>
+<tr>
+<td>"Collection sanitisation flag must be a boolean"</td>
+<td>Non-boolean value for <code>stripDisallowedCollectionNameCharacters</code></td>
+<td>Use true or false explicitly</td>
+</tr>
+</tbody>
+</table>
+<h2 id="usage-examples">Usage Examples<a class="headerlink" href="#usage-examples" title="Permanent link">&para;</a></h2>
+<h3 id="basic-configuration">Basic Configuration<a class="headerlink" href="#basic-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1">// Minimal configuration (uses defaults)</span>
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">();</span>
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+<a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1">// Custom root folder</span>
+<a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;1ABC123xyz789&#39;</span>
+<a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">});</span>
+<a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>
+<a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a><span class="c1">// Production-ready configuration</span>
+<a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;prod-folder-id&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">10000</span><span class="p">,</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;WARN&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="c1">// Avoid Drive file churn on start; backups occur lazily or explicitly</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">});</span>
+</code></pre></div>
+<h3 id="development-vs-production">Development vs Production<a class="headerlink" href="#development-vs-production" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Development configuration</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">devConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="w">  </span><span class="nx">cacheEnabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="c1">// Enable eager backup if you want an index snapshot each initialise</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="c1">// Looser query depth for exploratory work</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="w">  </span><span class="nx">queryEngineMaxNestedDepth</span><span class="o">:</span><span class="w"> </span><span class="mf">12</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="p">});</span>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1">// Production configuration</span>
+<a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="kd">const</span><span class="w"> </span><span class="nx">prodConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;production-folder-id&#39;</span><span class="p">,</span>
+<a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">5000</span><span class="p">,</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="p">,</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">  </span><span class="nx">cacheEnabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="p">});</span>
+</code></pre></div>
+<h3 id="configuration-cloning">Configuration Cloning<a class="headerlink" href="#configuration-cloning" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">baseConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;base-folder&#39;</span><span class="p">,</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INFO&#39;</span>
+<a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">});</span>
+<a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// Create variation for testing</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">testConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">baseConfig</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1">// Note: Properties are read-only after creation</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// Clone and create new instance for modifications</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
+<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">modifiedConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p">...</span><span class="nx">baseConfig</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span>
+<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span>
+<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">});</span>
+</code></pre></div>
+<h3 id="configuration-serialization">Configuration Serialization<a class="headerlink" href="#configuration-serialization" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">15000</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">});</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1">// Serialize for storage or logging</span>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">configData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Config:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">configData</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1">// Recreate from serialised data</span>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">restoredConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">.</span><span class="nx">fromJSON</span><span class="p">(</span><span class="nx">configData</span><span class="p">);</span>
+</code></pre></div>
+<h2 id="integration-with-database">Integration with Database<a class="headerlink" href="#integration-with-database" title="Permanent link">&para;</a></h2>
+<p>The DatabaseConfig class integrates seamlessly with the Database class. For Apps Script consumers, prefer the public API factories:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// First-time setup</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db1</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">createAndInitialiseDatabase</span><span class="p">(</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">    </span><span class="nx">masterIndexKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;myMasterIndex&#39;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">  </span><span class="p">})</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="p">);</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="c1">// Load existing database</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db2</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">loadDatabase</span><span class="p">({</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">  </span><span class="nx">masterIndexKey</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;myMasterIndex&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="c1">// Only back up MasterIndex to Drive during initialise when explicitly enabled</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="p">});</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
+<a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="c1">// Configuration is validated when constructing DatabaseConfig/Database</span>
+<a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">  </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">loadDatabase</span><span class="p">({</span><span class="w"> </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// Will throw</span>
+<a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Invalid configuration:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
+<a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="component-level-configuration">Component-Level Configuration<a class="headerlink" href="#component-level-configuration" title="Permanent link">&para;</a></h2>
+<p>While <code>DatabaseConfig</code> handles database-wide settings, individual components may have their own configuration options:</p>
+<h3 id="queryengine-configuration">QueryEngine Configuration<a class="headerlink" href="#queryengine-configuration" title="Permanent link">&para;</a></h3>
+<p>The QueryEngine uses defaults sourced from <code>DatabaseConfig</code> and is instantiated through <code>DocumentOperations</code>. You can still override defaults by passing a custom config directly to <code>QueryEngine</code> when needed.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// QueryEngine has its own configuration</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">queryEngine</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">QueryEngine</span><span class="p">({</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">  </span><span class="nx">maxNestedDepth</span><span class="o">:</span><span class="w"> </span><span class="mf">15</span><span class="w"> </span><span class="c1">// Override default of 10</span>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="p">});</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1">// DatabaseConfig supplies defaults for collections</span>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">20000</span><span class="p">,</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nx">queryEngineMaxNestedDepth</span><span class="o">:</span><span class="w"> </span><span class="mf">12</span><span class="p">,</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nx">queryEngineSupportedOperators</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;$eq&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$gt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$lt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$and&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$or&#39;</span><span class="p">]</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="p">});</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">dbConfig</span><span class="p">);</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1">// Collections use the QueryEngine internally with DatabaseConfig defaults</span>
+</code></pre></div>
+<p><strong>QueryEngine Options:</strong></p>
+<ul>
+<li><code>maxNestedDepth</code> (Number, default: 10): Maximum allowed query nesting depth for security</li>
+<li><code>supportedOperators</code> (String[], default: <code>['$eq', '$gt', '$lt', '$and', '$or']</code>): Operators permitted by the engine</li>
+<li><code>logicalOperators</code> (String[], default: <code>['$and', '$or']</code>): Logical operators permitted by the engine</li>
+</ul>
+<h3 id="fileoperations-configuration">FileOperations Configuration<a class="headerlink" href="#fileoperations-configuration" title="Permanent link">&para;</a></h3>
+<p>File operations use retry settings from <code>DatabaseConfig</code> when the <code>Database</code> constructs <code>FileOperations</code>:</p>
+<ul>
+<li><code>fileRetryAttempts</code>: Number of retry attempts for Drive operations</li>
+<li><code>fileRetryDelayMs</code>: Delay between retries</li>
+<li><code>fileRetryBackoffBase</code>: Exponential backoff base for retries</li>
+</ul>
+<p><strong>Security Note:</strong> QueryEngine always validates all queries for structure and supported operators to prevent malicious queries, regardless of configuration.</p>
+<h3 id="index-backup-strategy">Index Backup Strategy<a class="headerlink" href="#index-backup-strategy" title="Permanent link">&para;</a></h3>
+<p><code>backupOnInitialise</code> controls whether <code>Database.initialise()</code> performs Drive index creation and backup:</p>
+<ul>
+<li><code>false</code> (default): Initialise reads from MasterIndex only; no Drive writes are performed. The Drive-based index is created lazily on first write operation (e.g., <code>createCollection</code>, <code>dropCollection</code>) or when calling <code>database.loadIndex()</code>.</li>
+<li><code>true</code>: Initialise will create/find the index file in Drive and back up the current MasterIndex immediately. This is useful when you want a snapshot on every start at the cost of additional Drive operations.</li>
+</ul>
+<p>Independent of this flag, explicit calls to <code>database.backupIndexToDrive()</code> will always perform a backup if an index file exists.</p>
+<h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Validate early:</strong> Create DatabaseConfig instances explicitly to catch errors</li>
+<li><strong>Use appropriate timeouts:</strong> Consider script execution limits when setting lockTimeout</li>
+<li><strong>Environment-specific configs:</strong> Create different configurations for dev/test/prod</li>
+<li><strong>Immutable configurations:</strong> Don't modify config properties after creation</li>
+<li><strong>Proper folder permissions:</strong> Ensure root folder is accessible to the script</li>
+<li><strong>Sensible logging levels:</strong> Use DEBUG for development, INFO/WARN for production</li>
+<li><strong>Document custom settings:</strong> Comment why specific values were chosen</li>
+<li><strong>Test configuration validation:</strong> Include config validation in your tests</li>
+<li><strong>Security-first design:</strong> All components prioritise security over optional performance optimisations</li>
+<li><strong>Component separation:</strong> Each component manages its own configuration appropriate to its responsibilities</li>
+</ol>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../Database/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Database">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Database
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../MasterIndex/" class="md-footer__link md-footer__link--next" aria-label="Next: MasterIndex">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                MasterIndex
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/h-arnold/JsonDbApp" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>

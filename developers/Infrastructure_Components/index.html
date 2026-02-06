@@ -1,0 +1,3427 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="A document database implemented in Google Apps Script using the Google Drive API">
+      
+      
+        <meta name="author" content="h-arnold">
+      
+      
+        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/developers/Infrastructure_Components/">
+      
+      
+        <link rel="prev" href="../Collection_Components/">
+      
+      
+        <link rel="next" href="../Testing_Framework/">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>Infrastructure Components - JsonDbApp Documentation</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#1-gas-db-infrastructure-components" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../.." title="JsonDbApp Documentation" class="md-header__button md-logo" aria-label="JsonDbApp Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            JsonDbApp Documentation
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Infrastructure Components
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_0">
+    
+      <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+    
+      <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_0" hidden>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12s-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12z"/></svg>
+      </label>
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/h-arnold/JsonDbApp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    h-arnold/JsonDbApp
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="../.." class="md-tabs__link">
+        
+  
+  
+    
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Quick_Start/" class="md-tabs__link">
+          
+  
+  
+  Getting Started
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../Querying/" class="md-tabs__link">
+          
+  
+  
+  User Guide
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="../" class="md-tabs__link">
+          
+  
+  
+  Developer Documentation
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+    
+      <li class="md-tabs__item">
+        <a href="../../release-notes/release-notes-v0.0.4/" class="md-tabs__link">
+          
+  
+  
+  Release Notes
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../.." title="JsonDbApp Documentation" class="md-nav__button md-logo" aria-label="JsonDbApp Documentation" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54"/></svg>
+
+    </a>
+    JsonDbApp Documentation
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/h-arnold/JsonDbApp" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    h-arnold/JsonDbApp
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Getting Started
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Getting Started
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Quick_Start/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Quick Start
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Examples/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Querying/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Querying
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../Updates/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Updates
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Developer Documentation
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Developer Documentation
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Overview
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_2" id="__nav_4_2_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Architecture
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Architecture
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Database/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Database
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../DatabaseConfig/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    DatabaseConfig
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../MasterIndex/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    MasterIndex
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_3" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_4_3" id="__nav_4_3_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Components
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_3_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_4_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Components
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../QueryEngine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    QueryEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../UpdateEngine/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    UpdateEngine
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Collection_Components/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure Components
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Infrastructure Components
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#11-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1. Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-logger-jdblogger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2. Logger (JDbLogger)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2. Logger (JDbLogger)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1201-key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.1. Key Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1202-core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.2. Core Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1203-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.3. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1204-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.4. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#121-errorhandler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1. ErrorHandler
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.1. ErrorHandler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1211-error-type-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.1. Error Type Hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1212-error-management-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.2. Error Management Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1213-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.3. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1214-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.4. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-idgenerator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2. IdGenerator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.2. IdGenerator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1221-id-generation-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.1. ID Generation Strategies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1222-validation-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.2. Validation Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1223-custom-generator-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.3. Custom Generator Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1224-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.4. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1225-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.5. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123-objectutils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3. ObjectUtils
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.3. ObjectUtils">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1231-core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.1. Core Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1232-deep-cloning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.2. Deep Cloning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1233-date-string-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.3. Date String Conversion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1234-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.4. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1235-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.5. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#124-validate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4. Validate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.4. Validate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1241-core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4.1. Core Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1242-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4.2. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1243-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4.3. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-integration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3. Integration Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3. Integration Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-component-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3.1. Component Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-standardized-error-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3.2. Standardized Error Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4. Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4. Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-logger-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.1. Logger Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-error-handler-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.2. Error Handler Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-id-generator-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.3. ID Generator Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144-objectutils-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.4. ObjectUtils Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5. Performance Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-migration-and-versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6. Migration and Versioning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.6. Migration and Versioning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-component-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6.1. Component Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-extension-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6.2. Extension Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_4" id="__nav_4_4_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Testing
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Testing_Framework/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Testing Framework
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+          
+          
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Diagrams
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Diagrams
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../Class_Diagrams/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Class Diagrams
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Release Notes
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.0.4/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.0.4
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.0.3/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.0.3
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#11-overview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.1. Overview
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#12-logger-jdblogger" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2. Logger (JDbLogger)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2. Logger (JDbLogger)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1201-key-features" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.1. Key Features
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1202-core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.2. Core Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1203-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.3. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1204-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.0.4. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#121-errorhandler" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1. ErrorHandler
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.1. ErrorHandler">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1211-error-type-hierarchy" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.1. Error Type Hierarchy
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1212-error-management-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.2. Error Management Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1213-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.3. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1214-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.4. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#122-idgenerator" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2. IdGenerator
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.2. IdGenerator">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1221-id-generation-strategies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.1. ID Generation Strategies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1222-validation-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.2. Validation Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1223-custom-generator-creation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.3. Custom Generator Creation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1224-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.4. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1225-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.2.5. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#123-objectutils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3. ObjectUtils
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.3. ObjectUtils">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1231-core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.1. Core Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1232-deep-cloning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.2. Deep Cloning
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1233-date-string-conversion" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.3. Date String Conversion
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1234-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.4. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1235-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.3.5. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#124-validate" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4. Validate
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.2.4. Validate">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#1241-core-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4.1. Core Methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1242-usage-examples" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4.2. Usage Examples
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1243-best-practices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.4.3. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#13-integration-patterns" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3. Integration Patterns
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.3. Integration Patterns">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#131-component-integration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3.1. Component Integration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#132-standardized-error-flow" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.3.2. Standardized Error Flow
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#14-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4. Configuration
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.4. Configuration">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#141-logger-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.1. Logger Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#142-error-handler-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.2. Error Handler Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#143-id-generator-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.3. ID Generator Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#144-objectutils-configuration" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.4.4. ObjectUtils Configuration
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#15-performance-considerations" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.5. Performance Considerations
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#16-migration-and-versioning" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6. Migration and Versioning
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="1.6. Migration and Versioning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#161-component-dependencies" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6.1. Component Dependencies
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#162-extension-points" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.6.2. Extension Points
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+
+  
+  
+
+
+<p>\</p>
+<h1 id="1-gas-db-infrastructure-components">1. GAS DB Infrastructure Components<a class="headerlink" href="#1-gas-db-infrastructure-components" title="Permanent link">&para;</a></h1>
+<ul>
+<li><a href="#1-gas-db-infrastructure-components">1. GAS DB Infrastructure Components</a></li>
+<li><a href="#11-overview">1.1. Overview</a></li>
+<li><a href="#12-logger-jdblogger">1.2. Logger (JDbLogger)</a><ul>
+<li><a href="#1201-key-features">1.2.0.1. Key Features</a></li>
+<li><a href="#1202-core-methods">1.2.0.2. Core Methods</a></li>
+<li><a href="#1203-usage-examples">1.2.0.3. Usage Examples</a></li>
+<li><a href="#1204-best-practices">1.2.0.4. Best Practices</a></li>
+<li><a href="#121-errorhandler">1.2.1. ErrorHandler</a></li>
+<li><a href="#1211-error-type-hierarchy">1.2.1.1. Error Type Hierarchy</a></li>
+<li><a href="#1212-error-management-methods">1.2.1.2. Error Management Methods</a></li>
+<li><a href="#1213-usage-examples">1.2.1.3. Usage Examples</a></li>
+<li><a href="#1214-best-practices">1.2.1.4. Best Practices</a></li>
+<li><a href="#122-idgenerator">1.2.2. IdGenerator</a></li>
+<li><a href="#1221-id-generation-strategies">1.2.2.1. ID Generation Strategies</a></li>
+<li><a href="#1222-validation-methods">1.2.2.2. Validation Methods</a></li>
+<li><a href="#1223-custom-generator-creation">1.2.2.3. Custom Generator Creation</a></li>
+<li><a href="#1224-usage-examples">1.2.2.4. Usage Examples</a></li>
+<li><a href="#1225-best-practices">1.2.2.5. Best Practices</a></li>
+<li><a href="#123-objectutils">1.2.3. ObjectUtils</a></li>
+<li><a href="#1231-core-methods">1.2.3.1. Core Methods</a></li>
+<li><a href="#1232-deep-cloning">1.2.3.2. Deep Cloning</a></li>
+<li><a href="#1233-date-string-conversion">1.2.3.3. Date String Conversion</a></li>
+<li><a href="#1234-usage-examples">1.2.3.4. Usage Examples</a></li>
+<li><a href="#1235-best-practices">1.2.3.5. Best Practices</a></li>
+<li><a href="#124-validate">1.2.4. Validate</a></li>
+<li><a href="#1241-core-methods">1.2.4.1. Core Methods</a></li>
+<li><a href="#1242-usage-examples">1.2.4.2. Usage Examples</a></li>
+<li><a href="#1243-best-practices">1.2.4.3. Best Practices</a></li>
+</ul>
+</li>
+<li><a href="#13-integration-patterns">1.3. Integration Patterns</a><ul>
+<li><a href="#131-component-integration">1.3.1. Component Integration</a></li>
+<li><a href="#132-standardized-error-flow">1.3.2. Standardized Error Flow</a></li>
+</ul>
+</li>
+<li><a href="#14-configuration">1.4. Configuration</a><ul>
+<li><a href="#141-logger-configuration">1.4.1. Logger Configuration</a></li>
+<li><a href="#142-error-handler-configuration">1.4.2. Error Handler Configuration</a></li>
+<li><a href="#143-id-generator-configuration">1.4.3. ID Generator Configuration</a></li>
+<li><a href="#144-objectutils-configuration">1.4.4. ObjectUtils Configuration</a></li>
+</ul>
+</li>
+<li><a href="#15-performance-considerations">1.5. Performance Considerations</a></li>
+<li><a href="#16-migration-and-versioning">1.6. Migration and Versioning</a><ul>
+<li><a href="#161-component-dependencies">1.6.1. Component Dependencies</a></li>
+<li><a href="#162-extension-points">1.6.2. Extension Points</a></li>
+</ul>
+</li>
+</ul>
+<h2 id="11-overview">1.1. Overview<a class="headerlink" href="#11-overview" title="Permanent link">&para;</a></h2>
+<p>The JsonDbApp infrastructure provides essential utilities for logging, error management, ID generation, and object manipulation. These components are designed specifically for Google Apps Script environments and support the core database functionality.</p>
+<h2 id="12-logger-jdblogger">1.2. Logger (JDbLogger)<a class="headerlink" href="#12-logger-jdblogger" title="Permanent link">&para;</a></h2>
+<p>The <code>JDbLogger</code> provides sophisticated logging capabilities with multiple levels, component-specific loggers, and performance tracking.</p>
+<p>A comprehensive logging utility providing structured logging with multiple levels and context support for Google Apps Script environments.</p>
+<h3 id="1201-key-features">1.2.0.1. Key Features<a class="headerlink" href="#1201-key-features" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>Four Log Levels:</strong> ERROR (0), WARN (1), INFO (2), DEBUG (3)</li>
+<li><strong>Context Support:</strong> Rich logging with JSON serializable context objects</li>
+<li><strong>Component Loggers:</strong> Create specialized loggers for different components</li>
+<li><strong>Operation Timing:</strong> Built-in performance monitoring capabilities</li>
+<li><strong>GAS Compatibility:</strong> Works with console.log, console.warn, console.error</li>
+</ul>
+<h3 id="1202-core-methods">1.2.0.2. Core Methods<a class="headerlink" href="#1202-core-methods" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>setLevel(level)</code></td>
+<td>Set log level by number (0-3)</td>
+</tr>
+<tr>
+<td><code>setLevelByName(name)</code></td>
+<td>Set log level by name (ERROR/WARN/INFO/DEBUG)</td>
+</tr>
+<tr>
+<td><code>error(message, context)</code></td>
+<td>Log error message with optional context</td>
+</tr>
+<tr>
+<td><code>warn(message, context)</code></td>
+<td>Log warning message with optional context</td>
+</tr>
+<tr>
+<td><code>info(message, context)</code></td>
+<td>Log info message with optional context</td>
+</tr>
+<tr>
+<td><code>debug(message, context)</code></td>
+<td>Log debug message with optional context</td>
+</tr>
+<tr>
+<td><code>createComponentLogger(component)</code></td>
+<td>Create component-specific logger</td>
+</tr>
+<tr>
+<td><code>timeOperation(name, fn, context)</code></td>
+<td>Time and log operation execution</td>
+</tr>
+</tbody>
+</table>
+<h3 id="1203-usage-examples">1.2.0.3. Usage Examples<a class="headerlink" href="#1203-usage-examples" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// Basic logging</span>
+<a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Database initialised successfully&#39;</span><span class="p">);</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Failed to read file&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;abc123&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Permission denied&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1">// Set log level</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Show all messages</span>
+<a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;ERROR&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Show only errors</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1">// Component-specific logging</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">);</span>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="nx">dbLogger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Collection created&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;users&#39;</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="c1">// Operation timing</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">timeOperation</span><span class="p">(</span>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="w">  </span><span class="s1">&#39;loadCollection&#39;</span><span class="p">,</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="w">  </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">loadCollectionFromDrive</span><span class="p">(</span><span class="nx">collectionId</span><span class="p">);</span>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="w">  </span><span class="p">{</span><span class="w"> </span><span class="nx">collectionId</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-0-20" name="__codelineno-0-20" href="#__codelineno-0-20"></a><span class="p">);</span>
+</code></pre></div>
+<h3 id="1204-best-practices">1.2.0.4. Best Practices<a class="headerlink" href="#1204-best-practices" title="Permanent link">&para;</a></h3>
+<ol>
+<li><strong>Use appropriate log levels:</strong></li>
+<li>ERROR: System failures, exceptions</li>
+<li>WARN: Recoverable issues, deprecated usage</li>
+<li>INFO: Important state changes, operation completion</li>
+<li>
+<p>DEBUG: Detailed execution flow, variable values</p>
+</li>
+<li>
+<p><strong>Include context objects:</strong></p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Collection created&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">collectionName</span><span class="o">:</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span>
+<a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="nx">fileId</span><span class="p">,</span>
+<a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">documentCount</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
+<a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">()</span>
+<a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="p">});</span>
+</code></pre></div>
+<ol>
+<li><strong>Use component loggers:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Collection&#39;</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="121-errorhandler">1.2.1. ErrorHandler<a class="headerlink" href="#121-errorhandler" title="Permanent link">&para;</a></h3>
+<p><strong>Location:</strong> <code>src/01_utils/ErrorHandler.js</code></p>
+<p>Provides standardized error handling with custom error types and error context management. For input validation, refer to the Validate utility.</p>
+<h4 id="1211-error-type-hierarchy">1.2.1.1. Error Type Hierarchy<a class="headerlink" href="#1211-error-type-hierarchy" title="Permanent link">&para;</a></h4>
+<p>All errors extend the base <code>GASDBError</code> class and include:</p>
+<ul>
+<li>Error code for programmatic handling</li>
+<li>Context object for debugging information</li>
+<li>Timestamp for error tracking</li>
+</ul>
+<p>The shared <code>ERROR_CODES</code> catalogue mirrors the registered error types so consumers who prefer constants over string literals can import and compare against those values without relying on free-form strings.</p>
+<table>
+<thead>
+<tr>
+<th>Error Class</th>
+<th>Code</th>
+<th>Usage</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DocumentNotFoundError</code></td>
+<td><code>DOCUMENT_NOT_FOUND</code></td>
+<td>Document queries that return no results</td>
+</tr>
+<tr>
+<td><code>DuplicateKeyError</code></td>
+<td><code>DUPLICATE_KEY</code></td>
+<td>Unique constraint violations</td>
+</tr>
+<tr>
+<td><code>InvalidQueryError</code></td>
+<td><code>INVALID_QUERY</code></td>
+<td>Malformed query syntax</td>
+</tr>
+<tr>
+<td><code>LockTimeoutError</code></td>
+<td><code>LOCK_TIMEOUT</code></td>
+<td>Lock acquisition failures</td>
+</tr>
+<tr>
+<td><code>FileIOError</code></td>
+<td><code>FILE_IO_ERROR</code></td>
+<td>Drive API operation failures</td>
+</tr>
+<tr>
+<td><code>ConflictError</code></td>
+<td><code>CONFLICT_ERROR</code></td>
+<td>Modification token mismatches</td>
+</tr>
+<tr>
+<td><code>MasterIndexError</code></td>
+<td><code>MASTER_INDEX_ERROR</code></td>
+<td>ScriptProperties access failures</td>
+</tr>
+<tr>
+<td><code>CollectionNotFoundError</code></td>
+<td><code>COLLECTION_NOT_FOUND</code></td>
+<td>Missing collection references</td>
+</tr>
+<tr>
+<td><code>ConfigurationError</code></td>
+<td><code>CONFIGURATION_ERROR</code></td>
+<td>Invalid configuration values</td>
+</tr>
+<tr>
+<td><code>FileNotFoundError</code></td>
+<td><code>FILE_NOT_FOUND</code></td>
+<td>Specific file not found on Drive</td>
+</tr>
+<tr>
+<td><code>PermissionDeniedError</code></td>
+<td><code>PERMISSION_DENIED</code></td>
+<td>Lack of permission for a file operation</td>
+</tr>
+<tr>
+<td><code>QuotaExceededError</code></td>
+<td><code>QUOTA_EXCEEDED</code></td>
+<td>Google Drive API quota limits reached</td>
+</tr>
+<tr>
+<td><code>InvalidFileFormatError</code></td>
+<td><code>INVALID_FILE_FORMAT</code></td>
+<td>File content does not match expected format (e.g., not valid JSON)</td>
+</tr>
+<tr>
+<td><code>InvalidArgumentError</code></td>
+<td><code>INVALID_ARGUMENT</code></td>
+<td>Incorrect or missing function arguments (also used by Validate class)</td>
+</tr>
+<tr>
+<td><code>OperationError</code></td>
+<td><code>OPERATION_ERROR</code></td>
+<td>General failure during an operation not covered by other error types</td>
+</tr>
+<tr>
+<td><code>LockAcquisitionFailureError</code></td>
+<td><code>LOCK_ACQUISITION_FAILURE</code></td>
+<td>Lock attempts that fail immediately without waiting (e.g., contention without timeout)</td>
+</tr>
+<tr>
+<td><code>ModificationConflictError</code></td>
+<td><code>MODIFICATION_CONFLICT</code></td>
+<td>Fine-grained token mismatches where a more specific conflict signal is required</td>
+</tr>
+<tr>
+<td><code>CoordinationTimeoutError</code></td>
+<td><code>COORDINATION_TIMEOUT</code></td>
+<td>Cross-component orchestration exceeded the allotted coordination window</td>
+</tr>
+</tbody>
+</table>
+<p>When creating new subclasses, use the <code>createErrorConstructorArgs</code> helper to assemble the standard <code>(message, code, context)</code> tuple. This keeps constructors minimal and ensures new errors align with the catalogued codes and logging expectations.</p>
+<h4 id="1212-error-management-methods">1.2.1.2. Error Management Methods<a class="headerlink" href="#1212-error-management-methods" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>createError(errorType, ...args)</code></td>
+<td>Create new error of specified type</td>
+</tr>
+<tr>
+<td><code>handleError(error, context, rethrow)</code></td>
+<td>Handle error with logging and optional re-throw</td>
+</tr>
+<tr>
+<td><code>wrapFunction(fn, context)</code></td>
+<td>Wrap function with error handling</td>
+</tr>
+<tr>
+<td><code>isErrorType(error, errorType)</code></td>
+<td>Check if error is of specific type</td>
+</tr>
+<tr>
+<td><code>extractErrorInfo(error)</code></td>
+<td>Extract error information for logging</td>
+</tr>
+<tr>
+<td><code>detectDoubleParsing(data, parseError, context)</code></td>
+<td>Detects and throws a specific error if data is already a parsed object.</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1213-usage-examples">1.2.1.3. Usage Examples<a class="headerlink" href="#1213-usage-examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Create and throw specific errors</span>
+<a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="k">throw</span><span class="w"> </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">createError</span><span class="p">(</span><span class="s1">&#39;DOCUMENT_NOT_FOUND&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;doc123&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;users&#39;</span><span class="p">);</span>
+<a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+<a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1">// Handle errors with logging</span>
+<a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span><span class="nx">performDatabaseOperation</span><span class="p">();</span>
+<a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a><span class="w">  </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Database.performOperation&#39;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+<a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a><span class="p">}</span>
+<a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>
+<a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a><span class="c1">// Wrap functions with error handling</span>
+<a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">safeFunction</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">wrapFunction</span><span class="p">(</span><span class="nx">riskyOperation</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;RiskyOperation&#39;</span><span class="p">);</span>
+</code></pre></div>
+<h4 id="1214-best-practices">1.2.1.4. Best Practices<a class="headerlink" href="#1214-best-practices" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Use specific error types:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DocumentNotFoundError</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="nx">collectionName</span><span class="p">);</span>
+</code></pre></div>
+<ol>
+<li><strong>Preserve error context:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Collection.findOne&#39;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+</code></pre></div>
+<hr />
+<h3 id="122-idgenerator">1.2.2. IdGenerator<a class="headerlink" href="#122-idgenerator" title="Permanent link">&para;</a></h3>
+<p><strong>Location:</strong> <code>src/utils/IdGenerator.js</code></p>
+<p>Provides multiple strategies for generating unique identifiers suitable for different use cases in the database system.</p>
+<h4 id="1221-id-generation-strategies">1.2.2.1. ID Generation Strategies<a class="headerlink" href="#1221-id-generation-strategies" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Output Example</th>
+<th>Use Case</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>generateUUID()</code></td>
+<td><code>f47ac10b-58cc-4372-a567-0e02b2c3d479</code></td>
+<td>Default document IDs</td>
+</tr>
+<tr>
+<td><code>generateTimestampId(prefix)</code></td>
+<td><code>token_1640995200000_123</code></td>
+<td>Time-ordered IDs, modification tokens</td>
+</tr>
+<tr>
+<td><code>generateShortId(length)</code></td>
+<td><code>a1b2c3d4</code></td>
+<td>Compact identifiers</td>
+</tr>
+<tr>
+<td><code>generateAlphanumericId(length)</code></td>
+<td><code>A1b2C3d4E5f6</code></td>
+<td>General purpose IDs</td>
+</tr>
+<tr>
+<td><code>generateNumericId(length)</code></td>
+<td><code>1234567890</code></td>
+<td>Numeric-only IDs</td>
+</tr>
+<tr>
+<td><code>generateObjectId()</code></td>
+<td><code>507f1f77bcf86cd799439011</code></td>
+<td>MongoDB compatibility</td>
+</tr>
+<tr>
+<td><code>generateSequentialId(prefix)</code></td>
+<td><code>seq_1640995200000_000001</code></td>
+<td>Ordered sequences</td>
+</tr>
+<tr>
+<td><code>generateReadableId()</code></td>
+<td><code>quick-cat-123</code></td>
+<td>Human-friendly IDs</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1222-validation-methods">1.2.2.2. Validation Methods<a class="headerlink" href="#1222-validation-methods" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>isValidUUID(id)</code></td>
+<td>Check if string is valid UUID format</td>
+</tr>
+<tr>
+<td><code>isValidObjectId(id)</code></td>
+<td>Check if string is valid ObjectId format</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1223-custom-generator-creation">1.2.2.3. Custom Generator Creation<a class="headerlink" href="#1223-custom-generator-creation" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Create custom generators for specific needs</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">tokenGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;token&#39;</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="p">});</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">shortCodeGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;alphanumeric&#39;</span><span class="p">,</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="nx">length</span><span class="o">:</span><span class="w"> </span><span class="mf">8</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="p">});</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">readableGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;readable&#39;</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="p">});</span>
+</code></pre></div>
+<h4 id="1224-usage-examples">1.2.2.4. Usage Examples<a class="headerlink" href="#1224-usage-examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1">// Generate document IDs</span>
+<a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">documentId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">generateUUID</span><span class="p">();</span>
+<a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+<a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1">// Generate modification tokens</span>
+<a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">token</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">generateTimestampId</span><span class="p">(</span><span class="s1">&#39;token&#39;</span><span class="p">);</span>
+<a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+<a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1">// Create custom generators</span>
+<a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;alphanumeric&#39;</span><span class="p">,</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nx">length</span><span class="o">:</span><span class="w"> </span><span class="mf">16</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="p">});</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">customGenerator</span><span class="p">();</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="c1">// Validate ID formats</span>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">isValidUUID</span><span class="p">(</span><span class="nx">documentId</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="w">  </span><span class="nx">processDocument</span><span class="p">(</span><span class="nx">documentId</span><span class="p">);</span>
+<a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="p">}</span>
+</code></pre></div>
+<h4 id="1225-best-practices">1.2.2.5. Best Practices<a class="headerlink" href="#1225-best-practices" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Use appropriate ID types:</strong></li>
+<li>UUIDs for document IDs (default)</li>
+<li>Timestamp IDs for modification tokens</li>
+<li>ObjectIDs for MongoDB compatibility</li>
+<li>
+<p>Readable IDs for debugging and testing</p>
+</li>
+<li>
+<p><strong>Validate ID formats:</strong></p>
+</li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">isValidUUID</span><span class="p">(</span><span class="nx">documentId</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">InvalidArgumentError</span><span class="p">(</span><span class="s1">&#39;Invalid document ID format&#39;</span><span class="p">);</span>
+<a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a><span class="p">}</span>
+</code></pre></div>
+<hr />
+<h3 id="123-objectutils">1.2.3. ObjectUtils<a class="headerlink" href="#123-objectutils" title="Permanent link">&para;</a></h3>
+<p><strong>Location:</strong> <code>src/utils/ObjectUtils.js</code></p>
+<p>Provides utilities for object manipulation with Date preservation, essential for handling complex data structures and maintaining Date object integrity during JSON serialisation operations.</p>
+<h4 id="1231-core-methods">1.2.3.1. Core Methods<a class="headerlink" href="#1231-core-methods" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>deepClone(obj)</code></td>
+<td>Create deep copy preserving Date instances and object structure</td>
+</tr>
+<tr>
+<td><code>convertDateStringsToObjects(obj)</code></td>
+<td>Convert ISO date strings to Date objects recursively</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1232-deep-cloning">1.2.3.2. Deep Cloning<a class="headerlink" href="#1232-deep-cloning" title="Permanent link">&para;</a></h4>
+<p>The <code>deepClone</code> method creates independent copies of complex objects while preserving:</p>
+<ul>
+<li><strong>Date Objects:</strong> Maintains Date instances with accurate time values</li>
+<li><strong>Nested Structures:</strong> Handles deeply nested objects and arrays</li>
+<li><strong>Independence:</strong> Ensures modifications to cloned objects don't affect originals</li>
+<li><strong>Type Preservation:</strong> Maintains primitive types and object references</li>
+</ul>
+<p><strong>Supported Data Types:</strong></p>
+<ul>
+<li>Primitives: <code>null</code>, <code>undefined</code>, <code>string</code>, <code>number</code>, <code>boolean</code></li>
+<li>Complex Types: <code>Date</code>, <code>Array</code>, <code>Object</code></li>
+<li>Nested Structures: Unlimited depth for objects and arrays</li>
+</ul>
+<h4 id="1233-date-string-conversion">1.2.3.3. Date String Conversion<a class="headerlink" href="#1233-date-string-conversion" title="Permanent link">&para;</a></h4>
+<p>The <code>convertDateStringsToObjects</code> method provides intelligent conversion of ISO date strings:</p>
+<ul>
+<li><strong>ISO Detection:</strong> Identifies valid ISO 8601 format strings (<code>YYYY-MM-DDTHH:mm:ss.sssZ</code>)</li>
+<li><strong>Selective Conversion:</strong> Only converts valid ISO strings, leaves others unchanged</li>
+<li><strong>In-Place Modification:</strong> Modifies original object structure</li>
+<li><strong>Recursive Processing:</strong> Handles nested objects and arrays</li>
+</ul>
+<p><strong>ISO Date Format Requirements:</strong></p>
+<ul>
+<li>Complete date-time format: <code>2023-06-15T10:30:00.000Z</code></li>
+<li>Timezone indicator: Must end with <code>Z</code></li>
+<li>Optional milliseconds: Supports both <code>.sssZ</code> and <code>Z</code> endings</li>
+<li>Valid date values: Validates month, day, hour, minute, second ranges</li>
+</ul>
+<h4 id="1234-usage-examples">1.2.3.4. Usage Examples<a class="headerlink" href="#1234-usage-examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a><span class="c1">// Deep cloning with Date preservation</span>
+<a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">originalDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="w">  </span><span class="nx">_id</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;doc123&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">  </span><span class="nx">created</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2023-06-15T10:30:00.000Z&#39;</span><span class="p">),</span>
+<a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">  </span><span class="nx">user</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a><span class="w">    </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;John Doe&#39;</span><span class="p">,</span>
+<a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span><span class="nx">profile</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="w">      </span><span class="nx">lastLogin</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(</span><span class="s1">&#39;2024-06-11T10:00:00.000Z&#39;</span><span class="p">),</span>
+<a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a><span class="w">      </span><span class="nx">preferences</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;theme-dark&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;lang-en&#39;</span><span class="p">]</span>
+<a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a><span class="w">  </span><span class="p">},</span>
+<a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a><span class="w">  </span><span class="nx">tags</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;important&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;archived&#39;</span><span class="p">]</span>
+<a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="p">};</span>
+<a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a>
+<a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a><span class="kd">const</span><span class="w"> </span><span class="nx">clonedDoc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nx">originalDoc</span><span class="p">);</span>
+<a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a><span class="c1">// clonedDoc is completely independent with Date objects preserved</span>
+<a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a>
+<a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="c1">// Converting date strings from JSON parsing</span>
+<a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a><span class="kd">const</span><span class="w"> </span><span class="nx">jsonData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="w">  </span><span class="nx">event</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="w">    </span><span class="nx">startTime</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2023-06-15T10:30:00.000Z&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Will be converted to Date</span>
+<a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="w">    </span><span class="nx">endTime</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2023-06-15 12:30:00&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Will remain string (invalid ISO)</span>
+<a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="w">    </span><span class="nx">participants</span><span class="o">:</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a><span class="w">      </span><span class="p">{</span>
+<a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a><span class="w">        </span><span class="nx">joined</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;2023-06-15T10:35:00.000Z&#39;</span><span class="p">,</span><span class="w"> </span><span class="c1">// Will be converted to Date</span>
+<a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a><span class="w">        </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Alice&#39;</span><span class="w"> </span><span class="c1">// Will remain string</span>
+<a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a><span class="w">    </span><span class="p">]</span>
+<a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a><span class="p">};</span>
+<a id="__codelineno-9-31" name="__codelineno-9-31" href="#__codelineno-9-31"></a>
+<a id="__codelineno-9-32" name="__codelineno-9-32" href="#__codelineno-9-32"></a><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">jsonData</span><span class="p">);</span>
+<a id="__codelineno-9-33" name="__codelineno-9-33" href="#__codelineno-9-33"></a><span class="c1">// jsonData.event.startTime is now a Date object</span>
+<a id="__codelineno-9-34" name="__codelineno-9-34" href="#__codelineno-9-34"></a><span class="c1">// jsonData.event.participants[0].joined is now a Date object</span>
+<a id="__codelineno-9-35" name="__codelineno-9-35" href="#__codelineno-9-35"></a>
+<a id="__codelineno-9-36" name="__codelineno-9-36" href="#__codelineno-9-36"></a><span class="c1">// Working with FileOperations integration</span>
+<a id="__codelineno-9-37" name="__codelineno-9-37" href="#__codelineno-9-37"></a><span class="kd">const</span><span class="w"> </span><span class="nx">documentData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-9-38" name="__codelineno-9-38" href="#__codelineno-9-38"></a><span class="w">  </span><span class="nx">metadata</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">created</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">(),</span><span class="w"> </span><span class="nx">version</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">},</span>
+<a id="__codelineno-9-39" name="__codelineno-9-39" href="#__codelineno-9-39"></a><span class="w">  </span><span class="nx">content</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">title</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;Document&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">lastModified</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">()</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-9-40" name="__codelineno-9-40" href="#__codelineno-9-40"></a><span class="p">};</span>
+<a id="__codelineno-9-41" name="__codelineno-9-41" href="#__codelineno-9-41"></a>
+<a id="__codelineno-9-42" name="__codelineno-9-42" href="#__codelineno-9-42"></a><span class="c1">// Before saving to Drive (preserves Dates through JSON)</span>
+<a id="__codelineno-9-43" name="__codelineno-9-43" href="#__codelineno-9-43"></a><span class="nx">fileOps</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">documentData</span><span class="p">);</span>
+<a id="__codelineno-9-44" name="__codelineno-9-44" href="#__codelineno-9-44"></a>
+<a id="__codelineno-9-45" name="__codelineno-9-45" href="#__codelineno-9-45"></a><span class="c1">// After reading from Drive (converts ISO strings back to Dates)</span>
+<a id="__codelineno-9-46" name="__codelineno-9-46" href="#__codelineno-9-46"></a><span class="kd">const</span><span class="w"> </span><span class="nx">loadedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fileOps</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">);</span>
+<a id="__codelineno-9-47" name="__codelineno-9-47" href="#__codelineno-9-47"></a><span class="c1">// loadedData now has proper Date objects restored</span>
+</code></pre></div>
+<h4 id="1235-best-practices">1.2.3.5. Best Practices<a class="headerlink" href="#1235-best-practices" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Use deepClone for object independence:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1">// Create independent copy before modifications</span>
+<a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">workingCopy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nx">originalDocument</span><span class="p">);</span>
+<a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="nx">workingCopy</span><span class="p">.</span><span class="nx">user</span><span class="p">.</span><span class="nx">name</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;Updated Name&#39;</span><span class="p">;</span><span class="w"> </span><span class="c1">// Original remains unchanged</span>
+</code></pre></div>
+<ol>
+<li><strong>Apply date conversion after JSON operations:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="c1">// After parsing JSON or reading from Drive</span>
+<a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">parsedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">jsonString</span><span class="p">);</span>
+<a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">parsedData</span><span class="p">);</span>
+</code></pre></div>
+<ol>
+<li><strong>Handle FileOperations integration:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a><span class="c1">// Reading data with automatic date conversion</span>
+<a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">rawData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">fileOps</span><span class="p">.</span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">);</span>
+<a id="__codelineno-12-3" name="__codelineno-12-3" href="#__codelineno-12-3"></a><span class="c1">// Date strings automatically converted by FileOperations using ObjectUtils</span>
+</code></pre></div>
+<ol>
+<li><strong>Validate data integrity:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-13-1" name="__codelineno-13-1" href="#__codelineno-13-1"></a><span class="c1">// Verify Date objects after conversion</span>
+<a id="__codelineno-13-2" name="__codelineno-13-2" href="#__codelineno-13-2"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nb">document</span><span class="p">.</span><span class="nx">created</span><span class="w"> </span><span class="ow">instanceof</span><span class="w"> </span><span class="nb">Date</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-13-3" name="__codelineno-13-3" href="#__codelineno-13-3"></a><span class="w">  </span><span class="c1">// Safe to use Date methods</span>
+<a id="__codelineno-13-4" name="__codelineno-13-4" href="#__codelineno-13-4"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">age</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">()</span><span class="w"> </span><span class="o">-</span><span class="w"> </span><span class="nb">document</span><span class="p">.</span><span class="nx">created</span><span class="p">.</span><span class="nx">getTime</span><span class="p">();</span>
+<a id="__codelineno-13-5" name="__codelineno-13-5" href="#__codelineno-13-5"></a><span class="p">}</span>
+</code></pre></div>
+<ol>
+<li><strong>Performance considerations:</strong></li>
+</ol>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Clone only when necessary for independence</span>
+<a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">backup</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nx">criticalData</span><span class="p">);</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="c1">// Use direct references for read-only operations</span>
+<a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">readOnlyView</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">criticalData</span><span class="p">;</span><span class="w"> </span><span class="c1">// No cloning needed</span>
+</code></pre></div>
+<hr />
+<h3 id="124-validate">1.2.4. Validate<a class="headerlink" href="#124-validate" title="Permanent link">&para;</a></h3>
+<p><strong>Location:</strong> <code>src/01_utils/Validation.js</code></p>
+<p>Provides a collection of static methods for common data validation tasks, ensuring consistency and reducing boilerplate code. All validation methods throw <code>ErrorHandler.ErrorTypes.INVALID_ARGUMENT</code> upon failure, providing the parameter name and a descriptive reason.</p>
+<h4 id="1241-core-methods">1.2.4.1. Core Methods<a class="headerlink" href="#1241-core-methods" title="Permanent link">&para;</a></h4>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>required(value, paramName)</code></td>
+<td>Ensures <code>value</code> is not <code>null</code> or <code>undefined</code>.</td>
+</tr>
+<tr>
+<td><code>type(value, expectedType, paramName)</code></td>
+<td>Validates that <code>value</code> is of the <code>expectedType</code> (e.g., 'string', 'number', 'object').</td>
+</tr>
+<tr>
+<td><code>nonEmptyString(value, paramName)</code></td>
+<td>Checks if <code>value</code> is a string and is not empty or composed only of whitespace.</td>
+</tr>
+<tr>
+<td><code>string(value, paramName)</code></td>
+<td>Checks if <code>value</code> is a string. Allows empty strings.</td>
+</tr>
+<tr>
+<td><code>object(value, paramName, allowEmpty = true)</code></td>
+<td>Validates if <code>value</code> is an object (and not an array or <code>null</code>). If <code>allowEmpty</code> is <code>false</code>, an empty object will also fail validation.</td>
+</tr>
+<tr>
+<td><code>boolean(value, paramName)</code></td>
+<td>Ensures <code>value</code> is a boolean (<code>true</code> or <code>false</code>).</td>
+</tr>
+<tr>
+<td><code>array(value, paramName)</code></td>
+<td>Validates if <code>value</code> is an array.</td>
+</tr>
+<tr>
+<td><code>nonEmptyArray(value, paramName)</code></td>
+<td>Ensures <code>value</code> is an array containing at least one element.</td>
+</tr>
+<tr>
+<td><code>number(value, paramName)</code></td>
+<td>Checks if <code>value</code> is a number (and not <code>NaN</code>).</td>
+</tr>
+<tr>
+<td><code>integer(value, paramName)</code></td>
+<td>Validates if <code>value</code> is an integer.</td>
+</tr>
+<tr>
+<td><code>positiveNumber(value, paramName)</code></td>
+<td>Ensures <code>value</code> is a number strictly greater than zero.</td>
+</tr>
+<tr>
+<td><code>nonNegativeNumber(value, paramName)</code></td>
+<td>Ensures <code>value</code> is a number greater than or equal to zero.</td>
+</tr>
+<tr>
+<td><code>range(value, min, max, paramName)</code></td>
+<td>Checks if a numeric <code>value</code> falls within the inclusive range defined by <code>min</code> and <code>max</code>.</td>
+</tr>
+<tr>
+<td><code>func(value, paramName)</code></td>
+<td>Validates if <code>value</code> is a function.</td>
+</tr>
+<tr>
+<td><code>enum(value, allowedValues, paramName)</code></td>
+<td>Ensures <code>value</code> is present in the <code>allowedValues</code> array.</td>
+</tr>
+<tr>
+<td><code>objectProperties(obj, requiredProps, paramName)</code></td>
+<td>Checks if the object <code>obj</code> possesses all property names listed in the <code>requiredProps</code> array.</td>
+</tr>
+<tr>
+<td><code>pattern(value, pattern, paramName, description)</code></td>
+<td>Validates if a string <code>value</code> matches the provided <code>RegExp</code> <code>pattern</code>. The <code>description</code> is used in the error message.</td>
+</tr>
+<tr>
+<td><code>optional(value, validationFn, paramName)</code></td>
+<td>If <code>value</code> is not <code>null</code> or <code>undefined</code>, applies the <code>validationFn</code> to it. Otherwise, passes.</td>
+</tr>
+<tr>
+<td><code>all(validators, value, paramName)</code></td>
+<td>Ensures <code>value</code> successfully passes all validation functions provided in the <code>validators</code> array. Each function in <code>validators</code> should accept <code>(value, paramName)</code>.</td>
+</tr>
+<tr>
+<td><code>any(validators, value, paramName)</code></td>
+<td>Ensures <code>value</code> successfully passes at least one validation function from the <code>validators</code> array. Each function in <code>validators</code> should accept <code>(value, paramName)</code>.</td>
+</tr>
+<tr>
+<td><code>validateObject(value, paramName)</code></td>
+<td>Validates if <code>value</code> is a "plain" object (i.e., created by <code>{}</code> or <code>new Object()</code>, not an array, <code>null</code>, or an instance of <code>Date</code>).</td>
+</tr>
+<tr>
+<td><code>isPlainObject(value)</code></td>
+<td>A helper method that returns <code>true</code> if <code>value</code> is a plain object, <code>false</code> otherwise. Not typically used for direct validation throwing errors but can be used for conditional logic.</td>
+</tr>
+<tr>
+<td><code>validateUpdateObject(update, paramName, options = {})</code></td>
+<td>Validates the structure of a MongoDB-style update object. <code>options</code> can include: <code>allowMixed</code> (boolean, default <code>false</code>), <code>requireOperators</code> (boolean, default <code>false</code>), <code>forbidOperators</code> (boolean, default <code>false</code>).</td>
+</tr>
+</tbody>
+</table>
+<h4 id="1242-usage-examples">1.2.4.2. Usage Examples<a class="headerlink" href="#1242-usage-examples" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-15-1" name="__codelineno-15-1" href="#__codelineno-15-1"></a><span class="c1">// Ensuring a parameter is provided</span>
+<a id="__codelineno-15-2" name="__codelineno-15-2" href="#__codelineno-15-2"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">required</span><span class="p">(</span><span class="nx">userId</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;userId&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-3" name="__codelineno-15-3" href="#__codelineno-15-3"></a>
+<a id="__codelineno-15-4" name="__codelineno-15-4" href="#__codelineno-15-4"></a><span class="c1">// Type checking</span>
+<a id="__codelineno-15-5" name="__codelineno-15-5" href="#__codelineno-15-5"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;object&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;config&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-6" name="__codelineno-15-6" href="#__codelineno-15-6"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">nonEmptyString</span><span class="p">(</span><span class="nx">collectionName</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;collectionName&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-7" name="__codelineno-15-7" href="#__codelineno-15-7"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">number</span><span class="p">(</span><span class="nx">count</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;count&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-8" name="__codelineno-15-8" href="#__codelineno-15-8"></a>
+<a id="__codelineno-15-9" name="__codelineno-15-9" href="#__codelineno-15-9"></a><span class="c1">// Number constraints</span>
+<a id="__codelineno-15-10" name="__codelineno-15-10" href="#__codelineno-15-10"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">positiveNumber</span><span class="p">(</span><span class="nx">limit</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;limit&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-11" name="__codelineno-15-11" href="#__codelineno-15-11"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">range</span><span class="p">(</span><span class="nx">age</span><span class="p">,</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span><span class="w"> </span><span class="mf">120</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;age&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-12" name="__codelineno-15-12" href="#__codelineno-15-12"></a>
+<a id="__codelineno-15-13" name="__codelineno-15-13" href="#__codelineno-15-13"></a><span class="c1">// Object and array validation</span>
+<a id="__codelineno-15-14" name="__codelineno-15-14" href="#__codelineno-15-14"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">object</span><span class="p">(</span><span class="nx">settings</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;settings&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-15" name="__codelineno-15-15" href="#__codelineno-15-15"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">nonEmptyArray</span><span class="p">(</span><span class="nx">tags</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;tags&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-16" name="__codelineno-15-16" href="#__codelineno-15-16"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">objectProperties</span><span class="p">(</span><span class="nx">userProfile</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;username&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;email&#39;</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;userProfile&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-17" name="__codelineno-15-17" href="#__codelineno-15-17"></a>
+<a id="__codelineno-15-18" name="__codelineno-15-18" href="#__codelineno-15-18"></a><span class="c1">// Enum validation</span>
+<a id="__codelineno-15-19" name="__codelineno-15-19" href="#__codelineno-15-19"></a><span class="nx">Validate</span><span class="p">.</span><span class="kr">enum</span><span class="p">(</span><span class="nx">status</span><span class="p">,</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;active&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;inactive&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;pending&#39;</span><span class="p">],</span><span class="w"> </span><span class="s1">&#39;status&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-20" name="__codelineno-15-20" href="#__codelineno-15-20"></a>
+<a id="__codelineno-15-21" name="__codelineno-15-21" href="#__codelineno-15-21"></a><span class="c1">// Pattern matching for a string</span>
+<a id="__codelineno-15-22" name="__codelineno-15-22" href="#__codelineno-15-22"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span><span class="nx">email</span><span class="p">,</span><span class="w"> </span><span class="sr">/\\S+@\\S+\\.\\S+/</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;email&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;a valid email address format&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-23" name="__codelineno-15-23" href="#__codelineno-15-23"></a>
+<a id="__codelineno-15-24" name="__codelineno-15-24" href="#__codelineno-15-24"></a><span class="c1">// Optional field validation</span>
+<a id="__codelineno-15-25" name="__codelineno-15-25" href="#__codelineno-15-25"></a><span class="c1">// &#39;description&#39; can be null/undefined, but if it exists, it must be a string.</span>
+<a id="__codelineno-15-26" name="__codelineno-15-26" href="#__codelineno-15-26"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">optional</span><span class="p">(</span><span class="nx">description</span><span class="p">,</span><span class="w"> </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">string</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;description&#39;</span><span class="p">);</span>
+<a id="__codelineno-15-27" name="__codelineno-15-27" href="#__codelineno-15-27"></a>
+<a id="__codelineno-15-28" name="__codelineno-15-28" href="#__codelineno-15-28"></a><span class="c1">// Combining multiple validations for a single field</span>
+<a id="__codelineno-15-29" name="__codelineno-15-29" href="#__codelineno-15-29"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">all</span><span class="p">(</span>
+<a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a><span class="w">  </span><span class="p">[</span>
+<a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a><span class="w">    </span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">string</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">),</span><span class="w"> </span><span class="c1">// Must be a string</span>
+<a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a><span class="w">    </span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">nonEmptyString</span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">),</span><span class="w"> </span><span class="c1">// Must not be empty</span>
+<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a><span class="w">    </span><span class="p">(</span><span class="nx">val</span><span class="p">,</span><span class="w"> </span><span class="nx">name</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span>
+<a id="__codelineno-15-34" name="__codelineno-15-34" href="#__codelineno-15-34"></a><span class="w">      </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">pattern</span><span class="p">(</span>
+<a id="__codelineno-15-35" name="__codelineno-15-35" href="#__codelineno-15-35"></a><span class="w">        </span><span class="nx">val</span><span class="p">,</span>
+<a id="__codelineno-15-36" name="__codelineno-15-36" href="#__codelineno-15-36"></a><span class="w">        </span><span class="sr">/^[a-zA-Z0-9_]{3,16}$/</span><span class="p">,</span>
+<a id="__codelineno-15-37" name="__codelineno-15-37" href="#__codelineno-15-37"></a><span class="w">        </span><span class="nx">name</span><span class="p">,</span>
+<a id="__codelineno-15-38" name="__codelineno-15-38" href="#__codelineno-15-38"></a><span class="w">        </span><span class="s1">&#39;3-16 alphanumeric characters or underscores&#39;</span>
+<a id="__codelineno-15-39" name="__codelineno-15-39" href="#__codelineno-15-39"></a><span class="w">      </span><span class="p">)</span><span class="w"> </span><span class="c1">// Must match pattern</span>
+<a id="__codelineno-15-40" name="__codelineno-15-40" href="#__codelineno-15-40"></a><span class="w">  </span><span class="p">],</span>
+<a id="__codelineno-15-41" name="__codelineno-15-41" href="#__codelineno-15-41"></a><span class="w">  </span><span class="nx">username</span><span class="p">,</span>
+<a id="__codelineno-15-42" name="__codelineno-15-42" href="#__codelineno-15-42"></a><span class="w">  </span><span class="s1">&#39;username&#39;</span>
+<a id="__codelineno-15-43" name="__codelineno-15-43" href="#__codelineno-15-43"></a><span class="p">);</span>
+<a id="__codelineno-15-44" name="__codelineno-15-44" href="#__codelineno-15-44"></a>
+<a id="__codelineno-15-45" name="__codelineno-15-45" href="#__codelineno-15-45"></a><span class="c1">// Validating update objects (e.g., for database operations)</span>
+<a id="__codelineno-15-46" name="__codelineno-15-46" href="#__codelineno-15-46"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-47" name="__codelineno-15-47" href="#__codelineno-15-47"></a><span class="w">  </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">validateUpdateObject</span><span class="p">({</span><span class="w"> </span><span class="nx">$set</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;New Name&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;active&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;updatePayload&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Fails by default (mixed)</span>
+<a id="__codelineno-15-48" name="__codelineno-15-48" href="#__codelineno-15-48"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-49" name="__codelineno-15-49" href="#__codelineno-15-49"></a><span class="w">  </span><span class="c1">// console.error(e.message); // &quot;updatePayload cannot mix update operators with document fields&quot;</span>
+<a id="__codelineno-15-50" name="__codelineno-15-50" href="#__codelineno-15-50"></a><span class="p">}</span>
+<a id="__codelineno-15-51" name="__codelineno-15-51" href="#__codelineno-15-51"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">validateUpdateObject</span><span class="p">({</span><span class="w"> </span><span class="nx">$set</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;New Name&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;active&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;updatePayload&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-15-52" name="__codelineno-15-52" href="#__codelineno-15-52"></a><span class="w">  </span><span class="nx">allowMixed</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
+<a id="__codelineno-15-53" name="__codelineno-15-53" href="#__codelineno-15-53"></a><span class="p">});</span><span class="w"> </span><span class="c1">// Passes</span>
+<a id="__codelineno-15-54" name="__codelineno-15-54" href="#__codelineno-15-54"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">validateUpdateObject</span><span class="p">({</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;New Name&#39;</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;updatePayload&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">forbidOperators</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// Passes</span>
+<a id="__codelineno-15-55" name="__codelineno-15-55" href="#__codelineno-15-55"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">validateUpdateObject</span><span class="p">({</span><span class="w"> </span><span class="nx">$inc</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">score</span><span class="o">:</span><span class="w"> </span><span class="mf">1</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">&#39;updatePayload&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">requireOperators</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// Passes</span>
+</code></pre></div>
+<h4 id="1243-best-practices">1.2.4.3. Best Practices<a class="headerlink" href="#1243-best-practices" title="Permanent link">&para;</a></h4>
+<ol>
+<li><strong>Early and Often:</strong> Apply validation at the entry points of your functions and methods to catch errors early and prevent invalid data from propagating.</li>
+<li><strong>Clear Parameter Names:</strong> Use descriptive <code>paramName</code> arguments, as they are included in error messages, aiding debugging.</li>
+<li><strong>Leverage <code>Validate.optional</code>:</strong> For fields that are not mandatory but must conform to a type or rule if present.</li>
+<li><strong>Compose with <code>Validate.all</code> and <code>Validate.any</code>:</strong> For complex validation scenarios involving multiple conditions on a single piece of data.</li>
+<li><strong>Specific Over Generic:</strong> Prefer specific validators like <code>nonEmptyString</code> or <code>positiveNumber</code> over more generic ones like <code>string</code> or <code>number</code> when applicable, to provide more precise validation.</li>
+<li><strong>Understand Plain Objects:</strong> When using <code>validateObject</code> or <code>isPlainObject</code>, be aware that it specifically checks for objects that are not arrays or instances of other complex types like <code>Date</code>.</li>
+<li><strong>Update Object Validation:</strong> Use <code>validateUpdateObject</code> when dealing with MongoDB-style update operations to ensure structural correctness.</li>
+</ol>
+<hr />
+<h2 id="13-integration-patterns">1.3. Integration Patterns<a class="headerlink" href="#13-integration-patterns" title="Permanent link">&para;</a></h2>
+<h3 id="131-component-integration">1.3.1. Component Integration<a class="headerlink" href="#131-component-integration" title="Permanent link">&para;</a></h3>
+<p>All infrastructure components are designed to work together seamlessly:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a><span class="c1">// Example: Database component using all utilities</span>
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Database</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a><span class="w">    </span><span class="c1">// Validate configuration</span>
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a><span class="w">    </span><span class="nx">ValidationUtils</span><span class="p">.</span><span class="nx">validateRequired</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;config&#39;</span><span class="p">);</span>
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a><span class="w">    </span><span class="nx">ValidationUtils</span><span class="p">.</span><span class="nx">validateType</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">rootFolderId</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;string&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;rootFolderId&#39;</span><span class="p">);</span>
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a><span class="w">    </span><span class="c1">// Set up logging</span>
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">);</span>
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">&#39;Initializing database&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a><span class="w">    </span><span class="c1">// Generate instance ID</span>
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">instanceId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">generateUUID</span><span class="p">();</span>
+<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>
+<a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a><span class="w">  </span><span class="nx">performOperation</span><span class="p">(</span><span class="nx">operationName</span><span class="p">,</span><span class="w"> </span><span class="nx">operationFn</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">timeOperation</span><span class="p">(</span>
+<a id="__codelineno-16-18" name="__codelineno-16-18" href="#__codelineno-16-18"></a><span class="w">      </span><span class="nx">operationName</span><span class="p">,</span>
+<a id="__codelineno-16-19" name="__codelineno-16-19" href="#__codelineno-16-19"></a><span class="w">      </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-20" name="__codelineno-16-20" href="#__codelineno-16-20"></a><span class="w">        </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-21" name="__codelineno-16-21" href="#__codelineno-16-21"></a><span class="w">          </span><span class="k">return</span><span class="w"> </span><span class="nx">operationFn</span><span class="p">();</span>
+<a id="__codelineno-16-22" name="__codelineno-16-22" href="#__codelineno-16-22"></a><span class="w">        </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-23" name="__codelineno-16-23" href="#__codelineno-16-23"></a><span class="w">          </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="sb">`Database.</span><span class="si">${</span><span class="nx">operationName</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+<a id="__codelineno-16-24" name="__codelineno-16-24" href="#__codelineno-16-24"></a><span class="w">        </span><span class="p">}</span>
+<a id="__codelineno-16-25" name="__codelineno-16-25" href="#__codelineno-16-25"></a><span class="w">      </span><span class="p">},</span>
+<a id="__codelineno-16-26" name="__codelineno-16-26" href="#__codelineno-16-26"></a><span class="w">      </span><span class="p">{</span><span class="w"> </span><span class="nx">instanceId</span><span class="o">:</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">instanceId</span><span class="w"> </span><span class="p">}</span>
+<a id="__codelineno-16-27" name="__codelineno-16-27" href="#__codelineno-16-27"></a><span class="w">    </span><span class="p">);</span>
+<a id="__codelineno-16-28" name="__codelineno-16-28" href="#__codelineno-16-28"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-16-29" name="__codelineno-16-29" href="#__codelineno-16-29"></a>
+<a id="__codelineno-16-30" name="__codelineno-16-30" href="#__codelineno-16-30"></a><span class="w">  </span><span class="nx">cloneDocumentSafely</span><span class="p">(</span><span class="nb">document</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-31" name="__codelineno-16-31" href="#__codelineno-16-31"></a><span class="w">    </span><span class="c1">// Use ObjectUtils for safe document cloning with Date preservation</span>
+<a id="__codelineno-16-32" name="__codelineno-16-32" href="#__codelineno-16-32"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nb">document</span><span class="p">);</span>
+<a id="__codelineno-16-33" name="__codelineno-16-33" href="#__codelineno-16-33"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-16-34" name="__codelineno-16-34" href="#__codelineno-16-34"></a>
+<a id="__codelineno-16-35" name="__codelineno-16-35" href="#__codelineno-16-35"></a><span class="w">  </span><span class="nx">processFileData</span><span class="p">(</span><span class="nx">fileData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-16-36" name="__codelineno-16-36" href="#__codelineno-16-36"></a><span class="w">    </span><span class="c1">// Convert ISO date strings from JSON to Date objects</span>
+<a id="__codelineno-16-37" name="__codelineno-16-37" href="#__codelineno-16-37"></a><span class="w">    </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">fileData</span><span class="p">);</span>
+<a id="__codelineno-16-38" name="__codelineno-16-38" href="#__codelineno-16-38"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fileData</span><span class="p">;</span>
+<a id="__codelineno-16-39" name="__codelineno-16-39" href="#__codelineno-16-39"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-16-40" name="__codelineno-16-40" href="#__codelineno-16-40"></a><span class="p">}</span>
+</code></pre></div>
+<h3 id="132-standardized-error-flow">1.3.2. Standardized Error Flow<a class="headerlink" href="#132-standardized-error-flow" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a><span class="c1">// Standard error handling pattern across all components</span>
+<a id="__codelineno-17-2" name="__codelineno-17-2" href="#__codelineno-17-2"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Collection</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-3" name="__codelineno-17-3" href="#__codelineno-17-3"></a><span class="w">  </span><span class="nx">findOne</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-4" name="__codelineno-17-4" href="#__codelineno-17-4"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-5" name="__codelineno-17-5" href="#__codelineno-17-5"></a><span class="w">      </span><span class="nx">ValidationUtils</span><span class="p">.</span><span class="nx">validateRequired</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;query&#39;</span><span class="p">);</span>
+<a id="__codelineno-17-6" name="__codelineno-17-6" href="#__codelineno-17-6"></a><span class="w">      </span><span class="nx">ValidationUtils</span><span class="p">.</span><span class="nx">validateType</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;object&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;query&#39;</span><span class="p">);</span>
+<a id="__codelineno-17-7" name="__codelineno-17-7" href="#__codelineno-17-7"></a>
+<a id="__codelineno-17-8" name="__codelineno-17-8" href="#__codelineno-17-8"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_performFind</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span>
+<a id="__codelineno-17-9" name="__codelineno-17-9" href="#__codelineno-17-9"></a>
+<a id="__codelineno-17-10" name="__codelineno-17-10" href="#__codelineno-17-10"></a><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-11" name="__codelineno-17-11" href="#__codelineno-17-11"></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DocumentNotFoundError</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<a id="__codelineno-17-12" name="__codelineno-17-12" href="#__codelineno-17-12"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-17-13" name="__codelineno-17-13" href="#__codelineno-17-13"></a>
+<a id="__codelineno-17-14" name="__codelineno-17-14" href="#__codelineno-17-14"></a><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">result</span><span class="p">;</span>
+<a id="__codelineno-17-15" name="__codelineno-17-15" href="#__codelineno-17-15"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-17-16" name="__codelineno-17-16" href="#__codelineno-17-16"></a><span class="w">      </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;Collection.findOne&#39;</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+<a id="__codelineno-17-17" name="__codelineno-17-17" href="#__codelineno-17-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-17-18" name="__codelineno-17-18" href="#__codelineno-17-18"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-17-19" name="__codelineno-17-19" href="#__codelineno-17-19"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="14-configuration">1.4. Configuration<a class="headerlink" href="#14-configuration" title="Permanent link">&para;</a></h2>
+<h3 id="141-logger-configuration">1.4.1. Logger Configuration<a class="headerlink" href="#141-logger-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// Set global log level</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Development</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Production</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1">// Component-specific configuration</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">);</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">collectionLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Collection&#39;</span><span class="p">);</span>
+</code></pre></div>
+<p><code>DatabaseConfig</code> enforces these names via its <code>LOG_LEVELS</code> constant and defaults to <code>DEFAULT_LOG_LEVEL</code> (<code>'INFO'</code>), ensuring runtime configuration always maps cleanly onto <code>JDbLogger</code> expectations.</p>
+<h3 id="142-error-handler-configuration">1.4.2. Error Handler Configuration<a class="headerlink" href="#142-error-handler-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// Error types are pre-configured in ErrorHandler.ErrorTypes</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">errorType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">ErrorTypes</span><span class="p">.</span><span class="nx">DOCUMENT_NOT_FOUND</span><span class="p">;</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="c1">// Custom error handling</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customErrorHandler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">  </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">context</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span><span class="w"> </span><span class="c1">// Don&#39;t re-throw</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="w">  </span><span class="c1">// Custom recovery logic here</span>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="p">};</span>
+</code></pre></div>
+<h3 id="143-id-generator-configuration">1.4.3. ID Generator Configuration<a class="headerlink" href="#143-id-generator-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1">// Set up generators for different use cases</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">documentIdGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">getDefaultGenerator</span><span class="p">();</span><span class="w"> </span><span class="c1">// UUID</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">tokenGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;timestamp&#39;</span><span class="p">,</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">  </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;token&#39;</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="p">});</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">debugIdGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;readable&#39;</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="p">});</span>
+</code></pre></div>
+<h3 id="144-objectutils-configuration">1.4.4. ObjectUtils Configuration<a class="headerlink" href="#144-objectutils-configuration" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1">// ObjectUtils is stateless and requires no configuration</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="c1">// Methods are called directly on the class</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1">// Example integration with FileOperations</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="kd">class</span><span class="w"> </span><span class="nx">FileOperations</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">  </span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">rawData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_readFromDrive</span><span class="p">(</span><span class="nx">fileId</span><span class="p">);</span>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">parsedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">rawData</span><span class="p">);</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="w">    </span><span class="c1">// Automatically convert ISO date strings to Date objects</span>
+<a id="__codelineno-21-11" name="__codelineno-21-11" href="#__codelineno-21-11"></a><span class="w">    </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">parsedData</span><span class="p">);</span>
+<a id="__codelineno-21-12" name="__codelineno-21-12" href="#__codelineno-21-12"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">parsedData</span><span class="p">;</span>
+<a id="__codelineno-21-13" name="__codelineno-21-13" href="#__codelineno-21-13"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-21-14" name="__codelineno-21-14" href="#__codelineno-21-14"></a>
+<a id="__codelineno-21-15" name="__codelineno-21-15" href="#__codelineno-21-15"></a><span class="w">  </span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-21-16" name="__codelineno-21-16" href="#__codelineno-21-16"></a><span class="w">    </span><span class="c1">// Create independent copy to avoid modifying original</span>
+<a id="__codelineno-21-17" name="__codelineno-21-17" href="#__codelineno-21-17"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">dataToWrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<a id="__codelineno-21-18" name="__codelineno-21-18" href="#__codelineno-21-18"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">jsonString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">dataToWrite</span><span class="p">);</span>
+<a id="__codelineno-21-19" name="__codelineno-21-19" href="#__codelineno-21-19"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_writeToDrive</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">jsonString</span><span class="p">);</span>
+<a id="__codelineno-21-20" name="__codelineno-21-20" href="#__codelineno-21-20"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-21-21" name="__codelineno-21-21" href="#__codelineno-21-21"></a><span class="p">}</span>
+</code></pre></div>
+<h2 id="15-performance-considerations">1.5. Performance Considerations<a class="headerlink" href="#15-performance-considerations" title="Permanent link">&para;</a></h2>
+<ol>
+<li><strong>Logging:</strong> Use appropriate log levels to avoid performance impact in production</li>
+<li><strong>Error Handling:</strong> Error context objects are JSON serialised, avoid large objects</li>
+<li><strong>ID Generation:</strong> UUID generation uses Google Apps Script utilities for optimal performance</li>
+<li><strong>Validation:</strong> Input validation is performed early to fail fast</li>
+<li><strong>ObjectUtils:</strong> Deep cloning and date conversion have performance implications for large objects</li>
+<li>Use <code>deepClone</code> judiciously for large nested structures</li>
+<li><code>convertDateStringsToObjects</code> modifies objects in-place for efficiency</li>
+<li>Consider object size and nesting depth when using these utilities</li>
+</ol>
+<h2 id="16-migration-and-versioning">1.6. Migration and Versioning<a class="headerlink" href="#16-migration-and-versioning" title="Permanent link">&para;</a></h2>
+<p>All infrastructure components are designed to be stable and backwards compatible. Future versions will maintain API compatibility while potentially adding new features.</p>
+<h3 id="161-component-dependencies">1.6.1. Component Dependencies<a class="headerlink" href="#161-component-dependencies" title="Permanent link">&para;</a></h3>
+<ul>
+<li><strong>JDbLogger:</strong> Self-contained, no dependencies</li>
+<li><strong>ErrorHandler:</strong> Uses JDbLogger for error logging</li>
+<li><strong>IdGenerator:</strong> Self-contained, uses Google Apps Script Utilities when available</li>
+<li><strong>ObjectUtils:</strong> Self-contained, no dependencies</li>
+</ul>
+<h3 id="162-extension-points">1.6.2. Extension Points<a class="headerlink" href="#162-extension-points" title="Permanent link">&para;</a></h3>
+<p>These components can be extended for future functionality:</p>
+<ol>
+<li><strong>Custom Log Destinations:</strong> Extend JDbLogger to support additional output targets</li>
+<li><strong>Additional Error Types:</strong> Add new error classes that extend GASDBError</li>
+<li><strong>New ID Strategies:</strong> Add additional generation methods to IdGenerator</li>
+<li><strong>Object Manipulation:</strong> Add additional utility methods to ObjectUtils for specialized data handling</li>
+</ol>
+<hr />
+<p><em>This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (JDbLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability.</em></p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8z"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="../Collection_Components/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Collection Components">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Collection Components
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="../Testing_Framework/" class="md-footer__link md-footer__link--next" aria-label="Next: Testing Framework">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Testing Framework
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11z"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/h-arnold/JsonDbApp" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
