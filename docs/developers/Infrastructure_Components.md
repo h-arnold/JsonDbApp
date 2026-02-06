@@ -43,7 +43,6 @@
     - [1.6.1. Component Dependencies](#161-component-dependencies)
     - [1.6.2. Extension Points](#162-extension-points)
 
-
 ## 1.1. Overview
 
 The JsonDbApp infrastructure provides essential utilities for logging, error management, ID generation, and object manipulation. These components are designed specifically for Google Apps Script environments and support the core database functionality.

@@ -41,7 +41,6 @@
   - [Error Types](#error-types)
   - [Best Practices](#best-practices)
 
-
 ## Overview
 
 The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. Following the Section 4 refactoring, `MasterIndex` serves as the **primary source of truth** for collection metadata, with the `Database` class delegating all collection management operations to it.

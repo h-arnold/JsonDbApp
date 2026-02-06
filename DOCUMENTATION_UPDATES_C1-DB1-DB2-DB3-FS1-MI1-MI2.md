@@ -8,4 +8,3 @@ This document now serves as a brief record of documentation updates following C1
 
 - DB1 remained the only public API change (alias removal).
 - Developer documentation continued to focus on public behaviour.
-
