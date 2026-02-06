@@ -121,4 +121,3 @@ mkdocs build
 - [MkDocs Documentation](https://www.mkdocs.org/)
 - [Material for MkDocs](https://squidfunk.github.io/mkdocs-material/)
 - [GitHub Pages Documentation](https://docs.github.com/en/pages)
-

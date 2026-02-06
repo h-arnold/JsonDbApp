@@ -69,10 +69,7 @@ function demo() {
 }
 ```
 
-!!! note
-    - Use `masterIndexKey` (not `masterIndexName`).
-    - Avoid `JSON.stringify(db)`; inspect specific values instead (e.g. `db.listCollections()`).
-    - Write operations are in-memory until you call `collection.save()`. Batch multiple writes, then `save()` once to persist to Drive.
+!!! note - Use `masterIndexKey` (not `masterIndexName`). - Avoid `JSON.stringify(db)`; inspect specific values instead (e.g. `db.listCollections()`). - Write operations are in-memory until you call `collection.save()`. Batch multiple writes, then `save()` once to persist to Drive.
 
 ## Supported Query Operators
 
@@ -81,10 +78,7 @@ Current query support focuses on a small, fast subset:
 - **Comparison**: `$eq`, `$gt`, `$lt`
 - **Logical**: `$and`, `$or`
 
-!!! info
-    - Multiple top-level fields are implicitly ANDed (e.g. `{ a: 1, b: 2 }`).
-    - Nested fields are supported via dot notation (e.g. `"profile.department"`).
-    - Equality against arrays treats a scalar as a membership test (MongoDB-style).
+!!! info - Multiple top-level fields are implicitly ANDed (e.g. `{ a: 1, b: 2 }`). - Nested fields are supported via dot notation (e.g. `"profile.department"`). - Equality against arrays treats a scalar as a membership test (MongoDB-style).
 
 For detailed examples and usage, see the [Querying Guide](Querying.md).
 
@@ -96,12 +90,7 @@ Implemented MongoDB-style update operators:
 - **Numeric**: `$inc`, `$mul`, `$min`, `$max`
 - **Array**: `$push`, `$pull`, `$addToSet`
 
-!!! info
-    - Dot notation is supported for nested fields (e.g. `"profile.name"`).
-    - `$push` and `$addToSet` support the `$each` modifier for multiple values.
-    - `$addToSet` enforces uniqueness; creates the array if missing; errors if target exists and isn't an array.
-    - `$push` creates the array if missing; errors if target exists and isn't an array.
-    - `$pull` removes matching elements; non-array or missing targets are a no-op. Object criteria support simple field predicates and basic comparison operators.
+!!! info - Dot notation is supported for nested fields (e.g. `"profile.name"`). - `$push` and `$addToSet` support the `$each` modifier for multiple values. - `$addToSet` enforces uniqueness; creates the array if missing; errors if target exists and isn't an array. - `$push` creates the array if missing; errors if target exists and isn't an array. - `$pull` removes matching elements; non-array or missing targets are a no-op. Object criteria support simple field predicates and basic comparison operators.
 
 For detailed examples and usage, see the [Updates Guide](Updates.md).
 
@@ -122,4 +111,3 @@ For detailed examples and usage, see the [Updates Guide](Updates.md).
 5. **Expand query and update operator support** to cover a larger subset of MongoDB syntax.
 6. **Add user access levels** - at the moment, access is handled by Google Drive File permissions. It would be good to have more granular control over user access.
 7. A GAS WebApp query interface for testing and debugging queries.
-
