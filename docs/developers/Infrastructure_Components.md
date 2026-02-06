@@ -2,9 +2,9 @@
 
 # 1. GAS DB Infrastructure Components
 
-- [1. JsonDbApp Infrastructure Components](#1-jsondbapp-infrastructure-components)
+- [1. GAS DB Infrastructure Components](#1-gas-db-infrastructure-components)
   - [1.1. Overview](#11-overview)
-  - [1.2. Logger (JDbLogger)](#12-logger-gasdblogger)
+  - [1.2. Logger (JDbLogger)](#12-logger-jdblogger)
     - [1.2.0.1. Key Features](#1201-key-features)
     - [1.2.0.2. Core Methods](#1202-core-methods)
     - [1.2.0.3. Usage Examples](#1203-usage-examples)
@@ -42,6 +42,7 @@
   - [1.6. Migration and Versioning](#16-migration-and-versioning)
     - [1.6.1. Component Dependencies](#161-component-dependencies)
     - [1.6.2. Extension Points](#162-extension-points)
+
 
 ## 1.1. Overview
 

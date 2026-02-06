@@ -4,6 +4,10 @@
   - [Overview](#overview)
   - [Internal Helper Components](#internal-helper-components)
     - [MasterIndexMetadataNormaliser](#masterindexmetadatanormaliser)
+    - [MasterIndexLockManager Helper Methods ⭐ NEW in v0.0.5](#masterindexlockmanager-helper-methods--new-in-v005)
+      - [`_setAndPersistLockStatus(collectionName, collection, lockStatus)`](#_setandpersistlockstatuscollectionname-collection-lockstatus)
+    - [MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5](#masterindexconflictresolver-helper-methods--new-in-v005)
+      - [`_applyMetadataUpdates(collectionMetadata, updates)`](#_applymetadataupdatescollectionmetadata-updates)
   - [Core Workflow](#core-workflow)
     - [Collection Access Protocol](#collection-access-protocol)
     - [Virtual Locking](#virtual-locking)
@@ -36,6 +40,7 @@
     - [Locking Coordination](#locking-coordination)
   - [Error Types](#error-types)
   - [Best Practices](#best-practices)
+
 
 ## Overview
 

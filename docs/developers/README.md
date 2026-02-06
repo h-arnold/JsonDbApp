@@ -38,14 +38,3 @@ Within this repo (`old_tests/`), you can still use `new Database(config)` then c
 
 - **Linting**: `no-magic-numbers` is enforced as an error for source files to keep configuration and algorithmic values explicit. Tests allow numeric literals for readability because the rule is disabled for `tests/**/*.js`.
 - **Documentation**: JSDoc completeness is enforced as errors; ensure descriptions, param types, and return details are present.
-
-## Documentation Structure
-
-- **Collection Components**: Understand how Collection, CollectionMetadata, and DocumentOperations work together for MongoDB-compatible operations
-- **Database**: Main entry point for database operations, collection management, and index file coordination
-- **DatabaseConfig**: Configuration validation, defaults, and management for database instances
-- **Infrastructure Components**: Use JDbLogger, ErrorHandler, and IdGenerator in your code
-- **MasterIndex**: Understand cross-instance coordination, virtual locking, and conflict resolution
-- **QueryEngine**: Learn how to use the query engine for document retrieval
-- **Testing Framework**: Learn to write effective tests using AssertionUtilities and TestRunner
-- **UpdateEngine**: Understand how to apply update operators to documents
