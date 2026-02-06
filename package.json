@@ -1,6 +1,6 @@
 {
   "name": "jsondbapp",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "A document database implemented in Google App Script using the Google Drive API. Recommended for masochists.",
   "main": "index.js",
   "directories": {
