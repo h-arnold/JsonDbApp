@@ -79,11 +79,7 @@ Build complex queries using MongoDB-compatible operators:
 ```javascript
 // Find active users aged 25-40 with high scores
 const results = users.find({
-  $and: [
-    { isActive: true },
-    { age: { $gte: 25, $lte: 40 } },
-    { score: { $gt: 85 } }
-  ]
+  $and: [{ isActive: true }, { age: { $gte: 25, $lte: 40 } }, { score: { $gt: 85 } }]
 });
 ```
 
@@ -95,11 +91,14 @@ Modify documents precisely using update operators:
 
 ```javascript
 // Increment counter, add tag, update timestamp
-users.updateOne({ _id: 'user123' }, {
-  $inc: { loginCount: 1 },
-  $addToSet: { tags: 'premium' },
-  $set: { lastLogin: new Date() }
-});
+users.updateOne(
+  { _id: 'user123' },
+  {
+    $inc: { loginCount: 1 },
+    $addToSet: { tags: 'premium' },
+    $set: { lastLogin: new Date() }
+  }
+);
 ```
 
 See [Updates.md](Updates.md) for complete details.

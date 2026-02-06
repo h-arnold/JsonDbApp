@@ -257,20 +257,12 @@ const result2 = persons.find({
 
 // Multiple conditions
 const result3 = persons.find({
-  $and: [
-    { isActive: { $eq: true } },
-    { score: { $gt: 80 } },
-    { balance: { $gt: 1000 } }
-  ]
+  $and: [{ isActive: { $eq: true } }, { score: { $gt: 80 } }, { balance: { $gt: 1000 } }]
 });
 
 // Mixed comparison operators
 const result4 = persons.find({
-  $and: [
-    { 'name.first': { $eq: 'Anna' } },
-    { age: { $lt: 35 } },
-    { score: { $gt: 80 } }
-  ]
+  $and: [{ 'name.first': { $eq: 'Anna' } }, { age: { $lt: 35 } }, { score: { $gt: 80 } }]
 });
 ```
 
@@ -648,4 +640,3 @@ const targetUsers = persons.find({
 ---
 
 For more examples, see [Examples.md](Examples.md). For update operations, see [Updates.md](Updates.md). For technical details, see [developers/QueryEngine.md](developers/QueryEngine.md).
-

@@ -96,11 +96,14 @@ persons.updateOne({ _id: 'person1' }, { $set: { newField: 'new value', anotherFi
 persons.updateOne({ _id: 'person1' }, { $set: { 'preferences.settings.theme': 'auto' } });
 
 // Create deeply nested fields (intermediate objects created automatically)
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: { 'preferences.settings.notifications.push.enabled': true }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: { 'preferences.settings.notifications.push.enabled': true }
+  }
+);
 ```
 
 **Type Changes:**
@@ -136,11 +139,14 @@ persons.updateOne({ _id: 'person1' }, { $unset: { temp1: '', temp3: '' } });
 persons.updateOne({ _id: 'person1' }, { $unset: { 'preferences.newsletter': '' } });
 
 // Remove deeply nested field
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $unset: { 'preferences.settings.notifications.email.frequency': '' }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $unset: { 'preferences.settings.notifications.email.frequency': '' }
+  }
+);
 ```
 
 **Object Structure Preservation:**
@@ -370,19 +376,25 @@ persons.updateOne({ _id: 'person2' }, { $push: { 'newly.nested.array': 'value' }
 
 ```javascript
 // Push multiple values at once
-persons.updateOne({
-  _id: 'person4'
-}, {
-  $push: { 'preferences.tags': { $each: ['new1', 'new2', 'new3'] } }
-});
+persons.updateOne(
+  {
+    _id: 'person4'
+  },
+  {
+    $push: { 'preferences.tags': { $each: ['new1', 'new2', 'new3'] } }
+  }
+);
 // tags: ['travel', 'photography', 'music', 'new1', 'new2', 'new3']
 
 // Empty $each array is no-op
-const result = persons.updateOne({
-  _id: 'person5'
-}, {
-  $push: { 'preferences.tags': { $each: [] } }
-});
+const result = persons.updateOne(
+  {
+    _id: 'person5'
+  },
+  {
+    $push: { 'preferences.tags': { $each: [] } }
+  }
+);
 console.log(result.modifiedCount); // 0
 
 // Push array of objects
@@ -429,11 +441,14 @@ const result = persons.updateOne({ _id: 'person1' }, { $pull: { 'name.first': 'A
 console.log(result.modifiedCount); // 0
 
 // Pulling non-existent value is no-op
-const result2 = persons.updateOne({
-  _id: 'person1'
-}, {
-  $pull: { 'preferences.tags': 'non-existent' }
-});
+const result2 = persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $pull: { 'preferences.tags': 'non-existent' }
+  }
+);
 console.log(result2.modifiedCount); // 0
 
 // Pulling from empty array is no-op
@@ -448,11 +463,14 @@ console.log(result3.modifiedCount); // 0
 orders.updateOne({ _id: 'order1' }, { $pull: { 'items.quantity': { $lt: 5 } } });
 
 // Remove with multiple conditions
-inventory.updateOne({
-  _id: 'inv1'
-}, {
-  $pull: { alerts: { type: 'low-stock', level: { $ne: 'critical' } } }
-});
+inventory.updateOne(
+  {
+    _id: 'inv1'
+  },
+  {
+    $pull: { alerts: { type: 'low-stock', level: { $ne: 'critical' } } }
+  }
+);
 ```
 
 ### $addToSet - Add Unique to Array
@@ -476,11 +494,14 @@ inventory.updateOne({ _id: 'inv1' }, { $addToSet: { alerts: alert } });
 
 ```javascript
 // No-op if value already exists
-const result = persons.updateOne({
-  _id: 'person1'
-}, {
-  $addToSet: { 'preferences.tags': 'sports' }
-});
+const result = persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $addToSet: { 'preferences.tags': 'sports' }
+  }
+);
 console.log(result.modifiedCount); // 0 (already exists)
 
 // Object equality checked by value
@@ -493,19 +514,25 @@ console.log(result2.modifiedCount); // 0 if exact object exists
 
 ```javascript
 // Add multiple unique values
-persons.updateOne({
-  _id: 'person4'
-}, {
-  $addToSet: { 'preferences.tags': { $each: ['tag1', 'tag2', 'tag3'] } }
-});
+persons.updateOne(
+  {
+    _id: 'person4'
+  },
+  {
+    $addToSet: { 'preferences.tags': { $each: ['tag1', 'tag2', 'tag3'] } }
+  }
+);
 // Only non-duplicate tags added
 
 // Combining new and existing values
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $addToSet: { 'preferences.tags': { $each: ['sports', 'new1', 'music', 'new2'] } }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $addToSet: { 'preferences.tags': { $each: ['sports', 'new1', 'music', 'new2'] } }
+  }
+);
 // Only 'new1' and 'new2' added (sports and music already exist)
 ```
 
@@ -543,25 +570,31 @@ console.log(result.modifiedCount); // 0
 
 ```javascript
 // Create entire nested structure
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: {
-    'newly.created.nested.field': 'value',
-    'newly.created.sibling': 'another value'
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: {
+      'newly.created.nested.field': 'value',
+      'newly.created.sibling': 'another value'
+    }
   }
-});
+);
 // Creates: { newly: { created: { nested: { field: 'value' }, sibling: 'another value' } } }
 
 // Mixing existing and new nested paths
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: {
-    'preferences.settings.newSetting': true,
-    'preferences.newTopLevel': 'value'
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: {
+      'preferences.settings.newSetting': true,
+      'preferences.newTopLevel': 'value'
+    }
   }
-});
+);
 ```
 
 ### Type Changes
@@ -592,14 +625,17 @@ persons.updateOne({ _id: 'person1' }, { $set: { 'name.first': 'Anna' } });
 // document.name.last remains unchanged
 
 // Update multiple nested fields
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: {
-    'preferences.newsletter': false,
-    'preferences.settings.theme': 'dark'
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: {
+      'preferences.newsletter': false,
+      'preferences.settings.theme': 'dark'
+    }
   }
-});
+);
 // Other preferences fields remain unchanged
 ```
 
@@ -609,30 +645,36 @@ Combine multiple operators in a single update:
 
 ```javascript
 // Multiple $set operations
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: {
-    'name.first': 'Anna',
-    age: 30,
-    isActive: true
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: {
+      'name.first': 'Anna',
+      age: 30,
+      isActive: true
+    }
   }
-});
+);
 
 // Combine different operators
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: { status: 'active' },
-  $inc: { loginCount: 1 },
-  $push: { 'activity.logins': new Date() },
-  $unset: { tempFlag: '' }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: { status: 'active' },
+    $inc: { loginCount: 1 },
+    $push: { 'activity.logins': new Date() },
+    $unset: { tempFlag: '' }
+  }
+);
 ```
 
 ## Edge Cases and Validation
 
-### The _id Field
+### The \_id Field
 
 The `_id` field is immutable and cannot be updated:
 
@@ -772,61 +814,76 @@ const result = persons.replaceOne({ _id: 'person1' }, replacement);
 **Increment Login Count and Update Last Login:**
 
 ```javascript
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $inc: { 'stats.loginCount': 1 },
-  $set: { lastLogin: new Date() }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $inc: { 'stats.loginCount': 1 },
+    $set: { lastLogin: new Date() }
+  }
+);
 ```
 
 **Add Tags and Update Preferences:**
 
 ```javascript
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $addToSet: { 'preferences.tags': { $each: ['premium', 'verified'] } },
-  $set: { 'preferences.newsletter': true }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $addToSet: { 'preferences.tags': { $each: ['premium', 'verified'] } },
+    $set: { 'preferences.newsletter': true }
+  }
+);
 ```
 
 **Update Nested Settings:**
 
 ```javascript
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $set: {
-    'preferences.settings.theme': 'dark',
-    'preferences.settings.notifications.email.enabled': true,
-    'preferences.settings.notifications.email.frequency': 'daily'
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $set: {
+      'preferences.settings.theme': 'dark',
+      'preferences.settings.notifications.email.enabled': true,
+      'preferences.settings.notifications.email.frequency': 'daily'
+    }
   }
-});
+);
 ```
 
 **Clean Up Old Fields and Add New Ones:**
 
 ```javascript
-persons.updateOne({
-  _id: 'person1'
-}, {
-  $unset: { legacyField: '', deprecatedSetting: '' },
-  $set: { newField: 'value', version: 2 }
-});
+persons.updateOne(
+  {
+    _id: 'person1'
+  },
+  {
+    $unset: { legacyField: '', deprecatedSetting: '' },
+    $set: { newField: 'value', version: 2 }
+  }
+);
 ```
 
 **Batch Update with Multiple Operators:**
 
 ```javascript
-persons.updateMany({
-  isActive: true,
-  lastLogin: { $lt: new Date('2025-01-01') }
-}, {
-  $set: { status: 'stale', reviewRequired: true },
-  $inc: { inactivityScore: 10 },
-  $push: { 'history.events': { type: 'flagged', date: new Date() } }
-});
+persons.updateMany(
+  {
+    isActive: true,
+    lastLogin: { $lt: new Date('2025-01-01') }
+  },
+  {
+    $set: { status: 'stale', reviewRequired: true },
+    $inc: { inactivityScore: 10 },
+    $push: { 'history.events': { type: 'flagged', date: new Date() } }
+  }
+);
 ```
 
 **Complex Nested Array Update:**
@@ -834,13 +891,16 @@ persons.updateMany({
 ```javascript
 const orders = db.getCollection('orders');
 
-orders.updateOne({
-  _id: 'order1'
-}, {
-  $push: { items: { sku: 'prod5', quantity: 3, price: 29.99 } },
-  $inc: { totalAmount: 89.97, 'metrics.itemCount': 3 },
-  $set: { updatedAt: new Date(), status: 'modified' }
-});
+orders.updateOne(
+  {
+    _id: 'order1'
+  },
+  {
+    $push: { items: { sku: 'prod5', quantity: 3, price: 29.99 } },
+    $inc: { totalAmount: 89.97, 'metrics.itemCount': 3 },
+    $set: { updatedAt: new Date(), status: 'modified' }
+  }
+);
 ```
 
 ---
