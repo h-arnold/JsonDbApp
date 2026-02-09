@@ -3,6 +3,7 @@
 - [Quick Start Guide](#quick-start-guide)
   - [Overview](#overview)
   - [Prerequisites](#prerequisites)
+  - [Get the Script](#get-the-script)
   - [Create or Load a Database](#create-or-load-a-database)
   - [Create a Collection and Insert Data](#create-a-collection-and-insert-data)
   - [Read, Update, and Delete](#read-update-and-delete)
@@ -16,6 +17,12 @@ This guide walks through creating a database, adding data, and running basic que
 
 - Google Apps Script project with the JsonDbApp library added.
 - Drive API enabled for the Google Cloud project that backs your Apps Script deployment.
+
+## Get the Script
+
+🔗 [Get a copy of the script](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link)
+
+Link it as a library to your chosen GAS project.
 
 ## Create or Load a Database
 

@@ -2,6 +2,8 @@
 
 Welcome to the JsonDbApp documentation. JsonDbApp is a MongoDB-style document database for Google Apps Script that provides synchronous CRUD operations on named collections stored as JSON files in Google Drive.
 
+🔗 [Get a copy of the script](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link)
+
 ## Getting Started
 
 - **[Quick Start Guide](Quick_Start.md)** - Get up and running with JsonDbApp in minutes. Covers database initialisation, basic CRUD operations, and saving data to Drive.

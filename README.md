@@ -32,7 +32,7 @@ Lots of reasons! Some of them good, some of them less so. The main ones are:
 
 ## Getting started
 
-[Make a copy of this project](https://drive.google.com/drive/u/0/folders/15YylpMppIdidm_G1kWN2D0ha6YAOWyom) in your Google Drive.
+[Make a copy of this project](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link) in your Google Drive.
 
 - If you plan on doing development work, use the version **with tests**.
 - If you just plan on using the library, use the version **without tests**. This makes the file much smaller and faster to load.
