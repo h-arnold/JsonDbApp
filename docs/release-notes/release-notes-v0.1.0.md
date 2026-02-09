@@ -1,4 +1,3 @@
-```markdown
 ## JsonDbApp v0.1.0 — Minor release
 
 Release date: 2026-02-06
@@ -7,9 +6,13 @@ Release date: 2026-02-06
 
 This release focuses on a comprehensive documentation overhaul and a significant internal refactor to reduce complexity and make the codebase easier to maintain. There are also developer-experience improvements (linting/tooling, test framework migration and CI enhancements) and ongoing DRY/KISS guidance implemented across docs and tests.
 
-**This is primarily a maintenance release with no breaking changes to public APIs.** ✅
+**This is primarily a maintenance release with no breaking changes to public APIs.**
 
-[Get copies of the latest scripts here](https://drive.google.com/drive/folders/1Y_2UTeT_eY7uWZ_4964FeFcjnwa1tOm-?usp=sharing)
+🔗[Get copies of the latest scripts here](https://drive.google.com/drive/folders/1EqZJjMRCHfXDvVtGbqrD85xFuQBYGf11?usp=drive_link)
+
+#### Breaking Change
+
+`Database.collection` and `Database.getCollection` were methods with largely duplicated functionality. The refactor has removed `Database.collection` in favour of a single canonical `getCollection` method. If you were using `Database.collection` directly, please switch to `Database.getCollection`.
 
 ---
 
@@ -68,4 +71,3 @@ This release focuses on a comprehensive documentation overhaul and a significant
 ---
 
 If you have any questions about the changes or want to help with follow-up cleanups, please open an issue or a PR.
-```
