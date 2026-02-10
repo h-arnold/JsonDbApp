@@ -92,9 +92,14 @@ describe('Gas mocks run inside Viitest', () => {
   });
 
   it('requires deleteTrigger argument identity from getProjectTriggers', () => {
-    const created = ScriptApp.newTrigger('flushPendingWritesHandler').timeBased().after(60000).create();
+    const created = ScriptApp.newTrigger('flushPendingWritesHandler')
+      .timeBased()
+      .after(60000)
+      .create();
     const projectTriggers = ScriptApp.getProjectTriggers();
-    const triggerFromProject = projectTriggers.find((item) => item.getUniqueId() === created.getUniqueId());
+    const triggerFromProject = projectTriggers.find(
+      (item) => item.getUniqueId() === created.getUniqueId()
+    );
 
     expect(created.getUniqueId()).toMatch(/^\d+$/);
     expect(() => ScriptApp.deleteTrigger(created)).toThrow(

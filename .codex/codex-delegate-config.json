@@ -1,0 +1,9 @@
+{
+  "sandbox": "danger-full-access",
+  "approval": "never",
+  "network": true,
+  "webSearch": "live",
+  "verbose": false,
+  "timeoutMinutes": 10,
+  "overrideWireApi": true
+}
