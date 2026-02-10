@@ -17,6 +17,8 @@ function createGasMockRecording() {
     propertiesService: recordPropertiesService(),
     driveApp: recordDriveApp(),
     lockService: recordLockService(),
+    cacheService: recordCacheService(),
+    scriptApp: recordScriptApp(),
     utilities: recordUtilities(),
     logger: recordLogger(),
     mimeType: recordMimeType()
@@ -209,6 +211,73 @@ function recordUtilities() {
   };
 }
 
+function recordCacheService() {
+  var cache = CacheService.getScriptCache();
+  var prefix = 'GASDB_MOCK_CACHE_' + new Date().getTime();
+  var keyOne = prefix + '_ONE';
+  var keyTwo = prefix + '_TWO';
+  var keyThree = prefix + '_THREE';
+
+  cache.removeAll([keyOne, keyTwo, keyThree]);
+
+  var initial = cache.get(keyOne);
+  cache.put(keyOne, 'value-1', 120);
+  var afterPut = cache.get(keyOne);
+
+  cache.putAll(
+    (function () {
+      var values = {};
+      values[keyTwo] = 'value-2';
+      values[keyThree] = 'value-3';
+      return values;
+    })(),
+    120
+  );
+  var afterPutAll = cache.getAll([keyOne, keyTwo, keyThree, prefix + '_MISSING']);
+
+  cache.remove(keyTwo);
+  var afterRemove = cache.getAll([keyTwo, keyThree]);
+
+  cache.removeAll([keyOne, keyThree]);
+  var afterRemoveAll = cache.getAll([keyOne, keyThree]);
+
+  return {
+    cacheType: 'script',
+    initial: initial,
+    afterPut: afterPut,
+    afterPutAll: afterPutAll,
+    afterRemove: afterRemove,
+    afterRemoveAll: afterRemoveAll
+  };
+}
+
+function recordScriptApp() {
+  var beforeTriggers = ScriptApp.getProjectTriggers();
+  var beforeCount = beforeTriggers.length;
+
+  var afterTrigger = ScriptApp.newTrigger('flushPendingWritesHandler').timeBased().after(60000).create();
+  var everyMinutesTrigger = ScriptApp.newTrigger('flushPendingWritesHandler')
+    .timeBased()
+    .everyMinutes(5)
+    .create();
+
+  var duringTriggers = ScriptApp.getProjectTriggers();
+
+  ScriptApp.deleteTrigger(afterTrigger);
+  ScriptApp.deleteTrigger(everyMinutesTrigger);
+
+  var afterDeleteCount = ScriptApp.getProjectTriggers().length;
+
+  return {
+    scriptId: ScriptApp.getScriptId(),
+    beforeCount: beforeCount,
+    createdAfterTrigger: serialiseTrigger_(afterTrigger),
+    createdEveryMinutesTrigger: serialiseTrigger_(everyMinutesTrigger),
+    duringCount: duringTriggers.length,
+    afterDeleteCount: afterDeleteCount
+  };
+}
+
 function recordLogger() {
   Logger.log('Mock recorder Logger.log() test');
   return {
@@ -230,4 +299,13 @@ function ensureRecordingFolder_() {
     return folders.next();
   }
   return root.createFolder('GASDB_Mock_Recordings');
+}
+
+function serialiseTrigger_(trigger) {
+  return {
+    uniqueId: trigger.getUniqueId(),
+    handlerFunction: trigger.getHandlerFunction(),
+    triggerSource: trigger.getTriggerSource(),
+    eventType: trigger.getEventType()
+  };
 }

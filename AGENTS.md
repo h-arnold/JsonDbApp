@@ -88,7 +88,31 @@ methodName(param) {
 - **TDD**: Always follow Red-Green-Refactor.
 - **Linting**: `no-magic-numbers` is an error for source code. Tests may use numeric literals for clarity because the rule is disabled for `tests/**/*.js`.
 
-## Calling Sub-Agents
+## Spawning sub-agents
+
+### In a codex environnent
+
+Use `codex-delegate` to spawn a focused sub-agent for a specific task. Keep tasks small, pass constraints in `--instructions`, and set `--timeout-minutes` to 10 or more for long-running jobs.
+
+Example:
+
+```bash
+codex-delegate --role implementation \
+  --task "Add input validation to the assessor controller" \
+  --instructions "Use existing DTO patterns; update tests." \
+  --working-dir packages/my-app \
+  --timeout-minutes 10
+```
+
+While a sub-agent is running, expect a heartbeat line (`agent is still working`) roughly every minute if no new stream events arrive.
+
+**IMPORTANT**: Be patient. Some tasks will take several minutes and if the agent is thinking, you may not see any output for a while. If you see the heartbeat line, it is still working. If there is an error with the agent, `codex-delegate` will throw an error. If you stop it early, you may lose the work it has done so far. If you think it has stalled, check the logs for details `codex-delegate.log` (or set `--log-file` to write logs to a different path).
+
+#### Sub-agent roles
+
+Sub-agent roles are defined in the `.codex` folder, along with the configuration file. To create a new role, add a markdown file with the role name (e.g. `implementation.md`) and a prompt template for that role. Empty files are ignored. Use `--list-roles` to see the discovered roles.
+
+### In a Github Copilot Environment
 
 MANDATORY: Every #runSubagent call must include the agent name. Calls that omit this parameter violate the workflow contract and should be rejected/retried.
 
@@ -133,7 +157,7 @@ The following specialized agents are available (names are case-sensitive):
    - Verifies code examples are current
    - Maintains cross-references
 
-### Mandatory Code Review Process
+### Mandatory Workflow for Non-Trivial Changes
 
 **NON-NEGOTIABLE REQUIREMENT**: All non-trivial code changes MUST be verified by the appropriate review agent before a task can be considered complete.
 

@@ -4,6 +4,10 @@ const path = require('node:path');
 
 const DEFAULT_ROOT = path.join(os.tmpdir(), 'gasdb-drive');
 const DEFAULT_PROPERTIES_FILE = path.join(os.tmpdir(), 'gasdb-script-properties.json');
+const DEFAULT_CACHE_TTL_SECONDS = 600;
+const MAX_CACHE_TTL_SECONDS = 21600;
+const MAX_CACHE_KEY_LENGTH = 250;
+const MAX_CACHE_VALUE_BYTES = 100 * 1024;
 
 let nextId = 1;
 
@@ -308,9 +312,221 @@ class MockLock {
   }
 }
 
+class MockCache {
+  constructor() {
+    this._entries = new Map();
+  }
+
+  get(key) {
+    this._assertKey(key);
+    const entry = this._entries.get(key);
+    if (!entry || entry.expiresAt <= Date.now()) {
+      this._entries.delete(key);
+      return null;
+    }
+    return entry.value;
+  }
+
+  getAll(keys) {
+    this._assertKeyArray(keys, 'keys');
+    const result = {};
+    keys.forEach((key) => {
+      const value = this.get(key);
+      if (value !== null) {
+        result[key] = value;
+      }
+    });
+    return result;
+  }
+
+  put(key, value, expirationInSeconds = DEFAULT_CACHE_TTL_SECONDS) {
+    this._assertKey(key);
+    this._assertValue(value);
+    this._assertExpiration(expirationInSeconds);
+    this._entries.set(key, {
+      value: String(value),
+      expiresAt: Date.now() + expirationInSeconds * 1000
+    });
+  }
+
+  putAll(values, expirationInSeconds = DEFAULT_CACHE_TTL_SECONDS) {
+    this._assertObject(values, 'values');
+    this._assertExpiration(expirationInSeconds);
+    Object.keys(values).forEach((key) => {
+      this.put(key, values[key], expirationInSeconds);
+    });
+  }
+
+  remove(key) {
+    this._assertKey(key);
+    this._entries.delete(key);
+  }
+
+  removeAll(keys) {
+    this._assertKeyArray(keys, 'keys');
+    keys.forEach((key) => this.remove(key));
+  }
+
+  _assertKey(key) {
+    if (typeof key !== 'string' || key.length === 0) {
+      throw new Error('Cache key must be a non-empty string');
+    }
+    if (key.length > MAX_CACHE_KEY_LENGTH) {
+      throw new Error(`Cache key exceeds max length ${MAX_CACHE_KEY_LENGTH}`);
+    }
+  }
+
+  _assertKeyArray(keys, name) {
+    if (!Array.isArray(keys)) {
+      throw new Error(`${name} must be an array`);
+    }
+    keys.forEach((key) => this._assertKey(key));
+  }
+
+  _assertObject(value, name) {
+    if (!value || typeof value !== 'object' || Array.isArray(value)) {
+      throw new Error(`${name} must be an object`);
+    }
+  }
+
+  _assertValue(value) {
+    const asString = String(value);
+    const bytes = Buffer.byteLength(asString, 'utf8');
+    if (bytes > MAX_CACHE_VALUE_BYTES) {
+      throw new Error(`Cache value exceeds max size ${MAX_CACHE_VALUE_BYTES} bytes`);
+    }
+  }
+
+  _assertExpiration(expirationInSeconds) {
+    if (!Number.isInteger(expirationInSeconds) || expirationInSeconds <= 0) {
+      throw new Error('expirationInSeconds must be a positive integer');
+    }
+    if (expirationInSeconds > MAX_CACHE_TTL_SECONDS) {
+      throw new Error(`expirationInSeconds exceeds max ${MAX_CACHE_TTL_SECONDS}`);
+    }
+  }
+}
+
+class MockTrigger {
+  constructor({ uniqueId, handlerFunction, eventType, schedule }) {
+    this._uniqueId = uniqueId;
+    this._handlerFunction = handlerFunction;
+    this._eventType = eventType;
+    this._schedule = schedule;
+  }
+
+  getUniqueId() {
+    return this._uniqueId;
+  }
+
+  getHandlerFunction() {
+    return this._handlerFunction;
+  }
+
+  getEventType() {
+    return this._eventType;
+  }
+
+  getTriggerSource() {
+    return 'CLOCK';
+  }
+
+  toJSON() {
+    return {
+      uniqueId: this._uniqueId,
+      handlerFunction: this._handlerFunction,
+      eventType: this._eventType,
+      schedule: this._schedule
+    };
+  }
+}
+
+class MockClockTriggerBuilder {
+  constructor(parentBuilder) {
+    this._parentBuilder = parentBuilder;
+    this._schedule = null;
+  }
+
+  after(milliseconds) {
+    if (!Number.isInteger(milliseconds) || milliseconds <= 0) {
+      throw new Error('milliseconds must be a positive integer');
+    }
+    this._schedule = { type: 'after', milliseconds };
+    return this;
+  }
+
+  everyMinutes(minutes) {
+    const allowed = [1, 5, 10, 15, 30];
+    if (!allowed.includes(minutes)) {
+      throw new Error('minutes must be one of 1, 5, 10, 15, 30');
+    }
+    this._schedule = { type: 'everyMinutes', minutes };
+    return this;
+  }
+
+  create() {
+    if (!this._schedule) {
+      throw new Error('No schedule configured for clock trigger');
+    }
+    return this._parentBuilder._createTrigger('CLOCK', this._schedule);
+  }
+}
+
+class MockTriggerBuilder {
+  constructor(scriptApp, handlerFunction) {
+    this._scriptApp = scriptApp;
+    this._handlerFunction = handlerFunction;
+  }
+
+  timeBased() {
+    return new MockClockTriggerBuilder(this);
+  }
+
+  _createTrigger(eventType, schedule) {
+    const trigger = new MockTrigger({
+      uniqueId: generateId(),
+      handlerFunction: this._handlerFunction,
+      eventType,
+      schedule
+    });
+    this._scriptApp._triggers.set(trigger.getUniqueId(), trigger);
+    return trigger;
+  }
+}
+
+class MockScriptApp {
+  constructor(scriptId) {
+    this._scriptId = scriptId;
+    this._triggers = new Map();
+  }
+
+  getScriptId() {
+    return this._scriptId;
+  }
+
+  newTrigger(functionName) {
+    if (typeof functionName !== 'string' || functionName.trim().length === 0) {
+      throw new Error('functionName must be a non-empty string');
+    }
+    return new MockTriggerBuilder(this, functionName);
+  }
+
+  getProjectTriggers() {
+    return Array.from(this._triggers.values());
+  }
+
+  deleteTrigger(trigger) {
+    if (!trigger || typeof trigger.getUniqueId !== 'function') {
+      throw new Error('trigger must be a Trigger object');
+    }
+    this._triggers.delete(trigger.getUniqueId());
+  }
+}
+
 function createGasMocks(options = {}) {
   const rootPath = options.driveRoot || DEFAULT_ROOT;
   const propertiesPath = options.propertiesFile || DEFAULT_PROPERTIES_FILE;
+  const scriptId = options.scriptId || 'mock-script-id';
   ensureDir(rootPath);
 
   const store = {
@@ -328,6 +544,10 @@ function createGasMocks(options = {}) {
 
   const scriptProperties = new MockProperties(propertiesPath);
   const lock = new MockLock();
+  const scriptCache = new MockCache();
+  const userCache = new MockCache();
+  const documentCache = new MockCache();
+  const scriptApp = new MockScriptApp(scriptId);
 
   const DriveApp = {
     getRootFolder() {
@@ -403,6 +623,33 @@ function createGasMocks(options = {}) {
     }
   };
 
+  const CacheService = {
+    getScriptCache() {
+      return scriptCache;
+    },
+    getUserCache() {
+      return userCache;
+    },
+    getDocumentCache() {
+      return documentCache;
+    }
+  };
+
+  const ScriptApp = {
+    getScriptId() {
+      return scriptApp.getScriptId();
+    },
+    newTrigger(functionName) {
+      return scriptApp.newTrigger(functionName);
+    },
+    getProjectTriggers() {
+      return scriptApp.getProjectTriggers();
+    },
+    deleteTrigger(trigger) {
+      return scriptApp.deleteTrigger(trigger);
+    }
+  };
+
   const Utilities = {
     /**
      * Mock implementation of Utilities.sleep.
@@ -437,6 +684,8 @@ function createGasMocks(options = {}) {
     PropertiesService,
     ScriptProperties,
     LockService,
+    CacheService,
+    ScriptApp,
     Utilities,
     Logger,
     MimeType

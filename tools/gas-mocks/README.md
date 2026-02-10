@@ -2,7 +2,7 @@
 
 This directory provides a partial local mock surface for the Google Apps Script APIs used by JsonDbApp tests.
 
-The mocks cover the core subset of APIs needed by most JsonDbApp tests. They provide basic functionality for `DriveApp`, `PropertiesService`, `LockService`, `Utilities`, `Logger`, and `MimeType` constants.
+The mocks cover the core subset of APIs needed by most JsonDbApp tests. They provide basic functionality for `DriveApp`, `PropertiesService`, `LockService`, `CacheService`, `ScriptApp`, `Utilities`, `Logger`, and `MimeType` constants.
 
 **Note:** The mock implementations have some limitations:
 
@@ -26,6 +26,8 @@ global.DriveApp = mocks.DriveApp;
 global.PropertiesService = mocks.PropertiesService;
 global.ScriptProperties = mocks.ScriptProperties;
 global.LockService = mocks.LockService;
+global.CacheService = mocks.CacheService;
+global.ScriptApp = mocks.ScriptApp;
 global.Utilities = mocks.Utilities;
 global.Logger = mocks.Logger;
 global.MimeType = mocks.MimeType;

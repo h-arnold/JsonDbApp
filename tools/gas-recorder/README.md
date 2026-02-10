@@ -16,6 +16,8 @@ The recording includes:
 - `propertiesService`: Script Properties set/get/delete behavior.
 - `driveApp`: Folder/file creation, listing, `getFilesByType`, and trash operations.
 - `lockService`: Script lock acquisition and release timings.
+- `cacheService`: `CacheService.getScriptCache()` calls covering `get`, `put`, `putAll`, `getAll`, `remove`, `removeAll`.
+- `scriptApp`: `ScriptApp` trigger lifecycle (`newTrigger`, `timeBased().after`, `everyMinutes`, `getProjectTriggers`, `deleteTrigger`) and trigger metadata.
 - `utilities`: `Utilities.sleep` timing deltas.
 - `logger`: Logger invocation confirmation.
 - `mimeType`: MIME type constant values.
