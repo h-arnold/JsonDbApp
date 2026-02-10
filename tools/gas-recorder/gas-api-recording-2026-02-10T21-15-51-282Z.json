@@ -1,0 +1,114 @@
+{
+  "meta": {
+    "generatedAt": "2026-02-10T21:15:51.282Z",
+    "timezone": "Europe/London",
+    "scriptId": "1Dj1XPdfJUWjM2PnfXmuPXbsSSwvQwFWqxtswsJRMA2z3falfSFQ3xJgN"
+  },
+  "propertiesService": {
+    "testKey": "GASDB_MOCK_RECORD_PROPERTIES_1770758151299",
+    "initial": null,
+    "afterSet": "value-1",
+    "afterUpdate": "value-2",
+    "afterDelete": null
+  },
+  "driveApp": {
+    "rootFolder": {
+      "serialisedGetRootFolder": "{}",
+      "seralisedGetFolderId": "\"0AMJHd1Qv4rBJUk9PVA\"",
+      "serialisedGetFolderName": "\"My Drive\""
+    },
+    "createdFolder": {
+      "id": "1GkKmxDgqTM7sj1PrNEfNGI2RiWtSJ9y6",
+      "name": "GASDB_Mock_Record_1770758151575"
+    },
+    "createdFile": {
+      "id": "189HLevgy4eqoCiad4-jI7yXN4MkZ9O3B",
+      "name": "mock-data.json",
+      "mimeType": "application/json"
+    },
+    "fullySerialisedFileProps": {
+      "serilaisedFileObj": "{}",
+      "serialisedFileName": "\"mock-data.json\"",
+      "serialisedFileId": "\"189HLevgy4eqoCiad4-jI7yXN4MkZ9O3B\"",
+      "serialisedFileMimeType": "\"application/json\""
+    },
+    "getFileById": {
+      "id": "189HLevgy4eqoCiad4-jI7yXN4MkZ9O3B",
+      "name": "mock-data.json"
+    },
+    "fileBlob": {
+      "content": "{\n  \"ok\": true,\n  \"createdAt\": \"2026-02-10T21:15:52.117Z\"\n}",
+      "contentType": "application/json"
+    },
+    "fileMetadata": {
+      "size": 59,
+      "lastUpdated": "2026-02-10T21:15:52.600Z",
+      "dateCreated": "2026-02-10T21:15:52.600Z",
+      "isTrashed": false
+    },
+    "setContent": {
+      "original": "{\n  \"ok\": true,\n  \"createdAt\": \"2026-02-10T21:15:52.117Z\"\n}",
+      "updated": "{\n  \"ok\": true,\n  \"updatedAt\": \"2026-02-10T21:15:54.215Z\"\n}"
+    },
+    "setTrashed": {
+      "isTrashedAfterSet": true
+    },
+    "listFiles": [
+      {
+        "id": "189HLevgy4eqoCiad4-jI7yXN4MkZ9O3B",
+        "name": "mock-data.json",
+        "mimeType": "application/json"
+      }
+    ],
+    "listTextFiles": []
+  },
+  "lockService": {
+    "waitedAt": "2026-02-10T21:15:57.189Z",
+    "acquiredAt": "2026-02-10T21:15:57.254Z",
+    "releasedAt": "2026-02-10T21:15:57.304Z"
+  },
+  "cacheService": {
+    "cacheType": "script",
+    "initial": null,
+    "afterPut": "value-1",
+    "afterPutAll": {
+      "GASDB_MOCK_CACHE_1770758157306_ONE": "value-1",
+      "GASDB_MOCK_CACHE_1770758157306_TWO": "value-2",
+      "GASDB_MOCK_CACHE_1770758157306_THREE": "value-3"
+    },
+    "afterRemove": {
+      "GASDB_MOCK_CACHE_1770758157306_THREE": "value-3"
+    },
+    "afterRemoveAll": {}
+  },
+  "scriptApp": {
+    "scriptId": "1Dj1XPdfJUWjM2PnfXmuPXbsSSwvQwFWqxtswsJRMA2z3falfSFQ3xJgN",
+    "beforeCount": 6,
+    "createdAfterTrigger": {
+      "uniqueId": "2044973346411511808",
+      "handlerFunction": "flushPendingWritesHandler",
+      "triggerSource": "CLOCK",
+      "eventType": "CLOCK"
+    },
+    "createdEveryMinutesTrigger": {
+      "uniqueId": "680830328054480896",
+      "handlerFunction": "flushPendingWritesHandler",
+      "triggerSource": "CLOCK",
+      "eventType": "CLOCK"
+    },
+    "duringCount": 8,
+    "afterDeleteCount": 6
+  },
+  "utilities": {
+    "sleepRequestedMs": 10,
+    "before": 1770758161084,
+    "after": 1770758161095,
+    "delta": 11
+  },
+  "logger": {
+    "logged": true
+  },
+  "mimeType": {
+    "plainText": "text/plain"
+  }
+}

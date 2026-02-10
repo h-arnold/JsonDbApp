@@ -10,6 +10,7 @@ The mocks cover the core subset of APIs needed by most JsonDbApp tests. They pro
 - The mocks are suitable for single-threaded sequential test scenarios but won't simulate true concurrent lock contention.
 
 DriveApp provides a singleton root folder via `getRootFolder()`, and `Folder.getId()` returns the mock folder identifier so tests can resolve it via `DriveApp.getFolderById()`.
+For `ScriptApp.deleteTrigger`, mocks mirror observed runtime behaviour: pass a trigger object from `ScriptApp.getProjectTriggers()` rather than the direct result of `.create()`.
 
 ## Files
 

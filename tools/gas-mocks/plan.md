@@ -92,17 +92,17 @@ This plan summarizes the Google Apps Script reference signatures for the APIs ex
 - CacheService: https://developers.google.com/apps-script/reference/cache/cache-service
 - Cache: https://developers.google.com/apps-script/reference/cache/cache
 
-| Method             | Signature                                                                      | Mock notes                                           |
-| ------------------ | ------------------------------------------------------------------------------ | ---------------------------------------------------- |
-| `getScriptCache`   | `CacheService.getScriptCache(): Cache`                                         | Singleton cache shared across script.                |
-| `getUserCache`     | `CacheService.getUserCache(): Cache`                                           | Separate cache instance per simulated user context.  |
-| `getDocumentCache` | `CacheService.getDocumentCache(): Cache`                                       | Separate cache instance for document scope.          |
-| `get`              | `Cache.get(key: String): String`                                               | Return string value or `null` if missing/expired.    |
-| `getAll`           | `Cache.getAll(keys: String[]): Object`                                         | Return object with found keys only.                  |
-| `put`              | `Cache.put(key: String, value: String, expirationInSeconds?: Integer): void`   | Enforce key/value size and TTL limits.               |
-| `putAll`           | `Cache.putAll(values: Object, expirationInSeconds?: Integer): void`            | Batch insert with same expiration for all entries.   |
-| `remove`           | `Cache.remove(key: String): void`                                              | Remove a single key if present.                      |
-| `removeAll`        | `Cache.removeAll(keys: String[]): void`                                        | Remove batch of keys.                                |
+| Method             | Signature                                                                    | Mock notes                                          |
+| ------------------ | ---------------------------------------------------------------------------- | --------------------------------------------------- |
+| `getScriptCache`   | `CacheService.getScriptCache(): Cache`                                       | Singleton cache shared across script.               |
+| `getUserCache`     | `CacheService.getUserCache(): Cache`                                         | Separate cache instance per simulated user context. |
+| `getDocumentCache` | `CacheService.getDocumentCache(): Cache`                                     | Separate cache instance for document scope.         |
+| `get`              | `Cache.get(key: String): String`                                             | Return string value or `null` if missing/expired.   |
+| `getAll`           | `Cache.getAll(keys: String[]): Object`                                       | Return object with found keys only.                 |
+| `put`              | `Cache.put(key: String, value: String, expirationInSeconds?: Integer): void` | Enforce key/value size and TTL limits.              |
+| `putAll`           | `Cache.putAll(values: Object, expirationInSeconds?: Integer): void`          | Batch insert with same expiration for all entries.  |
+| `remove`           | `Cache.remove(key: String): void`                                            | Remove a single key if present.                     |
+| `removeAll`        | `Cache.removeAll(keys: String[]): void`                                      | Remove batch of keys.                               |
 
 ## ScriptApp + Triggers
 
@@ -113,20 +113,20 @@ This plan summarizes the Google Apps Script reference signatures for the APIs ex
 - TriggerBuilder: https://developers.google.com/apps-script/reference/script/trigger-builder
 - ClockTriggerBuilder: https://developers.google.com/apps-script/reference/script/clock-trigger-builder
 
-| Method                | Signature                                                           | Mock notes                                           |
-| --------------------- | ------------------------------------------------------------------- | ---------------------------------------------------- |
-| `getScriptId`         | `ScriptApp.getScriptId(): String`                                   | Return configured script id.                         |
-| `newTrigger`          | `ScriptApp.newTrigger(functionName: String): TriggerBuilder`        | Build installable trigger for named handler.         |
-| `getProjectTriggers`  | `ScriptApp.getProjectTriggers(): Trigger[]`                         | Return in-memory trigger list.                       |
-| `deleteTrigger`       | `ScriptApp.deleteTrigger(trigger: Trigger): void`                   | Remove trigger by unique id.                         |
-| `timeBased`           | `TriggerBuilder.timeBased(): ClockTriggerBuilder`                   | Only clock triggers mocked.                          |
-| `after`               | `ClockTriggerBuilder.after(milliseconds: Integer): ClockTriggerBuilder` | Store one-off schedule metadata.                  |
-| `everyMinutes`        | `ClockTriggerBuilder.everyMinutes(n: Integer): ClockTriggerBuilder` | Accept GAS-supported values `1,5,10,15,30`.          |
-| `create`              | `ClockTriggerBuilder.create(): Trigger`                             | Materialise trigger with handler + schedule metadata |
-| `getUniqueId`         | `Trigger.getUniqueId(): String`                                     | Stable generated id.                                 |
-| `getHandlerFunction`  | `Trigger.getHandlerFunction(): String`                              | Return registered handler name.                      |
-| `getEventType`        | `Trigger.getEventType(): EventType`                                 | Returns `'CLOCK'` for clock triggers.                |
-| `getTriggerSource`    | `Trigger.getTriggerSource(): TriggerSource`                         | Returns `'CLOCK'` for this mock surface.             |
+| Method               | Signature                                                               | Mock notes                                           |
+| -------------------- | ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| `getScriptId`        | `ScriptApp.getScriptId(): String`                                       | Return configured script id.                         |
+| `newTrigger`         | `ScriptApp.newTrigger(functionName: String): TriggerBuilder`            | Build installable trigger for named handler.         |
+| `getProjectTriggers` | `ScriptApp.getProjectTriggers(): Trigger[]`                             | Return in-memory trigger list.                       |
+| `deleteTrigger`      | `ScriptApp.deleteTrigger(trigger: Trigger): void`                       | Remove trigger by identity from `getProjectTriggers` |
+| `timeBased`          | `TriggerBuilder.timeBased(): ClockTriggerBuilder`                       | Only clock triggers mocked.                          |
+| `after`              | `ClockTriggerBuilder.after(milliseconds: Integer): ClockTriggerBuilder` | Store one-off schedule metadata.                     |
+| `everyMinutes`       | `ClockTriggerBuilder.everyMinutes(n: Integer): ClockTriggerBuilder`     | Accept GAS-supported values `1,5,10,15,30`.          |
+| `create`             | `ClockTriggerBuilder.create(): Trigger`                                 | Materialise trigger with handler + schedule metadata |
+| `getUniqueId`        | `Trigger.getUniqueId(): String`                                         | Stable generated id.                                 |
+| `getHandlerFunction` | `Trigger.getHandlerFunction(): String`                                  | Return registered handler name.                      |
+| `getEventType`       | `Trigger.getEventType(): EventType`                                     | Returns `'CLOCK'` for clock triggers.                |
+| `getTriggerSource`   | `Trigger.getTriggerSource(): TriggerSource`                             | Returns `'CLOCK'` for this mock surface.             |
 
 ## Utilities
 
@@ -163,3 +163,8 @@ This plan summarizes the Google Apps Script reference signatures for the APIs ex
 - **Lock**: `{ waitLock(timeout: number): void, releaseLock(): void }`
 - **Cache**: `{ get(key), getAll(keys), put(key, value, ttl), putAll(values, ttl), remove(key), removeAll(keys) }`
 - **Trigger**: `{ uniqueId: string, handlerFunction: string, eventType: string, schedule: object }`
+
+Observed behaviour note from recorder sessions: deleting with the direct object returned by
+`ClockTriggerBuilder.create()` may fail in some runtimes; deleting with the object from
+`ScriptApp.getProjectTriggers()` (matched by `getUniqueId()`) is reliable. Mocks follow that
+observed contract.

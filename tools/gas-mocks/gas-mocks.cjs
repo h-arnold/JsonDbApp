@@ -10,11 +10,19 @@ const MAX_CACHE_KEY_LENGTH = 250;
 const MAX_CACHE_VALUE_BYTES = 100 * 1024;
 
 let nextId = 1;
+let nextTriggerNumericId = BigInt(Date.now()) * 1000000n;
 
 function generateId() {
   const id = `mock-${Date.now()}-${nextId}`;
   nextId += 1;
   return id;
+}
+
+function generateTriggerId() {
+  // GAS trigger IDs are numeric-looking strings; keep this shape for fidelity.
+  const increment = BigInt(Math.floor(Math.random() * 1000) + 1);
+  nextTriggerNumericId += increment;
+  return nextTriggerNumericId.toString();
 }
 
 function ensureDir(dirPath) {
@@ -483,14 +491,23 @@ class MockTriggerBuilder {
   }
 
   _createTrigger(eventType, schedule) {
-    const trigger = new MockTrigger({
-      uniqueId: generateId(),
+    const projectTrigger = new MockTrigger({
+      uniqueId: generateTriggerId(),
       handlerFunction: this._handlerFunction,
       eventType,
       schedule
     });
-    this._scriptApp._triggers.set(trigger.getUniqueId(), trigger);
-    return trigger;
+    this._scriptApp._triggers.set(projectTrigger.getUniqueId(), projectTrigger);
+
+    // In live GAS, deleting a trigger created in the same call path can fail unless
+    // the trigger object comes from getProjectTriggers(). Return a detached object
+    // so tests can exercise that behaviour.
+    return new MockTrigger({
+      uniqueId: projectTrigger.getUniqueId(),
+      handlerFunction: projectTrigger.getHandlerFunction(),
+      eventType: projectTrigger.getEventType(),
+      schedule
+    });
   }
 }
 
@@ -518,6 +535,13 @@ class MockScriptApp {
   deleteTrigger(trigger) {
     if (!trigger || typeof trigger.getUniqueId !== 'function') {
       throw new Error('trigger must be a Trigger object');
+    }
+
+    const triggers = Array.from(this._triggers.values());
+    if (!triggers.includes(trigger)) {
+      throw new Error(
+        'Unexpected error while getting the method or property deleteTrigger on object ScriptApp.'
+      );
     }
     this._triggers.delete(trigger.getUniqueId());
   }

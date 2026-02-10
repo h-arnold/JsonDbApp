@@ -255,7 +255,10 @@ function recordScriptApp() {
   var beforeTriggers = ScriptApp.getProjectTriggers();
   var beforeCount = beforeTriggers.length;
 
-  var afterTrigger = ScriptApp.newTrigger('flushPendingWritesHandler').timeBased().after(60000).create();
+  var afterTrigger = ScriptApp.newTrigger('flushPendingWritesHandler')
+    .timeBased()
+    .after(60000)
+    .create();
   var everyMinutesTrigger = ScriptApp.newTrigger('flushPendingWritesHandler')
     .timeBased()
     .everyMinutes(5)
@@ -263,8 +266,8 @@ function recordScriptApp() {
 
   var duringTriggers = ScriptApp.getProjectTriggers();
 
-  ScriptApp.deleteTrigger(afterTrigger);
-  ScriptApp.deleteTrigger(everyMinutesTrigger);
+  deleteTriggerByUniqueId_(afterTrigger.getUniqueId());
+  deleteTriggerByUniqueId_(everyMinutesTrigger.getUniqueId());
 
   var afterDeleteCount = ScriptApp.getProjectTriggers().length;
 
@@ -276,6 +279,18 @@ function recordScriptApp() {
     duringCount: duringTriggers.length,
     afterDeleteCount: afterDeleteCount
   };
+}
+
+function deleteTriggerByUniqueId_(uniqueId) {
+  var triggers = ScriptApp.getProjectTriggers();
+  for (var index = 0; index < triggers.length; index += 1) {
+    var trigger = triggers[index];
+    if (trigger.getUniqueId() === uniqueId) {
+      ScriptApp.deleteTrigger(trigger);
+      return true;
+    }
+  }
+  return false;
 }
 
 function recordLogger() {
