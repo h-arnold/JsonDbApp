@@ -1,10 +1,9 @@
-/* global Utilities */
-
 import { afterEach, describe, expect, it } from 'vitest';
 import {
   cleanupMasterIndexTests,
   createTestMasterIndex
 } from '../../helpers/master-index-test-helpers.js';
+import { createMockClock } from '../../helpers/mock-time-helpers.js';
 
 /**
  * Add a simple collection entry for lock lifecycle tests.
@@ -28,33 +27,43 @@ afterEach(() => {
 
 describe('MasterIndex lock lease renewal', () => {
   it('should keep a longer custom lease active beyond the old single timeout window', () => {
+    const clock = createMockClock(1000);
     const { masterIndex } = createTestMasterIndex({ lockTimeout: 1200 });
-    addLockTestCollection(masterIndex, 'extendedLeaseTest');
+    try {
+      addLockTestCollection(masterIndex, 'extendedLeaseTest');
 
-    const operationId = 'extended-lease-operation';
-    expect(masterIndex.acquireCollectionLock('extendedLeaseTest', operationId)).toBe(true);
+      const operationId = 'extended-lease-operation';
+      expect(masterIndex.acquireCollectionLock('extendedLeaseTest', operationId)).toBe(true);
 
-    Utilities.sleep(700);
+      clock.advanceTime(700);
 
-    expect(masterIndex.isCollectionLocked('extendedLeaseTest')).toBe(true);
-    expect(masterIndex.releaseCollectionLock('extendedLeaseTest', operationId)).toBe(true);
+      expect(masterIndex.isCollectionLocked('extendedLeaseTest')).toBe(true);
+      expect(masterIndex.releaseCollectionLock('extendedLeaseTest', operationId)).toBe(true);
+    } finally {
+      clock.restore();
+    }
   });
 
   it('should renew an active collection lock before it expires', () => {
+    const clock = createMockClock(1000);
     const { masterIndex } = createTestMasterIndex({ lockTimeout: 700 });
-    addLockTestCollection(masterIndex, 'renewedLeaseTest');
+    try {
+      addLockTestCollection(masterIndex, 'renewedLeaseTest');
 
-    const operationId = 'renewed-lease-operation';
-    expect(masterIndex.acquireCollectionLock('renewedLeaseTest', operationId)).toBe(true);
+      const operationId = 'renewed-lease-operation';
+      expect(masterIndex.acquireCollectionLock('renewedLeaseTest', operationId)).toBe(true);
 
-    Utilities.sleep(550);
+      clock.advanceTime(550);
 
-    expect(masterIndex.renewCollectionLock('renewedLeaseTest', operationId, 700)).toBe(true);
+      expect(masterIndex.renewCollectionLock('renewedLeaseTest', operationId, 700)).toBe(true);
 
-    Utilities.sleep(550);
+      clock.advanceTime(550);
 
-    expect(masterIndex.isCollectionLocked('renewedLeaseTest')).toBe(true);
-    expect(masterIndex.releaseCollectionLock('renewedLeaseTest', operationId)).toBe(true);
+      expect(masterIndex.isCollectionLocked('renewedLeaseTest')).toBe(true);
+      expect(masterIndex.releaseCollectionLock('renewedLeaseTest', operationId)).toBe(true);
+    } finally {
+      clock.restore();
+    }
   });
 
   it('should refuse to renew a lock owned by another operation', () => {
@@ -69,14 +78,19 @@ describe('MasterIndex lock lease renewal', () => {
   });
 
   it('should refuse to renew a lock after it has already expired', () => {
+    const clock = createMockClock(1000);
     const { masterIndex } = createTestMasterIndex({ lockTimeout: 700 });
-    addLockTestCollection(masterIndex, 'renewedLeaseTest');
+    try {
+      addLockTestCollection(masterIndex, 'renewedLeaseTest');
 
-    const operationId = 'expired-renewal-operation';
-    expect(masterIndex.acquireCollectionLock('renewedLeaseTest', operationId)).toBe(true);
+      const operationId = 'expired-renewal-operation';
+      expect(masterIndex.acquireCollectionLock('renewedLeaseTest', operationId)).toBe(true);
 
-    Utilities.sleep(750);
+      clock.advanceTime(750);
 
-    expect(masterIndex.renewCollectionLock('renewedLeaseTest', operationId, 700)).toBe(false);
+      expect(masterIndex.renewCollectionLock('renewedLeaseTest', operationId, 700)).toBe(false);
+    } finally {
+      clock.restore();
+    }
   });
 });

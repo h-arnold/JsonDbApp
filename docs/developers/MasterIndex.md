@@ -21,9 +21,10 @@
       - [`removeCollection(name)`](#removecollectionname)
       - [`getCollections()`](#getcollections)
     - [Locking Methods](#locking-methods)
-      - [`acquireLock(collectionName, operationId)`](#acquirelockcollectionname-operationid)
-      - [`releaseLock(collectionName, operationId)`](#releaselockcollectionname-operationid)
-      - [`isLocked(collectionName)`](#islockedcollectionname)
+      - [`acquireCollectionLock(collectionName, operationId, timeout?)`](#acquirecollectionlockcollectionname-operationid-timeout)
+      - [`renewCollectionLock(collectionName, operationId, timeout?)`](#renewcollectionlockcollectionname-operationid-timeout)
+      - [`releaseCollectionLock(collectionName, operationId)`](#releasecollectionlockcollectionname-operationid)
+      - [`isCollectionLocked(collectionName)`](#iscollectionlockedcollectionname)
       - [`cleanupExpiredLocks()`](#cleanupexpiredlocks)
     - [Conflict Management](#conflict-management)
       - [`hasConflict(collectionName, expectedToken)`](#hasconflictcollectionname-expectedtoken)
@@ -87,7 +88,6 @@ Centralized helper for setting and persisting lock status with guaranteed orderi
 - **Behaviour:**
   1. Sets lock status on collection metadata
   2. Persists to MasterIndex via `_updateCollectionMetadataInternal()`
-- **Usage:** Used by `acquireCollectionLock()`, `releaseCollectionLock()`, `cleanupExpiredLocks()`
 - **Usage:** Used by `acquireCollectionLock()`, `renewCollectionLock()`, `releaseCollectionLock()`, `cleanupExpiredLocks()`
 - **Benefits:** Single source of truth for lock persistence, guaranteed update ordering
 
@@ -115,25 +115,28 @@ Centralized helper for applying metadata field updates during conflict resolutio
 
 ### Collection Access Protocol
 
-Database class collection access follows this protocol when delegating to MasterIndex:
+Database class updates to an existing collection follow this protocol when delegating to MasterIndex:
 
 ```javascript
-// 1. Database.getCollection() or Database.createCollection() delegates to MasterIndex
+// 1. Database retrieves the existing collection metadata from MasterIndex
 // 2. Acquire virtual lock for thread safety
-const acquired = masterIndex.acquireLock('users', operationId);
+const acquired = masterIndex.acquireCollectionLock('users', operationId);
+if (!acquired) {
+  throw new Error('Collection is already locked');
+}
 
 // 3. Check for conflicts (if updating existing collection)
 const hasConflict = masterIndex.hasConflict('users', expectedToken);
 
 // 4. Perform operations (Database coordinates with Drive operations)
-// 5. Update metadata with new modification token
-masterIndex.updateCollectionMetadata('users', updates);
-
-// 6. Renew the lease if the write is close to expiry
+// 5. Renew the lease if the write is close to expiry
 masterIndex.renewCollectionLock('users', operationId, 45000);
 
+// 6. Apply the metadata updates produced by the write
+masterIndex.updateCollectionMetadata('users', updates);
+
 // 7. Release lock
-masterIndex.releaseLock('users', operationId);
+masterIndex.releaseCollectionLock('users', operationId);
 ```
 
 ### Virtual Locking
@@ -143,7 +146,7 @@ Prevents concurrent modifications across script instances:
 - Locks expire automatically (default: 30 seconds)
 - Operation ID required for lock acquisition/release
 - Active locks may be renewed by the owning operation before final metadata persistence
-- Expired locks are cleaned up automatically
+- Expired locks may be explicitly removed by calling `cleanupExpiredLocks()`
 - All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata
 
 #### Lock-held snapshot refresh
@@ -169,17 +172,22 @@ This closes the stale-instance window where one execution could acquire the Scri
       name: String,
       fileId: String | null,
       created: String,
-      lastModified: String,
+      lastUpdated: String,
       documentCount: Number,
       modificationToken: String,
-      lockStatus: null | { lockedBy: String, lockedAt: String, expiresAt: String }
+      lockStatus: null | {
+        isLocked: Boolean,
+        lockedBy: String | null,
+        lockedAt: Number | null,
+        lockTimeout: Number | null
+      }
     }
-  },
-  locks: {
-    [collectionName]: { lockedBy: String, lockedAt: String, expiresAt: String }
   }
 }
 ```
+
+`lockStatus` may be `null`, an active lock object, or a persisted unlocked object with
+`isLocked: false` and null-valued lock fields immediately after an explicit release.
 
 ## Constructor
 
@@ -226,7 +234,7 @@ Coordinates collection-level virtual locks.
 - `acquireCollectionLock(...)`: claims a free or expired lock for an operation
 - `renewCollectionLock(...)`: refreshes an active lock owned by the same operation before it expires
 - `releaseCollectionLock(...)`: clears the lock for the owning operation
-- **Database Integration:** Called by Database class methods to check for existing collections before creation or access
+- **Database Integration:** Called by Database class methods when coordinating writes to collections that are already registered in the master index
 
 #### `updateCollectionMetadata(name, updates)`
 
@@ -253,23 +261,37 @@ Retrieves all collections in the master index.
 
 ### Locking Methods
 
-#### `acquireLock(collectionName, operationId)`
+#### `acquireCollectionLock(collectionName, operationId, timeout)`
 
 Acquires virtual lock for collection. Used by Database class before performing collection operations.
 
+- **Parameters:** `timeout` is optional and defaults to the configured lock lease duration
 - **Returns:** `true` if successful, `false` if already locked
-- **Database Integration:** Called by Database methods during collection creation, modification, and deletion
+- **Throws:** `COLLECTION_NOT_FOUND` if the collection is not yet registered in the master index
+- **Database Integration:** Called by Database methods during coordinated updates and deletion of already-registered collections
 - **Concurrency behaviour:** Evaluates lock ownership from a freshly reloaded snapshot while ScriptLock is held, preventing stale instances from stealing a newer lock
 
-#### `releaseLock(collectionName, operationId)`
+#### `renewCollectionLock(collectionName, operationId, timeout)`
+
+Renews an active virtual lock for a collection owned by the same operation.
+
+- **Parameters:** `timeout` is optional and defaults to the configured lock lease duration
+- **Returns:** `true` if the active lock was renewed, `false` if it was missing, expired, or owned by another operation
+- **Database Integration:** Used by `CollectionCoordinator` to extend a near-expiry lease before final metadata persistence
+- **Concurrency behaviour:** Reloads the latest lock state under ScriptLock before renewing, so stale instances cannot extend a newer lock they do not own
+
+#### `releaseCollectionLock(collectionName, operationId)`
 
 Releases virtual lock (must match operation ID).
 
+- **Returns:** `true` when the lock is released, when no lock is held, or when the collection no longer exists; `false` if another operation owns the active lock
 - **Concurrency behaviour:** Reloads the latest lock state under ScriptLock first, allowing a stale instance to release the current lock correctly when it still owns it
 
-#### `isLocked(collectionName)`
+#### `isCollectionLocked(collectionName)`
 
 Checks if collection is currently locked.
+
+- **Remarks:** Reads the current in-memory snapshot; call `load()` first when the caller needs the latest persisted lock state
 
 #### `cleanupExpiredLocks()`
 
@@ -323,12 +345,12 @@ masterIndex.updateCollectionMetadata('users', {
 ```javascript
 const operationId = 'op_' + Date.now();
 
-if (masterIndex.acquireLock('users', operationId)) {
+if (masterIndex.acquireCollectionLock('users', operationId)) {
   try {
     // Perform operations
     masterIndex.updateCollectionMetadata('users', updates);
   } finally {
-    masterIndex.releaseLock('users', operationId);
+    masterIndex.releaseCollectionLock('users', operationId);
   }
 }
 ```
@@ -385,16 +407,19 @@ The Database class maintains consistency between MasterIndex and Drive-based sto
 Database class uses MasterIndex locking for thread safety:
 
 ```javascript
-// Example from Database.createCollection()
-const operationId = 'create_' + Date.now();
-if (this._masterIndex.acquireLock(name, operationId)) {
+// Example from a coordinated update to an existing collection
+const operationId = 'update_' + Date.now();
+if (this._masterIndex.acquireCollectionLock(name, operationId)) {
   try {
-    // Perform Drive operations
-    const driveFileId = this._fileService.createFile(fileName, data, folderId);
-    // Update MasterIndex
-    this._masterIndex.addCollection(name, { fileId: driveFileId });
+    // Perform Drive operations for the existing collection
+    this._fileService.updateFile(fileId, updatedData);
+    // Update MasterIndex metadata for the existing collection
+    this._masterIndex.updateCollectionMetadata(name, {
+      documentCount: updatedDocumentCount,
+      modificationToken: nextModificationToken
+    });
   } finally {
-    this._masterIndex.releaseLock(name, operationId);
+    this._masterIndex.releaseCollectionLock(name, operationId);
   }
 }
 ```

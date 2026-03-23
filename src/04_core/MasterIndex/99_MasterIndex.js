@@ -7,8 +7,8 @@
  */
 /* exported MasterIndex */
 /* global MasterIndexMetadataNormaliser, MasterIndexLockManager, MasterIndexConflictResolver,
-          CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
-          ErrorHandler */
+           CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
+           ErrorHandler */
 
 /**
  * Coordinates collection metadata across script executions using a ScriptProperties-backed index.
@@ -367,22 +367,41 @@ class MasterIndex {
   }
 
   /**
-   * Prepare configuration with default fallbacks.
+   * Prepare configuration using DatabaseConfig defaults.
    * @param {Object} config - Raw configuration input
    * @returns {Object} Normalised configuration object
    * @private
    */
   _initialiseConfig(config) {
-    const defaultLockTimeout =
-      typeof DatabaseConfig !== 'undefined' &&
-      typeof DatabaseConfig.getDefaultCollectionLockLeaseMs === 'function'
-        ? DatabaseConfig.getDefaultCollectionLockLeaseMs()
-        : DatabaseConfig.getDefaultLockTimeout();
+    if (config.masterIndexKey == null) {
+      this._assertDatabaseConfigDefault('getDefaultMasterIndexKey');
+    }
+    if (config.lockTimeout == null) {
+      this._assertDatabaseConfigDefault('getDefaultCollectionLockLeaseMs');
+    }
+
     return {
-      masterIndexKey: config.masterIndexKey || DatabaseConfig.getDefaultMasterIndexKey(),
-      lockTimeout: config.lockTimeout || defaultLockTimeout,
-      version: config.version || 1
+      masterIndexKey: config.masterIndexKey ?? DatabaseConfig.getDefaultMasterIndexKey(),
+      lockTimeout: config.lockTimeout ?? DatabaseConfig.getDefaultCollectionLockLeaseMs(),
+      version: config.version ?? 1
     };
+  }
+
+  /**
+   * Assert that DatabaseConfig exposes a required default provider.
+   * @param {string} methodName - DatabaseConfig static method required by MasterIndex.
+   * @returns {void}
+   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When DatabaseConfig or the required method is unavailable.
+   * @private
+   */
+  _assertDatabaseConfigDefault(methodName) {
+    if (typeof DatabaseConfig === 'undefined' || typeof DatabaseConfig[methodName] !== 'function') {
+      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
+        `DatabaseConfig.${methodName}()`,
+        DatabaseConfig,
+        `MasterIndex requires DatabaseConfig.${methodName}() for defaults.`
+      );
+    }
   }
 
   /**
