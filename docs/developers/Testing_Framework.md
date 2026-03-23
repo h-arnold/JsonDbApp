@@ -493,7 +493,11 @@ The `expectCollectionPersisted()` helper automatically registers the file for cl
 - `describeValidationOperatorSuite(description, callback)`: Creates a complete validation test suite with automatic setup/cleanup. Provides `getTestEnv()` function to access the test environment (database, collections, mock data)
 - `setupValidationTestEnvironment()`: Sets up a complete validation test environment with pre-populated collections and mock data
 
-When writing MasterIndex suites, prefer the public API so the internal helpers (MasterIndexMetadataNormaliser and MasterIndexHistoryManager) are exercised end to end. This ensures metadata cloning, timestamp coercion, and modification history capping mirror production behaviour. For example:
+When writing MasterIndex suites, prefer the public API so the internal helpers are exercised end to end. This ensures metadata cloning, timestamp coercion, lock refresh behaviour, and persistence semantics mirror production behaviour.
+
+For cross-instance coordination regressions, construct separate `MasterIndex` instances that share the same `masterIndexKey`. This is the preferred way to prove that ScriptLock-protected mutations reload the latest ScriptProperties snapshot instead of acting on stale in-memory state.
+
+For example:
 
 ```javascript
 const { masterIndex } = createTestMasterIndex({ modificationHistoryLimit: 5 });
