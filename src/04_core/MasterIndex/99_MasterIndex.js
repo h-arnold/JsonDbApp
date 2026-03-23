@@ -10,9 +10,6 @@
            CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
            ErrorHandler */
 
-const FALLBACK_MASTER_INDEX_LOCK_TIMEOUT_MS = 30000;
-const FALLBACK_MASTER_INDEX_KEY = 'GASDB_MASTER_INDEX';
-
 /**
  * Coordinates collection metadata across script executions using a ScriptProperties-backed index.
  */
@@ -370,54 +367,44 @@ class MasterIndex {
   }
 
   /**
-   * Prepare configuration with default fallbacks.
+   * Prepare configuration using DatabaseConfig defaults.
    * @param {Object} config - Raw configuration input
    * @returns {Object} Normalised configuration object
    * @private
    */
   _initialiseConfig(config) {
+    if (config.masterIndexKey === undefined) {
+      this._assertDatabaseConfigDefault('getDefaultMasterIndexKey');
+    }
+    if (config.lockTimeout === undefined) {
+      this._assertDatabaseConfigDefault('getDefaultCollectionLockLeaseMs');
+    }
+
     return {
-      masterIndexKey: config.masterIndexKey || this._getDefaultMasterIndexKey(),
-      lockTimeout: config.lockTimeout || this._getDefaultLockTimeout(),
-      version: config.version || 1
+      masterIndexKey: config.masterIndexKey ?? DatabaseConfig.getDefaultMasterIndexKey(),
+      lockTimeout: config.lockTimeout ?? DatabaseConfig.getDefaultCollectionLockLeaseMs(),
+      version: config.version ?? 1
     };
   }
 
   /**
-   * Resolve the default master index lock timeout safely.
-   * @returns {number} Default lock timeout in milliseconds.
+   * Assert that DatabaseConfig exposes a required default provider.
+   * @param {string} methodName - DatabaseConfig static method required by MasterIndex.
+   * @returns {void}
+   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When DatabaseConfig or the required method is unavailable.
    * @private
    */
-  _getDefaultLockTimeout() {
-    if (typeof DatabaseConfig === 'undefined') {
-      return FALLBACK_MASTER_INDEX_LOCK_TIMEOUT_MS;
-    }
-
-    if (typeof DatabaseConfig.getDefaultCollectionLockLeaseMs === 'function') {
-      return DatabaseConfig.getDefaultCollectionLockLeaseMs();
-    }
-
-    if (typeof DatabaseConfig.getDefaultLockTimeout === 'function') {
-      return DatabaseConfig.getDefaultLockTimeout();
-    }
-
-    return FALLBACK_MASTER_INDEX_LOCK_TIMEOUT_MS;
-  }
-
-  /**
-   * Resolve the default master index storage key safely.
-   * @returns {string} Default master index storage key.
-   * @private
-   */
-  _getDefaultMasterIndexKey() {
+  _assertDatabaseConfigDefault(methodName) {
     if (
-      typeof DatabaseConfig !== 'undefined' &&
-      typeof DatabaseConfig.getDefaultMasterIndexKey === 'function'
+      typeof DatabaseConfig === 'undefined' ||
+      typeof DatabaseConfig[methodName] !== 'function'
     ) {
-      return DatabaseConfig.getDefaultMasterIndexKey();
+      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
+        `DatabaseConfig.${methodName}()`,
+        DatabaseConfig,
+        `MasterIndex requires DatabaseConfig.${methodName}() for defaults.`
+      );
     }
-
-    return FALLBACK_MASTER_INDEX_KEY;
   }
 
   /**
