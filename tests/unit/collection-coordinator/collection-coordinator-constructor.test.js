@@ -54,13 +54,16 @@ describe('CollectionCoordinator Constructor', () => {
       const coordinator = createTestCoordinator(collection, env.masterIndex);
 
       expect(coordinator._config.lockTimeout).toBe(30000);
+      expect(coordinator._config.collectionLockLeaseMs).toBe(30000);
+      expect(coordinator._config.coordinationTimeoutMs).toBe(30000);
       expect(coordinator._config.retryAttempts).toBe(3);
       expect(coordinator._config.retryDelayMs).toBe(1000);
     });
 
     it('should use custom configuration values', () => {
       const customConfig = {
-        lockTimeout: 12345,
+        collectionLockLeaseMs: 12345,
+        coordinationTimeoutMs: 9000,
         retryAttempts: 7,
         retryDelayMs: 2222
       };
@@ -68,6 +71,8 @@ describe('CollectionCoordinator Constructor', () => {
       const coordinator = createTestCoordinator(collection, env.masterIndex, customConfig);
 
       expect(coordinator._config.lockTimeout).toBe(12345);
+      expect(coordinator._config.collectionLockLeaseMs).toBe(12345);
+      expect(coordinator._config.coordinationTimeoutMs).toBe(9000);
       expect(coordinator._config.retryAttempts).toBe(7);
       expect(coordinator._config.retryDelayMs).toBe(2222);
     });

@@ -141,7 +141,8 @@ describe('ObjectUtils class revival', () => {
     const originalConfig = new DatabaseConfig({
       rootFolderId: 'root123',
       autoCreateCollections: false,
-      lockTimeout: 10000,
+      collectionLockLeaseMs: 10000,
+      coordinationTimeoutMs: 9000,
       cacheEnabled: false,
       logLevel: 'DEBUG',
       masterIndexKey: 'TEST_KEY',
@@ -155,6 +156,8 @@ describe('ObjectUtils class revival', () => {
     expect(deserialised.rootFolderId).toBe(originalConfig.rootFolderId);
     expect(deserialised.autoCreateCollections).toBe(originalConfig.autoCreateCollections);
     expect(deserialised.lockTimeout).toBe(originalConfig.lockTimeout);
+    expect(deserialised.collectionLockLeaseMs).toBe(originalConfig.collectionLockLeaseMs);
+    expect(deserialised.coordinationTimeoutMs).toBe(originalConfig.coordinationTimeoutMs);
     expect(deserialised.cacheEnabled).toBe(originalConfig.cacheEnabled);
     expect(deserialised.logLevel).toBe(originalConfig.logLevel);
     expect(deserialised.masterIndexKey).toBe(originalConfig.masterIndexKey);

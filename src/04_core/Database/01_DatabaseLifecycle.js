@@ -43,7 +43,10 @@ class DatabaseLifecycle {
         throw configurationError;
       }
 
-      db._masterIndex = new MasterIndex({ masterIndexKey: db.config.masterIndexKey });
+      db._masterIndex = new MasterIndex({
+        masterIndexKey: db.config.masterIndexKey,
+        lockTimeout: db.config.collectionLockLeaseMs
+      });
 
       db._logger.info('Database created successfully', {
         masterIndexKey: db.config.masterIndexKey
@@ -155,7 +158,10 @@ class DatabaseLifecycle {
    */
   _initialiseMasterIndexInstance() {
     const db = this._database;
-    db._masterIndex = new MasterIndex({ masterIndexKey: db.config.masterIndexKey });
+    db._masterIndex = new MasterIndex({
+      masterIndexKey: db.config.masterIndexKey,
+      lockTimeout: db.config.collectionLockLeaseMs
+    });
     if (!db._masterIndex.isInitialised()) {
       const masterIndexError = new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
         'initialise',
@@ -238,7 +244,10 @@ class DatabaseLifecycle {
    */
   _initialiseMasterIndexForRecovery() {
     const db = this._database;
-    db._masterIndex = new MasterIndex({ masterIndexKey: db.config.masterIndexKey });
+    db._masterIndex = new MasterIndex({
+      masterIndexKey: db.config.masterIndexKey,
+      lockTimeout: db.config.collectionLockLeaseMs
+    });
   }
 
   /**

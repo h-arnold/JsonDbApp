@@ -10,6 +10,7 @@ import {
   createTestCollection,
   createTestCoordinator
 } from '../../helpers/collection-coordinator-test-helpers.js';
+import { createMockClock } from '../../helpers/mock-time-helpers.js';
 
 describe('CollectionCoordinator Acquire Operation Lock', () => {
   let env;
@@ -43,7 +44,8 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
       env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 30000);
 
       const coordinator = createCoordinator({
-        lockTimeout: 500,
+        collectionLockLeaseMs: 500,
+        coordinationTimeoutMs: 500,
         retryAttempts: 2,
         retryDelayMs: 50
       });
@@ -51,6 +53,31 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
       expect(() => {
         coordinator.acquireOperationLock('test-op-id-2');
       }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
+    });
+
+    it('should stop retrying before the requested lease window is exhausted', () => {
+      env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 1500);
+
+      const clock = createMockClock(1000);
+      const sleepSpy = clock.mockUtilitiesSleep();
+      try {
+        const coordinator = createCoordinator({
+          collectionLockLeaseMs: 600,
+          coordinationTimeoutMs: 600,
+          retryAttempts: 4,
+          retryDelayMs: 250,
+          lockRetryBackoffBase: 2
+        });
+
+        expect(() => {
+          coordinator.acquireOperationLock('test-op-id-3');
+        }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
+
+        expect(sleepSpy).toHaveBeenCalledTimes(1);
+        expect(sleepSpy).toHaveBeenCalledWith(250);
+      } finally {
+        clock.restore();
+      }
     });
   });
 });

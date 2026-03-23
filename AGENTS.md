@@ -85,6 +85,7 @@ methodName(param) {
 - **Tests**: Descriptive, Arrange-Act-Assert, independent, per-class folder, per-suite file, orchestrator for all tests.
 - **Serialisation**: Use `ObjectUtils.serialise()`/`deserialise()`. Classes needing serialisation: implement `toJSON()`, static `fromJSON()`, register in `ObjectUtils._classRegistry`.
 - **Validation**: Use `Validate` class; class-specific validation as private method.
+- **Fail Fast and Loud**: This is a prime directive. Do not add fallbacks or defaults unless they are explicitly requested by the user or task requirements. When a dependency is missing or state is invalid, surface the error immediately and clearly instead of recovering silently.
 - **TDD**: Always follow Red-Green-Refactor.
 - **Linting**: `no-magic-numbers` is an error for source code. Tests may use numeric literals for clarity because the rule is disabled for `tests/**/*.js`.
 
@@ -146,14 +147,14 @@ The following specialized agents are available (names are case-sensitive):
 
 **Test Code Changes:**
 
-- New tests → `Test Creation Agent` followed by `Test Code Review Agent`
-- Modified tests → `Test Code Review Agent`
+- New tests → `Test Creation Agent` followed by `Test Review Agent`
+- Modified tests → `Test Review Agent`
 - Must pass lint with 0 errors, 0 warnings
 - Must maintain or improve coverage
 
 **Documentation Review (Final Step):**
 
-- After code review passes → `Documentation Review Agent`
+- After code review passes → `docs-review-agent`
 - Updates developer docs to match code changes
 - Updates agent instructions with new patterns/helpers
 - Verifies all code examples are current
@@ -204,7 +205,7 @@ runSubagent({
 3. **Call Review Agent**: Pass to appropriate review agent (code or test review)
 4. **Address Feedback**: Fix any issues identified by review agent
 5. **Final Verification**: Confirm 0 lint errors/warnings and all tests pass
-6. **Documentation Review**: Pass to `Documentation Review Agent` to update docs
+6. **Documentation Review**: Pass to `docs-review-agent` to update docs
 7. **Complete Task**: Only mark complete after all reviews approved
 
 **Always write concisely in British English.**

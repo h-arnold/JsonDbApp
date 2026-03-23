@@ -39,6 +39,20 @@ describe('Database createDatabase()', () => {
     expect(getCollectionsCount(masterIndex)).toBe(0);
   });
 
+  it('should pass collectionLockLeaseMs into the created MasterIndex instance', () => {
+    const { config, masterIndexKey } = createDatabaseTestConfig({
+      collectionLockLeaseMs: 4321,
+      coordinationTimeoutMs: 4000
+    });
+    registerMasterIndexKey(masterIndexKey);
+    getScriptProperties().deleteProperty(masterIndexKey);
+    const database = new Database(config);
+
+    database.createDatabase();
+
+    expect(database._masterIndex._config.lockTimeout).toBe(4321);
+  });
+
   it('should throw when a MasterIndex already exists for the key', () => {
     // Arrange - Prepare configuration with a pre-existing MasterIndex
     const { config, masterIndexKey, rootFolderId } = createDatabaseTestConfig();

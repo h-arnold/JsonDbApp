@@ -75,7 +75,9 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | Property                                  | Type     | Default                            | Description                                                                                                                                                                                                                                        |
 | ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
-| `lockTimeout`                             | Number   | `30000`                            | Lock timeout in milliseconds                                                                                                                                                                                                                       |
+| `lockTimeout`                             | Number   | `30000`                            | Legacy compatibility alias for `collectionLockLeaseMs`; when provided on its own it seeds both timeout settings                                                                                                                                    |
+| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds; must be at least as long as `coordinationTimeoutMs`                                                                                                                                                |
+| `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                                                                    |
 | `retryAttempts`                           | Number   | `3`                                | Lock acquisition retry attempts                                                                                                                                                                                                                    |
 | `retryDelayMs`                            | Number   | `1000`                             | Delay between lock retries                                                                                                                                                                                                                         |
 | `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for lock retries                                                                                                                                                                                                          |
@@ -159,7 +161,7 @@ Creates a `DatabaseConfig` from an object produced by `toJSON()`.
 
 #### `_initialiseGeneralDefaults(config)`
 
-Applies root folder, lock timeout, log level (via `DEFAULT_LOG_LEVEL`), and master index defaults.
+Applies root folder, split coordination timing defaults, log level (via `DEFAULT_LOG_LEVEL`), and master index defaults.
 
 #### `_initialiseRetryConfig(config)`
 
@@ -204,10 +206,13 @@ Validates optional operator arrays against type constraints and preserves the or
 
 ### Property Validation
 
-**lockTimeout:**
+**lockTimeout / collectionLockLeaseMs / coordinationTimeoutMs:**
 
-- Must be a number of at least 500ms
-- Recommended range: 5000-60000ms
+- Each value must be a number of at least 500ms
+- `lockTimeout` is retained as a legacy alias; new code should prefer the split properties
+- `collectionLockLeaseMs` must be greater than or equal to `coordinationTimeoutMs`
+- `CollectionCoordinator` may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback
+- Recommended range: 5000-60000ms unless you have a measured need for longer operations
 - Zero is invalid because the minimum is enforced during validation
 
 **retryAttempts / retryDelayMs / lockRetryBackoffBase:**
@@ -284,7 +289,8 @@ const config = new DatabaseConfig({
 const config = new DatabaseConfig({
   rootFolderId: 'prod-folder-id',
   autoCreateCollections: false,
-  lockTimeout: 10000,
+  collectionLockLeaseMs: 12000,
+  coordinationTimeoutMs: 10000,
   logLevel: 'WARN',
   // Avoid Drive file churn on start; backups occur lazily or explicitly
   backupOnInitialise: false
@@ -309,7 +315,8 @@ const devConfig = new DatabaseConfig({
 const prodConfig = new DatabaseConfig({
   rootFolderId: 'production-folder-id',
   autoCreateCollections: false,
-  lockTimeout: 5000,
+  collectionLockLeaseMs: 8000,
+  coordinationTimeoutMs: 5000,
   logLevel: 'ERROR',
   cacheEnabled: true,
   backupOnInitialise: false
@@ -340,7 +347,8 @@ const modifiedConfig = new DatabaseConfig({
 ```javascript
 const config = new DatabaseConfig({
   autoCreateCollections: false,
-  lockTimeout: 15000
+  collectionLockLeaseMs: 20000,
+  coordinationTimeoutMs: 15000
 });
 
 // Serialize for storage or logging
@@ -373,7 +381,7 @@ const db2 = JsonDbApp.loadDatabase({
 
 // Configuration is validated when constructing DatabaseConfig/Database
 try {
-  JsonDbApp.loadDatabase({ lockTimeout: -1 }); // Will throw
+  JsonDbApp.loadDatabase({ coordinationTimeoutMs: -1 }); // Will throw
 } catch (error) {
   console.error('Invalid configuration:', error.message);
 }
@@ -396,7 +404,8 @@ const queryEngine = new QueryEngine({
 // DatabaseConfig supplies defaults for collections
 const dbConfig = new DatabaseConfig({
   logLevel: 'DEBUG',
-  lockTimeout: 20000,
+  collectionLockLeaseMs: 25000,
+  coordinationTimeoutMs: 20000,
   queryEngineMaxNestedDepth: 12,
   queryEngineSupportedOperators: ['$eq', '$gt', '$lt', '$and', '$or']
 });
@@ -433,7 +442,7 @@ Independent of this flag, explicit calls to `database.backupIndexToDrive()` will
 ## Best Practices
 
 1. **Validate early:** Create DatabaseConfig instances explicitly to catch errors
-2. **Use appropriate timeouts:** Consider script execution limits when setting lockTimeout
+2. **Use appropriate timeouts:** Size `collectionLockLeaseMs` to cover the whole write, and keep `coordinationTimeoutMs` within that lease
 3. **Environment-specific configs:** Create different configurations for dev/test/prod
 4. **Immutable configurations:** Don't modify config properties after creation
 5. **Proper folder permissions:** Ensure root folder is accessible to the script
