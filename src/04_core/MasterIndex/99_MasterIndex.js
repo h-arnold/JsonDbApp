@@ -7,8 +7,11 @@
  */
 /* exported MasterIndex */
 /* global MasterIndexMetadataNormaliser, MasterIndexLockManager, MasterIndexConflictResolver,
-          CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
-          ErrorHandler */
+           CollectionMetadata, DbLockService, JDbLogger, Validate, ObjectUtils, PropertiesService,
+           ErrorHandler */
+
+const FALLBACK_MASTER_INDEX_LOCK_TIMEOUT_MS = 30000;
+const FALLBACK_MASTER_INDEX_KEY = 'GASDB_MASTER_INDEX';
 
 /**
  * Coordinates collection metadata across script executions using a ScriptProperties-backed index.
@@ -373,16 +376,48 @@ class MasterIndex {
    * @private
    */
   _initialiseConfig(config) {
-    const defaultLockTimeout =
-      typeof DatabaseConfig !== 'undefined' &&
-      typeof DatabaseConfig.getDefaultCollectionLockLeaseMs === 'function'
-        ? DatabaseConfig.getDefaultCollectionLockLeaseMs()
-        : DatabaseConfig.getDefaultLockTimeout();
     return {
-      masterIndexKey: config.masterIndexKey || DatabaseConfig.getDefaultMasterIndexKey(),
-      lockTimeout: config.lockTimeout || defaultLockTimeout,
+      masterIndexKey: config.masterIndexKey || this._getDefaultMasterIndexKey(),
+      lockTimeout: config.lockTimeout || this._getDefaultLockTimeout(),
       version: config.version || 1
     };
+  }
+
+  /**
+   * Resolve the default master index lock timeout safely.
+   * @returns {number} Default lock timeout in milliseconds.
+   * @private
+   */
+  _getDefaultLockTimeout() {
+    if (typeof DatabaseConfig === 'undefined') {
+      return FALLBACK_MASTER_INDEX_LOCK_TIMEOUT_MS;
+    }
+
+    if (typeof DatabaseConfig.getDefaultCollectionLockLeaseMs === 'function') {
+      return DatabaseConfig.getDefaultCollectionLockLeaseMs();
+    }
+
+    if (typeof DatabaseConfig.getDefaultLockTimeout === 'function') {
+      return DatabaseConfig.getDefaultLockTimeout();
+    }
+
+    return FALLBACK_MASTER_INDEX_LOCK_TIMEOUT_MS;
+  }
+
+  /**
+   * Resolve the default master index storage key safely.
+   * @returns {string} Default master index storage key.
+   * @private
+   */
+  _getDefaultMasterIndexKey() {
+    if (
+      typeof DatabaseConfig !== 'undefined' &&
+      typeof DatabaseConfig.getDefaultMasterIndexKey === 'function'
+    ) {
+      return DatabaseConfig.getDefaultMasterIndexKey();
+    }
+
+    return FALLBACK_MASTER_INDEX_KEY;
   }
 
   /**
