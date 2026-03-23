@@ -131,7 +131,8 @@ Customise database behaviour with `DatabaseConfig`:
 const config = new DatabaseConfig({
   rootFolderId: 'YOUR_DRIVE_FOLDER_ID',
   autoCreateCollections: true,
-  lockTimeout: 15000,
+  collectionLockLeaseMs: 15000,
+  coordinationTimeoutMs: 10000,
   retryAttempts: 5,
   logLevel: 'INFO',
   backupOnInitialise: true

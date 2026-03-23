@@ -41,7 +41,8 @@ Public API functions exposed by the library identifier (e.g. `JsonDbApp`):
 function setupDb() {
   const db = JsonDbApp.createAndInitialiseDatabase({
     masterIndexKey: 'myMasterIndex',
-    lockTimeout: 5000
+    collectionLockLeaseMs: 5000,
+    coordinationTimeoutMs: 3000
   });
   // db is initialised and ready to use
 }
@@ -51,7 +52,8 @@ function getDb() {
   const config = {
     masterIndexKey: 'myMasterIndex'
     // rootFolderId: 'your-folder-id', // optional; where new files/backups are created
-    // lockTimeout: 5000,              // optional; override defaults as needed
+    // collectionLockLeaseMs: 5000,    // optional; lease duration for collection locks
+    // coordinationTimeoutMs: 3000,    // optional; coordination window within the lease
     // logLevel: 'INFO'                // optional
   };
   const db = JsonDbApp.loadDatabase(config);
@@ -61,7 +63,7 @@ function getDb() {
 // Work with a collection
 function demo() {
   const db = JsonDbApp.loadDatabase({ masterIndexKey: 'myMasterIndex' });
-  const users = db.collection('users'); // auto-creates if enabled (default true)
+  const users = db.getCollection('users'); // auto-creates if enabled (default true)
   users.insertOne({ _id: 'u1', name: 'Ada', role: 'admin' });
   users.save(); // persist changes to Drive
   const admins = users.find({ role: 'admin' });

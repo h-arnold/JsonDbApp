@@ -12,7 +12,7 @@ This release focuses on stronger coordination and locking behaviour for multi-st
 
 ### Highlights 🔧
 
-- **Lock coordination**: Split the legacy `lockTimeout` behaviour into `collectionLockLeaseMs` and `coordinationTimeoutMs` so lease duration and coordination windows can be tuned independently.
+- **Lock coordination**: Split the legacy `lockTimeout` behaviour into `collectionLockLeaseMs` and `coordinationTimeoutMs` so lease duration and coordination windows can be configured separately.
 - **Safer concurrent writes**: `MasterIndex` now reloads the latest `ScriptProperties` state under `ScriptLock`, reducing the risk of cross-instance stale writes.
 - **Lease renewal**: Collection coordination can renew an active lock lease before final metadata persistence when a long-running operation approaches expiry.
 - **Validation & docs**: Added validation around the new timing settings and refreshed documentation links and release notes.

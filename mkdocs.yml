@@ -75,6 +75,8 @@ nav:
       - Diagrams:
           - Class Diagrams: developers/Class_Diagrams.md
   - Release Notes:
+      - Version 0.2.0: release-notes/release-notes-v0.2.0.md
+      - Version 0.1.0: release-notes/release-notes-v0.1.0.md
       - Version 0.0.4: release-notes/release-notes-v0.0.4.md
       - Version 0.0.3: release-notes/release-notes-v0.0.3.md
 
