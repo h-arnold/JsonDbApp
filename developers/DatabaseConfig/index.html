@@ -2379,7 +2379,19 @@
 <td><code>lockTimeout</code></td>
 <td>Number</td>
 <td><code>30000</code></td>
-<td>Lock timeout in milliseconds</td>
+<td>Legacy compatibility alias for <code>collectionLockLeaseMs</code>; when provided on its own it seeds both timeout settings</td>
+</tr>
+<tr>
+<td><code>collectionLockLeaseMs</code></td>
+<td>Number</td>
+<td><code>30000</code></td>
+<td>Collection lock lease duration in milliseconds; must be at least as long as <code>coordinationTimeoutMs</code></td>
+</tr>
+<tr>
+<td><code>coordinationTimeoutMs</code></td>
+<td>Number</td>
+<td><code>30000</code></td>
+<td>Maximum duration allowed for a coordinated collection operation</td>
 </tr>
 <tr>
 <td><code>retryAttempts</code></td>
@@ -2517,7 +2529,7 @@
 </ul>
 <h3 id="private-methods">Private Methods<a class="headerlink" href="#private-methods" title="Permanent link">&para;</a></h3>
 <h4 id="_initialisegeneraldefaultsconfig"><code>_initialiseGeneralDefaults(config)</code><a class="headerlink" href="#_initialisegeneraldefaultsconfig" title="Permanent link">&para;</a></h4>
-<p>Applies root folder, lock timeout, log level (via <code>DEFAULT_LOG_LEVEL</code>), and master index defaults.</p>
+<p>Applies root folder, split coordination timing defaults, log level (via <code>DEFAULT_LOG_LEVEL</code>), and master index defaults.</p>
 <h4 id="_initialiseretryconfigconfig"><code>_initialiseRetryConfig(config)</code><a class="headerlink" href="#_initialiseretryconfigconfig" title="Permanent link">&para;</a></h4>
 <p>Normalises retry-related options (lock and file retries) with grouped defaults.</p>
 <h4 id="_initialisequeryengineconfigconfig"><code>_initialiseQueryEngineConfig(config)</code><a class="headerlink" href="#_initialisequeryengineconfigconfig" title="Permanent link">&para;</a></h4>
@@ -2547,10 +2559,13 @@
 <p>Validates optional operator arrays against type constraints and preserves the original error context.</p>
 <h2 id="validation-rules">Validation Rules<a class="headerlink" href="#validation-rules" title="Permanent link">&para;</a></h2>
 <h3 id="property-validation">Property Validation<a class="headerlink" href="#property-validation" title="Permanent link">&para;</a></h3>
-<p><strong>lockTimeout:</strong></p>
+<p><strong>lockTimeout / collectionLockLeaseMs / coordinationTimeoutMs:</strong></p>
 <ul>
-<li>Must be a number of at least 500ms</li>
-<li>Recommended range: 5000-60000ms</li>
+<li>Each value must be a number of at least 500ms</li>
+<li><code>lockTimeout</code> is retained as a legacy alias; new code should prefer the split properties</li>
+<li><code>collectionLockLeaseMs</code> must be greater than or equal to <code>coordinationTimeoutMs</code></li>
+<li><code>CollectionCoordinator</code> may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback</li>
+<li>Recommended range: 5000-60000ms unless you have a measured need for longer operations</li>
 <li>Zero is invalid because the minimum is enforced during validation</li>
 </ul>
 <p><strong>retryAttempts / retryDelayMs / lockRetryBackoffBase:</strong></p>
@@ -2650,11 +2665,12 @@
 <a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
 <a id="__codelineno-2-11" name="__codelineno-2-11" href="#__codelineno-2-11"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;prod-folder-id&#39;</span><span class="p">,</span>
 <a id="__codelineno-2-12" name="__codelineno-2-12" href="#__codelineno-2-12"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">10000</span><span class="p">,</span>
-<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;WARN&#39;</span><span class="p">,</span>
-<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="c1">// Avoid Drive file churn on start; backups occur lazily or explicitly</span>
-<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="p">});</span>
+<a id="__codelineno-2-13" name="__codelineno-2-13" href="#__codelineno-2-13"></a><span class="w">  </span><span class="nx">collectionLockLeaseMs</span><span class="o">:</span><span class="w"> </span><span class="mf">12000</span><span class="p">,</span>
+<a id="__codelineno-2-14" name="__codelineno-2-14" href="#__codelineno-2-14"></a><span class="w">  </span><span class="nx">coordinationTimeoutMs</span><span class="o">:</span><span class="w"> </span><span class="mf">10000</span><span class="p">,</span>
+<a id="__codelineno-2-15" name="__codelineno-2-15" href="#__codelineno-2-15"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;WARN&#39;</span><span class="p">,</span>
+<a id="__codelineno-2-16" name="__codelineno-2-16" href="#__codelineno-2-16"></a><span class="w">  </span><span class="c1">// Avoid Drive file churn on start; backups occur lazily or explicitly</span>
+<a id="__codelineno-2-17" name="__codelineno-2-17" href="#__codelineno-2-17"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-2-18" name="__codelineno-2-18" href="#__codelineno-2-18"></a><span class="p">});</span>
 </code></pre></div>
 <h3 id="development-vs-production">Development vs Production<a class="headerlink" href="#development-vs-production" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="c1">// Development configuration</span>
@@ -2672,11 +2688,12 @@
 <a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="kd">const</span><span class="w"> </span><span class="nx">prodConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
 <a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a><span class="w">  </span><span class="nx">rootFolderId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;production-folder-id&#39;</span><span class="p">,</span>
 <a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">5000</span><span class="p">,</span>
-<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="p">,</span>
-<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">  </span><span class="nx">cacheEnabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
-<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
-<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="p">});</span>
+<a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="w">  </span><span class="nx">collectionLockLeaseMs</span><span class="o">:</span><span class="w"> </span><span class="mf">8000</span><span class="p">,</span>
+<a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a><span class="w">  </span><span class="nx">coordinationTimeoutMs</span><span class="o">:</span><span class="w"> </span><span class="mf">5000</span><span class="p">,</span>
+<a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;ERROR&#39;</span><span class="p">,</span>
+<a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a><span class="w">  </span><span class="nx">cacheEnabled</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span><span class="p">,</span>
+<a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">  </span><span class="nx">backupOnInitialise</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span>
+<a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a><span class="p">});</span>
 </code></pre></div>
 <h3 id="configuration-cloning">Configuration Cloning<a class="headerlink" href="#configuration-cloning" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">baseConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
@@ -2697,15 +2714,16 @@
 <h3 id="configuration-serialization">Configuration Serialization<a class="headerlink" href="#configuration-serialization" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
 <a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nx">autoCreateCollections</span><span class="o">:</span><span class="w"> </span><span class="kc">false</span><span class="p">,</span>
-<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">15000</span>
-<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">});</span>
-<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>
-<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="c1">// Serialize for storage or logging</span>
-<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">configData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
-<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Config:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">configData</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
-<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a>
-<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="c1">// Recreate from serialised data</span>
-<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">restoredConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">.</span><span class="nx">fromJSON</span><span class="p">(</span><span class="nx">configData</span><span class="p">);</span>
+<a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nx">collectionLockLeaseMs</span><span class="o">:</span><span class="w"> </span><span class="mf">20000</span><span class="p">,</span>
+<a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="w">  </span><span class="nx">coordinationTimeoutMs</span><span class="o">:</span><span class="w"> </span><span class="mf">15000</span>
+<a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="p">});</span>
+<a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>
+<a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="c1">// Serialize for storage or logging</span>
+<a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">configData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">config</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">();</span>
+<a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">&#39;Config:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">configData</span><span class="p">,</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">));</span>
+<a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a>
+<a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="c1">// Recreate from serialised data</span>
+<a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a><span class="kd">const</span><span class="w"> </span><span class="nx">restoredConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">.</span><span class="nx">fromJSON</span><span class="p">(</span><span class="nx">configData</span><span class="p">);</span>
 </code></pre></div>
 <h2 id="integration-with-database">Integration with Database<a class="headerlink" href="#integration-with-database" title="Permanent link">&para;</a></h2>
 <p>The DatabaseConfig class integrates seamlessly with the Database class. For Apps Script consumers, prefer the public API factories:</p>
@@ -2726,7 +2744,7 @@
 <a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a>
 <a id="__codelineno-6-16" name="__codelineno-6-16" href="#__codelineno-6-16"></a><span class="c1">// Configuration is validated when constructing DatabaseConfig/Database</span>
 <a id="__codelineno-6-17" name="__codelineno-6-17" href="#__codelineno-6-17"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">  </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">loadDatabase</span><span class="p">({</span><span class="w"> </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// Will throw</span>
+<a id="__codelineno-6-18" name="__codelineno-6-18" href="#__codelineno-6-18"></a><span class="w">  </span><span class="nx">JsonDbApp</span><span class="p">.</span><span class="nx">loadDatabase</span><span class="p">({</span><span class="w"> </span><span class="nx">coordinationTimeoutMs</span><span class="o">:</span><span class="w"> </span><span class="o">-</span><span class="mf">1</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// Will throw</span>
 <a id="__codelineno-6-19" name="__codelineno-6-19" href="#__codelineno-6-19"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-6-20" name="__codelineno-6-20" href="#__codelineno-6-20"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">&#39;Invalid configuration:&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
 <a id="__codelineno-6-21" name="__codelineno-6-21" href="#__codelineno-6-21"></a><span class="p">}</span>
@@ -2743,13 +2761,14 @@
 <a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c1">// DatabaseConfig supplies defaults for collections</span>
 <a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
 <a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span><span class="p">,</span>
-<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="mf">20000</span><span class="p">,</span>
-<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nx">queryEngineMaxNestedDepth</span><span class="o">:</span><span class="w"> </span><span class="mf">12</span><span class="p">,</span>
-<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nx">queryEngineSupportedOperators</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;$eq&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$gt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$lt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$and&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$or&#39;</span><span class="p">]</span>
-<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="p">});</span>
-<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>
-<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">dbConfig</span><span class="p">);</span>
-<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="c1">// Collections use the QueryEngine internally with DatabaseConfig defaults</span>
+<a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="w">  </span><span class="nx">collectionLockLeaseMs</span><span class="o">:</span><span class="w"> </span><span class="mf">25000</span><span class="p">,</span>
+<a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="w">  </span><span class="nx">coordinationTimeoutMs</span><span class="o">:</span><span class="w"> </span><span class="mf">20000</span><span class="p">,</span>
+<a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a><span class="w">  </span><span class="nx">queryEngineMaxNestedDepth</span><span class="o">:</span><span class="w"> </span><span class="mf">12</span><span class="p">,</span>
+<a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="w">  </span><span class="nx">queryEngineSupportedOperators</span><span class="o">:</span><span class="w"> </span><span class="p">[</span><span class="s1">&#39;$eq&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$gt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$lt&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$and&#39;</span><span class="p">,</span><span class="w"> </span><span class="s1">&#39;$or&#39;</span><span class="p">]</span>
+<a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="p">});</span>
+<a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>
+<a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">(</span><span class="nx">dbConfig</span><span class="p">);</span>
+<a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a><span class="c1">// Collections use the QueryEngine internally with DatabaseConfig defaults</span>
 </code></pre></div>
 <p><strong>QueryEngine Options:</strong></p>
 <ul>
@@ -2775,7 +2794,7 @@
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Validate early:</strong> Create DatabaseConfig instances explicitly to catch errors</li>
-<li><strong>Use appropriate timeouts:</strong> Consider script execution limits when setting lockTimeout</li>
+<li><strong>Use appropriate timeouts:</strong> Size <code>collectionLockLeaseMs</code> to cover the whole write, and keep <code>coordinationTimeoutMs</code> within that lease</li>
 <li><strong>Environment-specific configs:</strong> Create different configurations for dev/test/prod</li>
 <li><strong>Immutable configurations:</strong> Don't modify config properties after creation</li>
 <li><strong>Proper folder permissions:</strong> Ensure root folder is accessible to the script</li>

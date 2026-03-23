@@ -1108,6 +1108,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#acquirecollectionlockcollectionname-operationid-timeout-renewcollectionlockcollectionname-operationid-timeout-releasecollectionlockcollectionname-operationid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        acquireCollectionLock(collectionName, operationId, timeout) / renewCollectionLock(collectionName, operationId, timeout) / releaseCollectionLock(collectionName, operationId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#updatecollectionmetadataname-updates" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1158,10 +1169,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#acquirelockcollectionname-operationid" class="md-nav__link">
+  <a href="#acquirecollectionlockcollectionname-operationid-timeout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        acquireLock(collectionName, operationId)
+        acquireCollectionLock(collectionName, operationId, timeout)
       
     </span>
   </a>
@@ -1169,10 +1180,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#releaselockcollectionname-operationid" class="md-nav__link">
+  <a href="#renewcollectionlockcollectionname-operationid-timeout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        releaseLock(collectionName, operationId)
+        renewCollectionLock(collectionName, operationId, timeout)
       
     </span>
   </a>
@@ -1180,10 +1191,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#islockedcollectionname" class="md-nav__link">
+  <a href="#releasecollectionlockcollectionname-operationid" class="md-nav__link">
     <span class="md-ellipsis">
       
-        isLocked(collectionName)
+        releaseCollectionLock(collectionName, operationId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iscollectionlockedcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        isCollectionLocked(collectionName)
       
     </span>
   </a>
@@ -2136,6 +2158,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#acquirecollectionlockcollectionname-operationid-timeout-renewcollectionlockcollectionname-operationid-timeout-releasecollectionlockcollectionname-operationid" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        acquireCollectionLock(collectionName, operationId, timeout) / renewCollectionLock(collectionName, operationId, timeout) / releaseCollectionLock(collectionName, operationId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#updatecollectionmetadataname-updates" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2186,10 +2219,10 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#acquirelockcollectionname-operationid" class="md-nav__link">
+  <a href="#acquirecollectionlockcollectionname-operationid-timeout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        acquireLock(collectionName, operationId)
+        acquireCollectionLock(collectionName, operationId, timeout)
       
     </span>
   </a>
@@ -2197,10 +2230,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#releaselockcollectionname-operationid" class="md-nav__link">
+  <a href="#renewcollectionlockcollectionname-operationid-timeout" class="md-nav__link">
     <span class="md-ellipsis">
       
-        releaseLock(collectionName, operationId)
+        renewCollectionLock(collectionName, operationId, timeout)
       
     </span>
   </a>
@@ -2208,10 +2241,21 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#islockedcollectionname" class="md-nav__link">
+  <a href="#releasecollectionlockcollectionname-operationid" class="md-nav__link">
     <span class="md-ellipsis">
       
-        isLocked(collectionName)
+        releaseCollectionLock(collectionName, operationId)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#iscollectionlockedcollectionname" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        isCollectionLocked(collectionName)
       
     </span>
   </a>
@@ -2469,9 +2513,10 @@
 <li><a href="#removecollectionname"><code>removeCollection(name)</code></a></li>
 <li><a href="#getcollections"><code>getCollections()</code></a></li>
 <li><a href="#locking-methods">Locking Methods</a></li>
-<li><a href="#acquirelockcollectionname-operationid"><code>acquireLock(collectionName, operationId)</code></a></li>
-<li><a href="#releaselockcollectionname-operationid"><code>releaseLock(collectionName, operationId)</code></a></li>
-<li><a href="#islockedcollectionname"><code>isLocked(collectionName)</code></a></li>
+<li><a href="#acquirecollectionlockcollectionname-operationid-timeout"><code>acquireCollectionLock(collectionName, operationId, timeout?)</code></a></li>
+<li><a href="#renewcollectionlockcollectionname-operationid-timeout"><code>renewCollectionLock(collectionName, operationId, timeout?)</code></a></li>
+<li><a href="#releasecollectionlockcollectionname-operationid"><code>releaseCollectionLock(collectionName, operationId)</code></a></li>
+<li><a href="#iscollectionlockedcollectionname"><code>isCollectionLocked(collectionName)</code></a></li>
 <li><a href="#cleanupexpiredlocks"><code>cleanupExpiredLocks()</code></a></li>
 <li><a href="#conflict-management">Conflict Management</a></li>
 <li><a href="#hasconflictcollectionname-expectedtoken"><code>hasConflict(collectionName, expectedToken)</code></a></li>
@@ -2530,7 +2575,7 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li><strong>Behaviour:</strong></li>
 <li>Sets lock status on collection metadata</li>
 <li>Persists to MasterIndex via <code>_updateCollectionMetadataInternal()</code></li>
-<li><strong>Usage:</strong> Used by <code>acquireCollectionLock()</code>, <code>releaseCollectionLock()</code>, <code>cleanupExpiredLocks()</code></li>
+<li><strong>Usage:</strong> Used by <code>acquireCollectionLock()</code>, <code>renewCollectionLock()</code>, <code>releaseCollectionLock()</code>, <code>cleanupExpiredLocks()</code></li>
 <li><strong>Benefits:</strong> Single source of truth for lock persistence, guaranteed update ordering</li>
 </ul>
 <h3 id="masterindexconflictresolver-helper-methods-new-in-v005">MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5<a class="headerlink" href="#masterindexconflictresolver-helper-methods-new-in-v005" title="Permanent link">&para;</a></h3>
@@ -2551,27 +2596,34 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 </ul>
 <h2 id="core-workflow">Core Workflow<a class="headerlink" href="#core-workflow" title="Permanent link">&para;</a></h2>
 <h3 id="collection-access-protocol">Collection Access Protocol<a class="headerlink" href="#collection-access-protocol" title="Permanent link">&para;</a></h3>
-<p>Database class collection access follows this protocol when delegating to MasterIndex:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// 1. Database.getCollection() or Database.createCollection() delegates to MasterIndex</span>
+<p>Database class updates to an existing collection follow this protocol when delegating to MasterIndex:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="c1">// 1. Database retrieves the existing collection metadata from MasterIndex</span>
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1">// 2. Acquire virtual lock for thread safety</span>
-<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">acquired</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">acquireLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
-<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="c1">// 3. Check for conflicts (if updating existing collection)</span>
-<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">hasConflict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">hasConflict</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">expectedToken</span><span class="p">);</span>
+<a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">acquired</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">acquireCollectionLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
+<a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">acquired</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="w">  </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="ne">Error</span><span class="p">(</span><span class="s1">&#39;Collection is already locked&#39;</span><span class="p">);</span>
+<a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="p">}</span>
 <a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>
-<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1">// 4. Perform operations (Database coordinates with Drive operations)</span>
-<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="c1">// 5. Update metadata with new modification token</span>
-<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">updateCollectionMetadata</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">updates</span><span class="p">);</span>
-<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a>
-<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1">// 6. Release lock</span>
-<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">releaseLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
+<a id="__codelineno-0-8" name="__codelineno-0-8" href="#__codelineno-0-8"></a><span class="c1">// 3. Check for conflicts (if updating existing collection)</span>
+<a id="__codelineno-0-9" name="__codelineno-0-9" href="#__codelineno-0-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">hasConflict</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">hasConflict</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">expectedToken</span><span class="p">);</span>
+<a id="__codelineno-0-10" name="__codelineno-0-10" href="#__codelineno-0-10"></a>
+<a id="__codelineno-0-11" name="__codelineno-0-11" href="#__codelineno-0-11"></a><span class="c1">// 4. Perform operations (Database coordinates with Drive operations)</span>
+<a id="__codelineno-0-12" name="__codelineno-0-12" href="#__codelineno-0-12"></a><span class="c1">// 5. Renew the lease if the write is close to expiry</span>
+<a id="__codelineno-0-13" name="__codelineno-0-13" href="#__codelineno-0-13"></a><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">renewCollectionLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">,</span><span class="w"> </span><span class="mf">45000</span><span class="p">);</span>
+<a id="__codelineno-0-14" name="__codelineno-0-14" href="#__codelineno-0-14"></a>
+<a id="__codelineno-0-15" name="__codelineno-0-15" href="#__codelineno-0-15"></a><span class="c1">// 6. Apply the metadata updates produced by the write</span>
+<a id="__codelineno-0-16" name="__codelineno-0-16" href="#__codelineno-0-16"></a><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">updateCollectionMetadata</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">updates</span><span class="p">);</span>
+<a id="__codelineno-0-17" name="__codelineno-0-17" href="#__codelineno-0-17"></a>
+<a id="__codelineno-0-18" name="__codelineno-0-18" href="#__codelineno-0-18"></a><span class="c1">// 7. Release lock</span>
+<a id="__codelineno-0-19" name="__codelineno-0-19" href="#__codelineno-0-19"></a><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">releaseCollectionLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
 </code></pre></div>
 <h3 id="virtual-locking">Virtual Locking<a class="headerlink" href="#virtual-locking" title="Permanent link">&para;</a></h3>
 <p>Prevents concurrent modifications across script instances:</p>
 <ul>
 <li>Locks expire automatically (default: 30 seconds)</li>
 <li>Operation ID required for lock acquisition/release</li>
-<li>Expired locks are cleaned up automatically</li>
+<li>Active locks may be renewed by the owning operation before final metadata persistence</li>
+<li>Expired locks may be explicitly removed by calling <code>cleanupExpiredLocks()</code></li>
 <li>All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata</li>
 </ul>
 <h4 id="lock-held-snapshot-refresh">Lock-held snapshot refresh<a class="headerlink" href="#lock-held-snapshot-refresh" title="Permanent link">&para;</a></h4>
@@ -2593,17 +2645,21 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
 <a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">      </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">      </span><span class="nx">created</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
-<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nx">lastModified</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
+<a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="nx">lastUpdated</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
 <a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">      </span><span class="nx">documentCount</span><span class="o">:</span><span class="w"> </span><span class="nb">Number</span><span class="p">,</span>
 <a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">      </span><span class="nx">modificationToken</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span>
-<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nx">lockStatus</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">lockedBy</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nx">lockedAt</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nx">expiresAt</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">  </span><span class="p">},</span>
-<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">  </span><span class="nx">locks</span><span class="o">:</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="p">[</span><span class="nx">collectionName</span><span class="p">]</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">lockedBy</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nx">lockedAt</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="p">,</span><span class="w"> </span><span class="nx">expiresAt</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="p">}</span>
-<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="p">}</span>
+<a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="w">      </span><span class="nx">lockStatus</span><span class="o">:</span><span class="w"> </span><span class="kc">null</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="w">        </span><span class="nx">isLocked</span><span class="o">:</span><span class="w"> </span><span class="nb">Boolean</span><span class="p">,</span>
+<a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="w">        </span><span class="nx">lockedBy</span><span class="o">:</span><span class="w"> </span><span class="nb">String</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="w">        </span><span class="nx">lockedAt</span><span class="o">:</span><span class="w"> </span><span class="nb">Number</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span><span class="p">,</span>
+<a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">        </span><span class="nx">lockTimeout</span><span class="o">:</span><span class="w"> </span><span class="nb">Number</span><span class="w"> </span><span class="o">|</span><span class="w"> </span><span class="kc">null</span>
+<a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="p">}</span>
 </code></pre></div>
+<p><code>lockStatus</code> may be <code>null</code>, an active lock object, or a persisted unlocked object with
+<code>isLocked: false</code> and null-valued lock fields immediately after an explicit release.</p>
 <h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">class</span><span class="w"> </span><span class="nx">MasterIndex</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
@@ -2633,7 +2689,14 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <p>Retrieves collection metadata. Used by <code>Database.getCollection()</code> and <code>Database.listCollections()</code> to access collection information.</p>
 <ul>
 <li><strong>Returns:</strong> Collection object or collections map</li>
-<li><strong>Database Integration:</strong> Called by Database class methods to check for existing collections before creation or access</li>
+</ul>
+<h4 id="acquirecollectionlockcollectionname-operationid-timeout-renewcollectionlockcollectionname-operationid-timeout-releasecollectionlockcollectionname-operationid"><code>acquireCollectionLock(collectionName, operationId, timeout)</code> / <code>renewCollectionLock(collectionName, operationId, timeout)</code> / <code>releaseCollectionLock(collectionName, operationId)</code><a class="headerlink" href="#acquirecollectionlockcollectionname-operationid-timeout-renewcollectionlockcollectionname-operationid-timeout-releasecollectionlockcollectionname-operationid" title="Permanent link">&para;</a></h4>
+<p>Coordinates collection-level virtual locks.</p>
+<ul>
+<li><code>acquireCollectionLock(...)</code>: claims a free or expired lock for an operation</li>
+<li><code>renewCollectionLock(...)</code>: refreshes an active lock owned by the same operation before it expires</li>
+<li><code>releaseCollectionLock(...)</code>: clears the lock for the owning operation</li>
+<li><strong>Database Integration:</strong> Called by Database class methods when coordinating writes to collections that are already registered in the master index</li>
 </ul>
 <h4 id="updatecollectionmetadataname-updates"><code>updateCollectionMetadata(name, updates)</code><a class="headerlink" href="#updatecollectionmetadataname-updates" title="Permanent link">&para;</a></h4>
 <p>Updates collection metadata with new modification token.</p>
@@ -2656,20 +2719,34 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li><strong>Returns:</strong> Object - map of collection metadata</li>
 </ul>
 <h3 id="locking-methods">Locking Methods<a class="headerlink" href="#locking-methods" title="Permanent link">&para;</a></h3>
-<h4 id="acquirelockcollectionname-operationid"><code>acquireLock(collectionName, operationId)</code><a class="headerlink" href="#acquirelockcollectionname-operationid" title="Permanent link">&para;</a></h4>
+<h4 id="acquirecollectionlockcollectionname-operationid-timeout"><code>acquireCollectionLock(collectionName, operationId, timeout)</code><a class="headerlink" href="#acquirecollectionlockcollectionname-operationid-timeout" title="Permanent link">&para;</a></h4>
 <p>Acquires virtual lock for collection. Used by Database class before performing collection operations.</p>
 <ul>
+<li><strong>Parameters:</strong> <code>timeout</code> is optional and defaults to the configured lock lease duration</li>
 <li><strong>Returns:</strong> <code>true</code> if successful, <code>false</code> if already locked</li>
-<li><strong>Database Integration:</strong> Called by Database methods during collection creation, modification, and deletion</li>
+<li><strong>Throws:</strong> <code>COLLECTION_NOT_FOUND</code> if the collection is not yet registered in the master index</li>
+<li><strong>Database Integration:</strong> Called by Database methods during coordinated updates and deletion of already-registered collections</li>
 <li><strong>Concurrency behaviour:</strong> Evaluates lock ownership from a freshly reloaded snapshot while ScriptLock is held, preventing stale instances from stealing a newer lock</li>
 </ul>
-<h4 id="releaselockcollectionname-operationid"><code>releaseLock(collectionName, operationId)</code><a class="headerlink" href="#releaselockcollectionname-operationid" title="Permanent link">&para;</a></h4>
+<h4 id="renewcollectionlockcollectionname-operationid-timeout"><code>renewCollectionLock(collectionName, operationId, timeout)</code><a class="headerlink" href="#renewcollectionlockcollectionname-operationid-timeout" title="Permanent link">&para;</a></h4>
+<p>Renews an active virtual lock for a collection owned by the same operation.</p>
+<ul>
+<li><strong>Parameters:</strong> <code>timeout</code> is optional and defaults to the configured lock lease duration</li>
+<li><strong>Returns:</strong> <code>true</code> if the active lock was renewed, <code>false</code> if it was missing, expired, or owned by another operation</li>
+<li><strong>Database Integration:</strong> Used by <code>CollectionCoordinator</code> to extend a near-expiry lease before final metadata persistence</li>
+<li><strong>Concurrency behaviour:</strong> Reloads the latest lock state under ScriptLock before renewing, so stale instances cannot extend a newer lock they do not own</li>
+</ul>
+<h4 id="releasecollectionlockcollectionname-operationid"><code>releaseCollectionLock(collectionName, operationId)</code><a class="headerlink" href="#releasecollectionlockcollectionname-operationid" title="Permanent link">&para;</a></h4>
 <p>Releases virtual lock (must match operation ID).</p>
 <ul>
+<li><strong>Returns:</strong> <code>true</code> when the lock is released, when no lock is held, or when the collection no longer exists; <code>false</code> if another operation owns the active lock</li>
 <li><strong>Concurrency behaviour:</strong> Reloads the latest lock state under ScriptLock first, allowing a stale instance to release the current lock correctly when it still owns it</li>
 </ul>
-<h4 id="islockedcollectionname"><code>isLocked(collectionName)</code><a class="headerlink" href="#islockedcollectionname" title="Permanent link">&para;</a></h4>
+<h4 id="iscollectionlockedcollectionname"><code>isCollectionLocked(collectionName)</code><a class="headerlink" href="#iscollectionlockedcollectionname" title="Permanent link">&para;</a></h4>
 <p>Checks if collection is currently locked.</p>
+<ul>
+<li><strong>Remarks:</strong> Reads the current in-memory snapshot; call <code>load()</code> first when the caller needs the latest persisted lock state</li>
+</ul>
 <h4 id="cleanupexpiredlocks"><code>cleanupExpiredLocks()</code><a class="headerlink" href="#cleanupexpiredlocks" title="Permanent link">&para;</a></h4>
 <p>Removes expired locks.</p>
 <ul>
@@ -2706,12 +2783,12 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <h3 id="locking-pattern">Locking Pattern<a class="headerlink" href="#locking-pattern" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">operationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;op_&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
 <a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">acquireLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">acquireCollectionLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="w">    </span><span class="c1">// Perform operations</span>
 <a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="w">    </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">updateCollectionMetadata</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">updates</span><span class="p">);</span>
 <a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">releaseLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">    </span><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">releaseCollectionLock</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
 <a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="p">}</span>
 <a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">}</span>
 </code></pre></div>
@@ -2757,18 +2834,21 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 </ul>
 <h3 id="locking-coordination">Locking Coordination<a class="headerlink" href="#locking-coordination" title="Permanent link">&para;</a></h3>
 <p>Database class uses MasterIndex locking for thread safety:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Example from Database.createCollection()</span>
-<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">operationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;create_&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
-<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_masterIndex</span><span class="p">.</span><span class="nx">acquireLock</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1">// Example from a coordinated update to an existing collection</span>
+<a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">operationId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s1">&#39;update_&#39;</span><span class="w"> </span><span class="o">+</span><span class="w"> </span><span class="nb">Date</span><span class="p">.</span><span class="nx">now</span><span class="p">();</span>
+<a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="k">this</span><span class="p">.</span><span class="nx">_masterIndex</span><span class="p">.</span><span class="nx">acquireCollectionLock</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">))</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="w">  </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="c1">// Perform Drive operations</span>
-<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">driveFileId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_fileService</span><span class="p">.</span><span class="nx">createFile</span><span class="p">(</span><span class="nx">fileName</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">,</span><span class="w"> </span><span class="nx">folderId</span><span class="p">);</span>
-<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="c1">// Update MasterIndex</span>
-<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">_masterIndex</span><span class="p">.</span><span class="nx">addCollection</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="nx">driveFileId</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">_masterIndex</span><span class="p">.</span><span class="nx">releaseLock</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
-<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">}</span>
+<a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="w">    </span><span class="c1">// Perform Drive operations for the existing collection</span>
+<a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">_fileService</span><span class="p">.</span><span class="nx">updateFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">updatedData</span><span class="p">);</span>
+<a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="w">    </span><span class="c1">// Update MasterIndex metadata for the existing collection</span>
+<a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">_masterIndex</span><span class="p">.</span><span class="nx">updateCollectionMetadata</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-9" name="__codelineno-6-9" href="#__codelineno-6-9"></a><span class="w">      </span><span class="nx">documentCount</span><span class="o">:</span><span class="w"> </span><span class="nx">updatedDocumentCount</span><span class="p">,</span>
+<a id="__codelineno-6-10" name="__codelineno-6-10" href="#__codelineno-6-10"></a><span class="w">      </span><span class="nx">modificationToken</span><span class="o">:</span><span class="w"> </span><span class="nx">nextModificationToken</span>
+<a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">    </span><span class="p">});</span>
+<a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="w">  </span><span class="p">}</span><span class="w"> </span><span class="k">finally</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-6-13" name="__codelineno-6-13" href="#__codelineno-6-13"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">_masterIndex</span><span class="p">.</span><span class="nx">releaseCollectionLock</span><span class="p">(</span><span class="nx">name</span><span class="p">,</span><span class="w"> </span><span class="nx">operationId</span><span class="p">);</span>
+<a id="__codelineno-6-14" name="__codelineno-6-14" href="#__codelineno-6-14"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-6-15" name="__codelineno-6-15" href="#__codelineno-6-15"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="error-types">Error Types<a class="headerlink" href="#error-types" title="Permanent link">&para;</a></h2>
 <ul>
