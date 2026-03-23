@@ -343,6 +343,156 @@ describe('MasterIndex Helper Behaviour', () => {
   });
 });
 
+describe('MasterIndex cross-instance mutation safety', () => {
+  it('should not allow a stale instance to overwrite a newer lock during lock acquisition', () => {
+    const key = createMasterIndexKey();
+    const primary = new MasterIndex({ masterIndexKey: key, lockTimeout: 2000 });
+    addTestCollection(primary, 'sharedCollection');
+
+    const staleInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 2000 });
+    const freshInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 2000 });
+
+    expect(freshInstance.acquireCollectionLock('sharedCollection', 'fresh-operation')).toBe(true);
+    expect(staleInstance.acquireCollectionLock('sharedCollection', 'stale-operation')).toBe(false);
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('sharedCollection');
+    expect(persisted.getLockStatus()).toEqual({
+      isLocked: true,
+      lockedBy: 'fresh-operation',
+      lockedAt: expect.any(Number),
+      lockTimeout: 2000
+    });
+  });
+
+  it('should preserve a newer lock when stale metadata is updated from another instance', () => {
+    const key = createMasterIndexKey();
+    const primary = new MasterIndex({ masterIndexKey: key, lockTimeout: 3000 });
+    addTestCollection(primary, 'sharedCollection');
+
+    const staleInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 3000 });
+    const freshInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 3000 });
+
+    expect(freshInstance.acquireCollectionLock('sharedCollection', 'fresh-operation')).toBe(true);
+
+    const updated = staleInstance.updateCollectionMetadata('sharedCollection', {
+      documentCount: 9
+    });
+
+    expect(updated.documentCount).toBe(9);
+    expect(updated.getLockStatus()).toEqual({
+      isLocked: true,
+      lockedBy: 'fresh-operation',
+      lockedAt: expect.any(Number),
+      lockTimeout: 3000
+    });
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('sharedCollection');
+    expect(persisted.documentCount).toBe(9);
+    expect(persisted.getLockStatus()).toEqual({
+      isLocked: true,
+      lockedBy: 'fresh-operation',
+      lockedAt: expect.any(Number),
+      lockTimeout: 3000
+    });
+  });
+
+  it('should release a newer lock even when the releasing instance was constructed before it', () => {
+    const key = createMasterIndexKey();
+    const primary = new MasterIndex({ masterIndexKey: key, lockTimeout: 3000 });
+    addTestCollection(primary, 'sharedCollection');
+
+    const staleInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 3000 });
+    const freshInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 3000 });
+
+    expect(freshInstance.acquireCollectionLock('sharedCollection', 'fresh-operation')).toBe(true);
+    expect(staleInstance.releaseCollectionLock('sharedCollection', 'fresh-operation')).toBe(true);
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('sharedCollection');
+    expect(persisted.getLockStatus()).toEqual({
+      isLocked: false,
+      lockedBy: null,
+      lockedAt: null,
+      lockTimeout: null
+    });
+  });
+
+  it('should remove a collection added by another instance after the stale instance was constructed', () => {
+    const key = createMasterIndexKey();
+    const staleInstance = new MasterIndex({ masterIndexKey: key });
+    const freshInstance = new MasterIndex({ masterIndexKey: key });
+
+    addTestCollection(freshInstance, 'lateCollection');
+
+    expect(staleInstance.removeCollection('lateCollection')).toBe(true);
+    expect(new MasterIndex({ masterIndexKey: key }).getCollection('lateCollection')).toBeNull();
+  });
+
+  it('should clean up an expired lock written by another instance after the stale instance was constructed', () => {
+    const key = createMasterIndexKey();
+    const primary = new MasterIndex({ masterIndexKey: key, lockTimeout: 1000 });
+    addTestCollection(primary, 'sharedCollection');
+
+    const staleInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 1000 });
+    const freshInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 1000 });
+    const expiredLockStatus = {
+      isLocked: true,
+      lockedBy: 'expired-operation',
+      lockedAt: Date.now() - 5000,
+      lockTimeout: 1000
+    };
+
+    freshInstance.updateCollectionMetadata('sharedCollection', {
+      lockStatus: expiredLockStatus
+    });
+
+    staleInstance.cleanupExpiredLocks();
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('sharedCollection');
+    expect(persisted.getLockStatus()).toBeNull();
+  });
+
+  it('should preserve an active lock during cleanup when the stale instance predates it', () => {
+    const key = createMasterIndexKey();
+    const primary = new MasterIndex({ masterIndexKey: key, lockTimeout: 5000 });
+    addTestCollection(primary, 'sharedCollection');
+
+    const staleInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 5000 });
+    const freshInstance = new MasterIndex({ masterIndexKey: key, lockTimeout: 5000 });
+
+    expect(freshInstance.acquireCollectionLock('sharedCollection', 'fresh-operation')).toBe(true);
+
+    staleInstance.cleanupExpiredLocks();
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('sharedCollection');
+    expect(persisted.getLockStatus()).toEqual({
+      isLocked: true,
+      lockedBy: 'fresh-operation',
+      lockedAt: expect.any(Number),
+      lockTimeout: 5000
+    });
+  });
+
+  it('should recreate the master index under ScriptLock when the persisted snapshot is missing', () => {
+    const key = createMasterIndexKey();
+    const masterIndex = new MasterIndex({ masterIndexKey: key });
+    scriptProperties.deleteProperty(key);
+
+    const added = masterIndex.addCollection('recreatedCollection', {
+      name: 'recreatedCollection',
+      fileId: 'recreated-file-id',
+      documentCount: 1,
+      modificationToken: masterIndex.generateModificationToken()
+    });
+
+    expect(added.name).toBe('recreatedCollection');
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('recreatedCollection');
+    expect(persisted).toBeInstanceOf(CollectionMetadata);
+    expect(persisted.fileId).toBe('recreated-file-id');
+    expect(persisted.documentCount).toBe(1);
+  });
+});
+
 describe('MasterIndex Integration', () => {
   it('should coordinate locking and conflict detection', () => {
     const { masterIndex } = createTestMasterIndex({ lockTimeout: 200 });

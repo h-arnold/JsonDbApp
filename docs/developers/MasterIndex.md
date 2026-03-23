@@ -139,6 +139,19 @@ Prevents concurrent modifications across script instances:
 - Locks expire automatically (default: 30 seconds)
 - Operation ID required for lock acquisition/release
 - Expired locks are cleaned up automatically
+- All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata
+
+#### Lock-held snapshot refresh
+
+`MasterIndex._withScriptLock()` now reloads the latest ScriptProperties payload while the ScriptLock is held before any mutation logic reads collection metadata. This means separate `MasterIndex` instances pointing at the same `masterIndexKey` observe the newest collection and lock state before they:
+
+- add or remove collections
+- update collection metadata
+- acquire or release collection locks
+- clean up expired locks
+- resolve conflicts that persist metadata back to the index
+
+This closes the stale-instance window where one execution could acquire the ScriptLock yet still overwrite a newer lock or collection update using outdated in-memory state.
 
 ### Data Structure
 
@@ -208,6 +221,7 @@ Updates collection metadata with new modification token.
 
 - `updates` (Object): Metadata changes
 - **Returns:** Updated collection data
+- **Concurrency behaviour:** Reloads the latest ScriptProperties snapshot while holding ScriptLock before applying updates, so stale instances preserve newer lock state and metadata written by other executions
 
 #### `removeCollection(name)`
 
@@ -216,6 +230,7 @@ Removes a collection from the master index. Called by `Database.dropCollection()
 - `name` (String): Collection name to remove
 - **Returns:** Boolean - `true` if the collection was removed, `false` otherwise
 - **Database Integration:** Used by Database class to remove collections from the primary metadata store
+- **Concurrency behaviour:** Refreshes from ScriptProperties under ScriptLock first, so an older instance can still remove a collection added by a newer instance instead of missing it in stale memory
 
 #### `getCollections()`
 
@@ -231,10 +246,13 @@ Acquires virtual lock for collection. Used by Database class before performing c
 
 - **Returns:** `true` if successful, `false` if already locked
 - **Database Integration:** Called by Database methods during collection creation, modification, and deletion
+- **Concurrency behaviour:** Evaluates lock ownership from a freshly reloaded snapshot while ScriptLock is held, preventing stale instances from stealing a newer lock
 
 #### `releaseLock(collectionName, operationId)`
 
 Releases virtual lock (must match operation ID).
+
+- **Concurrency behaviour:** Reloads the latest lock state under ScriptLock first, allowing a stale instance to release the current lock correctly when it still owns it
 
 #### `isLocked(collectionName)`
 
@@ -243,6 +261,8 @@ Checks if collection is currently locked.
 #### `cleanupExpiredLocks()`
 
 Removes expired locks.
+
+- **Concurrency behaviour:** Reloads current collection metadata under ScriptLock before scanning, so cleanup removes genuinely expired locks without clearing newer active locks written by another instance
 
 ### Conflict Management
 
