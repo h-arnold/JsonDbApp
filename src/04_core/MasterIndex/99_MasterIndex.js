@@ -373,10 +373,10 @@ class MasterIndex {
    * @private
    */
   _initialiseConfig(config) {
-    if (config.masterIndexKey === undefined) {
+    if (config.masterIndexKey == null) {
       this._assertDatabaseConfigDefault('getDefaultMasterIndexKey');
     }
-    if (config.lockTimeout === undefined) {
+    if (config.lockTimeout == null) {
       this._assertDatabaseConfigDefault('getDefaultCollectionLockLeaseMs');
     }
 
