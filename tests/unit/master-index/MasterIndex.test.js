@@ -471,6 +471,26 @@ describe('MasterIndex cross-instance mutation safety', () => {
       lockTimeout: 5000
     });
   });
+
+  it('should recreate the master index under ScriptLock when the persisted snapshot is missing', () => {
+    const key = createMasterIndexKey();
+    const masterIndex = new MasterIndex({ masterIndexKey: key });
+    scriptProperties.deleteProperty(key);
+
+    const added = masterIndex.addCollection('recreatedCollection', {
+      name: 'recreatedCollection',
+      fileId: 'recreated-file-id',
+      documentCount: 1,
+      modificationToken: masterIndex.generateModificationToken()
+    });
+
+    expect(added.name).toBe('recreatedCollection');
+
+    const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('recreatedCollection');
+    expect(persisted).toBeInstanceOf(CollectionMetadata);
+    expect(persisted.fileId).toBe('recreated-file-id');
+    expect(persisted.documentCount).toBe(1);
+  });
 });
 
 describe('MasterIndex Integration', () => {

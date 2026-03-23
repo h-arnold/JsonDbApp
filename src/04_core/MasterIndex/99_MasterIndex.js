@@ -438,7 +438,9 @@ class MasterIndex {
    */
   _reloadLatestStateUnderLock() {
     this._loadFromScriptProperties();
-    this._initialiseDataState();
+    if (!this._data) {
+      this._initialiseDataState();
+    }
   }
 
   /**
