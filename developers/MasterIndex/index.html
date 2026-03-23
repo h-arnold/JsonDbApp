@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -1014,6 +1014,23 @@
       
     </span>
   </a>
+  
+    <nav class="md-nav" aria-label="Virtual Locking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lock-held-snapshot-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lock-held snapshot refresh
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2026,6 +2043,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Virtual Locking">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#lock-held-snapshot-refresh" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Lock-held snapshot refresh
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
           <li class="md-nav__item">
@@ -2538,7 +2572,18 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li>Locks expire automatically (default: 30 seconds)</li>
 <li>Operation ID required for lock acquisition/release</li>
 <li>Expired locks are cleaned up automatically</li>
+<li>All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata</li>
 </ul>
+<h4 id="lock-held-snapshot-refresh">Lock-held snapshot refresh<a class="headerlink" href="#lock-held-snapshot-refresh" title="Permanent link">&para;</a></h4>
+<p><code>MasterIndex._withScriptLock()</code> now reloads the latest ScriptProperties payload while the ScriptLock is held before any mutation logic reads collection metadata. This means separate <code>MasterIndex</code> instances pointing at the same <code>masterIndexKey</code> observe the newest collection and lock state before they:</p>
+<ul>
+<li>add or remove collections</li>
+<li>update collection metadata</li>
+<li>acquire or release collection locks</li>
+<li>clean up expired locks</li>
+<li>resolve conflicts that persist metadata back to the index</li>
+</ul>
+<p>This closes the stale-instance window where one execution could acquire the ScriptLock yet still overwrite a newer lock or collection update using outdated in-memory state.</p>
 <h3 id="data-structure">Data Structure<a class="headerlink" href="#data-structure" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">version</span><span class="o">:</span><span class="w"> </span><span class="nb">Number</span><span class="p">,</span>
@@ -2595,6 +2640,7 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <ul>
 <li><code>updates</code> (Object): Metadata changes</li>
 <li><strong>Returns:</strong> Updated collection data</li>
+<li><strong>Concurrency behaviour:</strong> Reloads the latest ScriptProperties snapshot while holding ScriptLock before applying updates, so stale instances preserve newer lock state and metadata written by other executions</li>
 </ul>
 <h4 id="removecollectionname"><code>removeCollection(name)</code><a class="headerlink" href="#removecollectionname" title="Permanent link">&para;</a></h4>
 <p>Removes a collection from the master index. Called by <code>Database.dropCollection()</code> during collection deletion.</p>
@@ -2602,6 +2648,7 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li><code>name</code> (String): Collection name to remove</li>
 <li><strong>Returns:</strong> Boolean - <code>true</code> if the collection was removed, <code>false</code> otherwise</li>
 <li><strong>Database Integration:</strong> Used by Database class to remove collections from the primary metadata store</li>
+<li><strong>Concurrency behaviour:</strong> Refreshes from ScriptProperties under ScriptLock first, so an older instance can still remove a collection added by a newer instance instead of missing it in stale memory</li>
 </ul>
 <h4 id="getcollections"><code>getCollections()</code><a class="headerlink" href="#getcollections" title="Permanent link">&para;</a></h4>
 <p>Retrieves all collections in the master index.</p>
@@ -2614,13 +2661,20 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <ul>
 <li><strong>Returns:</strong> <code>true</code> if successful, <code>false</code> if already locked</li>
 <li><strong>Database Integration:</strong> Called by Database methods during collection creation, modification, and deletion</li>
+<li><strong>Concurrency behaviour:</strong> Evaluates lock ownership from a freshly reloaded snapshot while ScriptLock is held, preventing stale instances from stealing a newer lock</li>
 </ul>
 <h4 id="releaselockcollectionname-operationid"><code>releaseLock(collectionName, operationId)</code><a class="headerlink" href="#releaselockcollectionname-operationid" title="Permanent link">&para;</a></h4>
 <p>Releases virtual lock (must match operation ID).</p>
+<ul>
+<li><strong>Concurrency behaviour:</strong> Reloads the latest lock state under ScriptLock first, allowing a stale instance to release the current lock correctly when it still owns it</li>
+</ul>
 <h4 id="islockedcollectionname"><code>isLocked(collectionName)</code><a class="headerlink" href="#islockedcollectionname" title="Permanent link">&para;</a></h4>
 <p>Checks if collection is currently locked.</p>
 <h4 id="cleanupexpiredlocks"><code>cleanupExpiredLocks()</code><a class="headerlink" href="#cleanupexpiredlocks" title="Permanent link">&para;</a></h4>
 <p>Removes expired locks.</p>
+<ul>
+<li><strong>Concurrency behaviour:</strong> Reloads current collection metadata under ScriptLock before scanning, so cleanup removes genuinely expired locks without clearing newer active locks written by another instance</li>
+</ul>
 <h3 id="conflict-management">Conflict Management<a class="headerlink" href="#conflict-management" title="Permanent link">&para;</a></h3>
 <h4 id="hasconflictcollectionname-expectedtoken"><code>hasConflict(collectionName, expectedToken)</code><a class="headerlink" href="#hasconflictcollectionname-expectedtoken" title="Permanent link">&para;</a></h4>
 <p>Checks if collection was modified since token was generated.</p>

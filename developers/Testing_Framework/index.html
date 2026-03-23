@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
     
     
       
@@ -3076,7 +3076,9 @@
 <li><code>describeValidationOperatorSuite(description, callback)</code>: Creates a complete validation test suite with automatic setup/cleanup. Provides <code>getTestEnv()</code> function to access the test environment (database, collections, mock data)</li>
 <li><code>setupValidationTestEnvironment()</code>: Sets up a complete validation test environment with pre-populated collections and mock data</li>
 </ul>
-<p>When writing MasterIndex suites, prefer the public API so the internal helpers (MasterIndexMetadataNormaliser and MasterIndexHistoryManager) are exercised end to end. This ensures metadata cloning, timestamp coercion, and modification history capping mirror production behaviour. For example:</p>
+<p>When writing MasterIndex suites, prefer the public API so the internal helpers are exercised end to end. This ensures metadata cloning, timestamp coercion, lock refresh behaviour, and persistence semantics mirror production behaviour.</p>
+<p>For cross-instance coordination regressions, construct separate <code>MasterIndex</code> instances that share the same <code>masterIndexKey</code>. This is the preferred way to prove that ScriptLock-protected mutations reload the latest ScriptProperties snapshot instead of acting on stale in-memory state.</p>
+<p>For example:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">masterIndex</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">createTestMasterIndex</span><span class="p">({</span><span class="w"> </span><span class="nx">modificationHistoryLimit</span><span class="o">:</span><span class="w"> </span><span class="mf">5</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-11-2" name="__codelineno-11-2" href="#__codelineno-11-2"></a><span class="nx">masterIndex</span><span class="p">.</span><span class="nx">addCollection</span><span class="p">(</span><span class="s1">&#39;users&#39;</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;users-file&#39;</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-11-3" name="__codelineno-11-3" href="#__codelineno-11-3"></a>
