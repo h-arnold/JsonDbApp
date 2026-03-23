@@ -395,10 +395,7 @@ class MasterIndex {
    * @private
    */
   _assertDatabaseConfigDefault(methodName) {
-    if (
-      typeof DatabaseConfig === 'undefined' ||
-      typeof DatabaseConfig[methodName] !== 'function'
-    ) {
+    if (typeof DatabaseConfig === 'undefined' || typeof DatabaseConfig[methodName] !== 'function') {
       throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
         `DatabaseConfig.${methodName}()`,
         DatabaseConfig,

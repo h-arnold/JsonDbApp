@@ -29,8 +29,7 @@ describe('MasterIndex configuration defaults', () => {
   });
 
   it('should fail fast when the default lock timeout provider is unavailable', () => {
-    const originalGetDefaultCollectionLockLeaseMs =
-      DatabaseConfig.getDefaultCollectionLockLeaseMs;
+    const originalGetDefaultCollectionLockLeaseMs = DatabaseConfig.getDefaultCollectionLockLeaseMs;
     try {
       DatabaseConfig.getDefaultCollectionLockLeaseMs = undefined;
       try {
