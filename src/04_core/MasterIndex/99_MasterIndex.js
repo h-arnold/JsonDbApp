@@ -284,6 +284,17 @@ class MasterIndex {
   }
 
   /**
+   * Renew an active lock for a collection.
+   * @param {string} collectionName - The name of the collection to renew.
+   * @param {string} operationId - The identifier of the operation that holds the lock.
+   * @param {number} [timeout=this._config.lockTimeout] - The renewed lock duration in milliseconds.
+   * @returns {boolean} True if the lock was renewed, false otherwise.
+   */
+  renewCollectionLock(collectionName, operationId, timeout = this._config.lockTimeout) {
+    return this._lockManager.renewCollectionLock(collectionName, operationId, timeout);
+  }
+
+  /**
    * Release a lock for a collection.
    * @param {string} collectionName - The name of the collection to unlock.
    * @param {string} operationId - The identifier of the operation that holds the lock.
@@ -362,9 +373,14 @@ class MasterIndex {
    * @private
    */
   _initialiseConfig(config) {
+    const defaultLockTimeout =
+      typeof DatabaseConfig !== 'undefined' &&
+      typeof DatabaseConfig.getDefaultCollectionLockLeaseMs === 'function'
+        ? DatabaseConfig.getDefaultCollectionLockLeaseMs()
+        : DatabaseConfig.getDefaultLockTimeout();
     return {
       masterIndexKey: config.masterIndexKey || DatabaseConfig.getDefaultMasterIndexKey(),
-      lockTimeout: config.lockTimeout || DatabaseConfig.getDefaultLockTimeout(),
+      lockTimeout: config.lockTimeout || defaultLockTimeout,
       version: config.version || 1
     };
   }

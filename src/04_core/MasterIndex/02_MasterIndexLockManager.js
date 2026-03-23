@@ -117,6 +117,66 @@ class MasterIndexLockManager {
   }
 
   /**
+   * Renew an active lock for a collection.
+   * @param {string} collectionName - The name of the locked collection.
+   * @param {string} operationId - The identifier of the operation that owns the lock.
+   * @param {number} timeout - The renewed lock duration in milliseconds.
+   * @returns {boolean} True if the lock was renewed, false otherwise.
+   */
+  renewCollectionLock(collectionName, operationId, timeout) {
+    Validate.nonEmptyString(collectionName, 'collectionName');
+    Validate.nonEmptyString(operationId, 'operationId');
+    Validate.number(timeout, 'timeout');
+
+    return this._masterIndex._withScriptLock(() => {
+      const collection = this._masterIndex.getCollection(collectionName);
+      if (!collection) {
+        return false;
+      }
+
+      const lockStatus = collection.getLockStatus();
+      if (!lockStatus || !lockStatus.isLocked) {
+        return false;
+      }
+
+      if (lockStatus.lockedBy !== operationId) {
+        this._masterIndex._logger.warn('Attempted to renew lock with incorrect operationId.', {
+          collectionName,
+          operationId,
+          owner: lockStatus.lockedBy
+        });
+        return false;
+      }
+
+      const now = Date.now();
+      const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
+      if (now >= expiry) {
+        this._masterIndex._logger.warn('Attempted to renew an expired lock.', {
+          collectionName,
+          operationId
+        });
+        return false;
+      }
+
+      const renewedLockStatus = {
+        isLocked: true,
+        lockedBy: operationId,
+        lockedAt: now,
+        lockTimeout: timeout
+      };
+
+      this._setAndPersistLockStatus(collectionName, collection, renewedLockStatus);
+
+      this._masterIndex._logger.info('Collection lock renewed.', {
+        collectionName,
+        operationId,
+        timeout
+      });
+      return true;
+    });
+  }
+
+  /**
    * Check if a collection is currently locked.
    * @param {string} collectionName - The name of the collection.
    * @returns {boolean} True if the collection is locked, false otherwise.

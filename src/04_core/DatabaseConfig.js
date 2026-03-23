@@ -42,7 +42,9 @@ class DatabaseConfig {
    * @param {Object} config - Configuration options
    * @param {string} [config.rootFolderId] - Root folder ID for database files
    * @param {boolean} [config.autoCreateCollections=true] - Auto-create collections when accessed
-   * @param {number} [config.lockTimeout=30000] - Lock timeout in milliseconds (coordination)
+   * @param {number} [config.lockTimeout=30000] - Legacy timeout applied to both lease and coordination settings
+   * @param {number} [config.collectionLockLeaseMs=30000] - Collection lock lease duration in milliseconds
+   * @param {number} [config.coordinationTimeoutMs=30000] - Maximum coordination duration in milliseconds
    * @param {number} [config.retryAttempts=3] - Number of lock acquisition attempts
    * @param {number} [config.retryDelayMs=1000] - Delay between lock retries (ms)
    * @param {number} [config.lockRetryBackoffBase=2] - Backoff base for lock retries
@@ -73,9 +75,29 @@ class DatabaseConfig {
    */
   _initialiseGeneralDefaults(config) {
     this.rootFolderId = config.rootFolderId || this._getDefaultRootFolder();
-    this.lockTimeout = config.lockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS;
+    const timingConfig = this._resolveTimingConfig(config);
+    this.collectionLockLeaseMs = timingConfig.collectionLockLeaseMs;
+    this.coordinationTimeoutMs = timingConfig.coordinationTimeoutMs;
+    this.lockTimeout = this.collectionLockLeaseMs;
     this.logLevel = config.logLevel ?? DEFAULT_LOG_LEVEL;
     this.masterIndexKey = config.masterIndexKey || DEFAULT_MASTER_INDEX_KEY;
+  }
+
+  /**
+   * Resolve split timing configuration while preserving legacy lockTimeout support.
+   * @param {Object} config - Raw configuration object provided to the constructor.
+   * @returns {{collectionLockLeaseMs: number, coordinationTimeoutMs: number}}
+   *   Normalised timing configuration.
+   * @private
+   */
+  _resolveTimingConfig(config) {
+    const legacyLockTimeout = config.lockTimeout;
+    return {
+      collectionLockLeaseMs:
+        config.collectionLockLeaseMs ?? legacyLockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS,
+      coordinationTimeoutMs:
+        config.coordinationTimeoutMs ?? legacyLockTimeout ?? DEFAULT_LOCK_TIMEOUT_MS
+    };
   }
 
   /**
@@ -158,9 +180,28 @@ class DatabaseConfig {
    */
   _validateConfig() {
     // Use shared validation helpers for consistent error types
-    // lockTimeout must be a number and at least 500ms
-    Validate.number(this.lockTimeout, 'lockTimeout');
-    Validate.range(this.lockTimeout, MIN_LOCK_TIMEOUT_MS, Number.MAX_SAFE_INTEGER, 'lockTimeout');
+    // Collection lease and coordination timeout must be numbers and at least 500ms
+    Validate.number(this.collectionLockLeaseMs, 'collectionLockLeaseMs');
+    Validate.range(
+      this.collectionLockLeaseMs,
+      MIN_LOCK_TIMEOUT_MS,
+      Number.MAX_SAFE_INTEGER,
+      'collectionLockLeaseMs'
+    );
+    Validate.number(this.coordinationTimeoutMs, 'coordinationTimeoutMs');
+    Validate.range(
+      this.coordinationTimeoutMs,
+      MIN_LOCK_TIMEOUT_MS,
+      Number.MAX_SAFE_INTEGER,
+      'coordinationTimeoutMs'
+    );
+    Validate.range(
+      this.collectionLockLeaseMs,
+      this.coordinationTimeoutMs,
+      Number.MAX_SAFE_INTEGER,
+      'collectionLockLeaseMs'
+    );
+    this.lockTimeout = this.collectionLockLeaseMs;
 
     // retryAttempts must be a positive integer
     Validate.integer(this.retryAttempts, 'retryAttempts');
@@ -278,6 +319,8 @@ class DatabaseConfig {
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
       lockTimeout: this.lockTimeout,
+      collectionLockLeaseMs: this.collectionLockLeaseMs,
+      coordinationTimeoutMs: this.coordinationTimeoutMs,
       retryAttempts: this.retryAttempts,
       retryDelayMs: this.retryDelayMs,
       lockRetryBackoffBase: this.lockRetryBackoffBase,
@@ -305,6 +348,8 @@ class DatabaseConfig {
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
       lockTimeout: this.lockTimeout,
+      collectionLockLeaseMs: this.collectionLockLeaseMs,
+      coordinationTimeoutMs: this.coordinationTimeoutMs,
       retryAttempts: this.retryAttempts,
       retryDelayMs: this.retryDelayMs,
       lockRetryBackoffBase: this.lockRetryBackoffBase,
@@ -334,6 +379,8 @@ class DatabaseConfig {
         rootFolderId: obj.rootFolderId,
         autoCreateCollections: obj.autoCreateCollections,
         lockTimeout: obj.lockTimeout,
+        collectionLockLeaseMs: obj.collectionLockLeaseMs,
+        coordinationTimeoutMs: obj.coordinationTimeoutMs,
         retryAttempts: obj.retryAttempts,
         retryDelayMs: obj.retryDelayMs,
         lockRetryBackoffBase: obj.lockRetryBackoffBase,
@@ -380,6 +427,22 @@ class DatabaseConfig {
    * @returns {number} Default lock timeout in milliseconds.
    */
   static getDefaultLockTimeout() {
+    return DEFAULT_LOCK_TIMEOUT_MS;
+  }
+
+  /**
+   * Provides default collection lock lease duration.
+   * @returns {number} Default collection lock lease in milliseconds.
+   */
+  static getDefaultCollectionLockLeaseMs() {
+    return DEFAULT_LOCK_TIMEOUT_MS;
+  }
+
+  /**
+   * Provides default coordination timeout duration.
+   * @returns {number} Default coordination timeout in milliseconds.
+   */
+  static getDefaultCoordinationTimeoutMs() {
     return DEFAULT_LOCK_TIMEOUT_MS;
   }
 

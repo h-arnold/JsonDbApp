@@ -68,6 +68,18 @@ describe('Database Initialisation', () => {
       registerDatabaseFile(database.indexFileId);
     });
 
+    it('should retain collectionLockLeaseMs when initialising the MasterIndex facade', () => {
+      const { database } = setupDatabaseTestEnvironment({
+        collectionLockLeaseMs: 4321,
+        coordinationTimeoutMs: 4000
+      });
+
+      database.createDatabase();
+      database.initialise();
+
+      expect(database._masterIndex._config.lockTimeout).toBe(4321);
+    });
+
     it('should load existing collections during initialise when index exists', () => {
       // Arrange - Create and initialise the database, then add a collection
       const { database, config, masterIndexKey } = setupDatabaseTestEnvironment();

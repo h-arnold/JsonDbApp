@@ -68,6 +68,24 @@ describe('Database recoverDatabase()', () => {
     );
   });
 
+  it('should retain collectionLockLeaseMs when rebuilding the MasterIndex during recovery', () => {
+    const { config, masterIndexKey, rootFolderId } = createDatabaseTestConfig({
+      collectionLockLeaseMs: 4321,
+      coordinationTimeoutMs: 4000
+    });
+    registerMasterIndexKey(masterIndexKey);
+    const backupFileId = createBackupIndexFile(
+      rootFolderId,
+      { collections: {}, lastUpdated: new Date(), version: 1 },
+      'empty_backup.json'
+    );
+    const database = new Database(config);
+
+    database.recoverDatabase(backupFileId);
+
+    expect(database._masterIndex._config.lockTimeout).toBe(4321);
+  });
+
   it('should throw when backup file structure is invalid', () => {
     // Arrange - Create malformed backup content missing the collections object
     const { config, masterIndexKey, rootFolderId } = createDatabaseTestConfig();

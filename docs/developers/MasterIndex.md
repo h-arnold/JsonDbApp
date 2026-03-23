@@ -88,6 +88,7 @@ Centralized helper for setting and persisting lock status with guaranteed orderi
   1. Sets lock status on collection metadata
   2. Persists to MasterIndex via `_updateCollectionMetadataInternal()`
 - **Usage:** Used by `acquireCollectionLock()`, `releaseCollectionLock()`, `cleanupExpiredLocks()`
+- **Usage:** Used by `acquireCollectionLock()`, `renewCollectionLock()`, `releaseCollectionLock()`, `cleanupExpiredLocks()`
 - **Benefits:** Single source of truth for lock persistence, guaranteed update ordering
 
 ### MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5
@@ -128,7 +129,10 @@ const hasConflict = masterIndex.hasConflict('users', expectedToken);
 // 5. Update metadata with new modification token
 masterIndex.updateCollectionMetadata('users', updates);
 
-// 6. Release lock
+// 6. Renew the lease if the write is close to expiry
+masterIndex.renewCollectionLock('users', operationId, 45000);
+
+// 7. Release lock
 masterIndex.releaseLock('users', operationId);
 ```
 
@@ -138,6 +142,7 @@ Prevents concurrent modifications across script instances:
 
 - Locks expire automatically (default: 30 seconds)
 - Operation ID required for lock acquisition/release
+- Active locks may be renewed by the owning operation before final metadata persistence
 - Expired locks are cleaned up automatically
 - All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata
 
@@ -213,6 +218,14 @@ Adds collection to master index. Called by `Database.createCollection()` during 
 Retrieves collection metadata. Used by `Database.getCollection()` and `Database.listCollections()` to access collection information.
 
 - **Returns:** Collection object or collections map
+
+#### `acquireCollectionLock(collectionName, operationId, timeout)` / `renewCollectionLock(collectionName, operationId, timeout)` / `releaseCollectionLock(collectionName, operationId)`
+
+Coordinates collection-level virtual locks.
+
+- `acquireCollectionLock(...)`: claims a free or expired lock for an operation
+- `renewCollectionLock(...)`: refreshes an active lock owned by the same operation before it expires
+- `releaseCollectionLock(...)`: clears the lock for the owning operation
 - **Database Integration:** Called by Database class methods to check for existing collections before creation or access
 
 #### `updateCollectionMetadata(name, updates)`

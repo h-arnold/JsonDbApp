@@ -7,6 +7,7 @@
  * @class
  */
 /* exported CollectionCoordinator */
+const LEASE_RENEWAL_WINDOW_MS = 250;
 /**
  * Orchestrates coordinated collection operations by applying locking,
  * conflict detection, and metadata synchronisation around core CRUD actions.
@@ -30,7 +31,9 @@ class CollectionCoordinator {
 
     const resolvedConfig = config instanceof DatabaseConfig ? config : new DatabaseConfig(config);
     this._config = {
-      lockTimeout: resolvedConfig.lockTimeout,
+      lockTimeout: resolvedConfig.collectionLockLeaseMs,
+      collectionLockLeaseMs: resolvedConfig.collectionLockLeaseMs,
+      coordinationTimeoutMs: resolvedConfig.coordinationTimeoutMs,
       retryAttempts: resolvedConfig.retryAttempts,
       retryDelayMs: resolvedConfig.retryDelayMs,
       lockRetryBackoffBase: resolvedConfig.lockRetryBackoffBase
@@ -51,12 +54,14 @@ class CollectionCoordinator {
     const opId = IdGenerator.generateUUID();
     const name = this._collection.getName();
     let lockAcquired = false;
+    let lockAcquiredAt = null;
     const startTime = Date.now();
 
     this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
 
     try {
-      lockAcquired = this._acquireLockWithTimeoutMapping(opId, operationName, name);
+      lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
+      lockAcquired = true;
       this._resolveConflictsIfPresent(name);
       const result = this._executeOperationWithTimeout(
         callback,
@@ -65,6 +70,7 @@ class CollectionCoordinator {
         name,
         startTime
       );
+      this._renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, name);
       this.updateMasterIndexMetadata();
       return result;
     } catch (e) {
@@ -105,29 +111,77 @@ class CollectionCoordinator {
    * @param {string} opId - Operation identifier
    * @param {string} operationName - Operation name for error context
    * @param {string} collectionName - Collection name for logging
-   * @returns {boolean} True when lock was acquired
+   * @returns {number} Timestamp recorded after the lock was acquired.
    * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When lock acquisition times out
    * @throws {ErrorHandler.ErrorTypes.*} For other lock acquisition failures
    * @private
    */
   _acquireLockWithTimeoutMapping(opId, operationName, collectionName) {
     try {
-      this.acquireOperationLock(opId);
-      return true;
+      return this.acquireOperationLock(opId);
     } catch (e) {
       if (e instanceof ErrorHandler.ErrorTypes.LOCK_TIMEOUT) {
         this._logger.error('Lock acquisition timed out', {
           collection: collectionName,
           operationId: opId,
-          timeout: this._config.lockTimeout
+          timeout: this._config.coordinationTimeoutMs
         });
         throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
           operationName,
-          this._config.lockTimeout
+          this._config.coordinationTimeoutMs
         );
       }
       throw e;
     }
+  }
+
+  /**
+   * Renew the lock lease when the operation is close to the expiry window.
+   * @param {number|null} lockAcquiredAt - Timestamp recorded after lock acquisition.
+   * @param {string} opId - Operation identifier.
+   * @param {string} operationName - Operation name for error context.
+   * @param {string} collectionName - Collection name for logging.
+   * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When the lease can no longer be renewed safely.
+   * @private
+   */
+  _renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, collectionName) {
+    if (!this._shouldRenewLease(lockAcquiredAt)) {
+      return;
+    }
+
+    const renewed = this._masterIndex.renewCollectionLock(
+      collectionName,
+      opId,
+      this._config.collectionLockLeaseMs
+    );
+    if (renewed) {
+      return;
+    }
+
+    this._logger.error('Collection lock lease expired before finalisation could complete', {
+      collection: collectionName,
+      opId,
+      leaseMs: this._config.collectionLockLeaseMs
+    });
+    throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+      operationName,
+      this._config.coordinationTimeoutMs
+    );
+  }
+
+  /**
+   * Determine whether the current operation is close enough to lease expiry to require renewal.
+   * @param {number|null} lockAcquiredAt - Timestamp recorded after lock acquisition.
+   * @returns {boolean} True when renewal should be attempted.
+   * @private
+   */
+  _shouldRenewLease(lockAcquiredAt) {
+    if (typeof lockAcquiredAt !== 'number') {
+      return false;
+    }
+
+    const elapsedSinceLockMs = Date.now() - lockAcquiredAt;
+    return elapsedSinceLockMs >= this._config.collectionLockLeaseMs - LEASE_RENEWAL_WINDOW_MS;
   }
 
   /**
@@ -156,15 +210,15 @@ class CollectionCoordinator {
   _executeOperationWithTimeout(callback, operationName, opId, collectionName, startTime) {
     const result = callback();
     const elapsed = Date.now() - startTime;
-    if (elapsed > this._config.lockTimeout) {
+    if (elapsed > this._config.coordinationTimeoutMs) {
       this._logger.error('Operation timed out', {
         collection: collectionName,
         opId,
-        timeout: this._config.lockTimeout
+        timeout: this._config.coordinationTimeoutMs
       });
       throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
         operationName,
-        this._config.lockTimeout
+        this._config.coordinationTimeoutMs
       );
     }
     return result;
@@ -173,24 +227,38 @@ class CollectionCoordinator {
   /**
    * Acquire operation lock with retry/backoff
    * @param {string} operationId - Unique operation identifier
+   * @returns {number} Timestamp recorded after the lock was acquired.
    * @throws {ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE} When lock cannot be acquired
    * @throws {Error} For unexpected errors during lock acquisition.
    */
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
-    const { retryAttempts, retryDelayMs, lockTimeout } = this._config;
+    const { retryAttempts, retryDelayMs, collectionLockLeaseMs, lockRetryBackoffBase } =
+      this._config;
 
     let acquired = false;
+    let lockAcquiredAt = null;
+    let elapsedBackoffMs = 0;
     for (let attempt = 1; attempt <= retryAttempts; attempt++) {
       try {
-        const got = this._masterIndex.acquireCollectionLock(name, operationId, lockTimeout);
+        const got = this._masterIndex.acquireCollectionLock(
+          name,
+          operationId,
+          collectionLockLeaseMs
+        );
         if (got) {
           acquired = true;
+          lockAcquiredAt = Date.now();
           break;
         }
         // retry after backoff
         if (attempt < retryAttempts) {
-          Utilities.sleep(retryDelayMs * Math.pow(this._config.lockRetryBackoffBase, attempt - 1));
+          const backoffDelayMs = retryDelayMs * Math.pow(lockRetryBackoffBase, attempt - 1);
+          if (elapsedBackoffMs + backoffDelayMs >= collectionLockLeaseMs) {
+            break;
+          }
+          Utilities.sleep(backoffDelayMs);
+          elapsedBackoffMs += backoffDelayMs;
         }
       } catch (e) {
         this._logger.error('Unexpected error during lock acquisition attempt', {
@@ -208,6 +276,7 @@ class CollectionCoordinator {
       // Throw specific error when lock acquisition fails
       throw new ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE(name);
     }
+    return lockAcquiredAt;
   }
 
   /**

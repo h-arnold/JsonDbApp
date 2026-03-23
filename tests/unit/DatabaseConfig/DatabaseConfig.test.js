@@ -44,6 +44,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
     expect(config.rootFolderId).toBeDefined();
     expect(config.autoCreateCollections).toBe(true);
     expect(config.lockTimeout).toBe(30000);
+    expect(config.collectionLockLeaseMs).toBe(30000);
+    expect(config.coordinationTimeoutMs).toBe(30000);
     expect(config.retryAttempts).toBe(3);
     expect(config.retryDelayMs).toBe(1000);
     expect(config.lockRetryBackoffBase).toBe(2);
@@ -84,7 +86,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
     const customConfig = {
       rootFolderId: 'custom-folder-id',
       autoCreateCollections: false,
-      lockTimeout: 60000,
+      collectionLockLeaseMs: 60000,
+      coordinationTimeoutMs: 45000,
       retryAttempts: 5,
       retryDelayMs: 2000,
       lockRetryBackoffBase: 3,
@@ -105,6 +108,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
     expect(config.rootFolderId).toBe(customConfig.rootFolderId);
     expect(config.autoCreateCollections).toBe(false);
     expect(config.lockTimeout).toBe(60000);
+    expect(config.collectionLockLeaseMs).toBe(60000);
+    expect(config.coordinationTimeoutMs).toBe(45000);
     expect(config.retryAttempts).toBe(5);
     expect(config.retryDelayMs).toBe(2000);
     expect(config.lockRetryBackoffBase).toBe(3);
@@ -122,14 +127,16 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
   it('should merge custom config with defaults', () => {
     const partialConfig = {
-      lockTimeout: 45000,
+      coordinationTimeoutMs: 25000,
       retryAttempts: 7,
       logLevel: 'WARN'
     };
 
     const config = new DatabaseConfig(partialConfig);
 
-    expect(config.lockTimeout).toBe(45000);
+    expect(config.lockTimeout).toBe(30000);
+    expect(config.collectionLockLeaseMs).toBe(30000);
+    expect(config.coordinationTimeoutMs).toBe(25000);
     expect(config.retryAttempts).toBe(7);
     expect(config.retryDelayMs).toBe(1000);
     expect(config.lockRetryBackoffBase).toBe(2);
@@ -164,6 +171,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
     const cfg = new DatabaseConfig({
       logLevel: null,
       lockTimeout: null,
+      collectionLockLeaseMs: null,
+      coordinationTimeoutMs: null,
       retryAttempts: null,
       retryDelayMs: null,
       fileRetryAttempts: null,
@@ -176,6 +185,8 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
     expect(cfg.logLevel).toBe('INFO');
     expect(cfg.lockTimeout).toBe(30000);
+    expect(cfg.collectionLockLeaseMs).toBe(30000);
+    expect(cfg.coordinationTimeoutMs).toBe(30000);
     expect(cfg.retryAttempts).toBe(3);
     expect(cfg.retryDelayMs).toBe(1000);
     expect(cfg.fileRetryAttempts).toBe(3);
@@ -203,6 +214,40 @@ describe('DatabaseConfig Validation', () => {
 
     const cfg = new DatabaseConfig({ lockTimeout: 500 });
     expect(cfg.lockTimeout).toBe(500);
+    expect(cfg.collectionLockLeaseMs).toBe(500);
+    expect(cfg.coordinationTimeoutMs).toBe(500);
+  });
+
+  it('should validate split coordination timeout configuration', () => {
+    expect(() => {
+      new DatabaseConfig({ collectionLockLeaseMs: 'invalid' });
+    }).toThrow();
+
+    expect(() => {
+      new DatabaseConfig({ coordinationTimeoutMs: 'invalid' });
+    }).toThrow();
+
+    expect(() => {
+      new DatabaseConfig({ collectionLockLeaseMs: 499 });
+    }).toThrow();
+
+    expect(() => {
+      new DatabaseConfig({ coordinationTimeoutMs: 499 });
+    }).toThrow();
+
+    expect(() => {
+      new DatabaseConfig({
+        collectionLockLeaseMs: 800,
+        coordinationTimeoutMs: 1000
+      });
+    }).toThrow();
+
+    const cfg = new DatabaseConfig({
+      collectionLockLeaseMs: 1200,
+      coordinationTimeoutMs: 1000
+    });
+    expect(cfg.collectionLockLeaseMs).toBe(1200);
+    expect(cfg.coordinationTimeoutMs).toBe(1000);
   });
 
   it('should validate retryAttempts and retryDelayMs parameters', () => {

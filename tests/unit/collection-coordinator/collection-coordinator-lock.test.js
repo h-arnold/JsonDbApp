@@ -4,7 +4,7 @@
  * Tests for CollectionCoordinator.acquireOperationLock.
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   setupCoordinatorTestEnvironment,
   createTestCollection,
@@ -43,7 +43,8 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
       env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 30000);
 
       const coordinator = createCoordinator({
-        lockTimeout: 500,
+        collectionLockLeaseMs: 500,
+        coordinationTimeoutMs: 500,
         retryAttempts: 2,
         retryDelayMs: 50
       });
@@ -51,6 +52,27 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
       expect(() => {
         coordinator.acquireOperationLock('test-op-id-2');
       }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
+    });
+
+    it('should stop retrying before the requested lease window is exhausted', () => {
+      env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 1500);
+
+      const sleepSpy = vi.spyOn(Utilities, 'sleep');
+      const coordinator = createCoordinator({
+        collectionLockLeaseMs: 600,
+        coordinationTimeoutMs: 600,
+        retryAttempts: 4,
+        retryDelayMs: 250,
+        lockRetryBackoffBase: 2
+      });
+
+      expect(() => {
+        coordinator.acquireOperationLock('test-op-id-3');
+      }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
+
+      expect(sleepSpy).toHaveBeenCalledTimes(1);
+      expect(sleepSpy).toHaveBeenCalledWith(250);
+      sleepSpy.mockRestore();
     });
   });
 });
