@@ -139,6 +139,7 @@ Prevents concurrent modifications across script instances:
 - Locks expire automatically (default: 30 seconds)
 - Operation ID required for lock acquisition/release
 - Expired locks are cleaned up automatically
+- All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata
 
 ### Data Structure
 

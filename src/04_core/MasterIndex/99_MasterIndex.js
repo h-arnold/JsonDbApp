@@ -257,8 +257,6 @@ class MasterIndex {
     Validate.nonEmptyString(name, 'name');
 
     return this._withScriptLock(() => {
-      this._loadFromScriptProperties();
-
       if (this._data.collections && this._data.collections.hasOwnProperty(name)) {
         delete this._data.collections[name];
         const timestamp = this._getCurrentTimestamp();
@@ -426,10 +424,21 @@ class MasterIndex {
   _withScriptLock(operation, timeout = this._config.lockTimeout) {
     this._dbLockService.acquireScriptLock(timeout);
     try {
+      this._reloadLatestStateUnderLock();
       return operation();
     } finally {
       this._dbLockService.releaseScriptLock();
     }
+  }
+
+  /**
+   * Reload the latest ScriptProperties snapshot while the ScriptLock is held.
+   * @returns {void}
+   * @private
+   */
+  _reloadLatestStateUnderLock() {
+    this._loadFromScriptProperties();
+    this._initialiseDataState();
   }
 
   /**
