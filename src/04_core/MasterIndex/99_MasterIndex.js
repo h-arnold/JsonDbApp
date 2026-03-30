@@ -373,18 +373,29 @@ class MasterIndex {
    * @private
    */
   _initialiseConfig(config) {
-    if (config.masterIndexKey == null) {
-      this._assertDatabaseConfigDefault('getDefaultMasterIndexKey');
-    }
-    if (config.lockTimeout == null) {
-      this._assertDatabaseConfigDefault('getDefaultCollectionLockLeaseMs');
-    }
+    this._assertRequiredDatabaseConfigDefaults(config);
 
     return {
       masterIndexKey: config.masterIndexKey ?? DatabaseConfig.getDefaultMasterIndexKey(),
       lockTimeout: config.lockTimeout ?? DatabaseConfig.getDefaultCollectionLockLeaseMs(),
       version: config.version ?? 1
     };
+  }
+
+  /**
+   * Assert that DatabaseConfig exposes the default providers required by MasterIndex.
+   * @param {Object} config - Raw configuration input.
+   * @returns {void}
+   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When DatabaseConfig or a required method is unavailable.
+   * @private
+   */
+  _assertRequiredDatabaseConfigDefaults(config) {
+    if (config.masterIndexKey === undefined || config.masterIndexKey === null) {
+      this._assertDatabaseConfigDefault('getDefaultMasterIndexKey');
+    }
+    if (config.lockTimeout === undefined || config.lockTimeout === null) {
+      this._assertDatabaseConfigDefault('getDefaultCollectionLockLeaseMs');
+    }
   }
 
   /**

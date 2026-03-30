@@ -229,7 +229,7 @@ See [AGENTS.md](../AGENTS.md) for development guidelines.
 
 ## Version Information
 
-Current version: 0.0.4 (Beta)
+Current version: 0.1.1 (Beta)
 
 JsonDbApp is under active development. APIs may change between versions. See [release notes](release-notes/) for version-specific changes.
 
