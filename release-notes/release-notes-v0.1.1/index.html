@@ -12,13 +12,13 @@
         <meta name="author" content="h-arnold">
       
       
-        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/release-notes/release-notes-v0.1.0/">
+        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/release-notes/release-notes-v0.1.1/">
       
       
-        <link rel="prev" href="../release-notes-v0.1.1/">
+        <link rel="prev" href="../../developers/Class_Diagrams/">
       
       
-        <link rel="next" href="../release-notes-v0.0.4/">
+        <link rel="next" href="../release-notes-v0.1.0/">
       
       
         
@@ -29,7 +29,7 @@
     
     
       
-        <title>Version 0.1.0 - JsonDbApp Documentation</title>
+        <title>Version 0.1.1 - JsonDbApp Documentation</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#jsondbapp-v010-minor-release" class="md-skip">
+        <a href="#jsondbapp-v011-patch-release" class="md-skip">
           Skip to content
         </a>
       
@@ -114,7 +114,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Version 0.1.0
+              Version 0.1.1
             
           </span>
         </div>
@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item md-tabs__item--active">
-        <a href="../release-notes-v0.1.1/" class="md-tabs__link">
+        <a href="./" class="md-tabs__link">
           
   
   
@@ -1264,34 +1264,6 @@
                 
   
   
-  
-  
-    <li class="md-nav__item">
-      <a href="../release-notes-v0.1.1/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Version 0.1.1
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
     
   
   
@@ -1309,7 +1281,7 @@
   <span class="md-ellipsis">
     
   
-    Version 0.1.0
+    Version 0.1.1
   
 
     
@@ -1327,7 +1299,7 @@
   <span class="md-ellipsis">
     
   
-    Version 0.1.0
+    Version 0.1.1
   
 
     
@@ -1351,15 +1323,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#jsondbapp-v010-minor-release" class="md-nav__link">
+  <a href="#jsondbapp-v011-patch-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JsonDbApp v0.1.0 — Minor release
+        JsonDbApp v0.1.1 — Patch release
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JsonDbApp v0.1.0 — Minor release">
+    <nav class="md-nav" aria-label="JsonDbApp v0.1.1 — Patch release">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1371,30 +1343,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Summary">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#breaking-change" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Breaking Change
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
           <li class="md-nav__item">
   <a href="#highlights" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Highlights 🔧
+        Highlights
       
     </span>
   </a>
@@ -1418,10 +1373,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#48-docs-clarify-constructor-examples" class="md-nav__link">
+  <a href="#50-introduce-collectionlockleasems-and-coordinationtimeoutms-add-lock-renewal-and-validations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        48 — docs: clarify constructor examples
+        50 — Introduce collectionLockLeaseMs and coordinationTimeoutMs; add lock renewal and validations
       
     </span>
   </a>
@@ -1429,92 +1384,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#47-implement-suggestions-from-kiss_and_drymd" class="md-nav__link">
+  <a href="#49-reload-masterindex-state-under-scriptlock-to-prevent-stale-overwrites-and-add-cross-instance-lock-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        47 — Implement suggestions from KISS_AND_DRY.md
+        49 — Reload MasterIndex state under ScriptLock to prevent stale overwrites and add cross-instance lock tests
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#46-update-kiss_and_drymd-to-recommend-validate-driven-errors-and-canonical-getcollection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        46 — Update KISS_AND_DRY.md to recommend Validate-driven errors and canonical getCollection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#45-refactor-tests-to-eliminate-duplication-dry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        45 — Refactor tests to eliminate duplication (DRY)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#44-silence-lint-complexity-warnings-in-core-utilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        44 — Silence lint complexity warnings in core utilities
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#43-update-dry-testing-refactor-guidance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        43 — Update DRY testing refactor guidance
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#41-de-clause-the-code-de-cluttercleanups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        41 — De-Clause the code (de-clutter/cleanups)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#29-refactor-tests-to-vitest-framework-and-enhance-test-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        29 — Refactor tests to Vitest framework and enhance test structure
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#23-lower-lint-severities-add-jsdoc-plugin-prettier-husky-and-ci-updates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        23 — Lower lint severities, add JSDoc plugin, Prettier, Husky and CI updates
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="23 — Lower lint severities, add JSDoc plugin, Prettier, Husky and CI updates">
+    <nav class="md-nav" aria-label="49 — Reload MasterIndex state under ScriptLock to prevent stale overwrites and add cross-instance lock tests">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1532,7 +1410,7 @@
   <a href="#upgrade-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Upgrade notes ⚠️
+        Upgrade notes
       
     </span>
   </a>
@@ -1548,6 +1426,34 @@
   
 </nav>
       
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../release-notes-v0.1.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.1.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
     </li>
   
 
@@ -1641,15 +1547,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#jsondbapp-v010-minor-release" class="md-nav__link">
+  <a href="#jsondbapp-v011-patch-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JsonDbApp v0.1.0 — Minor release
+        JsonDbApp v0.1.1 — Patch release
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JsonDbApp v0.1.0 — Minor release">
+    <nav class="md-nav" aria-label="JsonDbApp v0.1.1 — Patch release">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1661,30 +1567,13 @@
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Summary">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#breaking-change" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Breaking Change
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
 </li>
         
           <li class="md-nav__item">
   <a href="#highlights" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Highlights 🔧
+        Highlights
       
     </span>
   </a>
@@ -1708,10 +1597,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#48-docs-clarify-constructor-examples" class="md-nav__link">
+  <a href="#50-introduce-collectionlockleasems-and-coordinationtimeoutms-add-lock-renewal-and-validations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        48 — docs: clarify constructor examples
+        50 — Introduce collectionLockLeaseMs and coordinationTimeoutMs; add lock renewal and validations
       
     </span>
   </a>
@@ -1719,92 +1608,15 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#47-implement-suggestions-from-kiss_and_drymd" class="md-nav__link">
+  <a href="#49-reload-masterindex-state-under-scriptlock-to-prevent-stale-overwrites-and-add-cross-instance-lock-tests" class="md-nav__link">
     <span class="md-ellipsis">
       
-        47 — Implement suggestions from KISS_AND_DRY.md
+        49 — Reload MasterIndex state under ScriptLock to prevent stale overwrites and add cross-instance lock tests
       
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#46-update-kiss_and_drymd-to-recommend-validate-driven-errors-and-canonical-getcollection" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        46 — Update KISS_AND_DRY.md to recommend Validate-driven errors and canonical getCollection
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#45-refactor-tests-to-eliminate-duplication-dry" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        45 — Refactor tests to eliminate duplication (DRY)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#44-silence-lint-complexity-warnings-in-core-utilities" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        44 — Silence lint complexity warnings in core utilities
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#43-update-dry-testing-refactor-guidance" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        43 — Update DRY testing refactor guidance
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#41-de-clause-the-code-de-cluttercleanups" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        41 — De-Clause the code (de-clutter/cleanups)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#29-refactor-tests-to-vitest-framework-and-enhance-test-structure" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        29 — Refactor tests to Vitest framework and enhance test structure
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#23-lower-lint-severities-add-jsdoc-plugin-prettier-husky-and-ci-updates" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        23 — Lower lint severities, add JSDoc plugin, Prettier, Husky and CI updates
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="23 — Lower lint severities, add JSDoc plugin, Prettier, Husky and CI updates">
+    <nav class="md-nav" aria-label="49 — Reload MasterIndex state under ScriptLock to prevent stale overwrites and add cross-instance lock tests">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1822,7 +1634,7 @@
   <a href="#upgrade-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Upgrade notes ⚠️
+        Upgrade notes
       
     </span>
   </a>
@@ -1854,84 +1666,43 @@
   
 
 
-<h2 id="jsondbapp-v010-minor-release">JsonDbApp v0.1.0 — Minor release<a class="headerlink" href="#jsondbapp-v010-minor-release" title="Permanent link">&para;</a></h2>
-<p>Release date: 2026-02-06</p>
+<h2 id="jsondbapp-v011-patch-release">JsonDbApp v0.1.1 — Patch release<a class="headerlink" href="#jsondbapp-v011-patch-release" title="Permanent link">&para;</a></h2>
+<p>Release date: 2026-03-30</p>
 <h3 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h3>
-<p>This release focuses on a comprehensive documentation overhaul and a significant internal refactor to reduce complexity and make the codebase easier to maintain. There are also developer-experience improvements (linting/tooling, test framework migration and CI enhancements) and ongoing DRY/KISS guidance implemented across docs and tests.</p>
-<p><strong>This is primarily a maintenance release with no breaking changes to public APIs.</strong></p>
-<p>🔗<a href="https://drive.google.com/drive/folders/1EqZJjMRCHfXDvVtGbqrD85xFuQBYGf11?usp=drive_link">Get copies of the latest scripts here</a></p>
-<h4 id="breaking-change">Breaking Change<a class="headerlink" href="#breaking-change" title="Permanent link">&para;</a></h4>
-<p><code>Database.collection</code> and <code>Database.getCollection</code> were methods with largely duplicated functionality. The refactor has removed <code>Database.collection</code> in favour of a single canonical <code>getCollection</code> method. If you were using <code>Database.collection</code> directly, please switch to <code>Database.getCollection</code>.</p>
-<hr />
-<h3 id="highlights">Highlights 🔧<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h3>
+<p>This patch release hardens collection locking and master-index coordination. It separates lock lease duration from overall coordination timeout, renews collection locks when operations approach expiry, and reloads master index state while holding <code>ScriptLock</code> to avoid stale overwrites. Includes supporting test and documentation updates.</p>
+<p><a href="https://drive.google.com/drive/folders/1EqZJjMRCHfXDvVtGbqrD85xFuQBYGf11?usp=drive_link">Get copies of the latest scripts here</a></p>
+<h3 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Documentation</strong>: Added comprehensive documentation and setup guides, consolidated note/info blocks and improved examples (query/update) and constructor documentation for easier onboarding and reference. 📚</li>
-<li><strong>Refactor &amp; Simplicity</strong>: Significant internal refactor to reduce complexity, remove redundant files and "de-clutter" the code for easier maintenance and clearer contributor guidance. ✂️</li>
-<li><strong>Testing</strong>: Migrated tests to the <strong>Vitest</strong> framework, eliminated duplication (DRY) and restructured test suites for maintainability and improved clarity. ✅</li>
-<li><strong>Tooling &amp; CI</strong>: Added/updated tooling for developer ergonomics — <strong>Prettier</strong>, <strong>Husky</strong>, <strong>JSDoc</strong> plugin, and updated GitHub Actions for documentation deployment. ⚙️</li>
-<li><strong>Linting</strong>: Lowered some lint severities and silenced complexity warnings in core utilities to reduce noise while preserving quality. 🧹</li>
-<li><strong>Guidance</strong>: Updated and implemented recommendations from <code>KISS_AND_DRY.md</code> (recommend Validate-driven errors and a canonical <code>getCollection</code> approach). 💡</li>
+<li>Split lock timing into separate collection lease and coordination timeout settings.</li>
+<li>Add lock renewal support for long-running collection operations.</li>
+<li>Reload master index state under <code>ScriptLock</code> to prevent stale overwrites.</li>
+<li>Expand validation and test coverage for lock timing and recovery paths.</li>
+<li>Update supporting documentation for the new locking behaviour.</li>
 </ul>
-<hr />
 <h3 id="prs-merged">PRs merged<a class="headerlink" href="#prs-merged" title="Permanent link">&para;</a></h3>
 <ul>
 <li>
-<h1 id="48-docs-clarify-constructor-examples">48 — docs: clarify constructor examples<a class="headerlink" href="#48-docs-clarify-constructor-examples" title="Permanent link">&para;</a></h1>
+<h1 id="50-introduce-collectionlockleasems-and-coordinationtimeoutms-add-lock-renewal-and-validations">50 — Introduce <code>collectionLockLeaseMs</code> and <code>coordinationTimeoutMs</code>; add lock renewal and validations<a class="headerlink" href="#50-introduce-collectionlockleasems-and-coordinationtimeoutms-add-lock-renewal-and-validations" title="Permanent link">&para;</a></h1>
 </li>
 <li>
-<h1 id="47-implement-suggestions-from-kiss_and_drymd">47 — Implement suggestions from <code>KISS_AND_DRY.md</code><a class="headerlink" href="#47-implement-suggestions-from-kiss_and_drymd" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="46-update-kiss_and_drymd-to-recommend-validate-driven-errors-and-canonical-getcollection">46 — Update <code>KISS_AND_DRY.md</code> to recommend Validate-driven errors and canonical <code>getCollection</code><a class="headerlink" href="#46-update-kiss_and_drymd-to-recommend-validate-driven-errors-and-canonical-getcollection" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="45-refactor-tests-to-eliminate-duplication-dry">45 — Refactor tests to eliminate duplication (DRY)<a class="headerlink" href="#45-refactor-tests-to-eliminate-duplication-dry" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="44-silence-lint-complexity-warnings-in-core-utilities">44 — Silence lint complexity warnings in core utilities<a class="headerlink" href="#44-silence-lint-complexity-warnings-in-core-utilities" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="43-update-dry-testing-refactor-guidance">43 — Update DRY testing refactor guidance<a class="headerlink" href="#43-update-dry-testing-refactor-guidance" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="41-de-clause-the-code-de-cluttercleanups">41 — De-Clause the code (de-clutter/cleanups)<a class="headerlink" href="#41-de-clause-the-code-de-cluttercleanups" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="29-refactor-tests-to-vitest-framework-and-enhance-test-structure">29 — Refactor tests to Vitest framework and enhance test structure<a class="headerlink" href="#29-refactor-tests-to-vitest-framework-and-enhance-test-structure" title="Permanent link">&para;</a></h1>
-</li>
-<li>
-<h1 id="23-lower-lint-severities-add-jsdoc-plugin-prettier-husky-and-ci-updates">23 — Lower lint severities, add JSDoc plugin, Prettier, Husky and CI updates<a class="headerlink" href="#23-lower-lint-severities-add-jsdoc-plugin-prettier-husky-and-ci-updates" title="Permanent link">&para;</a></h1>
+<h1 id="49-reload-masterindex-state-under-scriptlock-to-prevent-stale-overwrites-and-add-cross-instance-lock-tests">49 — Reload MasterIndex state under <code>ScriptLock</code> to prevent stale overwrites and add cross-instance lock tests<a class="headerlink" href="#49-reload-masterindex-state-under-scriptlock-to-prevent-stale-overwrites-and-add-cross-instance-lock-tests" title="Permanent link">&para;</a></h1>
 </li>
 </ul>
-<hr />
 <h3 id="full-changelog">Full changelog<a class="headerlink" href="#full-changelog" title="Permanent link">&para;</a></h3>
 <ul>
-<li>53bef17 — Update GitHub Actions workflow for documentation deployment</li>
-<li>069b8e9 — docs: consolidate note and info blocks for improved readability</li>
-<li>76dd21e — docs: add comprehensive documentation for JsonDbApp and setup guides</li>
-<li>f7dbd29 — docs: streamline query and update examples for improved readability</li>
-<li>4bb08e4 — Add documentation for JsonDbApp</li>
-<li>029bfe4 — docs: remove unnecessary blank lines for improved readability</li>
-<li>6aec06f — refactor: consolidate documentation and remove redundant files for improved clarity and maintainability</li>
-<li>bfd42ce — docs: clarify constructor examples (#48)</li>
-<li>deb67bc — Implement all suggestions from KISS_AND_DRY.md (#47)</li>
-<li>5bcbd8f — Update KISS_AND_DRY.md to recommend Validate-driven errors and canonical getCollection (#46)</li>
-<li>1aa0026 — Refactor tests to eliminate duplication (DRY) (#45)</li>
-<li>3978dd8 — Silence lint complexity warnings in core utilities (#44)</li>
-<li>b16b9f6 — Update DRY testing refactor guidance (#43)</li>
-<li>cded06d — De-Claude the code (#41)</li>
-<li>5fbc9e3 — refactor: enhance refactoring guidelines with shared helper identification strategy and extraction steps</li>
-<li>2ac9785 — Refactor tests to Vitest framework and enhance test structure (#29)</li>
-<li>de8348d — Lower lint severities, add JSDoc plugin, Prettier, Husky and CI (#23)</li>
+<li>dafec87 — feat: Introduce <code>collectionLockLeaseMs</code> and <code>coordinationTimeoutMs</code>; add lock renewal and validations (#50)</li>
+<li>a3d4420 — fix: Reload MasterIndex state under <code>ScriptLock</code> to prevent stale overwrites and add cross-instance lock tests (#49)</li>
+<li>6389bf5 — docs: update links to project copy in README and Quick Start Guide</li>
+<li>09305c4 — docs: update release notes for v0.1.0, fix formatting and improve clarity</li>
+<li>Added: lock lease renewal logic in <code>CollectionCoordinator</code> and <code>MasterIndexLockManager</code></li>
+<li>Added: configuration split for <code>collectionLockLeaseMs</code> and <code>coordinationTimeoutMs</code></li>
+<li>Added: focused tests for lock renewal, master-index recovery, and timing validation</li>
 </ul>
-<hr />
-<h3 id="upgrade-notes">Upgrade notes ⚠️<a class="headerlink" href="#upgrade-notes" title="Permanent link">&para;</a></h3>
+<h3 id="upgrade-notes">Upgrade notes<a class="headerlink" href="#upgrade-notes" title="Permanent link">&para;</a></h3>
 <ul>
-<li>No breaking changes introduced — existing public APIs should continue to work as before. If you use any internal modules directly (not recommended), review the refactor notes and tests for any changed internals.</li>
-<li>Documentation has been restructured and improved; consult the new docs for setup, examples and contribution guidelines.</li>
+<li>No breaking changes introduced.</li>
+<li><code>lockTimeout</code> remains supported for compatibility, but new code should prefer <code>collectionLockLeaseMs</code> and <code>coordinationTimeoutMs</code> when tuning lock behaviour.</li>
 </ul>
-<hr />
-<p>If you have any questions about the changes or want to help with follow-up cleanups, please open an issue or a PR.</p>
 
 
 
@@ -1967,7 +1738,7 @@
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../release-notes-v0.1.1/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Version 0.1.1">
+          <a href="../../developers/Class_Diagrams/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Class Diagrams">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -1977,20 +1748,20 @@
                 Previous
               </span>
               <div class="md-ellipsis">
-                Version 0.1.1
+                Class Diagrams
               </div>
             </div>
           </a>
         
         
           
-          <a href="../release-notes-v0.0.4/" class="md-footer__link md-footer__link--next" aria-label="Next: Version 0.0.4">
+          <a href="../release-notes-v0.1.0/" class="md-footer__link md-footer__link--next" aria-label="Next: Version 0.1.0">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Version 0.0.4
+                Version 0.1.0
               </div>
             </div>
             <div class="md-footer__button md-icon">
