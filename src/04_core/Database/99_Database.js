@@ -31,9 +31,17 @@ class Database {
 
     this.indexFileId = null;
     this.collections = new Map();
+
+    // Apply log-level configuration before creating the component logger
+    // so that all subsequent log output respects the configured level.
+    JDbLogger.setLevelByName(this.config.logLevel);
     this._logger = JDbLogger.createComponentLogger('Database');
+
     this._fileOps = new FileOperations(this._logger, this.config);
     this._fileService = new FileService(this._fileOps, this._logger);
+    // FileService defaults cacheEnabled to true; propagate the configured value.
+    this._fileService.setCacheEnabled(this.config.cacheEnabled);
+
     this._masterIndex = null;
 
     this._lifecycle = new DatabaseLifecycle(this);

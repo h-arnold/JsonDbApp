@@ -63,16 +63,16 @@ A comprehensive logging utility providing structured logging with multiple level
 
 ### 1.2.0.2. Core Methods
 
-| Method                             | Description                                   |
-| ---------------------------------- | --------------------------------------------- |
-| `setLevel(level)`                  | Set log level by number (0-3)                 |
-| `setLevelByName(name)`             | Set log level by name (ERROR/WARN/INFO/DEBUG) |
-| `error(message, context)`          | Log error message with optional context       |
-| `warn(message, context)`           | Log warning message with optional context     |
-| `info(message, context)`           | Log info message with optional context        |
-| `debug(message, context)`          | Log debug message with optional context       |
-| `createComponentLogger(component)` | Create component-specific logger              |
-| `timeOperation(name, fn, context)` | Time and log operation execution              |
+| Method                             | Description                                                                                                                   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `setLevel(level)`                  | Set log level by number (0-3)                                                                                                 |
+| `setLevelByName(name)`             | Set log level by name (ERROR/WARN/INFO/DEBUG). Called automatically by `Database` constructor to propagate `logLevel` config. |
+| `error(message, context)`          | Log error message with optional context                                                                                       |
+| `warn(message, context)`           | Log warning message with optional context                                                                                     |
+| `info(message, context)`           | Log info message with optional context                                                                                        |
+| `debug(message, context)`          | Log debug message with optional context                                                                                       |
+| `createComponentLogger(component)` | Create component-specific logger                                                                                              |
+| `timeOperation(name, fn, context)` | Time and log operation execution                                                                                              |
 
 ### 1.2.0.3. Usage Examples
 
@@ -622,7 +622,10 @@ class Collection {
 ### 1.4.1. Logger Configuration
 
 ```javascript
-// Set global log level
+// When using Database, the constructor propagates logLevel automatically:
+const db = new Database({ logLevel: 'DEBUG' }); // JDbLogger.setLevelByName('DEBUG') called internally
+
+// Manual override (e.g., for standalone scripts or testing):
 JDbLogger.setLevelByName('DEBUG'); // Development
 JDbLogger.setLevelByName('INFO'); // Production
 
