@@ -176,6 +176,8 @@ class Database {
 
 - Validates and normalizes configuration via DatabaseConfig
 - initialises logging, file services, and MasterIndex
+- Propagates `logLevel` config to `JDbLogger` via `setLevelByName()` so all subsequent log output respects the configured level
+- Propagates `cacheEnabled` config to `FileService` via `setCacheEnabled()` (defaults to `true`)
 - Creates in-memory collections map
 - Does NOT automatically initialise - call `initialise()` explicitly
 

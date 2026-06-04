@@ -1,4 +1,4 @@
-/* global Database, DatabaseConfig, MasterIndex, PropertiesService, MasterIndexError */
+/* global Database, DatabaseConfig, MasterIndex, PropertiesService, MasterIndexError, JDbLogger */
 
 /**
  * Database Initialisation Tests
@@ -167,34 +167,68 @@ describe('Database Initialisation', () => {
     it('should propagate logLevel config to JDbLogger', () => {
       // Arrange - Save original level to restore after test
       const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with explicit logLevel
+        const { database } = setupDatabaseTestEnvironment({ logLevel: 'ERROR' });
 
-      // Act - Create Database with explicit logLevel
-      const { database } = setupDatabaseTestEnvironment({ logLevel: 'ERROR' });
-
-      // Assert - JDbLogger.currentLevel should match configured logLevel
-      expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.ERROR);
-      expect(database.config.logLevel).toBe('ERROR');
-
-      // Cleanup - Restore original log level
-      JDbLogger.setLevel(originalLevel);
+        // Assert - JDbLogger.currentLevel should match configured logLevel
+        expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.ERROR);
+        expect(database.config.logLevel).toBe('ERROR');
+      } finally {
+        // Cleanup - Restore original log level
+        JDbLogger.setLevel(originalLevel);
+      }
     });
 
     it('should propagate logLevel default of INFO to JDbLogger', () => {
       // Arrange - Save original level to restore after test
       const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with default config (logLevel defaults to INFO)
+        const { database } = setupDatabaseTestEnvironment();
 
-      // Act - Create Database with default config (logLevel defaults to INFO)
-      const { database } = setupDatabaseTestEnvironment();
-
-      // Assert - JDbLogger.currentLevel should be INFO by default
-      expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.INFO);
-      expect(database.config.logLevel).toBe('INFO');
-
-      // Cleanup - Restore original log level
-      JDbLogger.setLevel(originalLevel);
+        // Assert - JDbLogger.currentLevel should be INFO by default
+        expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.INFO);
+        expect(database.config.logLevel).toBe('INFO');
+      } finally {
+        // Cleanup - Restore original log level
+        JDbLogger.setLevel(originalLevel);
+      }
     });
 
-    it('should propagate cacheEnabled config to FileService', () => {
+    it('should propagate WARN logLevel to JDbLogger', () => {
+      // Arrange - Save original level to restore after test
+      const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with WARN logLevel
+        const { database } = setupDatabaseTestEnvironment({ logLevel: 'WARN' });
+
+        // Assert - JDbLogger.currentLevel should match WARN
+        expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.WARN);
+        expect(database.config.logLevel).toBe('WARN');
+      } finally {
+        // Cleanup - Restore original log level
+        JDbLogger.setLevel(originalLevel);
+      }
+    });
+
+    it('should propagate DEBUG logLevel to JDbLogger', () => {
+      // Arrange - Save original level to restore after test
+      const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with DEBUG logLevel
+        const { database } = setupDatabaseTestEnvironment({ logLevel: 'DEBUG' });
+
+        // Assert - JDbLogger.currentLevel should match DEBUG
+        expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.DEBUG);
+        expect(database.config.logLevel).toBe('DEBUG');
+      } finally {
+        // Cleanup - Restore original log level
+        JDbLogger.setLevel(originalLevel);
+      }
+    });
+
+    it('should propagate cacheEnabled: false to FileService', () => {
       // Arrange & Act - Create Database with cacheEnabled explicitly disabled
       const { database } = setupDatabaseTestEnvironment({ cacheEnabled: false });
 
@@ -202,6 +236,16 @@ describe('Database Initialisation', () => {
       expect(database.config.cacheEnabled).toBe(false);
       const cacheStats = database._fileService.getCacheStats();
       expect(cacheStats.enabled).toBe(false);
+    });
+
+    it('should propagate explicit cacheEnabled: true to FileService', () => {
+      // Arrange & Act - Create Database with cacheEnabled explicitly enabled
+      const { database } = setupDatabaseTestEnvironment({ cacheEnabled: true });
+
+      // Assert - FileService should have cache enabled
+      expect(database.config.cacheEnabled).toBe(true);
+      const cacheStats = database._fileService.getCacheStats();
+      expect(cacheStats.enabled).toBe(true);
     });
 
     it('should propagate cacheEnabled default of true to FileService', () => {
