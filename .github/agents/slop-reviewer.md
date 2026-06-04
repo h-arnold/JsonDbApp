@@ -1,7 +1,6 @@
 ---
 name: Slop Reviewer
 description: Reviews code for typical markers of AI-Slop
-argument-hint:
 tools:
   [
     vscode/askQuestions,
@@ -23,7 +22,6 @@ tools:
     github.vscode-pull-request-github/issue_fetch,
     github.vscode-pull-request-github/activePullRequest
   ]
-infer: true
 ---
 
 # De-Sloppification Agent Instructions
