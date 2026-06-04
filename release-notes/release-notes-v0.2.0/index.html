@@ -1487,6 +1487,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#getting-the-new-script" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Getting the new script
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1623,6 +1634,18 @@
 <li>The legacy <code>lockTimeout</code> key in the constructor input object is still accepted as a backward-compatible alias.</li>
 <li>No configuration changes required; existing configs now work as originally intended.</li>
 </ul>
+<h3 id="getting-the-new-script">Getting the new script<a class="headerlink" href="#getting-the-new-script" title="Permanent link">&para;</a></h3>
+<p>A copy of this release is available at:</p>
+<p>https://drive.google.com/drive/folders/16i-qTptMN8zR-uXM8FrrDbDYTUXU2NYw?usp=sharing</p>
+<p>Open the link, make a copy of the script into your own Google Drive, then migrate your <code>MasterIndex</code>:</p>
+<ol>
+<li>Open your <strong>old</strong> copy of JsonDbApp in the Apps Script editor.</li>
+<li>Go to <strong>Project Settings</strong> → <strong>Script Properties</strong> and locate the <code>MasterIndex</code> entry.</li>
+<li>Copy the entire value.</li>
+<li>Open your <strong>new</strong> copy of JsonDbApp (the one you just copied from the link above).</li>
+<li>Go to <strong>Project Settings</strong> → <strong>Script Properties</strong> and create a new property with the key <code>MasterIndex</code> and paste the copied value.</li>
+<li>Your collections, data and configuration are now preserved in the new version.</li>
+</ol>
 
 
 
