@@ -2520,7 +2520,7 @@
 </tr>
 <tr>
 <td><code>setLevelByName(name)</code></td>
-<td>Set log level by name (ERROR/WARN/INFO/DEBUG)</td>
+<td>Set log level by name (ERROR/WARN/INFO/DEBUG). Called automatically by <code>Database</code> constructor to propagate <code>logLevel</code> config.</td>
 </tr>
 <tr>
 <td><code>error(message, context)</code></td>
@@ -3279,13 +3279,16 @@
 </code></pre></div>
 <h2 id="14-configuration">1.4. Configuration<a class="headerlink" href="#14-configuration" title="Permanent link">&para;</a></h2>
 <h3 id="141-logger-configuration">1.4.1. Logger Configuration<a class="headerlink" href="#141-logger-configuration" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// Set global log level</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Development</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Production</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1">// Component-specific configuration</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">);</span>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">collectionLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Collection&#39;</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// When using Database, the constructor propagates logLevel automatically:</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">({</span><span class="w"> </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// JDbLogger.setLevelByName(&#39;DEBUG&#39;) called internally</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="c1">// Manual override (e.g., for standalone scripts or testing):</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;DEBUG&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Development</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">&#39;INFO&#39;</span><span class="p">);</span><span class="w"> </span><span class="c1">// Production</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="c1">// Component-specific configuration</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Database&#39;</span><span class="p">);</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">collectionLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">&#39;Collection&#39;</span><span class="p">);</span>
 </code></pre></div>
 <p><code>DatabaseConfig</code> enforces these names via its <code>LOG_LEVELS</code> constant and defaults to <code>DEFAULT_LOG_LEVEL</code> (<code>'INFO'</code>), ensuring runtime configuration always maps cleanly onto <code>JDbLogger</code> expectations.</p>
 <h3 id="142-error-handler-configuration">1.4.2. Error Handler Configuration<a class="headerlink" href="#142-error-handler-configuration" title="Permanent link">&para;</a></h3>

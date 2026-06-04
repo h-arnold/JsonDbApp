@@ -2737,6 +2737,8 @@
 <ul>
 <li>Validates and normalizes configuration via DatabaseConfig</li>
 <li>initialises logging, file services, and MasterIndex</li>
+<li>Propagates <code>logLevel</code> config to <code>JDbLogger</code> via <code>setLevelByName()</code> so all subsequent log output respects the configured level</li>
+<li>Propagates <code>cacheEnabled</code> config to <code>FileService</code> via <code>setCacheEnabled()</code> (defaults to <code>true</code>)</li>
 <li>Creates in-memory collections map</li>
 <li>Does NOT automatically initialise - call <code>initialise()</code> explicitly</li>
 </ul>
