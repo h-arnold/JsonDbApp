@@ -4,7 +4,6 @@ description: Creates tests in a manner compliant with the repo standards
 argument-hint: Create tests for this class.
 tools:
   [
-    'vscode/openSimpleBrowser',
     'vscode/runCommand',
     'execute/getTerminalOutput',
     'execute/runTask',
@@ -26,7 +25,6 @@ tools:
     'github.vscode-pull-request-github/issue_fetch',
     'github.vscode-pull-request-github/activePullRequest'
   ]
-infer: true
 ---
 
 # JsonDbApp Code Generation Guidelines
