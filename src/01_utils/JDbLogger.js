@@ -1,23 +1,11 @@
 /**
- * GASDBLogger - Provides standardized logging functionality for GAS DB
+ * JDbLogger - Provides standardized logging functionality for GAS DB
  *
  * This class provides different log levels and formats messages consistently
  * across the entire library. Designed to work with Google Apps Script's
  * console logging capabilities.
  */
 class JDbLogger {
-  /**
-   * Set the current logging level
-   * @param {number} level - The log level from LOG_LEVELS
-   */
-  static setLevel(level) {
-    if (Object.values(JDbLogger.LOG_LEVELS).includes(level)) {
-      JDbLogger.currentLevel = level;
-    } else {
-      throw new Error(`Invalid log level: ${level}`);
-    }
-  }
-
   /**
    * Set the current logging level by name
    * @param {string} levelName - The log level name (ERROR, WARN, INFO, DEBUG)
@@ -29,27 +17,6 @@ class JDbLogger {
     } else {
       throw new Error(`Invalid log level name: ${levelName}`);
     }
-  }
-
-  /**
-   * Get the current logging level
-   * @returns {number} The current log level
-   */
-  static getLevel() {
-    return JDbLogger.currentLevel;
-  }
-
-  /**
-   * Get the current logging level name
-   * @returns {string} The current log level name
-   */
-  static getLevelName() {
-    for (const [name, level] of Object.entries(JDbLogger.LOG_LEVELS)) {
-      if (level === JDbLogger.currentLevel) {
-        return name;
-      }
-    }
-    return 'UNKNOWN';
   }
 
   /**
@@ -119,31 +86,6 @@ class JDbLogger {
   }
 
   /**
-   * Log a message with custom level (for internal use)
-   * @param {string} level - The log level name
-   * @param {string} message - The message to log
-   * @param {Object} context - Optional context object
-   */
-  static log(level, message, context = null) {
-    const levelValue = JDbLogger.LOG_LEVELS[level.toUpperCase()];
-    if (levelValue !== undefined && JDbLogger.currentLevel >= levelValue) {
-      const formatted = JDbLogger.formatMessage(level.toUpperCase(), message, context);
-
-      // Use appropriate console method based on level
-      switch (level.toUpperCase()) {
-        case 'ERROR':
-          console.error(formatted);
-          break;
-        case 'WARN':
-          console.warn(formatted);
-          break;
-        default:
-          console.log(formatted);
-      }
-    }
-  }
-
-  /**
    * Create a logger instance for a specific component
    * @param {string} component - The component name
    * @returns {Object} Component-specific logger
@@ -183,53 +125,6 @@ class JDbLogger {
         JDbLogger.debug(`[${component}] ${message}`, context);
       }
     };
-  }
-
-  /**
-   * Log an operation start
-   * @param {string} operation - The operation name
-   * @param {Object} context - Optional context object
-   */
-  static startOperation(operation, context = null) {
-    JDbLogger.debug(`Starting operation: ${operation}`, context);
-  }
-
-  /**
-   * Log an operation completion
-   * @param {string} operation - The operation name
-   * @param {number} duration - Optional duration in milliseconds
-   * @param {Object} context - Optional context object
-   */
-  static endOperation(operation, duration = null, context = null) {
-    let message = `Completed operation: ${operation}`;
-    if (duration !== null) {
-      message += ` (${duration}ms)`;
-    }
-    JDbLogger.debug(message, context);
-  }
-
-  /**
-   * Time an operation and log its duration
-   * @param {string} operation - The operation name
-   * @param {Function} fn - The function to time
-   * @param {Object} context - Optional context object
-   * @returns {*} The result of the function
-   */
-  static timeOperation(operation, fn, context = null) {
-    const startTime = Date.now();
-    JDbLogger.startOperation(operation, context);
-
-    try {
-      const result = fn();
-      const duration = Date.now() - startTime;
-      JDbLogger.endOperation(operation, duration, context);
-      return result;
-    } catch (error) {
-      const duration = Date.now() - startTime;
-      const errorContext = Object.assign({}, context, { error: error.message });
-      JDbLogger.error(`Operation failed: ${operation} (${duration}ms)`, errorContext);
-      throw error;
-    }
   }
 }
 

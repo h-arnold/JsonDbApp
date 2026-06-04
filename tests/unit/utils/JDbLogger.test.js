@@ -12,16 +12,16 @@ describe('JDbLogger basic functionality', () => {
 });
 
 describe('JDbLogger levels', () => {
-  it('should set and get log levels', () => {
-    const originalLevel = JDbLogger.getLevel();
+  it('should set log level by name', () => {
+    const originalLevel = JDbLogger.currentLevel;
 
-    JDbLogger.setLevel(JDbLogger.LOG_LEVELS.ERROR);
-    expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.ERROR);
+    JDbLogger.setLevelByName('ERROR');
+    expect(JDbLogger.currentLevel).toBe(JDbLogger.LOG_LEVELS.ERROR);
 
     JDbLogger.setLevelByName('DEBUG');
-    expect(JDbLogger.getLevel()).toBe(JDbLogger.LOG_LEVELS.DEBUG);
+    expect(JDbLogger.currentLevel).toBe(JDbLogger.LOG_LEVELS.DEBUG);
 
-    JDbLogger.setLevel(originalLevel);
+    JDbLogger.currentLevel = originalLevel;
   });
 });
 

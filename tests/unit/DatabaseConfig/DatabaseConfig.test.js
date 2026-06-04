@@ -43,7 +43,6 @@ describe('DatabaseConfig Creation and Default Values', () => {
     expect(config).not.toBeNull();
     expect(config.rootFolderId).toBeDefined();
     expect(config.autoCreateCollections).toBe(true);
-    expect(config.lockTimeout).toBe(30000);
     expect(config.collectionLockLeaseMs).toBe(30000);
     expect(config.coordinationTimeoutMs).toBe(30000);
     expect(config.retryAttempts).toBe(3);
@@ -107,7 +106,6 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
     expect(config.rootFolderId).toBe(customConfig.rootFolderId);
     expect(config.autoCreateCollections).toBe(false);
-    expect(config.lockTimeout).toBe(60000);
     expect(config.collectionLockLeaseMs).toBe(60000);
     expect(config.coordinationTimeoutMs).toBe(45000);
     expect(config.retryAttempts).toBe(5);
@@ -134,7 +132,6 @@ describe('DatabaseConfig Creation and Default Values', () => {
 
     const config = new DatabaseConfig(partialConfig);
 
-    expect(config.lockTimeout).toBe(30000);
     expect(config.collectionLockLeaseMs).toBe(30000);
     expect(config.coordinationTimeoutMs).toBe(25000);
     expect(config.retryAttempts).toBe(7);
@@ -154,13 +151,10 @@ describe('DatabaseConfig Creation and Default Values', () => {
     expect(config.stripDisallowedCollectionNameCharacters).toBe(false);
   });
 
-  it('should preserve sanitisation flag through clone and serialization', () => {
+  it('should preserve sanitisation flag through serialization', () => {
     const config = new DatabaseConfig({ stripDisallowedCollectionNameCharacters: true });
-    const clone = config.clone();
 
-    expect(clone.stripDisallowedCollectionNameCharacters).toBe(true);
-
-    const serialised = clone.toJSON();
+    const serialised = config.toJSON();
     expect(serialised.stripDisallowedCollectionNameCharacters).toBe(true);
 
     const deserialised = DatabaseConfig.fromJSON(serialised);
@@ -170,7 +164,6 @@ describe('DatabaseConfig Creation and Default Values', () => {
   it('should treat nullish numeric and boolean properties as defaults', () => {
     const cfg = new DatabaseConfig({
       logLevel: null,
-      lockTimeout: null,
       collectionLockLeaseMs: null,
       coordinationTimeoutMs: null,
       retryAttempts: null,
@@ -184,7 +177,6 @@ describe('DatabaseConfig Creation and Default Values', () => {
     });
 
     expect(cfg.logLevel).toBe('INFO');
-    expect(cfg.lockTimeout).toBe(30000);
     expect(cfg.collectionLockLeaseMs).toBe(30000);
     expect(cfg.coordinationTimeoutMs).toBe(30000);
     expect(cfg.retryAttempts).toBe(3);
@@ -213,7 +205,6 @@ describe('DatabaseConfig Validation', () => {
     }).toThrow();
 
     const cfg = new DatabaseConfig({ lockTimeout: 500 });
-    expect(cfg.lockTimeout).toBe(500);
     expect(cfg.collectionLockLeaseMs).toBe(500);
     expect(cfg.coordinationTimeoutMs).toBe(500);
   });
@@ -268,7 +259,7 @@ describe('DatabaseConfig Validation', () => {
     }).toThrow();
 
     const cfg = new DatabaseConfig({ lockTimeout: 500, retryAttempts: 1, retryDelayMs: 0 });
-    expect(cfg.lockTimeout).toBe(500);
+    expect(cfg.collectionLockLeaseMs).toBe(500);
     expect(cfg.retryAttempts).toBe(1);
     expect(cfg.retryDelayMs).toBe(0);
   });
@@ -428,7 +419,7 @@ describe('DatabaseConfig Validation', () => {
 
   it('testValidMinimumLockTimeout', () => {
     const config = new DatabaseConfig({ lockTimeout: 500 });
-    expect(config.lockTimeout).toBe(500);
+    expect(config.collectionLockLeaseMs).toBe(500);
   });
 
   it('testTooLowLockTimeoutThrowsError', () => {

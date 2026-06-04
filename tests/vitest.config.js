@@ -6,13 +6,23 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 export default defineConfig({
-  root: __dirname,
   test: {
     globals: true,
     environment: 'node',
-    setupFiles: './setup/gas-mocks.setup.js',
-    include: ['unit/**/*.test.js', 'helpers/**/*.test.js'],
+    setupFiles: [path.resolve(__dirname, 'setup/gas-mocks.setup.js')],
+    include: [
+      path.resolve(__dirname, 'unit/**/*.test.js'),
+      path.resolve(__dirname, 'helpers/**/*.test.js')
+    ],
     clearMocks: true,
-    cleanupMocks: true
+    cleanupMocks: true,
+    coverage: {
+      provider: 'v8',
+      enabled: true,
+      all: true,
+      reportsDirectory: path.resolve(__dirname, 'coverage'),
+      include: [path.resolve(__dirname, '../src/**/*.js')],
+      exclude: [path.resolve(__dirname, '../src/appsscript.json')]
+    }
   }
 });

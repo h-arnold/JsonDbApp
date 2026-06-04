@@ -60,11 +60,10 @@ class DatabaseConfig {
    * @throws {Error} When configuration validation fails
    */
   constructor(config = {}) {
-    const resolvedConfig = config || {};
-    this._initialiseGeneralDefaults(resolvedConfig);
-    this._initialiseRetryConfig(resolvedConfig);
-    this._initialiseQueryEngineConfig(resolvedConfig);
-    this._initialiseBooleanFlags(resolvedConfig);
+    this._initialiseGeneralDefaults(config);
+    this._initialiseRetryConfig(config);
+    this._initialiseQueryEngineConfig(config);
+    this._initialiseBooleanFlags(config);
     this._validateConfig();
   }
 
@@ -78,7 +77,6 @@ class DatabaseConfig {
     const timingConfig = this._resolveTimingConfig(config);
     this.collectionLockLeaseMs = timingConfig.collectionLockLeaseMs;
     this.coordinationTimeoutMs = timingConfig.coordinationTimeoutMs;
-    this.lockTimeout = this.collectionLockLeaseMs;
     this.logLevel = config.logLevel ?? DEFAULT_LOG_LEVEL;
     this.masterIndexKey = config.masterIndexKey || DEFAULT_MASTER_INDEX_KEY;
   }
@@ -201,7 +199,6 @@ class DatabaseConfig {
       Number.MAX_SAFE_INTEGER,
       'collectionLockLeaseMs'
     );
-    this.lockTimeout = this.collectionLockLeaseMs;
 
     // retryAttempts must be a positive integer
     Validate.integer(this.retryAttempts, 'retryAttempts');
@@ -310,35 +307,6 @@ class DatabaseConfig {
   }
 
   /**
-   * Creates a copy of this configuration
-   *
-   * @returns {DatabaseConfig} New configuration instance
-   */
-  clone() {
-    return new DatabaseConfig({
-      rootFolderId: this.rootFolderId,
-      autoCreateCollections: this.autoCreateCollections,
-      lockTimeout: this.lockTimeout,
-      collectionLockLeaseMs: this.collectionLockLeaseMs,
-      coordinationTimeoutMs: this.coordinationTimeoutMs,
-      retryAttempts: this.retryAttempts,
-      retryDelayMs: this.retryDelayMs,
-      lockRetryBackoffBase: this.lockRetryBackoffBase,
-      cacheEnabled: this.cacheEnabled,
-      logLevel: this.logLevel,
-      fileRetryAttempts: this.fileRetryAttempts,
-      fileRetryDelayMs: this.fileRetryDelayMs,
-      fileRetryBackoffBase: this.fileRetryBackoffBase,
-      queryEngineMaxNestedDepth: this.queryEngineMaxNestedDepth,
-      queryEngineSupportedOperators: this.queryEngineSupportedOperators.slice(),
-      queryEngineLogicalOperators: this.queryEngineLogicalOperators.slice(),
-      masterIndexKey: this.masterIndexKey,
-      backupOnInitialise: this.backupOnInitialise,
-      stripDisallowedCollectionNameCharacters: this.stripDisallowedCollectionNameCharacters
-    });
-  }
-
-  /**
    * toJSON hook for JSON.stringify
    * @returns {Object} Plain object with configuration and __type tag
    */
@@ -347,7 +315,6 @@ class DatabaseConfig {
       __type: this.constructor.name,
       rootFolderId: this.rootFolderId,
       autoCreateCollections: this.autoCreateCollections,
-      lockTimeout: this.lockTimeout,
       collectionLockLeaseMs: this.collectionLockLeaseMs,
       coordinationTimeoutMs: this.coordinationTimeoutMs,
       retryAttempts: this.retryAttempts,
@@ -378,7 +345,6 @@ class DatabaseConfig {
       const config = {
         rootFolderId: obj.rootFolderId,
         autoCreateCollections: obj.autoCreateCollections,
-        lockTimeout: obj.lockTimeout,
         collectionLockLeaseMs: obj.collectionLockLeaseMs,
         coordinationTimeoutMs: obj.coordinationTimeoutMs,
         retryAttempts: obj.retryAttempts,
@@ -398,7 +364,7 @@ class DatabaseConfig {
       };
       return new DatabaseConfig(config);
     }
-    throw new InvalidArgumentError('obj', obj, 'Invalid JSON for DatabaseConfig');
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('obj', obj, 'Invalid JSON for DatabaseConfig');
   }
 
   /**
@@ -423,51 +389,11 @@ class DatabaseConfig {
   }
 
   /**
-   * Provides default lock timeout.
-   * @returns {number} Default lock timeout in milliseconds.
-   */
-  static getDefaultLockTimeout() {
-    return DEFAULT_LOCK_TIMEOUT_MS;
-  }
-
-  /**
    * Provides default collection lock lease duration.
    * @returns {number} Default collection lock lease in milliseconds.
    */
   static getDefaultCollectionLockLeaseMs() {
     return DEFAULT_LOCK_TIMEOUT_MS;
-  }
-
-  /**
-   * Provides default coordination timeout duration.
-   * @returns {number} Default coordination timeout in milliseconds.
-   */
-  static getDefaultCoordinationTimeoutMs() {
-    return DEFAULT_LOCK_TIMEOUT_MS;
-  }
-
-  /**
-   * Provides default retry attempts for lock acquisition.
-   * @returns {number} Default retry attempt count.
-   */
-  static getDefaultRetryAttempts() {
-    return DEFAULT_RETRY_ATTEMPTS;
-  }
-
-  /**
-   * Provides default retry delay.
-   * @returns {number} Default retry delay in milliseconds.
-   */
-  static getDefaultRetryDelayMs() {
-    return DEFAULT_RETRY_DELAY_MS;
-  }
-
-  /**
-   * Provides default lock retry backoff base.
-   * @returns {number} Default lock retry backoff base.
-   */
-  static getDefaultLockRetryBackoffBase() {
-    return DEFAULT_LOCK_RETRY_BACKOFF_BASE;
   }
 
   /**
