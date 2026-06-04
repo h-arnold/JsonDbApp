@@ -118,11 +118,11 @@ Five static getters are defined but have zero external callers:
 
 ## Summary
 
-| Category             | Count | Status                         |
-| -------------------- | ----- | ------------------------------ |
-| Critical (dead code) | 6     | ✅ All resolved in v0.1.3      |
-| Improvement          | 4     | ✅ 1 resolved, 3 deferred      |
-| Nitpick              | 3     | ✅ 2 resolved, 1 deferred      |
+| Category             | Count | Status                    |
+| -------------------- | ----- | ------------------------- |
+| Critical (dead code) | 6     | ✅ All resolved in v0.1.3 |
+| Improvement          | 4     | ✅ 1 resolved, 3 deferred |
+| Nitpick              | 3     | ✅ 2 resolved, 1 deferred |
 
 **Resolved in v0.1.3:** Items #1–#7, #10, #11, #12.  
 **Deferred:** Items #8 (operator-array tracking), #9 (JDbLogger test coverage), #13 (test helper `toBe` vs `toEqual`).

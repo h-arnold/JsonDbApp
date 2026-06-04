@@ -12,29 +12,29 @@ This release removes dead code from `JDbLogger` and `DatabaseConfig` — methods
 
 The following methods were never called from any source file and have been removed:
 
-| Removed method | Migration |
-|---|---|
-| `JDbLogger.setLevel(level)` | Use `JDbLogger.setLevelByName(levelName)` |
-| `JDbLogger.getLevel()` | Read `JDbLogger.currentLevel` directly |
-| `JDbLogger.getLevelName()` | No replacement — no consumer reads the current level by name |
-| `JDbLogger.log(level, message, context)` | Use the dedicated methods: `error()`, `warn()`, `info()`, `debug()` |
-| `JDbLogger.startOperation(operation, context)` | Removed (transitively dead via `timeOperation` removal) |
-| `JDbLogger.endOperation(operation, duration, context)` | Removed (transitively dead via `timeOperation` removal) |
-| `JDbLogger.timeOperation(operation, fn, context)` | Removed — never called from any source file |
+| Removed method                                         | Migration                                                           |
+| ------------------------------------------------------ | ------------------------------------------------------------------- |
+| `JDbLogger.setLevel(level)`                            | Use `JDbLogger.setLevelByName(levelName)`                           |
+| `JDbLogger.getLevel()`                                 | Read `JDbLogger.currentLevel` directly                              |
+| `JDbLogger.getLevelName()`                             | No replacement — no consumer reads the current level by name        |
+| `JDbLogger.log(level, message, context)`               | Use the dedicated methods: `error()`, `warn()`, `info()`, `debug()` |
+| `JDbLogger.startOperation(operation, context)`         | Removed (transitively dead via `timeOperation` removal)             |
+| `JDbLogger.endOperation(operation, duration, context)` | Removed (transitively dead via `timeOperation` removal)             |
+| `JDbLogger.timeOperation(operation, fn, context)`      | Removed — never called from any source file                         |
 
 **Still available:** `setLevelByName()`, `currentLevel`, `formatMessage()`, `error()`, `warn()`, `info()`, `debug()`, `createComponentLogger()`, `LOG_LEVELS`.
 
 #### DatabaseConfig — removed methods and property
 
-| Removed | Migration |
-|---|---|
-| `DatabaseConfig.clone()` | Construct a new `DatabaseConfig` from `toJSON()` output instead |
-| `DatabaseConfig.getDefaultLockTimeout()` | Removed — had no external callers |
-| `DatabaseConfig.getDefaultCoordinationTimeoutMs()` | Removed — had no external callers |
-| `DatabaseConfig.getDefaultRetryAttempts()` | Removed — had no external callers |
-| `DatabaseConfig.getDefaultRetryDelayMs()` | Removed — had no external callers |
-| `DatabaseConfig.getDefaultLockRetryBackoffBase()` | Removed — had no external callers |
-| `this.lockTimeout` (instance property) | Use `this.collectionLockLeaseMs` directly. The constructor's `_resolveTimingConfig()` still accepts legacy `config.lockTimeout` as input for backward compatibility. |
+| Removed                                            | Migration                                                                                                                                                            |
+| -------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DatabaseConfig.clone()`                           | Construct a new `DatabaseConfig` from `toJSON()` output instead                                                                                                      |
+| `DatabaseConfig.getDefaultLockTimeout()`           | Removed — had no external callers                                                                                                                                    |
+| `DatabaseConfig.getDefaultCoordinationTimeoutMs()` | Removed — had no external callers                                                                                                                                    |
+| `DatabaseConfig.getDefaultRetryAttempts()`         | Removed — had no external callers                                                                                                                                    |
+| `DatabaseConfig.getDefaultRetryDelayMs()`          | Removed — had no external callers                                                                                                                                    |
+| `DatabaseConfig.getDefaultLockRetryBackoffBase()`  | Removed — had no external callers                                                                                                                                    |
+| `this.lockTimeout` (instance property)             | Use `this.collectionLockLeaseMs` directly. The constructor's `_resolveTimingConfig()` still accepts legacy `config.lockTimeout` as input for backward compatibility. |
 
 **Still available static getters:** `getDefaultMasterIndexKey()`, `getDefaultCollectionLockLeaseMs()`, `getDefaultFileRetryAttempts()`, `getDefaultFileRetryDelayMs()`, `getDefaultFileRetryBackoffBase()`, `getDefaultQueryEngineMaxNestedDepth()`, `getDefaultQueryEngineSupportedOperators()`, `getDefaultQueryEngineLogicalOperators()`.
 
