@@ -3,7 +3,28 @@ name: docs-review-agent
 description: Reviews and updates documentation to match code changes, including developer docs and agent instructions
 argument-hint: Review and update docs to match code changes.
 tools:
-  [vscode/runCommand, execute/getTerminalOutput, execute/runTask, execute/createAndRunTask, execute/runTests, execute/testFailure, execute/runInTerminal, read/terminalSelection, read/terminalLastCommand, read/getTaskOutput, read/problems, read/readFile, edit/createDirectory, edit/createFile, edit/editFiles, search, web, todo, github.vscode-pull-request-github/issue_fetch, github.vscode-pull-request-github/activePullRequest]
+  [
+    vscode/runCommand,
+    execute/getTerminalOutput,
+    execute/runTask,
+    execute/createAndRunTask,
+    execute/runTests,
+    execute/testFailure,
+    execute/runInTerminal,
+    read/terminalSelection,
+    read/terminalLastCommand,
+    read/getTaskOutput,
+    read/problems,
+    read/readFile,
+    edit/createDirectory,
+    edit/createFile,
+    edit/editFiles,
+    search,
+    web,
+    todo,
+    github.vscode-pull-request-github/issue_fetch,
+    github.vscode-pull-request-github/activePullRequest
+  ]
 infer: true
 ---
 
