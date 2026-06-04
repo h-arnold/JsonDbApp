@@ -63,16 +63,16 @@ A comprehensive logging utility providing structured logging with multiple level
 
 ### 1.2.0.2. Core Methods
 
-| Method                             | Description                                   |
-| ---------------------------------- | --------------------------------------------- |
-| `setLevel(level)`                  | Set log level by number (0-3)                 |
+| Method                             | Description                                                                                                                   |
+| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `setLevel(level)`                  | Set log level by number (0-3)                                                                                                 |
 | `setLevelByName(name)`             | Set log level by name (ERROR/WARN/INFO/DEBUG). Called automatically by `Database` constructor to propagate `logLevel` config. |
-| `error(message, context)`          | Log error message with optional context       |
-| `warn(message, context)`           | Log warning message with optional context     |
-| `info(message, context)`           | Log info message with optional context        |
-| `debug(message, context)`          | Log debug message with optional context       |
-| `createComponentLogger(component)` | Create component-specific logger              |
-| `timeOperation(name, fn, context)` | Time and log operation execution              |
+| `error(message, context)`          | Log error message with optional context                                                                                       |
+| `warn(message, context)`           | Log warning message with optional context                                                                                     |
+| `info(message, context)`           | Log info message with optional context                                                                                        |
+| `debug(message, context)`          | Log debug message with optional context                                                                                       |
+| `createComponentLogger(component)` | Create component-specific logger                                                                                              |
+| `timeOperation(name, fn, context)` | Time and log operation execution                                                                                              |
 
 ### 1.2.0.3. Usage Examples
 
