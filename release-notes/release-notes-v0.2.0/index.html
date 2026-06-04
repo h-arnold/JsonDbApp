@@ -12,7 +12,7 @@
         <meta name="author" content="h-arnold">
       
       
-        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/release-notes/release-notes-v0.1.2/">
+        <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/release-notes/release-notes-v0.2.0/">
       
       
       
@@ -25,7 +25,7 @@
     
     
       
-        <title>Release notes v0.1.2 - JsonDbApp Documentation</title>
+        <title>Release notes v0.2.0 - JsonDbApp Documentation</title>
       
     
     
@@ -76,7 +76,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#jsondbapp-v012-patch-release" class="md-skip">
+        <a href="#jsondbapp-v020-breaking-cleanup-release" class="md-skip">
           Skip to content
         </a>
       
@@ -110,7 +110,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Release notes v0.1.2
+              Release notes v0.2.0
             
           </span>
         </div>
@@ -1393,15 +1393,15 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#jsondbapp-v012-patch-release" class="md-nav__link">
+  <a href="#jsondbapp-v020-breaking-cleanup-release" class="md-nav__link">
     <span class="md-ellipsis">
       
-        JsonDbApp v0.1.2 — Patch release
+        JsonDbApp v0.2.0 — Breaking cleanup release
       
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="JsonDbApp v0.1.2 — Patch release">
+    <nav class="md-nav" aria-label="JsonDbApp v0.2.0 — Breaking cleanup release">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
@@ -1412,6 +1412,45 @@
       
     </span>
   </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Breaking Changes
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Breaking Changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#jdblogger-removed-methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JDbLogger — removed methods
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#databaseconfig-removed-methods-and-property" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        DatabaseConfig — removed methods and property
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -1473,16 +1512,102 @@
   
 
 
-  <h1>Release notes v0.1.2</h1>
+  <h1>Release notes v0.2.0</h1>
 
-<h2 id="jsondbapp-v012-patch-release">JsonDbApp v0.1.2 — Patch release<a class="headerlink" href="#jsondbapp-v012-patch-release" title="Permanent link">&para;</a></h2>
+<h2 id="jsondbapp-v020-breaking-cleanup-release">JsonDbApp v0.2.0 — Breaking cleanup release<a class="headerlink" href="#jsondbapp-v020-breaking-cleanup-release" title="Permanent link">&para;</a></h2>
 <p>Release date: 2026-06-04</p>
 <h3 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h3>
-<p>This patch release fixes two config propagation bugs where <code>logLevel</code> and <code>cacheEnabled</code> settings supplied via <code>DatabaseConfig</code> were not applied at runtime. <code>JDbLogger.currentLevel</code> was hardcoded to <code>DEBUG</code> and <code>FileService._cacheEnabled</code> was hardcoded to <code>true</code>, ignoring user configuration.</p>
+<p>This minor release merges the config propagation fixes from v0.1.2 with a cleanup of dead code in <code>JDbLogger</code> and <code>DatabaseConfig</code>. The <code>JDbLogger</code> removed methods and <code>DatabaseConfig</code> static getters were never called from any production source file and have been removed. The <code>DatabaseConfig.lockTimeout</code> <strong>instance property</strong> (distinct from the static getters) is also removed — it was a live property on every instance that external consumers could read, making this a breaking change. A few additional bug fixes are included.</p>
+<h3 id="breaking-changes">Breaking Changes<a class="headerlink" href="#breaking-changes" title="Permanent link">&para;</a></h3>
+<h4 id="jdblogger-removed-methods">JDbLogger — removed methods<a class="headerlink" href="#jdblogger-removed-methods" title="Permanent link">&para;</a></h4>
+<p>The following methods were never called from any source file and have been removed:</p>
+<table>
+<thead>
+<tr>
+<th>Removed method</th>
+<th>Migration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>JDbLogger.setLevel(level)</code></td>
+<td>Use <code>JDbLogger.setLevelByName(levelName)</code></td>
+</tr>
+<tr>
+<td><code>JDbLogger.getLevel()</code></td>
+<td>Read <code>JDbLogger.currentLevel</code> directly</td>
+</tr>
+<tr>
+<td><code>JDbLogger.getLevelName()</code></td>
+<td>No replacement — no consumer reads the current level by name</td>
+</tr>
+<tr>
+<td><code>JDbLogger.log(level, message, context)</code></td>
+<td>Use the dedicated methods: <code>error()</code>, <code>warn()</code>, <code>info()</code>, <code>debug()</code></td>
+</tr>
+<tr>
+<td><code>JDbLogger.startOperation(operation, context)</code></td>
+<td>Removed (transitively dead via <code>timeOperation</code> removal)</td>
+</tr>
+<tr>
+<td><code>JDbLogger.endOperation(operation, duration, context)</code></td>
+<td>Removed (transitively dead via <code>timeOperation</code> removal)</td>
+</tr>
+<tr>
+<td><code>JDbLogger.timeOperation(operation, fn, context)</code></td>
+<td>Removed — never called from any source file</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Still available:</strong> <code>setLevelByName()</code>, <code>currentLevel</code>, <code>formatMessage()</code>, <code>error()</code>, <code>warn()</code>, <code>info()</code>, <code>debug()</code>, <code>createComponentLogger()</code>, <code>LOG_LEVELS</code>.</p>
+<h4 id="databaseconfig-removed-methods-and-property">DatabaseConfig — removed methods and property<a class="headerlink" href="#databaseconfig-removed-methods-and-property" title="Permanent link">&para;</a></h4>
+<p>The static getters listed below were never called from any source file. The <code>this.lockTimeout</code> instance property was a live property set by the constructor that external consumers could read — its removal is a breaking change.</p>
+<table>
+<thead>
+<tr>
+<th>Removed</th>
+<th>Migration</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>DatabaseConfig.clone()</code></td>
+<td>Construct a new <code>DatabaseConfig</code> from <code>toJSON()</code> output instead</td>
+</tr>
+<tr>
+<td><code>DatabaseConfig.getDefaultLockTimeout()</code></td>
+<td>Removed — had no external callers</td>
+</tr>
+<tr>
+<td><code>DatabaseConfig.getDefaultCoordinationTimeoutMs()</code></td>
+<td>Removed — had no external callers</td>
+</tr>
+<tr>
+<td><code>DatabaseConfig.getDefaultRetryAttempts()</code></td>
+<td>Removed — had no external callers</td>
+</tr>
+<tr>
+<td><code>DatabaseConfig.getDefaultRetryDelayMs()</code></td>
+<td>Removed — had no external callers</td>
+</tr>
+<tr>
+<td><code>DatabaseConfig.getDefaultLockRetryBackoffBase()</code></td>
+<td>Removed — had no external callers</td>
+</tr>
+<tr>
+<td><code>this.lockTimeout</code> (instance property)</td>
+<td>Use <code>this.collectionLockLeaseMs</code> directly. The constructor's <code>_resolveTimingConfig()</code> still accepts legacy <code>config.lockTimeout</code> as input for backward compatibility.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Still available static getters:</strong> <code>getDefaultMasterIndexKey()</code>, <code>getDefaultCollectionLockLeaseMs()</code>, <code>getDefaultFileRetryAttempts()</code>, <code>getDefaultFileRetryDelayMs()</code>, <code>getDefaultFileRetryBackoffBase()</code>, <code>getDefaultQueryEngineMaxNestedDepth()</code>, <code>getDefaultQueryEngineSupportedOperators()</code>, <code>getDefaultQueryEngineLogicalOperators()</code>.</p>
 <h3 id="fixes">Fixes<a class="headerlink" href="#fixes" title="Permanent link">&para;</a></h3>
 <ul>
 <li><strong><code>logLevel</code> not propagated to <code>JDbLogger</code>:</strong> The <code>Database</code> constructor now calls <code>JDbLogger.setLevelByName(this.config.logLevel)</code> before creating any component loggers, ensuring all subsequent log output respects the configured level. Previously, <code>JDbLogger.currentLevel</code> was unconditionally set to <code>DEBUG</code> at class-load time and never updated from config.</li>
 <li><strong><code>cacheEnabled</code> not propagated to <code>FileService</code>:</strong> The <code>Database</code> constructor now calls <code>this._fileService.setCacheEnabled(this.config.cacheEnabled)</code> after <code>FileService</code> creation. Previously, <code>FileService</code> hardcoded <code>this._cacheEnabled = true</code> in its constructor, and <code>Database</code> did not call the existing <code>setCacheEnabled()</code> method to apply the user's preference.</li>
+<li><strong><code>JDbLogger</code> JSDoc:</strong> Class comment corrected from <code>GASDBLogger</code> to <code>JDbLogger</code>.</li>
+<li><strong><code>DatabaseConfig.fromJSON()</code> error construction:</strong> Changed <code>new InvalidArgumentError(...)</code> → <code>new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(...)</code> for consistency with the rest of the class.</li>
+<li><strong><code>DatabaseConfig</code> constructor null-guard removed:</strong> Passing <code>null</code> as config now fails fast instead of silently treating <code>null</code> as <code>{}</code>.</li>
 </ul>
 <h3 id="tests-added">Tests added<a class="headerlink" href="#tests-added" title="Permanent link">&para;</a></h3>
 <ul>
@@ -1492,7 +1617,10 @@
 </ul>
 <h3 id="upgrade-notes">Upgrade notes<a class="headerlink" href="#upgrade-notes" title="Permanent link">&para;</a></h3>
 <ul>
-<li>No breaking changes.</li>
+<li>If you were calling any of the removed <code>JDbLogger</code> methods, switch to the alternatives listed above.</li>
+<li>If you were calling <code>DatabaseConfig.clone()</code>, use <code>new DatabaseConfig({ ...config.toJSON(), ...overrides })</code> instead.</li>
+<li>If you were reading <code>config.lockTimeout</code> from a <code>DatabaseConfig</code> instance, use <code>config.collectionLockLeaseMs</code> instead.</li>
+<li>The legacy <code>lockTimeout</code> key in the constructor input object is still accepted as a backward-compatible alias.</li>
 <li>No configuration changes required; existing configs now work as originally intended.</li>
 </ul>
 

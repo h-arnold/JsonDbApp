@@ -957,17 +957,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        clone()
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#tojson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1979,17 +1968,6 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#clone" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        clone()
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#tojson" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2331,7 +2309,6 @@
 <li><a href="#constructor">Constructor</a></li>
 <li><a href="#api-reference">API Reference</a><ul>
 <li><a href="#public-methods">Public Methods</a></li>
-<li><a href="#clone"><code>clone()</code></a></li>
 <li><a href="#tojson"><code>toJSON()</code></a></li>
 <li><a href="#fromjsonobj"><code>fromJSON(obj)</code></a></li>
 <li><a href="#private-methods">Private Methods</a></li>
@@ -2373,11 +2350,11 @@
 <li>Configuration validation and normalization</li>
 <li>Default value management</li>
 <li>Type checking and constraint enforcement</li>
-<li>Configuration cloning and serialization</li>
+<li>Configuration serialization</li>
 </ul>
 <p><strong>Design Principles:</strong></p>
 <ul>
-<li>Fail-fast validation in constructor</li>
+<li>Fail-fast validation in constructor (passing <code>null</code> config throws immediately)</li>
 <li>Configuration intended to be treated as immutable after creation</li>
 <li>Clear error messages for invalid settings</li>
 <li>Sensible defaults for all properties</li>
@@ -2435,7 +2412,7 @@
 <td><code>lockTimeout</code></td>
 <td>Number</td>
 <td><code>30000</code></td>
-<td>Legacy compatibility alias for <code>collectionLockLeaseMs</code>; when provided on its own it seeds both timeout settings</td>
+<td>Legacy input alias for <code>collectionLockLeaseMs</code> accepted by the constructor only; the instance property has been removed — use <code>collectionLockLeaseMs</code></td>
 </tr>
 <tr>
 <td><code>collectionLockLeaseMs</code></td>
@@ -2558,15 +2535,6 @@
 </code></pre></div>
 <h2 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h2>
 <h3 id="public-methods">Public Methods<a class="headerlink" href="#public-methods" title="Permanent link">&para;</a></h3>
-<h4 id="clone"><code>clone()</code><a class="headerlink" href="#clone" title="Permanent link">&para;</a></h4>
-<p>Creates a deep copy of the configuration.</p>
-<ul>
-<li><strong>Returns:</strong> <code>DatabaseConfig</code> - New configuration instance</li>
-<li><strong>Use Cases:</strong></li>
-<li>Creating modified configurations</li>
-<li>Immutable configuration management</li>
-<li>Testing with variations</li>
-</ul>
 <h4 id="tojson"><code>toJSON()</code><a class="headerlink" href="#tojson" title="Permanent link">&para;</a></h4>
 <p>Converts configuration to a serialisable plain object with a <code>__type</code> tag.</p>
 <ul>
@@ -2615,10 +2583,10 @@
 <p>Validates optional operator arrays against type constraints and preserves the original error context.</p>
 <h2 id="validation-rules">Validation Rules<a class="headerlink" href="#validation-rules" title="Permanent link">&para;</a></h2>
 <h3 id="property-validation">Property Validation<a class="headerlink" href="#property-validation" title="Permanent link">&para;</a></h3>
-<p><strong>lockTimeout / collectionLockLeaseMs / coordinationTimeoutMs:</strong></p>
+<p><strong>collectionLockLeaseMs / coordinationTimeoutMs:</strong></p>
 <ul>
 <li>Each value must be a number of at least 500ms</li>
-<li><code>lockTimeout</code> is retained as a legacy alias; new code should prefer the split properties</li>
+<li>The legacy <code>lockTimeout</code> key in the constructor input object is accepted as a backward-compatible alias for <code>collectionLockLeaseMs</code>; new code should use <code>collectionLockLeaseMs</code> directly</li>
 <li><code>collectionLockLeaseMs</code> must be greater than or equal to <code>coordinationTimeoutMs</code></li>
 <li><code>CollectionCoordinator</code> may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback</li>
 <li>Recommended range: 5000-60000ms unless you have a measured need for longer operations</li>
@@ -2757,15 +2725,11 @@
 <a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;INFO&#39;</span>
 <a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">});</span>
 <a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>
-<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// Create variation for testing</span>
-<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">testConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">baseConfig</span><span class="p">.</span><span class="nx">clone</span><span class="p">();</span>
-<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="c1">// Note: Properties are read-only after creation</span>
-<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="c1">// Clone and create new instance for modifications</span>
-<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a>
-<a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="kd">const</span><span class="w"> </span><span class="nx">modifiedConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
-<a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a><span class="w">  </span><span class="p">...</span><span class="nx">baseConfig</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span>
-<a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span>
-<a id="__codelineno-4-14" name="__codelineno-4-14" href="#__codelineno-4-14"></a><span class="p">});</span>
+<a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="c1">// Create variation by spreading serialised config into a new instance</span>
+<a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">modifiedConfig</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
+<a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="w">  </span><span class="p">...</span><span class="nx">baseConfig</span><span class="p">.</span><span class="nx">toJSON</span><span class="p">(),</span>
+<a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="w">  </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">&#39;DEBUG&#39;</span>
+<a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="p">});</span>
 </code></pre></div>
 <h3 id="configuration-serialization">Configuration Serialization<a class="headerlink" href="#configuration-serialization" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DatabaseConfig</span><span class="p">({</span>
