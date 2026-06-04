@@ -229,33 +229,55 @@ describe('Database Initialisation', () => {
     });
 
     it('should propagate cacheEnabled: false to FileService', () => {
-      // Arrange & Act - Create Database with cacheEnabled explicitly disabled
-      const { database } = setupDatabaseTestEnvironment({ cacheEnabled: false });
+      // Arrange - Save JDbLogger level (mutated by Database constructor) to restore after test
+      const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with cacheEnabled explicitly disabled
+        const { database } = setupDatabaseTestEnvironment({ cacheEnabled: false });
 
-      // Assert - FileService should reflect disabled cache
-      expect(database.config.cacheEnabled).toBe(false);
-      const cacheStats = database._fileService.getCacheStats();
-      expect(cacheStats.enabled).toBe(false);
+        // Assert - FileService should reflect disabled cache
+        expect(database.config.cacheEnabled).toBe(false);
+        const cacheStats = database._fileService.getCacheStats();
+        expect(cacheStats.enabled).toBe(false);
+      } finally {
+        // Cleanup - Restore original JDbLogger level
+        JDbLogger.setLevel(originalLevel);
+      }
     });
 
     it('should propagate explicit cacheEnabled: true to FileService', () => {
-      // Arrange & Act - Create Database with cacheEnabled explicitly enabled
-      const { database } = setupDatabaseTestEnvironment({ cacheEnabled: true });
+      // Arrange - Save JDbLogger level (mutated by Database constructor) to restore after test
+      const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with cacheEnabled explicitly enabled
+        const { database } = setupDatabaseTestEnvironment({ cacheEnabled: true });
 
-      // Assert - FileService should have cache enabled
-      expect(database.config.cacheEnabled).toBe(true);
-      const cacheStats = database._fileService.getCacheStats();
-      expect(cacheStats.enabled).toBe(true);
+        // Assert - FileService should have cache enabled
+        expect(database.config.cacheEnabled).toBe(true);
+        const cacheStats = database._fileService.getCacheStats();
+        expect(cacheStats.enabled).toBe(true);
+      } finally {
+        // Cleanup - Restore original JDbLogger level
+        JDbLogger.setLevel(originalLevel);
+      }
     });
 
     it('should propagate cacheEnabled default of true to FileService', () => {
-      // Arrange & Act - Create Database with default config
-      const { database } = setupDatabaseTestEnvironment();
+      // Arrange - Save JDbLogger level (mutated by Database constructor) to restore after test
+      const originalLevel = JDbLogger.getLevel();
+      try {
+        // Act - Create Database with default config
+        const { database } = setupDatabaseTestEnvironment();
 
-      // Assert - FileService should have cache enabled by default
-      expect(database.config.cacheEnabled).toBe(true);
-      const cacheStats = database._fileService.getCacheStats();
-      expect(cacheStats.enabled).toBe(true);
+        // Assert - FileService should have cache enabled by default
+        expect(database.config.cacheEnabled).toBe(true);
+        expect(database.config.logLevel).toBe('INFO');
+        const cacheStats = database._fileService.getCacheStats();
+        expect(cacheStats.enabled).toBe(true);
+      } finally {
+        // Cleanup - Restore original JDbLogger level
+        JDbLogger.setLevel(originalLevel);
+      }
     });
   });
 });

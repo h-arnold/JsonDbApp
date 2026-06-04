@@ -9,7 +9,7 @@ This patch release fixes two config propagation bugs where `logLevel` and `cache
 ### Fixes
 
 - **`logLevel` not propagated to `JDbLogger`:** The `Database` constructor now calls `JDbLogger.setLevelByName(this.config.logLevel)` before creating any component loggers, ensuring all subsequent log output respects the configured level. Previously, `JDbLogger.currentLevel` was unconditionally set to `DEBUG` at class-load time and never updated from config.
-- **`cacheEnabled` not propagated to `FileService`:** The `Database` constructor now calls `this._fileService.setCacheEnabled(this.config.cacheEnabled)` after `FileService` creation. Previously, `FileService` hardcoded `this._cacheEnabled = true` in its constructor with no way for `Database` to propagate the user's preference.
+- **`cacheEnabled` not propagated to `FileService`:** The `Database` constructor now calls `this._fileService.setCacheEnabled(this.config.cacheEnabled)` after `FileService` creation. Previously, `FileService` hardcoded `this._cacheEnabled = true` in its constructor, and `Database` did not call the existing `setCacheEnabled()` method to apply the user's preference.
 
 ### Tests added
 
