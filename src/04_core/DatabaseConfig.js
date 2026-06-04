@@ -364,7 +364,11 @@ class DatabaseConfig {
       };
       return new DatabaseConfig(config);
     }
-    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT('obj', obj, 'Invalid JSON for DatabaseConfig');
+    throw new ErrorHandler.ErrorTypes.INVALID_ARGUMENT(
+      'obj',
+      obj,
+      'Invalid JSON for DatabaseConfig'
+    );
   }
 
   /**

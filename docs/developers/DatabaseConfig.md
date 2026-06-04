@@ -9,7 +9,6 @@
   - [Constructor](#constructor)
   - [API Reference](#api-reference)
     - [Public Methods](#public-methods)
-      - [`clone()`](#clone)
       - [`toJSON()`](#tojson)
       - [`fromJSON(obj)`](#fromjsonobj)
     - [Private Methods](#private-methods)
@@ -45,11 +44,11 @@ The `DatabaseConfig` class manages database configuration settings with validati
 - Configuration validation and normalization
 - Default value management
 - Type checking and constraint enforcement
-- Configuration cloning and serialization
+- Configuration serialization
 
 **Design Principles:**
 
-- Fail-fast validation in constructor
+- Fail-fast validation in constructor (passing `null` config throws immediately)
 - Configuration intended to be treated as immutable after creation
 - Clear error messages for invalid settings
 - Sensible defaults for all properties
@@ -75,7 +74,7 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | Property                                  | Type     | Default                            | Description                                                                                                                                                                                                                                        |
 | ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
-| `lockTimeout`                             | Number   | `30000`                            | Legacy compatibility alias for `collectionLockLeaseMs`; when provided on its own it seeds both timeout settings                                                                                                                                    |
+| `lockTimeout`                             | Number   | `30000`                            | Legacy input alias for `collectionLockLeaseMs` accepted by the constructor only; the instance property has been removed — use `collectionLockLeaseMs`                                                                                                 |
 | `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds; must be at least as long as `coordinationTimeoutMs`                                                                                                                                                |
 | `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                                                                    |
 | `retryAttempts`                           | Number   | `3`                                | Lock acquisition retry attempts                                                                                                                                                                                                                    |
@@ -128,16 +127,6 @@ const config = new DatabaseConfig({
 ## API Reference
 
 ### Public Methods
-
-#### `clone()`
-
-Creates a deep copy of the configuration.
-
-- **Returns:** `DatabaseConfig` - New configuration instance
-- **Use Cases:**
-  - Creating modified configurations
-  - Immutable configuration management
-  - Testing with variations
 
 #### `toJSON()`
 
@@ -206,10 +195,10 @@ Validates optional operator arrays against type constraints and preserves the or
 
 ### Property Validation
 
-**lockTimeout / collectionLockLeaseMs / coordinationTimeoutMs:**
+**collectionLockLeaseMs / coordinationTimeoutMs:**
 
 - Each value must be a number of at least 500ms
-- `lockTimeout` is retained as a legacy alias; new code should prefer the split properties
+- The legacy `lockTimeout` key in the constructor input object is accepted as a backward-compatible alias for `collectionLockLeaseMs`; new code should use `collectionLockLeaseMs` directly
 - `collectionLockLeaseMs` must be greater than or equal to `coordinationTimeoutMs`
 - `CollectionCoordinator` may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback
 - Recommended range: 5000-60000ms unless you have a measured need for longer operations
@@ -331,11 +320,7 @@ const baseConfig = new DatabaseConfig({
   logLevel: 'INFO'
 });
 
-// Create variation for testing
-const testConfig = baseConfig.clone();
-// Note: Properties are read-only after creation
-// Clone and create new instance for modifications
-
+// Create variation by spreading serialised config into a new instance
 const modifiedConfig = new DatabaseConfig({
   ...baseConfig.toJSON(),
   logLevel: 'DEBUG'

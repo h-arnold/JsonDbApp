@@ -58,21 +58,18 @@ A comprehensive logging utility providing structured logging with multiple level
 - **Four Log Levels:** ERROR (0), WARN (1), INFO (2), DEBUG (3)
 - **Context Support:** Rich logging with JSON serializable context objects
 - **Component Loggers:** Create specialized loggers for different components
-- **Operation Timing:** Built-in performance monitoring capabilities
 - **GAS Compatibility:** Works with console.log, console.warn, console.error
 
 ### 1.2.0.2. Core Methods
 
 | Method                             | Description                                                                                                                   |
 | ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `setLevel(level)`                  | Set log level by number (0-3)                                                                                                 |
 | `setLevelByName(name)`             | Set log level by name (ERROR/WARN/INFO/DEBUG). Called automatically by `Database` constructor to propagate `logLevel` config. |
 | `error(message, context)`          | Log error message with optional context                                                                                       |
 | `warn(message, context)`           | Log warning message with optional context                                                                                     |
 | `info(message, context)`           | Log info message with optional context                                                                                        |
 | `debug(message, context)`          | Log debug message with optional context                                                                                       |
 | `createComponentLogger(component)` | Create component-specific logger                                                                                              |
-| `timeOperation(name, fn, context)` | Time and log operation execution                                                                                              |
 
 ### 1.2.0.3. Usage Examples
 
@@ -88,15 +85,6 @@ JDbLogger.setLevelByName('ERROR'); // Show only errors
 // Component-specific logging
 const dbLogger = JDbLogger.createComponentLogger('Database');
 dbLogger.info('Collection created', { name: 'users' });
-
-// Operation timing
-const result = JDbLogger.timeOperation(
-  'loadCollection',
-  () => {
-    return loadCollectionFromDrive(collectionId);
-  },
-  { collectionId }
-);
 ```
 
 ### 1.2.0.4. Best Practices
@@ -567,17 +555,11 @@ class Database {
   }
 
   performOperation(operationName, operationFn) {
-    return JDbLogger.timeOperation(
-      operationName,
-      () => {
-        try {
-          return operationFn();
-        } catch (error) {
-          ErrorHandler.handleError(error, `Database.${operationName}`, true);
-        }
-      },
-      { instanceId: this.instanceId }
-    );
+    try {
+      return operationFn();
+    } catch (error) {
+      ErrorHandler.handleError(error, `Database.${operationName}`, true);
+    }
   }
 
   cloneDocumentSafely(document) {
