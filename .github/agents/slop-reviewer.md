@@ -1,9 +1,28 @@
 ---
 name: Slop Reviewer
 description: Reviews code for typcial markers of AI-Slop
-argument-hint: 
+argument-hint:
 tools:
-  [vscode/askQuestions, vscode/runCommand, execute/getTerminalOutput, execute/createAndRunTask, execute/runTests, execute/testFailure, execute/runInTerminal, read/terminalSelection, read/terminalLastCommand, read/getTaskOutput, read/problems, read/readFile, edit/createFile, search, web, todo, github.vscode-pull-request-github/issue_fetch, github.vscode-pull-request-github/activePullRequest]
+  [
+    vscode/askQuestions,
+    vscode/runCommand,
+    execute/getTerminalOutput,
+    execute/createAndRunTask,
+    execute/runTests,
+    execute/testFailure,
+    execute/runInTerminal,
+    read/terminalSelection,
+    read/terminalLastCommand,
+    read/getTaskOutput,
+    read/problems,
+    read/readFile,
+    edit/createFile,
+    search,
+    web,
+    todo,
+    github.vscode-pull-request-github/issue_fetch,
+    github.vscode-pull-request-github/activePullRequest
+  ]
 infer: true
 ---
 
