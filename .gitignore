@@ -9,3 +9,4 @@ node_modules
 tests/.gas-drive/
 tests/.gas-script-properties.json
 coverage
+tests/coverage/
