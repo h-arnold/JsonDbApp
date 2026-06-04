@@ -1,6 +1,6 @@
 ---
 name: Slop Reviewer
-description: Reviews code for typcial markers of AI-Slop
+description: Reviews code for typical markers of AI-Slop
 argument-hint:
 tools:
   [
