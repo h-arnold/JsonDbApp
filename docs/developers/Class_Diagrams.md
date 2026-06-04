@@ -66,14 +66,14 @@ classDiagram
     class DatabaseConfig {
         +rootFolderId: String
         +autoCreateCollections: Boolean
-        +lockTimeout: Number
+        +collectionLockLeaseMs: Number
+        +coordinationTimeoutMs: Number
         +cacheEnabled: Boolean
         +logLevel: String
         +masterIndexKey: String
         +retryAttempts: Number
         +retryDelayMs: Number
         +constructor(config: Object)
-        +clone(): DatabaseConfig
         +toJSON(): Object
         +fromJSON(obj: Object): DatabaseConfig
         -_getDefaultRootFolder(): String
@@ -336,20 +336,13 @@ classDiagram
     class JDbLogger {
         +LOG_LEVELS: Object
         +currentLevel: Number
-        +setLevel(level): void
         +setLevelByName(levelName): void
-        +getLevel(): Number
-        +getLevelName(): String
         +formatMessage(level, message, context): String
         +error(message, context): void
         +warn(message, context): void
         +info(message, context): void
         +debug(message, context): void
-        +log(level, message, context): void
         +createComponentLogger(component): Object
-        +startOperation(operation, context): void
-        +endOperation(operation, duration, context): void
-        +timeOperation(operation, fn, context): *
     }
 ```
 

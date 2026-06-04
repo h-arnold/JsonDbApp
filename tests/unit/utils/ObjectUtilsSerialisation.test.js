@@ -155,7 +155,6 @@ describe('ObjectUtils class revival', () => {
     expect(deserialised).toBeInstanceOf(DatabaseConfig);
     expect(deserialised.rootFolderId).toBe(originalConfig.rootFolderId);
     expect(deserialised.autoCreateCollections).toBe(originalConfig.autoCreateCollections);
-    expect(deserialised.lockTimeout).toBe(originalConfig.lockTimeout);
     expect(deserialised.collectionLockLeaseMs).toBe(originalConfig.collectionLockLeaseMs);
     expect(deserialised.coordinationTimeoutMs).toBe(originalConfig.coordinationTimeoutMs);
     expect(deserialised.cacheEnabled).toBe(originalConfig.cacheEnabled);

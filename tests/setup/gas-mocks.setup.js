@@ -34,7 +34,6 @@ const legacyScripts = [
   'src/02_components/FileOperations.js',
   'src/03_services/FileService.js',
   'src/02_components/DocumentOperations.js',
-  'src/02_components/QueryEngine.js',
   'src/02_components/QueryEngine/01_QueryEngineValidation.js',
   'src/02_components/QueryEngine/02_QueryEngineMatcher.js',
   'src/02_components/QueryEngine/99_QueryEngine.js',

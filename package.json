@@ -9,6 +9,7 @@
   "scripts": {
     "test": "vitest run --config tests/vitest.config.js --silent",
     "test:verbose": "vitest run --config tests/vitest.config.js",
+    "test:coverage": "vitest run --config tests/vitest.config.js --coverage",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
@@ -29,6 +30,7 @@
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@google/clasp": "^3.3.0",
+    "@vitest/coverage-v8": "^4.1.8",
     "eslint": "^9.39.2",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^10.1.8",

@@ -23,7 +23,7 @@ const defaultConfig = new DatabaseConfig();
 const config = new DatabaseConfig({
   rootFolderId: 'YOUR_DRIVE_FOLDER_ID',
   autoCreateCollections: false,
-  lockTimeout: 15000,
+  collectionLockLeaseMs: 15000,
   retryAttempts: 5,
   logLevel: 'INFO',
   backupOnInitialise: true
