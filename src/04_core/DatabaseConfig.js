@@ -60,6 +60,7 @@ class DatabaseConfig {
    * @throws {Error} When configuration validation fails
    */
   constructor(config = {}) {
+    Validate.object(config, 'config');
     this._initialiseGeneralDefaults(config);
     this._initialiseRetryConfig(config);
     this._initialiseQueryEngineConfig(config);
