@@ -112,6 +112,18 @@ dbLogger.info('Collection created', { name: 'users' });
    const logger = JDbLogger.createComponentLogger('Collection');
    ```
 
+### 1.2.0.5. Execution-Time Tracking (Planned — Not implemented)
+
+Specified in the repository-root `SPEC.md`; not yet built:
+
+- `JDbLogger.timeSync(label, fn, context?)` — DEBUG-gated scoped timer returning `fn`'s result;
+  internal seam `_timeSync(component, label, fn, context)`; clock seam `_now()` over `Date.now()`.
+- `JDbLogger.addTimingListener(listenerFn)` — structured events
+  `{ component, label, durationMs, timestamp, error }`; returns an idempotent unsubscribe closure.
+- Lazy context suppliers (`Object|Function|null`) across all four levels and `timeSync`, resolved
+  only when the level gate passes (post-level-check, pre-`formatMessage`).
+- Component-logger `timeSync(label, fn, context?)` tagging events with the component name.
+
 ---
 
 ### 1.2.1. ErrorHandler

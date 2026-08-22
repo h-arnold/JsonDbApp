@@ -551,6 +551,18 @@ npm run test -- -t "should persist"
 npm run test -- --coverage
 ```
 
+## Timing Assertions and Benchmarks (Planned — Not implemented)
+
+Specified in the repository-root `SPEC.md` (execution-time logging facility); not yet built:
+
+- Timing assertions via a registered `JDbLogger` listener plus `createMockClock()`
+  (`tests/helpers/mock-time-helpers.js`): advance the fake clock by N ms and assert the captured
+  event's `durationMs === N`. Unsubscribe in teardown; Vitest `clearMocks` does NOT clear listener
+  state.
+- `npm run bench` (`tools/benchmarks/bench.cjs`) — manual benchmark harness over the GAS mocks;
+  per-operation count/min/max/mean table. Mutating scenarios re-seed before every measured
+  iteration. Not part of `npm test`.
+
 ## API Reference
 
 ### Vitest Core APIs
