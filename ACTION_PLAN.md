@@ -19,8 +19,12 @@ full suite before hand-off to the next.
   (`npm run lint` 0/0; `npm run test` 70 files / 760 tests). Delivered: `timeSync`, `_timeSync`
   seam, `addTimingListener` (+idempotent unsubscribe), `_now()`, DEBUG gating with measurement
   tax preserved when suppressed, success/error exception asymmetry.
-- Section 3 — IN PROGRESS (red loop).
-- Sections 4–8 — PENDING.
+- Section 3 — COMPLETE. Red review CLEAN first pass; green review CLEAN first pass (seam
+  delegation verified direct; console prefix contract confirmed by code read). Regression gate
+  passed (`npm run lint` 0/0; `npm run test` 70 files / 763 tests). Delivered: component-logger
+  `timeSync` closing over the component name, calling `_timeSync` directly.
+- Section 4 — IN PROGRESS (red loop).
+- Sections 5–8 — PENDING.
 
 ## Global constraints
 

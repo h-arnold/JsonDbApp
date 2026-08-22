@@ -285,3 +285,87 @@ describe('JDbLogger timeSync', () => {
     });
   });
 });
+
+describe('JDbLogger component logger timeSync', () => {
+  let clock;
+  let originalLevel;
+  let componentLogger;
+  const activeCaptures = [];
+
+  beforeEach(() => {
+    clock = createMockClock(1000);
+    originalLevel = JDbLogger.currentLevel;
+    componentLogger = JDbLogger.createComponentLogger('TestComponent');
+
+    // Red-phase attribution guard: every failure in this block must trace to the
+    // absent timeSync on component logger objects, never to a stray TypeError at
+    // a call site below.
+    expect(typeof componentLogger.timeSync).toBe('function');
+  });
+
+  afterEach(() => {
+    while (activeCaptures.length > 0) {
+      activeCaptures.pop().restore();
+    }
+    JDbLogger.currentLevel = originalLevel;
+    clock.restore();
+  });
+
+  /**
+   * Starts a timing capture registered for teardown in afterEach.
+   * @param {Array<Object>} [targetEvents] - Optional shared collection array.
+   * @returns {Object} Capture handle with collected events and an idempotent restore.
+   */
+  const startCapture = (targetEvents) => {
+    const handle = captureTimingEvents(targetEvents);
+    activeCaptures.push(handle);
+    return handle;
+  };
+
+  describe('component attribution', () => {
+    it('tags emitted events with the owning component and leaves the label unprefixed', () => {
+      // Arrange
+      const capture = startCapture();
+
+      // Act
+      const result = componentLogger.timeSync('op', () => 'done');
+
+      // Assert
+      expect(result).toBe('done');
+      expect(capture.events).toHaveLength(1);
+      expect(capture.events[0].component).toBe('TestComponent');
+      expect(capture.events[0].label).toBe('op');
+    });
+  });
+
+  describe('static-form parity', () => {
+    it('still attributes events from the static form to a null component', () => {
+      // Arrange
+      const capture = startCapture();
+
+      // Act
+      JDbLogger.timeSync('op', () => 'done');
+
+      // Assert
+      expect(capture.events).toHaveLength(1);
+      expect(capture.events[0].component).toBeNull();
+    });
+  });
+
+  describe('debug gating', () => {
+    it('dispatches nothing and never invokes a function context when suppressed below DEBUG', () => {
+      // Arrange
+      const capture = startCapture();
+      const contextSupplier = vi.fn(() => ({ key: 'value' }));
+      JDbLogger.setLevelByName('WARN');
+
+      // Act
+      const result = componentLogger.timeSync('gated-out', () => 'still-ran', contextSupplier);
+
+      // Assert
+      expect(result).toBe('still-ran');
+      expect(contextSupplier).not.toHaveBeenCalled();
+      expect(capture.events).toHaveLength(0);
+    });
+  });
+});

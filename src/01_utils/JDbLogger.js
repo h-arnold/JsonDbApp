@@ -125,6 +125,25 @@ class JDbLogger {
        */
       debug: (message, context = null) => {
         JDbLogger.debug(`[${component}] ${message}`, context);
+      },
+      /**
+       * Time a synchronous operation owned by this component and emit its DEBUG record plus
+       * structured timing event.
+       * @param {string} label - Non-empty label identifying the timed operation; recorded
+       *   unprefixed on events.
+       * @param {Function} fn - Zero-argument operation to execute and measure.
+       * @param {Object|Function|null} [context=null] - Structured context object or lazy supplier
+       *   function returning one; omitted or undefined contexts are normalised to null.
+       * @returns {*} The value returned by fn, passed through unchanged.
+       * @throws {Error} When arguments are invalid before any timing starts (same rules as the
+       *   static form).
+       * @remarks Full delegation to the _timeSync seam (SPEC §4.2): every behavioural rule —
+       *   component attribution, label handling, DEBUG gating, exception asymmetry, console
+       *   prefixing — is seam-owned; this closure only supplies the component name directly to
+       *   _timeSync so static and component use cannot drift apart.
+       */
+      timeSync: (label, fn, context = null) => {
+        return JDbLogger._timeSync(component, label, fn, context);
       }
     };
   }
