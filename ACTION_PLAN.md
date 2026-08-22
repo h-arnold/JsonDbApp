@@ -6,6 +6,16 @@ sequenced so enabling contracts land before dependent orchestration. Every secti
 Red-Green-Refactor and must leave the tree at `npm run lint` (0 errors, 0 warnings) and a green
 full suite before hand-off to the next.
 
+## Progress log
+
+- Baseline: `npm run lint` 0 errors / 0 warnings; `npm run test` green (69 files, 741 tests).
+- Section 1 — COMPLETE. Red review CLEAN; green review CLEAN; regression gate passed
+  (`npm run lint` 0/0; `npm run test` 70 files / 745 tests). Manifest shipped as
+  `tools/gas-mocks/script-order.cjs`; setup file consumes it via ESM named import (named form
+  worked; default fallback not needed).
+- Section 2 — IN PROGRESS (red loop).
+- Sections 3–8 — PENDING.
+
 ## Global constraints
 
 - **TDD**: no production change without a failing test written first.
