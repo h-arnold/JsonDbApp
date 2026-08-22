@@ -13,8 +13,14 @@ full suite before hand-off to the next.
   (`npm run lint` 0/0; `npm run test` 70 files / 745 tests). Manifest shipped as
   `tools/gas-mocks/script-order.cjs`; setup file consumes it via ESM named import (named form
   worked; default fallback not needed).
-- Section 2 — IN PROGRESS (red loop).
-- Sections 3–8 — PENDING.
+- Section 2 — COMPLETE. Red review CLEAN after fix round (removed one speculative test; added
+  `/* global JDbLogger */` to helper). Green review CLEAN after fix round (suppressed path now
+  performs both `_now()` reads per SPEC §3; JSDoc return-shape aligned). Regression gate passed
+  (`npm run lint` 0/0; `npm run test` 70 files / 760 tests). Delivered: `timeSync`, `_timeSync`
+  seam, `addTimingListener` (+idempotent unsubscribe), `_now()`, DEBUG gating with measurement
+  tax preserved when suppressed, success/error exception asymmetry.
+- Section 3 — IN PROGRESS (red loop).
+- Sections 4–8 — PENDING.
 
 ## Global constraints
 
