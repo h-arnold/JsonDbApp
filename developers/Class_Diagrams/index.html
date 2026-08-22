@@ -25,7 +25,7 @@
       
       
       <link rel="icon" href="../../assets/images/favicon.png">
-      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.6">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
@@ -33,7 +33,7 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.484c7ddc.min.css">
+      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
       
         
         <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
@@ -2075,8 +2075,8 @@
 <h3 id="collection-facade-and-operations">Collection Facade and Operations<a class="headerlink" href="#collection-facade-and-operations" title="Permanent link">&para;</a></h3>
 <p>The <code>Collection</code> class acts as a facade, delegating operations to specialized handler classes.</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>classDiagram
-<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    Collection &quot;1&quot; --o &quot;1&quot; CollectionReadOperations
-<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    Collection &quot;1&quot; --o &quot;1&quot; CollectionWriteOperations
+<a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>    Collection "1" --o "1" CollectionReadOperations
+<a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>    Collection "1" --o "1" CollectionWriteOperations
 <a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>
 <a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>    class Collection {
 <a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>        -_name: String
@@ -2404,26 +2404,26 @@
 <a id="__codelineno-15-30" name="__codelineno-15-30" href="#__codelineno-15-30"></a>        collections: Map
 <a id="__codelineno-15-31" name="__codelineno-15-31" href="#__codelineno-15-31"></a>    }
 <a id="__codelineno-15-32" name="__codelineno-15-32" href="#__codelineno-15-32"></a>
-<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>    MasterIndex &quot;1&quot; -- &quot;1&quot; MasterIndexData : contains
+<a id="__codelineno-15-33" name="__codelineno-15-33" href="#__codelineno-15-33"></a>    MasterIndex "1" -- "1" MasterIndexData : contains
 </code></pre></div>
 <h2 id="class-relationships">Class Relationships<a class="headerlink" href="#class-relationships" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-16-1" name="__codelineno-16-1" href="#__codelineno-16-1"></a>classDiagram
-<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    Database &quot;1&quot; -- &quot;1&quot; DatabaseConfig : uses
-<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    Database &quot;1&quot; -- &quot;*&quot; Collection : creates
-<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    DatabaseConfig &quot;1&quot; -- &quot;1&quot; Collection : configures
-<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    Collection &quot;1&quot; -- &quot;1&quot; CollectionMetadata : contains
-<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    Collection &quot;1&quot; -- &quot;1&quot; DocumentOperations : contains
-<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    DocumentOperations &quot;1&quot; -- &quot;1&quot; QueryEngine : uses
-<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    DocumentOperations &quot;1&quot; -- &quot;1&quot; UpdateEngine : uses
-<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>    QueryEngine &quot;1&quot; -- &quot;1&quot; ErrorHandler : uses
-<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>    UpdateEngine &quot;1&quot; -- &quot;1&quot; ErrorHandler : uses
-<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>    ErrorHandler &quot;1&quot; -- &quot;1&quot; IdGenerator : uses
-<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>    ErrorHandler &quot;1&quot; -- &quot;1&quot; DbLockService : uses
-<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>    Database &quot;1&quot; -- &quot;1&quot; FileService : uses
-<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>    FileService &quot;1&quot; -- &quot;1&quot; Collection : uses
-<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>    FileService &quot;1&quot; -- &quot;1&quot; FileCache : contains
-<a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>    FileService &quot;1&quot; -- &quot;1&quot; FileOperations : contains
-<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>    FileOperations &quot;1&quot; -- &quot;1&quot; JDbLogger : uses
+<a id="__codelineno-16-2" name="__codelineno-16-2" href="#__codelineno-16-2"></a>    Database "1" -- "1" DatabaseConfig : uses
+<a id="__codelineno-16-3" name="__codelineno-16-3" href="#__codelineno-16-3"></a>    Database "1" -- "*" Collection : creates
+<a id="__codelineno-16-4" name="__codelineno-16-4" href="#__codelineno-16-4"></a>    DatabaseConfig "1" -- "1" Collection : configures
+<a id="__codelineno-16-5" name="__codelineno-16-5" href="#__codelineno-16-5"></a>    Collection "1" -- "1" CollectionMetadata : contains
+<a id="__codelineno-16-6" name="__codelineno-16-6" href="#__codelineno-16-6"></a>    Collection "1" -- "1" DocumentOperations : contains
+<a id="__codelineno-16-7" name="__codelineno-16-7" href="#__codelineno-16-7"></a>    DocumentOperations "1" -- "1" QueryEngine : uses
+<a id="__codelineno-16-8" name="__codelineno-16-8" href="#__codelineno-16-8"></a>    DocumentOperations "1" -- "1" UpdateEngine : uses
+<a id="__codelineno-16-9" name="__codelineno-16-9" href="#__codelineno-16-9"></a>    QueryEngine "1" -- "1" ErrorHandler : uses
+<a id="__codelineno-16-10" name="__codelineno-16-10" href="#__codelineno-16-10"></a>    UpdateEngine "1" -- "1" ErrorHandler : uses
+<a id="__codelineno-16-11" name="__codelineno-16-11" href="#__codelineno-16-11"></a>    ErrorHandler "1" -- "1" IdGenerator : uses
+<a id="__codelineno-16-12" name="__codelineno-16-12" href="#__codelineno-16-12"></a>    ErrorHandler "1" -- "1" DbLockService : uses
+<a id="__codelineno-16-13" name="__codelineno-16-13" href="#__codelineno-16-13"></a>    Database "1" -- "1" FileService : uses
+<a id="__codelineno-16-14" name="__codelineno-16-14" href="#__codelineno-16-14"></a>    FileService "1" -- "1" Collection : uses
+<a id="__codelineno-16-15" name="__codelineno-16-15" href="#__codelineno-16-15"></a>    FileService "1" -- "1" FileCache : contains
+<a id="__codelineno-16-16" name="__codelineno-16-16" href="#__codelineno-16-16"></a>    FileService "1" -- "1" FileOperations : contains
+<a id="__codelineno-16-17" name="__codelineno-16-17" href="#__codelineno-16-17"></a>    FileOperations "1" -- "1" JDbLogger : uses
 </code></pre></div>
 <h2 id="sequence-diagrams">Sequence Diagrams<a class="headerlink" href="#sequence-diagrams" title="Permanent link">&para;</a></h2>
 <h3 id="document-operation-sequence">Document Operation Sequence<a class="headerlink" href="#document-operation-sequence" title="Permanent link">&para;</a></h3>
@@ -2571,7 +2571,7 @@
       <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["navigation.tabs", "navigation.sections", "navigation.top", "navigation.footer", "search.suggest", "search.highlight", "content.code.copy", "content.code.annotate"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
     
     
-      <script src="../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   </body>
