@@ -369,3 +369,273 @@ describe('JDbLogger component logger timeSync', () => {
     });
   });
 });
+
+describe('JDbLogger lazy context', () => {
+  let originalLevel;
+
+  beforeEach(() => {
+    originalLevel = JDbLogger.currentLevel;
+    JDbLogger.setLevelByName('DEBUG');
+  });
+
+  afterEach(() => {
+    JDbLogger.currentLevel = originalLevel;
+  });
+
+  /**
+   * Builds a supplier spy returning a fresh structured context.
+   * @param {string} source - Marker recorded in the returned context.
+   * @returns {Function} Vitest spy that yields a `{ source }` object when invoked.
+   */
+  const createSupplierSpy = (source) => vi.fn(() => ({ source }));
+
+  describe('static level supplier gating', () => {
+    it('invokes the error-level supplier exactly once when an ERROR record is emitted', () => {
+      // Arrange
+      const supplier = createSupplierSpy('error');
+
+      // Act
+      JDbLogger.error('lazy error context', supplier);
+
+      // Assert
+      expect(supplier).toHaveBeenCalledTimes(1);
+    });
+
+    it('invokes the warn-level supplier exactly once when a WARN record is emitted', () => {
+      // Arrange
+      const supplier = createSupplierSpy('warn');
+
+      // Act
+      JDbLogger.warn('lazy warn context', supplier);
+
+      // Assert
+      expect(supplier).toHaveBeenCalledTimes(1);
+    });
+
+    it('invokes the info-level supplier exactly once when an INFO record is emitted', () => {
+      // Arrange
+      const supplier = createSupplierSpy('info');
+
+      // Act
+      JDbLogger.info('lazy info context', supplier);
+
+      // Assert
+      expect(supplier).toHaveBeenCalledTimes(1);
+    });
+
+    it('invokes the debug-level supplier exactly once when a DEBUG record is emitted', () => {
+      // Arrange
+      const supplier = createSupplierSpy('debug');
+
+      // Act
+      JDbLogger.debug('lazy debug context', supplier);
+
+      // Assert
+      expect(supplier).toHaveBeenCalledTimes(1);
+    });
+
+    it('never invokes the error-level supplier when the ERROR gate is closed', () => {
+      // Arrange — ERROR is the lowest valid level, so its gate only closes below the named
+      // scale; assign that sub-level sentinel directly to the static level state.
+      JDbLogger.currentLevel = JDbLogger.LOG_LEVELS.ERROR - 1;
+      const supplier = createSupplierSpy('error-suppressed');
+
+      // Act
+      JDbLogger.error('gated-out error context', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+
+    it('never invokes the warn-level supplier when records are suppressed to ERROR', () => {
+      // Arrange
+      JDbLogger.setLevelByName('ERROR');
+      const supplier = createSupplierSpy('warn-suppressed');
+
+      // Act
+      JDbLogger.warn('gated-out warn context', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+
+    it('never invokes the info-level supplier when records are suppressed to WARN', () => {
+      // Arrange
+      JDbLogger.setLevelByName('WARN');
+      const supplier = createSupplierSpy('info-suppressed');
+
+      // Act
+      JDbLogger.info('gated-out info context', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+
+    it('never invokes the debug-level supplier when records are suppressed to INFO', () => {
+      // Arrange
+      JDbLogger.setLevelByName('INFO');
+      const supplier = createSupplierSpy('debug-suppressed');
+
+      // Act
+      JDbLogger.debug('gated-out debug context', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('supplier resolution order', () => {
+    it('hands formatMessage the resolved context object rather than the supplier function', () => {
+      // Arrange
+      const resolvedContext = { key: 'value' };
+
+      /**
+       * Supplier returning the resolved context object.
+       * @returns {Object} The resolved context object.
+       */
+      const supplier = () => resolvedContext;
+      const formatSpy = vi.spyOn(JDbLogger, 'formatMessage');
+
+      try {
+        // Act
+        JDbLogger.debug('lazy message', supplier);
+
+        // Assert — resolution happens after the level check and before formatting, so the seam
+        // receives the resolved object and never a function.
+        expect(formatSpy).toHaveBeenCalledTimes(1);
+        const [level, , contextArgument] = formatSpy.mock.calls[0];
+        expect(level).toBe('DEBUG');
+        expect(typeof contextArgument).not.toBe('function');
+        expect(contextArgument).toEqual(resolvedContext);
+      } finally {
+        formatSpy.mockRestore();
+      }
+    });
+  });
+
+  describe('component wrapper pass-through', () => {
+    let componentLogger;
+
+    beforeEach(() => {
+      componentLogger = JDbLogger.createComponentLogger('TestComponent');
+    });
+
+    it('forwards the error wrapper context uninvoked when the level drops below the named scale', () => {
+      // Arrange — ERROR is the lowest valid level, so its gate only closes below the named
+      // scale; assign that sub-level sentinel directly to the static level state.
+      JDbLogger.currentLevel = JDbLogger.LOG_LEVELS.ERROR - 1;
+      const supplier = createSupplierSpy('wrapper-error');
+
+      // Act
+      componentLogger.error('gated out', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+
+    it('forwards the warn wrapper context uninvoked when records are suppressed to ERROR', () => {
+      // Arrange
+      JDbLogger.setLevelByName('ERROR');
+      const supplier = createSupplierSpy('wrapper-warn');
+
+      // Act
+      componentLogger.warn('gated out', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+
+    it('forwards the info wrapper context uninvoked when records are suppressed to WARN', () => {
+      // Arrange
+      JDbLogger.setLevelByName('WARN');
+      const supplier = createSupplierSpy('wrapper-info');
+
+      // Act
+      componentLogger.info('gated out', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+
+    it('forwards the debug wrapper context uninvoked when records are suppressed to INFO', () => {
+      // Arrange
+      JDbLogger.setLevelByName('INFO');
+      const supplier = createSupplierSpy('wrapper-debug');
+
+      // Act
+      componentLogger.debug('gated out', supplier);
+
+      // Assert
+      expect(supplier).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('timeSync supplier exceptions', () => {
+    it('propagates a throwing supplier after fn ran on the success path', () => {
+      // Arrange
+      const supplierError = new Error('supplier exploded');
+      let fnRan = false;
+
+      /**
+       * Context supplier that always throws.
+       * @returns {Object} Never returns normally.
+       * @throws {Error} The sentinel supplier error.
+       */
+      const throwingSupplier = () => {
+        throw supplierError;
+      };
+
+      // Act + Assert — the operation runs first; its return value is lost to the supplier failure.
+      expect(() => {
+        JDbLogger.timeSync(
+          'x',
+          () => {
+            fnRan = true;
+            return 'value lost';
+          },
+          throwingSupplier
+        );
+      }).toThrow(supplierError);
+      expect(fnRan).toBe(true);
+    });
+
+    it('rethrows the original operation error unchanged when the supplier also throws on the error path', () => {
+      // Arrange
+      const operationError = new Error('operation failed');
+
+      /**
+       * Context supplier that always throws.
+       * @returns {Object} Never returns normally.
+       * @throws {Error} A secondary supplier error.
+       */
+      const throwingSupplier = () => {
+        throw new Error('supplier exploded too');
+      };
+      const errorSpy = vi.spyOn(console, 'error');
+
+      try {
+        const callsBefore = errorSpy.mock.calls.length;
+
+        // Act
+        let caught = null;
+        try {
+          JDbLogger.timeSync(
+            'x',
+            () => {
+              throw operationError;
+            },
+            throwingSupplier
+          );
+        } catch (error) {
+          caught = error;
+        }
+
+        // Assert — call-count increase only; console content is never asserted.
+        expect(caught).toBe(operationError);
+        expect(errorSpy.mock.calls.length).toBeGreaterThan(callsBefore);
+      } finally {
+        errorSpy.mockRestore();
+      }
+    });
+  });
+});

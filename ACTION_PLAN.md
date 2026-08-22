@@ -23,8 +23,17 @@ full suite before hand-off to the next.
   delegation verified direct; console prefix contract confirmed by code read). Regression gate
   passed (`npm run lint` 0/0; `npm run test` 70 files / 763 tests). Delivered: component-logger
   `timeSync` closing over the component name, calling `_timeSync` directly.
-- Section 4 — IN PROGRESS (red loop).
-- Sections 5–8 — PENDING.
+- Section 4 — COMPLETE. Red review CLEAN first pass. Green review CLEAN after fix rounds: one
+  unsatisfiable red-phase test corrected under orchestrator authorisation (component-wrapper
+  ERROR-suppression case now uses the suite's sentinel `LOG_LEVELS.ERROR - 1`, mirroring the
+  static-side pattern) and two JSDoc accuracy nitpicks applied (`_resolveLevelContext` return
+  type; `formatMessage` context type). Regression gate passed (`npm run lint` 0/0;
+  `npm run test` 70 files / 782 tests). Delivered: lazy supplier contexts on all four static
+  levels (post-level-check, pre-formatMessage, at-most-once, never when gated); QueryEngine
+  'Executing query' and DocumentOperations `_executeQuery` debug sites converted to suppliers
+  with byte-identical emitted shapes.
+- Section 5 — IN PROGRESS (red loop).
+- Sections 6–8 — PENDING.
 
 ## Global constraints
 

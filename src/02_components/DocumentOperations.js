@@ -244,10 +244,10 @@ class DocumentOperations {
     const queryEngine = this._getQueryEngine();
     const results = queryEngine.executeQuery(documents, query);
 
-    this._logger.debug(`Query executed by ${operation}`, {
+    this._logger.debug(`Query executed by ${operation}`, () => ({
       queryString: JSON.stringify(query),
       resultCount: results.length
-    });
+    }));
 
     return results;
   }

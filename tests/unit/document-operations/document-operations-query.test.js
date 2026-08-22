@@ -2,7 +2,7 @@
  * DocumentOperations Query Enhancement Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   setupTestEnvironment,
   resetCollection
@@ -187,5 +187,66 @@ describe('DocumentOperations Query Enhancement', () => {
     expect(() => {
       docOps.findByQuery({ $and: 'not an array' });
     }).toThrow(InvalidQueryError);
+  });
+
+  describe('_executeQuery debug context laziness', () => {
+    let originalLevel;
+
+    beforeEach(() => {
+      originalLevel = JDbLogger.currentLevel;
+    });
+
+    afterEach(() => {
+      JDbLogger.currentLevel = originalLevel;
+    });
+
+    it('hands the operation logger an unresolved function context while DEBUG is disabled', () => {
+      // Arrange
+      seedTestUsers();
+      const query = { name: 'John Smith' };
+      JDbLogger.setLevelByName('ERROR');
+      const debugSpy = vi.spyOn(docOps._logger, 'debug');
+
+      try {
+        // Act
+        docOps.findByQuery(query);
+
+        // Assert — eager evaluation would stringify the query up front regardless of the gate;
+        // receiving a function proves the cost stays deferred past the logger call.
+        const executedCall = debugSpy.mock.calls.find(
+          (call) => call[0] === 'Query executed by findByQuery'
+        );
+        expect(executedCall).toBeDefined();
+        expect(typeof executedCall[1]).toBe('function');
+      } finally {
+        debugSpy.mockRestore();
+      }
+    });
+
+    it('resolves the executed-query context to exact queryString and resultCount keys through formatMessage', () => {
+      // Arrange
+      seedTestUsers();
+      const query = { name: 'John Smith' };
+      const formatSpy = vi.spyOn(JDbLogger, 'formatMessage');
+
+      try {
+        // Act
+        docOps.findByQuery(query);
+
+        // Assert
+        // Assert — the component wrapper prefixes messages, hence the suffix match.
+        const executedCalls = formatSpy.mock.calls.filter((call) =>
+          String(call[1]).endsWith('Query executed by findByQuery')
+        );
+        expect(executedCalls).toHaveLength(1);
+        expect(executedCalls[0][0]).toBe('DEBUG');
+        expect(executedCalls[0][2]).toEqual({
+          queryString: JSON.stringify(query),
+          resultCount: 1
+        });
+      } finally {
+        formatSpy.mockRestore();
+      }
+    });
   });
 });

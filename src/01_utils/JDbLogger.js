@@ -25,7 +25,9 @@ class JDbLogger {
    * Format a log message with timestamp and level
    * @param {string} level - The log level name
    * @param {string} message - The message to log
-   * @param {Object} context - Optional context object
+   * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+   *   supplier function returning one; suppliers are normally resolved by callers before
+   *   formatMessage runs, so function acceptance here is defensive only.
    * @returns {string} Formatted log message
    */
   static formatMessage(level, message, context = null) {
@@ -40,13 +42,35 @@ class JDbLogger {
   }
 
   /**
+   * Resolve a lazy log-context supplier immediately before formatting.
+   * @param {Object|Function|null} context - Context object or zero-argument supplier function
+   *   returning one.
+   * @returns {Object|null} Resolved context ready for formatMessage; a non-function value,
+   *   including null, passes through unchanged.
+   * @throws {*} When a supplied function throws; plain level logs have no operation error to
+   *   protect, so the exception propagates unchanged (fail loud).
+   * @remarks Callers invoke this only AFTER their level check has passed and BEFORE formatMessage,
+   *   so a gated-out supplier is never called and a function context never reaches stringification
+   *   unresolved. Shares the unguarded resolution semantics of _resolveTimingContext without its
+   *   error-path guarding, which only applies to timed operations.
+   */
+  static _resolveLevelContext(context) {
+    return typeof context === 'function' ? context() : context;
+  }
+
+  /**
    * Log an error message
    * @param {string} message - The error message
-   * @param {Object} context - Optional context object
+   * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+   *   supplier function returning one.
+   * @remarks The supplier is resolved only after the level check passes and before formatMessage
+   *   runs, so a gated-out supplier is never invoked and a function context never reaches
+   *   stringification. A throwing supplier propagates unchanged (fail loud).
    */
   static error(message, context = null) {
     if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.ERROR) {
-      const formatted = JDbLogger.formatMessage('ERROR', message, context);
+      const resolvedContext = JDbLogger._resolveLevelContext(context);
+      const formatted = JDbLogger.formatMessage('ERROR', message, resolvedContext);
       console.error(formatted);
     }
   }
@@ -54,11 +78,16 @@ class JDbLogger {
   /**
    * Log a warning message
    * @param {string} message - The warning message
-   * @param {Object} context - Optional context object
+   * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+   *   supplier function returning one.
+   * @remarks The supplier is resolved only after the level check passes and before formatMessage
+   *   runs, so a gated-out supplier is never invoked and a function context never reaches
+   *   stringification. A throwing supplier propagates unchanged (fail loud).
    */
   static warn(message, context = null) {
     if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.WARN) {
-      const formatted = JDbLogger.formatMessage('WARN', message, context);
+      const resolvedContext = JDbLogger._resolveLevelContext(context);
+      const formatted = JDbLogger.formatMessage('WARN', message, resolvedContext);
       console.warn(formatted);
     }
   }
@@ -66,11 +95,16 @@ class JDbLogger {
   /**
    * Log an info message
    * @param {string} message - The info message
-   * @param {Object} context - Optional context object
+   * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+   *   supplier function returning one.
+   * @remarks The supplier is resolved only after the level check passes and before formatMessage
+   *   runs, so a gated-out supplier is never invoked and a function context never reaches
+   *   stringification. A throwing supplier propagates unchanged (fail loud).
    */
   static info(message, context = null) {
     if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.INFO) {
-      const formatted = JDbLogger.formatMessage('INFO', message, context);
+      const resolvedContext = JDbLogger._resolveLevelContext(context);
+      const formatted = JDbLogger.formatMessage('INFO', message, resolvedContext);
       console.log(formatted);
     }
   }
@@ -78,11 +112,16 @@ class JDbLogger {
   /**
    * Log a debug message
    * @param {string} message - The debug message
-   * @param {Object} context - Optional context object
+   * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+   *   supplier function returning one.
+   * @remarks The supplier is resolved only after the level check passes and before formatMessage
+   *   runs, so a gated-out supplier is never invoked and a function context never reaches
+   *   stringification. A throwing supplier propagates unchanged (fail loud).
    */
   static debug(message, context = null) {
     if (JDbLogger.currentLevel >= JDbLogger.LOG_LEVELS.DEBUG) {
-      const formatted = JDbLogger.formatMessage('DEBUG', message, context);
+      const resolvedContext = JDbLogger._resolveLevelContext(context);
+      const formatted = JDbLogger.formatMessage('DEBUG', message, resolvedContext);
       console.log(formatted);
     }
   }
@@ -97,7 +136,9 @@ class JDbLogger {
       /**
        * Log an error message for this component.
        * @param {string} message - Message to record.
-       * @param {Object|null} [context=null] - Optional structured context.
+       * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+       *   supplier function returning one; forwarded uninvoked, so gating stays owned by the
+       *   static method.
        */
       error: (message, context = null) => {
         JDbLogger.error(`[${component}] ${message}`, context);
@@ -105,7 +146,9 @@ class JDbLogger {
       /**
        * Log a warning for this component.
        * @param {string} message - Message to record.
-       * @param {Object|null} [context=null] - Optional structured context.
+       * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+       *   supplier function returning one; forwarded uninvoked, so gating stays owned by the
+       *   static method.
        */
       warn: (message, context = null) => {
         JDbLogger.warn(`[${component}] ${message}`, context);
@@ -113,7 +156,9 @@ class JDbLogger {
       /**
        * Log informational details for this component.
        * @param {string} message - Message to record.
-       * @param {Object|null} [context=null] - Optional structured context.
+       * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+       *   supplier function returning one; forwarded uninvoked, so gating stays owned by the
+       *   static method.
        */
       info: (message, context = null) => {
         JDbLogger.info(`[${component}] ${message}`, context);
@@ -121,7 +166,9 @@ class JDbLogger {
       /**
        * Log verbose debug details for this component.
        * @param {string} message - Message to record.
-       * @param {Object|null} [context=null] - Optional structured context.
+       * @param {Object|Function|null} [context=null] - Optional structured context object or lazy
+       *   supplier function returning one; forwarded uninvoked, so gating stays owned by the
+       *   static method.
        */
       debug: (message, context = null) => {
         JDbLogger.debug(`[${component}] ${message}`, context);

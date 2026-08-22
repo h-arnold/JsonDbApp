@@ -73,10 +73,10 @@ class QueryEngine {
   executeQuery(documents, query) {
     this._validation.validateQuery(documents, query);
 
-    this._logger.debug('Executing query', {
+    this._logger.debug('Executing query', () => ({
       documentCount: documents.length,
       query: JSON.stringify(query)
-    });
+    }));
 
     if (Object.keys(query).length === 0) {
       return documents.slice();

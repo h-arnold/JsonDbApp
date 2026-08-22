@@ -11,7 +11,7 @@
  * - Error handling for invalid queries
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import MockQueryData from '../../data/MockQueryData.js';
 
 /**
@@ -563,6 +563,64 @@ describe('QueryEngine', () => {
         expect(doc.group).toBe(5);
         expect(doc.active).toBe(true);
       });
+    });
+  });
+
+  describe('executeQuery debug context laziness', () => {
+    let originalLevel;
+
+    beforeEach(() => {
+      originalLevel = JDbLogger.currentLevel;
+    });
+
+    afterEach(() => {
+      JDbLogger.currentLevel = originalLevel;
+    });
+
+    it('hands the instance logger an unresolved function context while DEBUG is disabled', () => {
+      // Arrange
+      const query = { name: 'John Smith' };
+      JDbLogger.setLevelByName('ERROR');
+      const debugSpy = vi.spyOn(queryEngine.getLogger(), 'debug');
+
+      try {
+        // Act
+        queryEngine.executeQuery(testUsers, query);
+
+        // Assert — an eager object literal would stringify the query before the level gate runs;
+        // receiving a function proves evaluation stays deferred past the logger call.
+        const executingCall = debugSpy.mock.calls.find((call) => call[0] === 'Executing query');
+        expect(executingCall).toBeDefined();
+        expect(typeof executingCall[1]).toBe('function');
+      } finally {
+        debugSpy.mockRestore();
+      }
+    });
+
+    it('resolves the executing-query context to exact documentCount and query keys through formatMessage', () => {
+      // Arrange
+      const query = { name: 'John Smith' };
+      const formatSpy = vi.spyOn(JDbLogger, 'formatMessage');
+
+      try {
+        // Act
+        queryEngine.executeQuery(testUsers, query);
+
+        // Assert — only the 'Executing query' record is captured via the formatting seam (the
+        // component wrapper prefixes messages, hence the suffix match); the second
+        // ('Query execution complete') record keeps its eager object form out of scope.
+        const executingCalls = formatSpy.mock.calls.filter((call) =>
+          String(call[1]).endsWith('Executing query')
+        );
+        expect(executingCalls).toHaveLength(1);
+        expect(executingCalls[0][0]).toBe('DEBUG');
+        expect(executingCalls[0][2]).toEqual({
+          documentCount: testUsers.length,
+          query: JSON.stringify(query)
+        });
+      } finally {
+        formatSpy.mockRestore();
+      }
     });
   });
 });
