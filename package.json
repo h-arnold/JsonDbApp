@@ -31,11 +31,11 @@
   "devDependencies": {
     "@google/clasp": "^3.3.0",
     "@vitest/coverage-v8": "^4.1.8",
-    "eslint": "^9.39.2",
+    "eslint": "^10.9.0",
     "eslint-config-google": "^0.14.0",
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-googleappsscript": "^1.0.5",
-    "eslint-plugin-jsdoc": "^62.5.0",
+    "eslint-plugin-jsdoc": "^64.2.1",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
     "vitest": "^4.0.18"
