@@ -134,7 +134,7 @@ When writing tests **before** implementation (red phase of TDD), you **MUST** cr
 
 5. **Place stubs in the production source location** (not in test files). This avoids test-only shims and ensures the test exercises the real module path.
 
-6. **Satisfy lint even in stubs.** JSDoc rules (`jsdoc/require-jsdoc`, `jsdoc/require-param`, `jsdoc/require-returns`) are errors for `src/**/*.js`, so stubs need accurate JSDoc from the start.
+6. **Satisfy lint even in stubs.** JSDoc rules (`jsdoc/require-jsdoc`, `jsdoc/require-param`, `jsdoc/require-returns`) are errors across all linted JavaScript (`src/**` and `tests/**`), so stubs need accurate JSDoc from the start.
 
 7. **Remove or replace stubs immediately when implementing.** Once you move to the green phase, replace the stub with working code. Do not leave `throw new Error('Not implemented')` in production files beyond the implementation cycle.
 
