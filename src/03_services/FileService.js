@@ -32,6 +32,10 @@ class FileService {
 
     this._fileOps = fileOps;
     this._logger = logger;
+    // Dedicated component logger used ONLY for timing attribution: FileService receives its
+    // working logger by injection (Database passes its own), so timing through it would
+    // mislabel fileService.* events as 'Database'.
+    this._timingLogger = JDbLogger.createComponentLogger('FileService');
     this._cache = new Map();
     this._maxCacheSize = 50;
     this._cacheEnabled = true;
@@ -49,27 +53,31 @@ class FileService {
    * @throws {FileNotFoundError} When file doesn't exist
    * @throws {PermissionDeniedError} When access is denied
    * @throws {InvalidFileFormatError} When file contains invalid JSON
+   * @remarks Emits a DEBUG-gated fileService.readFile timing event through the dedicated timing
+   *   logger so attribution stays FileService despite the injected logger.
    */
   readFile(fileId) {
-    this._assertFileId(fileId);
+    return this._timingLogger.timeSync('fileService.readFile', () => {
+      this._assertFileId(fileId);
 
-    this._logger.debug('Reading file through FileService', { fileId });
+      this._logger.debug('Reading file through FileService', { fileId });
 
-    // Check cache first if enabled
-    if (this._cacheEnabled && this._cache.has(fileId)) {
-      this._logger.debug('File content retrieved from cache', { fileId });
-      // Return a deep copy to preserve Date objects and avoid reference issues
-      return ObjectUtils.deepClone(this._cache.get(fileId));
-    }
+      // Check cache first if enabled
+      if (this._cacheEnabled && this._cache.has(fileId)) {
+        this._logger.debug('File content retrieved from cache', { fileId });
+        // Return a deep copy to preserve Date objects and avoid reference issues
+        return ObjectUtils.deepClone(this._cache.get(fileId));
+      }
 
-    const content = this._fileOps.readFile(fileId);
+      const content = this._fileOps.readFile(fileId);
 
-    // Add to cache if enabled
-    if (this._cacheEnabled) {
-      this._addToCache(fileId, content);
-    }
+      // Add to cache if enabled
+      if (this._cacheEnabled) {
+        this._addToCache(fileId, content);
+      }
 
-    return content;
+      return content;
+    });
   }
 
   /**
@@ -101,26 +109,30 @@ class FileService {
    * @param {string} folderId - Drive folder ID (optional, defaults to root)
    * @returns {string} Drive file ID of created file
    * @throws {PermissionDeniedError} When folder access is denied
+   * @remarks Emits a DEBUG-gated fileService.createFile timing event through the dedicated timing
+   *   logger so attribution stays FileService despite the injected logger.
    */
   createFile(fileName, data, folderId = null) {
-    this._assertFileName(fileName);
-    this._assertData(data);
+    return this._timingLogger.timeSync('fileService.createFile', () => {
+      this._assertFileName(fileName);
+      this._assertData(data);
 
-    this._logger.debug('Creating file through FileService', { fileName, folderId });
+      this._logger.debug('Creating file through FileService', { fileName, folderId });
 
-    const newFileId = this._fileOps.createFile(fileName, data, folderId);
+      const newFileId = this._fileOps.createFile(fileName, data, folderId);
 
-    // Add to cache if enabled - cache the data as it would be returned by readFile()
-    // This ensures cache consistency between write and read operations
-    if (this._cacheEnabled) {
-      // Simulate the round-trip through serialisation/deserialisation to ensure
-      // cached data matches what readFile() would return
-      const serialised = ObjectUtils.serialise(data);
-      const deserialisedData = ObjectUtils.deserialise(serialised);
-      this._addToCache(newFileId, deserialisedData);
-    }
+      // Add to cache if enabled - cache the data as it would be returned by readFile()
+      // This ensures cache consistency between write and read operations
+      if (this._cacheEnabled) {
+        // Simulate the round-trip through serialisation/deserialisation to ensure
+        // cached data matches what readFile() would return
+        const serialised = ObjectUtils.serialise(data);
+        const deserialisedData = ObjectUtils.deserialise(serialised);
+        this._addToCache(newFileId, deserialisedData);
+      }
 
-    return newFileId;
+      return newFileId;
+    });
   }
 
   /**

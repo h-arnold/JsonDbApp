@@ -40,8 +40,14 @@ full suite before hand-off to the next.
   3 passed, correct red attribution) and full suite to refute it. Green review CLEAN first pass.
   Regression gate passed (`npm run lint` 0/0; `npm run test` 71 files / 795 tests). Delivered:
   nine `collection.*` boundary wraps in `99_Collection.js`, aggregate untouched.
-- Section 6 — IN PROGRESS (red loop).
-- Sections 7–8 — PENDING.
+- Section 6 — COMPLETE. Red review CLEAN first pass. Green review CLEAN first pass (coordinator
+  clock-read safety verified against git diff: pure re-indentation, statement order unchanged,
+  other three reads in unwrapped methods; FileService dedicated `_timingLogger` confined to the
+  two timeSync calls; matcher via engine `getLogger()`; `masterIndex.save` single persist point).
+  Regression gate passed (`npm run lint` 0/0; `npm run test` 72 files / 800 tests). Delivered:
+  all ten SPEC §6 inner labels observable end-to-end.
+- Section 7 — IN PROGRESS (red-first verification).
+- Section 8 — PENDING.
 
 ## Global constraints
 

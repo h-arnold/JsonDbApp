@@ -237,19 +237,23 @@ class DocumentOperations {
    * @param {string} operation - Operation name for logging
    * @returns {Array<Object>} Query results
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When query contains invalid operators
+   * @remarks Emits a DEBUG-gated docOps.executeQuery timing event through the component logger;
+   *   the whole scan is timed as one unit.
    */
   _executeQuery(query, operation) {
-    this._validateQuery(query);
-    const documents = this.findAllDocuments();
-    const queryEngine = this._getQueryEngine();
-    const results = queryEngine.executeQuery(documents, query);
+    return this._logger.timeSync('docOps.executeQuery', () => {
+      this._validateQuery(query);
+      const documents = this.findAllDocuments();
+      const queryEngine = this._getQueryEngine();
+      const results = queryEngine.executeQuery(documents, query);
 
-    this._logger.debug(`Query executed by ${operation}`, () => ({
-      queryString: JSON.stringify(query),
-      resultCount: results.length
-    }));
+      this._logger.debug(`Query executed by ${operation}`, () => ({
+        queryString: JSON.stringify(query),
+        resultCount: results.length
+      }));
 
-    return results;
+      return results;
+    });
   }
 
   /**
@@ -322,36 +326,43 @@ class DocumentOperations {
    * @returns {Object} Update result { acknowledged: boolean, modifiedCount: number }
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When parameters are invalid
    * @throws {ErrorHandler.ErrorTypes.INVALID_QUERY} When update operators are invalid
+   * @remarks Emits a DEBUG-gated docOps.updateWithOperators timing event through the component
+   *   logger; the whole operator batch is timed as one unit.
    */
   updateDocumentWithOperators(id, updateOps) {
-    // Validate parameters
-    Validate.nonEmptyString(id, 'id');
-    Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
+    return this._logger.timeSync('docOps.updateWithOperators', () => {
+      // Validate parameters
+      Validate.nonEmptyString(id, 'id');
+      Validate.validateUpdateObject(updateOps, 'updateOps', { requireOperators: true });
 
-    // Validate operators before checking existence so invalid ops throw
-    this._validateUpdateOperators(updateOps);
+      // Validate operators before checking existence so invalid ops throw
+      this._validateUpdateOperators(updateOps);
 
-    // Check existence
-    if (!this.documentExists(id)) {
-      return { acknowledged: true, modifiedCount: 0 };
-    }
+      // Check existence
+      if (!this.documentExists(id)) {
+        return { acknowledged: true, modifiedCount: 0 };
+      }
 
-    // Get existing document for the update engine
-    const existing = this._collection._documents[id];
-    // Apply operators
-    const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
+      // Get existing document for the update engine
+      const existing = this._collection._documents[id];
+      // Apply operators
+      const updatedDoc = this._updateEngine.applyOperators(existing, updateOps);
 
-    // Check if the document was actually modified
-    if (ObjectUtils.deepEqual(existing, updatedDoc)) {
-      return { acknowledged: true, modifiedCount: 0 };
-    }
+      // Check if the document was actually modified
+      if (ObjectUtils.deepEqual(existing, updatedDoc)) {
+        return { acknowledged: true, modifiedCount: 0 };
+      }
 
-    // Persist
-    this._collection._documents[id] = updatedDoc;
-    this._collection._updateMetadata();
-    this._collection._markDirty();
-    this._logger.debug('Document updated with operators', { documentId: id, operators: updateOps });
-    return { acknowledged: true, modifiedCount: 1 };
+      // Persist
+      this._collection._documents[id] = updatedDoc;
+      this._collection._updateMetadata();
+      this._collection._markDirty();
+      this._logger.debug('Document updated with operators', {
+        documentId: id,
+        operators: updateOps
+      });
+      return { acknowledged: true, modifiedCount: 1 };
+    });
   }
 
   /**

@@ -46,46 +46,51 @@ class CollectionCoordinator {
    * @param {Function} callback - Core operation callback
    * @returns {*} Result of the core operation
    * @throws {ErrorHandler.ErrorTypes.*} On lock, conflict or operation errors
+   * @remarks Emits a DEBUG-gated coordinator.coordinate timing event through the component
+   *   logger; only this wrapper was added — the raw Date.now() reads feeding timeout, lease,
+   *   and retry decisions remain untouched.
    */
   coordinate(operationName, callback) {
-    Validate.nonEmptyString(operationName, 'operationName');
-    Validate.type(callback, 'function', 'callback');
+    return this._logger.timeSync('coordinator.coordinate', () => {
+      Validate.nonEmptyString(operationName, 'operationName');
+      Validate.type(callback, 'function', 'callback');
 
-    const opId = IdGenerator.generateUUID();
-    const name = this._collection.getName();
-    let lockAcquired = false;
-    let lockAcquiredAt = null;
-    const startTime = Date.now();
+      const opId = IdGenerator.generateUUID();
+      const name = this._collection.getName();
+      let lockAcquired = false;
+      let lockAcquiredAt = null;
+      const startTime = Date.now();
 
-    this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
+      this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
 
-    try {
-      lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
-      lockAcquired = true;
-      this._resolveConflictsIfPresent(name);
-      const result = this._executeOperationWithTimeout(
-        callback,
-        operationName,
-        opId,
-        name,
-        startTime
-      );
-      this._renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, name);
-      this.updateMasterIndexMetadata();
-      return result;
-    } catch (e) {
-      this._logger.error(`Operation ${operationName} failed`, {
-        collection: name,
-        opId,
-        error: e.message
-      });
-      throw e;
-    } finally {
-      if (lockAcquired) {
-        this.releaseOperationLock(opId);
+      try {
+        lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
+        lockAcquired = true;
+        this._resolveConflictsIfPresent(name);
+        const result = this._executeOperationWithTimeout(
+          callback,
+          operationName,
+          opId,
+          name,
+          startTime
+        );
+        this._renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, name);
+        this.updateMasterIndexMetadata();
+        return result;
+      } catch (e) {
+        this._logger.error(`Operation ${operationName} failed`, {
+          collection: name,
+          opId,
+          error: e.message
+        });
+        throw e;
+      } finally {
+        if (lockAcquired) {
+          this.releaseOperationLock(opId);
+        }
+        this._logger.info(`Operation ${operationName} complete`, { collection: name, opId });
       }
-      this._logger.info(`Operation ${operationName} complete`, { collection: name, opId });
-    }
+    });
   }
 
   /**
@@ -316,28 +321,33 @@ class CollectionCoordinator {
 
   /**
    * Update the master index with latest collection metadata
+   * @returns {void}
+   * @remarks Emits a DEBUG-gated coordinator.updateMasterIndexMetadata timing event through the
+   *   component logger; the whole metadata update is timed as one unit.
    */
   updateMasterIndexMetadata() {
-    const name = this._collection.getName();
-    const meta = this._collection._metadata;
-    const updates = {
-      documentCount: meta.documentCount,
-      modificationToken: meta.getModificationToken()
-    };
-    try {
-      if (this._masterIndex.getCollection(name)) {
-        this._masterIndex.updateCollectionMetadata(name, updates);
-      } else {
-        // Initial registration of new collection
-        this._masterIndex.addCollection(name, meta);
+    return this._logger.timeSync('coordinator.updateMasterIndexMetadata', () => {
+      const name = this._collection.getName();
+      const meta = this._collection._metadata;
+      const updates = {
+        documentCount: meta.documentCount,
+        modificationToken: meta.getModificationToken()
+      };
+      try {
+        if (this._masterIndex.getCollection(name)) {
+          this._masterIndex.updateCollectionMetadata(name, updates);
+        } else {
+          // Initial registration of new collection
+          this._masterIndex.addCollection(name, meta);
+        }
+      } catch (e) {
+        // Log and wrap any failure in a MasterIndexError
+        this._logger.error('Master index metadata update failed', {
+          collection: name,
+          error: e.message
+        });
+        throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('updateCollectionMetadata', e.message);
       }
-    } catch (e) {
-      // Log and wrap any failure in a MasterIndexError
-      this._logger.error('Master index metadata update failed', {
-        collection: name,
-        error: e.message
-      });
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('updateCollectionMetadata', e.message);
-    }
+    });
   }
 }

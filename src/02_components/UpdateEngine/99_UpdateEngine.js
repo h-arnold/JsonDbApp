@@ -41,38 +41,42 @@ class UpdateEngine {
    * @param {Object} document - The document to modify
    * @param {Object} updateOps - Update operations object
    * @returns {Object} Updated document
+   * @remarks Emits a DEBUG-gated updateEngine.applyOperators timing event through the component
+   *   logger; the whole operator batch is timed as one unit.
    */
   applyOperators(document, updateOps) {
-    this._validation.validateApplyOperatorsInputs(document, updateOps);
-    this._validation.validateUpdateOperationsNotEmpty(updateOps);
+    return this._logger.timeSync('updateEngine.applyOperators', () => {
+      this._validation.validateApplyOperatorsInputs(document, updateOps);
+      this._validation.validateUpdateOperationsNotEmpty(updateOps);
 
-    let workingDocument = null;
+      let workingDocument = null;
 
-    for (const operator in updateOps) {
-      const handler = this._operatorHandlers[operator];
-      if (!handler) {
-        throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
-          'operator',
-          operator,
-          `Unsupported update operator: ${operator}`
-        );
+      for (const operator in updateOps) {
+        const handler = this._operatorHandlers[operator];
+        if (!handler) {
+          throw new ErrorHandler.ErrorTypes.INVALID_QUERY(
+            'operator',
+            operator,
+            `Unsupported update operator: ${operator}`
+          );
+        }
+
+        if (workingDocument === null) {
+          workingDocument = ObjectUtils.deepClone(document);
+        }
+
+        this._logger.debug(`Applying operator ${operator}`, {
+          fields: Object.keys(updateOps[operator] || {})
+        });
+        workingDocument = handler(workingDocument, updateOps[operator]);
       }
 
       if (workingDocument === null) {
-        workingDocument = ObjectUtils.deepClone(document);
+        return ObjectUtils.deepClone(document);
       }
 
-      this._logger.debug(`Applying operator ${operator}`, {
-        fields: Object.keys(updateOps[operator] || {})
-      });
-      workingDocument = handler(workingDocument, updateOps[operator]);
-    }
-
-    if (workingDocument === null) {
-      return ObjectUtils.deepClone(document);
-    }
-
-    return workingDocument;
+      return workingDocument;
+    });
   }
 
   /**

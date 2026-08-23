@@ -93,20 +93,27 @@ class MasterIndex {
    * @param {Object} [dataOverride] - Optional data to save instead of internal state
    * @param {Date} [timestamp] - Optional timestamp override
    * @returns {void}
+   * @remarks Emits a DEBUG-gated masterIndex.save timing event through the component logger;
+   *   save is the single persist point timed for all indirect callers.
    */
   save(dataOverride, timestamp = this._getCurrentTimestamp()) {
-    try {
-      const dataToSave = dataOverride || this._data;
-      const effectiveTimestamp =
-        timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
-          ? new Date(timestamp.getTime())
-          : this._getCurrentTimestamp();
-      dataToSave.lastUpdated = effectiveTimestamp;
-      const dataString = ObjectUtils.serialise(dataToSave);
-      PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
-    } catch (error) {
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
-    }
+    return this._logger.timeSync('masterIndex.save', () => {
+      try {
+        const dataToSave = dataOverride || this._data;
+        const effectiveTimestamp =
+          timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
+            ? new Date(timestamp.getTime())
+            : this._getCurrentTimestamp();
+        dataToSave.lastUpdated = effectiveTimestamp;
+        const dataString = ObjectUtils.serialise(dataToSave);
+        PropertiesService.getScriptProperties().setProperty(
+          this._config.masterIndexKey,
+          dataString
+        );
+      } catch (error) {
+        throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
+      }
+    });
   }
 
   /**
