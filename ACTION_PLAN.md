@@ -32,8 +32,16 @@ full suite before hand-off to the next.
   levels (post-level-check, pre-formatMessage, at-most-once, never when gated); QueryEngine
   'Executing query' and DocumentOperations `_executeQuery` debug sites converted to suppliers
   with byte-identical emitted shapes.
-- Section 5 — IN PROGRESS (red loop).
-- Sections 6–8 — PENDING.
+- Section 5 — COMPLETE. Red review CLEAN after fix round (aggregate negative-space assertion
+  narrowed to the exact `collection.aggregate` label; orphaned prefix-selector removed). One
+  reviewer Critical claiming a repo-wide `JDbLogger is not defined` harness defect was DISCARDED
+  as factually wrong — it stemmed from running vitest without the canonical
+  `--config tests/vitest.config.js`; orchestrator re-ran both the targeted suite (10 failed /
+  3 passed, correct red attribution) and full suite to refute it. Green review CLEAN first pass.
+  Regression gate passed (`npm run lint` 0/0; `npm run test` 71 files / 795 tests). Delivered:
+  nine `collection.*` boundary wraps in `99_Collection.js`, aggregate untouched.
+- Section 6 — IN PROGRESS (red loop).
+- Sections 7–8 — PENDING.
 
 ## Global constraints
 
