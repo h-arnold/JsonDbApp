@@ -148,7 +148,9 @@ describe('Collection boundary timing instrumentation', () => {
 
         // Assert
         const emitted = eventsWithLabel(capture.events, expectedLabel);
-        expect(emitted.length, `no ${expectedLabel} timing events were captured`).toBeGreaterThan(0);
+        expect(emitted.length, `no ${expectedLabel} timing events were captured`).toBeGreaterThan(
+          0
+        );
         for (const event of emitted) {
           expect(event.component).toBe('Collection');
           expect(event.label).toBe(expectedLabel);
@@ -169,7 +171,10 @@ describe('Collection boundary timing instrumentation', () => {
       }
 
       // Assert
-      expect(capture.events.length, 'no timing events were captured for the happy paths').toBeGreaterThan(0);
+      expect(
+        capture.events.length,
+        'no timing events were captured for the happy paths'
+      ).toBeGreaterThan(0);
       for (const event of capture.events) {
         expect(typeof event.durationMs).toBe('number');
         expect(event.durationMs).toBeGreaterThanOrEqual(0);

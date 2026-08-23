@@ -46,8 +46,14 @@ full suite before hand-off to the next.
   two timeSync calls; matcher via engine `getLogger()`; `masterIndex.save` single persist point).
   Regression gate passed (`npm run lint` 0/0; `npm run test` 72 files / 800 tests). Delivered:
   all ten SPEC §6 inner labels observable end-to-end.
-- Section 7 — IN PROGRESS (red-first verification).
-- Section 8 — PENDING.
+- Section 7 — COMPLETE. Red gate verified (script absent → exit 1). Green review CLEAN first
+  pass (reviewer proved the dedicated `.cjs` lint block is genuinely active via a deliberate-
+  violation probe). Regression gate passed (`npm run lint` 0/0; `npm run test` 72 files / 800
+  tests; mandatory `npx eslint tools/benchmarks/bench.cjs` probe 0/0; default + env-override
+  smoke runs exit 0 printing all eight scenario tables). Delivered: `tools/benchmarks/bench.cjs`,
+  `"bench"` npm script, dedicated eslint `.cjs` block (shared rule const, Node globals,
+  `tools/gas-mocks/**` ignored), shared lint scope untouched.
+- Section 8 — IN PROGRESS (regression hardening + documentation follow-through).
 
 ## Global constraints
 

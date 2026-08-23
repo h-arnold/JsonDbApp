@@ -10,6 +10,7 @@
     "test": "vitest run --config tests/vitest.config.js --silent",
     "test:verbose": "vitest run --config tests/vitest.config.js",
     "test:coverage": "vitest run --config tests/vitest.config.js --coverage",
+    "bench": "node tools/benchmarks/bench.cjs",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
