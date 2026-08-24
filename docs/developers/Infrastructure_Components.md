@@ -9,6 +9,7 @@
     - [1.2.0.2. Core Methods](#1202-core-methods)
     - [1.2.0.3. Usage Examples](#1203-usage-examples)
     - [1.2.0.4. Best Practices](#1204-best-practices)
+    - [1.2.0.5. Execution-Time Tracking](#1205-execution-time-tracking)
     - [1.2.1. ErrorHandler](#121-errorhandler)
       - [1.2.1.1. Error Type Hierarchy](#1211-error-type-hierarchy)
       - [1.2.1.2. Error Management Methods](#1212-error-management-methods)
@@ -112,17 +113,113 @@ dbLogger.info('Collection created', { name: 'users' });
    const logger = JDbLogger.createComponentLogger('Collection');
    ```
 
-### 1.2.0.5. Execution-Time Tracking (Planned — Not implemented)
+### 1.2.0.5. Execution-Time Tracking
 
-Specified in the repository-root `SPEC.md`; not yet built:
+Implemented in `src/01_utils/JDbLogger.js`. The facility measures synchronous operations,
+emits a DEBUG-level console record, and delivers structured timing events to registered
+listeners so tests and tooling can assert against deterministic event fields.
 
-- `JDbLogger.timeSync(label, fn, context?)` — DEBUG-gated scoped timer returning `fn`'s result;
-  internal seam `_timeSync(component, label, fn, context)`; clock seam `_now()` over `Date.now()`.
-- `JDbLogger.addTimingListener(listenerFn)` — structured events
-  `{ component, label, durationMs, timestamp, error }`; returns an idempotent unsubscribe closure.
-- Lazy context suppliers (`Object|Function|null`) across all four levels and `timeSync`, resolved
-  only when the level gate passes (post-level-check, pre-`formatMessage`).
-- Component-logger `timeSync(label, fn, context?)` tagging events with the component name.
+#### Public surface
+
+| Member                                               | Description                                                                                                                                            |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `JDbLogger.timeSync(label, fn, context?)`            | Static entry point: runs `fn` once between two clock reads and returns its result unchanged.                                                           |
+| `logger.timeSync(label, fn, context?)`               | Component-logger form: delegates straight to the internal seam with the component name; events carry `component: '<Name>'` and labels stay unprefixed. |
+| `JDbLogger.addTimingListener(listenerFn)`            | Registers a listener receiving every timing event synchronously, in registration order. Returns an idempotent unsubscribe closure.                     |
+| `JDbLogger._timeSync(component, label, fn, context)` | Private static seam owning every behavioural rule; both entry points delegate here so behaviour cannot drift apart.                                    |
+| `JDbLogger._now()`                                   | Private clock seam over `Date.now()`; the sole clock source of the facility.                                                                           |
+
+Arguments validate before any measurement starts: `label` must be a non-empty string, `fn`
+a function, and `context` an object, a function, or `null` — `undefined` normalises to
+`null`, so context-less calls never throw. Plain `Error`s are thrown throughout;
+`JDbLogger` deliberately holds no `ErrorHandler` dependency.
+
+#### Timing events
+
+```javascript
+{
+  component: 'Collection',               // PascalCase owner, or null for static use
+  label: 'collection.find',
+  durationMs: 42, // end − start, both reads taken through _now()
+  timestamp: '2026-08-24T12:00:00.000Z', // ISO string derived from the measured END reading
+  error: null // thrown error message, or null on success
+}
+```
+
+The resolved context is intentionally excluded from events; it appears only on the console
+record.
+
+#### Console output contract
+
+Records flow through the standard debug pathway (`console.log` via `formatMessage`):
+
+- Static use: `[TIMING] <label> | Context: { ...resolvedContext, durationMs }` —
+  `durationMs` wins key collisions.
+- Component use: `[<Component>] [TIMING] <label> | Context: { ...resolvedContext, durationMs }`.
+- `formatMessage` stamps its own wall-clock timestamp; only `event.timestamp` derives from
+  the measured end value, which is why test assertions target listener events rather than
+  console lines (see
+  [Testing Framework](Testing_Framework.md#timing-assertions-and-benchmarks)).
+
+#### DEBUG gating and exception rules
+
+Everything downstream of measurement — supplier resolution, formatting, console output,
+listener dispatch — happens only when the level gate passes. Standalone `JDbLogger` defaults
+to DEBUG; `Database` propagates its configured `logLevel`, so set DEBUG to observe timings.
+Measurement itself precedes the gate: **both `_now()` clock reads occur on every call even
+when emission is suppressed**, and the suppressed path still executes `fn`, returning its
+result or rethrowing its error unchanged (an accepted, constant measurement tax).
+
+Exception handling is asymmetric by design:
+
+- **Success path**: throwing listeners and throwing context suppliers propagate unchanged
+  (fail loud — there is nothing to mask). A throwing supplier aborts the call after `fn` has
+  run, so the return value is lost.
+- **Error path**: the original operation error always wins. Listener dispatch and supplier
+  resolution are individually guarded; secondary failures surface through `console.error`,
+  remaining listeners still fire, and the original error reaches the caller with its identity
+  intact.
+
+#### Lazy context suppliers
+
+`context` accepts `Object | Function | null` on all four levels (`error`, `warn`, `info`,
+`debug`) and on both `timeSync` forms; component-logger wrappers forward suppliers
+uninvoked. Suppliers resolve after the level check and before `formatMessage`, at most once:
+gated-out calls never invoke them and a function context never reaches stringification
+unresolved.
+
+#### Instrumentation coverage
+
+Timers wrap whole batches and scans — never individual documents inside loops — keeping
+event volume proportional to operations, not documents:
+
+- **Boundary layer** (`src/04_core/Collection/99_Collection.js`): all nine public CRUD
+  methods (`find`, `findOne`, `countDocuments`, `insertOne`, `updateOne`, `updateMany`,
+  `replaceOne`, `deleteOne`, `deleteMany`) emit `collection.<operation>` events through the
+  Collection component logger.
+- **Inner hot paths**: `queryEngine.executeQuery` and `queryEngine.filterDocuments` (the
+  matcher borrows the engine logger via `getLogger()`), `docOps.executeQuery` and
+  `docOps.updateWithOperators` (`src/02_components/DocumentOperations.js`),
+  `updateEngine.applyOperators` (`src/02_components/UpdateEngine/99_UpdateEngine.js`),
+  `masterIndex.save` (`src/04_core/MasterIndex/99_MasterIndex.js` — the single persist point,
+  covering all indirect callers), `coordinator.coordinate` and
+  `coordinator.updateMasterIndexMetadata`
+  (`src/02_components/CollectionCoordinator.js`), and `fileService.readFile` /
+  `fileService.createFile` (`src/03_services/FileService.js`).
+
+Labels are lowercase dotted tags independent of the PascalCase `component` field
+(`collection.find` events carry `component: 'Collection'`).
+
+**FileService attribution rule.** `FileService` receives its working logger by injection
+(`Database` passes its own), so timing through it would mislabel `fileService.*` events as
+`Database`. It therefore constructs a dedicated `createComponentLogger('FileService')` used
+ONLY for `timeSync`; the injected logger keeps its existing debug/warn/error duties.
+
+**Deliberate non-instrumentations.** `Collection.aggregate`, per-document helpers
+(`deleteDocument`, `findAllDocuments`), the raw `Date.now()` reads inside
+`CollectionCoordinator` control flow (they feed timeout enforcement, lease renewal, and
+retry/backoff decisions and must stay outside the logging facility), `DbLockService`, and
+`Database` lifecycle methods emit no timing events.
 
 ---
 

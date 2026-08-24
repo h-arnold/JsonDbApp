@@ -63,7 +63,18 @@ full suite before hand-off to the next.
   DocumentOperations header 'Section 6' note stale; CollectionCoordinator dead `_logger`
   injection parameter; QueryEngine.test.js empty afterAll teardown; eslint.config self-referential
   files block vs global ignore.
-- Section 8 — IN PROGRESS (documentation follow-through + final review).
+- Section 8 — COMPLETE. Full regression gate green from a clean tree before and after the docs
+  pass (lint 0/0; 72 files / 800 tests). Docs agent flipped both planned entries to implemented
+  (Infrastructure_Components.md §1.2.0.5 execution-time tracking; Testing_Framework.md timing
+  assertions and benchmarks incl. `captureTimingEvents()` pattern, clearMocks caveat, mock-clock
+  recipe, and the bench harness subsection with BENCH_DOCS/BENCH_ITERATIONS overrides) plus
+  one-line pointers on QueryEngine.md, Collection_Components.md, MasterIndex.md; release notes
+  correctly deferred per SPEC §8; zero stale `bench.js` references found. Final Code Reviewer
+  pass over the cumulative branch diff: PASS, no findings — console format contracts verified by
+  code reading ([TIMING] shape, [<Component>] [TIMING] prefix, merged {...resolvedContext,
+  durationMs}, success and error paths), no suite asserts console content, all 19 SPEC §6 sites
+  present, coordinator control-flow Date.now reads untouched, docs claims match implementation.
+  Report at .opencode/scratchpad/code-review-section8-final.md.
 
 ## Global constraints
 

@@ -116,6 +116,10 @@ const results = queryEngine.executeQuery(docs, { age: 30, city: 'New York' });
 // results: [{ name: "Alice", age: 30, city: "New York" }]
 ```
 
+> **Timing:** `executeQuery` emits a DEBUG-gated `queryEngine.executeQuery` timing event, and
+> the matcher emits `queryEngine.filterDocuments`; see
+> [Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking).
+
 ### `_matchDocument(document, query)`
 
 (Private) Determines if a single document matches the given query. This method iterates through the query conditions and evaluates them against the document, handling both logical operators and field-based queries.

@@ -136,6 +136,11 @@ const collection = new Collection(
 
 ### Public Methods
 
+> **Timing:** every public CRUD method below (`find`, `findOne`, `countDocuments`,
+> `insertOne`, `updateOne`, `updateMany`, `replaceOne`, `deleteOne`, `deleteMany`) wraps its
+> delegate in a DEBUG-gated `collection.<operation>` timing event; see
+> [Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking).
+
 #### insertOne(doc: Object): Object
 
 Insert a single document with automatic ID generation.

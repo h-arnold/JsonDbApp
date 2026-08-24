@@ -33,6 +33,10 @@
     - [Run Specific Test File](#run-specific-test-file)
     - [Run Tests Matching Pattern](#run-tests-matching-pattern)
     - [Coverage](#coverage)
+  - [Timing Assertions and Benchmarks](#timing-assertions-and-benchmarks)
+    - [Capturing timing events](#capturing-timing-events)
+    - [Asserting exact durations with the mock clock](#asserting-exact-durations-with-the-mock-clock)
+    - [Benchmark harness](#benchmark-harness)
   - [API Reference](#api-reference)
     - [Vitest Core APIs](#vitest-core-apis)
       - [Test Structure](#test-structure)
@@ -551,17 +555,104 @@ npm run test -- -t "should persist"
 npm run test -- --coverage
 ```
 
-## Timing Assertions and Benchmarks (Planned — Not implemented)
+## Timing Assertions and Benchmarks
 
-Specified in the repository-root `SPEC.md` (execution-time logging facility); not yet built:
+The execution-time logging facility in `JDbLogger` makes synchronous-operation durations
+deterministically assertable in Vitest, and a manually-run benchmark harness reports
+per-label before/after figures. See
+[Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking)
+for the facility's API surface, event shape, and gating semantics.
 
-- Timing assertions via a registered `JDbLogger` listener plus `createMockClock()`
-  (`tests/helpers/mock-time-helpers.js`): advance the fake clock by N ms and assert the captured
-  event's `durationMs === N`. Unsubscribe in teardown; Vitest `clearMocks` does NOT clear listener
-  state.
-- `npm run bench` (`tools/benchmarks/bench.cjs`) — manual benchmark harness over the GAS mocks;
-  per-operation count/min/max/mean table. Mutating scenarios re-seed before every measured
-  iteration. Not part of `npm test`.
+### Capturing timing events
+
+Obtain listeners exclusively through `captureTimingEvents()`
+([tests/helpers/timing-capture-test-helpers.js](../../tests/helpers/timing-capture-test-helpers.js))
+and call `restore()` in `afterEach`. Raw `addTimingListener` calls in tests are forbidden by
+convention because Vitest's `clearMocks` resets mocks created with `vi.fn()`/`vi.spyOn()`
+but does NOT clear `JDbLogger`'s static listener list — only explicit unsubscription keeps
+suites independent.
+
+```javascript
+import { describe, it, expect, afterEach } from 'vitest';
+import {
+  captureTimingEvents,
+  eventsWithLabel,
+  expectLabelsPresent
+} from '../../helpers/timing-capture-test-helpers.js';
+
+describe('Collection timing', () => {
+  const { events, restore } = captureTimingEvents();
+  afterEach(() => restore());
+
+  it('emits boundary and inner labels for find', () => {
+    // Arrange: seeded collection via collection-test-helpers.js
+    collection.find({ group: 'group-3' });
+
+    // Assert
+    expectLabelsPresent(events, [
+      'collection.find',
+      'docOps.executeQuery',
+      'queryEngine.executeQuery'
+    ]);
+    expect(eventsWithLabel(events, 'collection.find')[0].component).toBe('Collection');
+  });
+});
+```
+
+- `captureTimingEvents(sharedEvents?)`: registers one listener appending to the returned
+  `events` array; passing a shared array to several captures lets a test observe the order in
+  which registered listeners fire. Returns `{ events, restore }`; `restore()` is idempotent.
+- `eventsWithLabel(events, label)`: selects captured events by exact label.
+- `expectLabelsPresent(events, requiredLabels)`: asserts each required label was emitted at
+  least once, naming the missing label and the captured alternatives on failure.
+
+### Asserting exact durations with the mock clock
+
+`createMockClock()`
+([tests/helpers/mock-time-helpers.js](../../tests/helpers/mock-time-helpers.js)) spies
+`Date.now`, so advancing the fake clock inside the timed operation yields an exact
+`durationMs`:
+
+```javascript
+const clock = createMockClock(1000);
+
+JDbLogger.timeSync('example', () => {
+  clock.advanceTime(42);
+});
+
+expect(eventsWithLabel(events, 'example')[0].durationMs).toBe(42);
+```
+
+Restore the clock alongside the listener in teardown (`clock.restore()`). Because
+`event.timestamp` derives from the measured end reading while formatted console lines keep
+wall-clock timestamps, assert on captured event fields — never on console content.
+
+### Benchmark harness
+
+`npm run bench` ([tools/benchmarks/bench.cjs](../../tools/benchmarks/bench.cjs)) is manual
+developer tooling for before/after comparisons. It is not wired into Vitest or CI and is not
+part of `npm test`.
+
+Each run:
+
+- Boots the full src surface over the mocked GAS services inside an OS-temporary Drive root,
+  loading scripts in the order shared with the Vitest setup
+  (`tools/gas-mocks/script-order.cjs`) with `src/04_core/99_PublicAPI.js` appended last,
+  then builds the database via `createAndInitialiseDatabase` at log level DEBUG — required
+  because timing events only dispatch when the DEBUG gate passes.
+- Seeds one collection deterministically (default 200 documents; `BENCH_DOCS` overrides) and
+  runs eight scenarios: full `find`, filtered `findOne`, `countDocuments`, batch
+  `updateMany`, batch `deleteMany`, single-document operator update, repeated cached
+  `readFile`, and one coordinated write.
+- Measures through the timing facility itself — a registered listener aggregates real
+  facility events per label. Every scenario performs one unmeasured warm-up pass first;
+  mutating scenarios re-establish their preconditions before EVERY measured iteration and
+  their preparation events are discarded, so only measured bodies contribute to the
+  statistics (read-only scenarios share the seeded state).
+- Prints one aligned table per scenario reporting count/min/max/mean milliseconds per label.
+- Honours `BENCH_ITERATIONS` (default 5) for measured iterations per scenario. Both
+  environment variables must be positive integers and invalid values fail fast; completed
+  runs always exit 0 regardless of measurement variance.
 
 ## API Reference
 
