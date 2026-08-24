@@ -1,5 +1,5 @@
 /**
- * JDbLogger - Provides standardized logging functionality for GAS DB
+ * JDbLogger - Provides standardised logging functionality for GAS DB
  *
  * This class provides different log levels and formats messages consistently
  * across the entire library. Designed to work with Google Apps Script's
@@ -184,7 +184,7 @@ class JDbLogger {
        * @returns {*} The value returned by fn, passed through unchanged.
        * @throws {Error} When arguments are invalid before any timing starts (same rules as the
        *   static form).
-       * @remarks Full delegation to the _timeSync seam (SPEC §4.2): every behavioural rule —
+       * @remarks Full delegation to the _timeSync seam: every behavioural rule —
        *   component attribution, label handling, DEBUG gating, exception asymmetry, console
        *   prefixing — is seam-owned; this closure only supplies the component name directly to
        *   _timeSync so static and component use cannot drift apart.
@@ -261,7 +261,8 @@ class JDbLogger {
    *   propagate unchanged (fail loud); on the ERROR path dispatch and supplier resolution are
    *   guarded per call (reported via console.error) so secondary failures can never mask the
    *   original operation error, which always reaches the caller with its identity preserved.
-   *   Measurement precedes the DEBUG gate so both clock reads occur on every call (SPEC §3).
+   *   Measurement precedes the DEBUG gate so both clock reads occur on every call, even when
+   *   emission is suppressed.
    */
   static _timeSync(component, label, fn, context) {
     if (context === undefined) {
@@ -269,8 +270,8 @@ class JDbLogger {
     }
     JDbLogger._validateTimingArguments(label, fn, context);
 
-    // Measurement runs unconditionally first so both _now() reads occur on every call regardless
-    // of the DEBUG gate below (SPEC §3 accepted measurement tax).
+    // Measurement runs unconditionally first so both _now() reads occur on every call, even when
+    // the DEBUG gate below suppresses emission.
     const measurement = JDbLogger._measureTimedOperation(fn);
 
     // DEBUG gate. When suppressed the measured outcome passes straight through: no supplier

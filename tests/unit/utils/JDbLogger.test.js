@@ -6,6 +6,19 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { captureTimingEvents } from '../../helpers/timing-capture-test-helpers.js';
 import { createMockClock } from '../../helpers/mock-time-helpers.js';
 
+const activeCaptures = [];
+
+/**
+ * Starts a timing capture registered for teardown in afterEach.
+ * @param {Array<Object>} [targetEvents] - Optional shared collection array.
+ * @returns {Object} Capture handle with collected events and an idempotent restore.
+ */
+const startCapture = (targetEvents) => {
+  const handle = captureTimingEvents(targetEvents);
+  activeCaptures.push(handle);
+  return handle;
+};
+
 describe('JDbLogger basic functionality', () => {
   it('should have logger methods', () => {
     expect(typeof JDbLogger.error).toBe('function');
@@ -40,16 +53,10 @@ describe('JDbLogger component logger', () => {
 describe('JDbLogger timeSync', () => {
   let clock;
   let originalLevel;
-  const activeCaptures = [];
 
   beforeEach(() => {
     clock = createMockClock(1000);
     originalLevel = JDbLogger.currentLevel;
-
-    // Red-phase attribution guard: every failure in this block must trace to the
-    // absent timing facility, never to a stray TypeError at a call site below.
-    expect(typeof JDbLogger.timeSync).toBe('function');
-    expect(typeof JDbLogger.addTimingListener).toBe('function');
   });
 
   afterEach(() => {
@@ -59,17 +66,6 @@ describe('JDbLogger timeSync', () => {
     JDbLogger.currentLevel = originalLevel;
     clock.restore();
   });
-
-  /**
-   * Starts a timing capture registered for teardown in afterEach.
-   * @param {Array<Object>} [targetEvents] - Optional shared collection array.
-   * @returns {Object} Capture handle with collected events and an idempotent restore.
-   */
-  const startCapture = (targetEvents) => {
-    const handle = captureTimingEvents(targetEvents);
-    activeCaptures.push(handle);
-    return handle;
-  };
 
   describe('result passthrough', () => {
     it("returns the wrapped supplier's result unchanged", () => {
@@ -290,17 +286,11 @@ describe('JDbLogger component logger timeSync', () => {
   let clock;
   let originalLevel;
   let componentLogger;
-  const activeCaptures = [];
 
   beforeEach(() => {
     clock = createMockClock(1000);
     originalLevel = JDbLogger.currentLevel;
     componentLogger = JDbLogger.createComponentLogger('TestComponent');
-
-    // Red-phase attribution guard: every failure in this block must trace to the
-    // absent timeSync on component logger objects, never to a stray TypeError at
-    // a call site below.
-    expect(typeof componentLogger.timeSync).toBe('function');
   });
 
   afterEach(() => {
@@ -310,17 +300,6 @@ describe('JDbLogger component logger timeSync', () => {
     JDbLogger.currentLevel = originalLevel;
     clock.restore();
   });
-
-  /**
-   * Starts a timing capture registered for teardown in afterEach.
-   * @param {Array<Object>} [targetEvents] - Optional shared collection array.
-   * @returns {Object} Capture handle with collected events and an idempotent restore.
-   */
-  const startCapture = (targetEvents) => {
-    const handle = captureTimingEvents(targetEvents);
-    activeCaptures.push(handle);
-    return handle;
-  };
 
   describe('component attribution', () => {
     it('tags emitted events with the owning component and leaves the label unprefixed', () => {

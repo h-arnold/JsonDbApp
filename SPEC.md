@@ -95,8 +95,6 @@ with two explicitly decided cases:
 
 ### 4.3 Timing listeners
 
-### 4.3 Timing listeners
-
 - No shared listener abstraction exists before or after this change; timing listeners are
   standalone callbacks registered via `JDbLogger.addTimingListener(listenerFn)`. The method returns
   an unsubscribe closure; calling it twice is safe (idempotent).

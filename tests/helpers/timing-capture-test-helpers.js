@@ -49,3 +49,29 @@ export const captureTimingEvents = (targetEvents = []) => {
     }
   };
 };
+
+/**
+ * Selects captured timing events whose label exactly matches the given value.
+ * @param {Array<Object>} events - Captured timing events.
+ * @param {string} label - Exact event label to select.
+ * @returns {Array<Object>} Events carrying the requested label.
+ */
+export const eventsWithLabel = (events, label) => events.filter((event) => event.label === label);
+
+/**
+ * Asserts that every required label was emitted at least once among the
+ * captured events, naming the missing label and the captured alternatives on
+ * failure so red-phase gaps are directly attributable.
+ * @param {Array<Object>} events - Captured timing events.
+ * @param {Array<string>} requiredLabels - Labels that must have been emitted.
+ * @returns {void}
+ */
+export const expectLabelsPresent = (events, requiredLabels) => {
+  const capturedLabels = events.map((event) => event.label);
+  for (const label of requiredLabels) {
+    expect(
+      capturedLabels.includes(label),
+      `expected a "${label}" timing event; captured labels: [${capturedLabels.join(', ')}]`
+    ).toBe(true);
+  }
+};

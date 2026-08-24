@@ -233,7 +233,6 @@ describe('DocumentOperations Query Enhancement', () => {
         // Act
         docOps.findByQuery(query);
 
-        // Assert
         // Assert — the component wrapper prefixes messages, hence the suffix match.
         const executedCalls = formatSpy.mock.calls.filter((call) =>
           String(call[1]).endsWith('Query executed by findByQuery')

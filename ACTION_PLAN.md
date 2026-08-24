@@ -53,7 +53,17 @@ full suite before hand-off to the next.
   smoke runs exit 0 printing all eight scenario tables). Delivered: `tools/benchmarks/bench.cjs`,
   `"bench"` npm script, dedicated eslint `.cjs` block (shared rule const, Node globals,
   `tools/gas-mocks/**` ignored), shared lint scope untouched.
-- Section 8 — IN PROGRESS (regression hardening + documentation follow-through).
+- De-sloppification pass — COMPLETE. Sweep verdict: no blocking slop. Seven mechanical fixes
+  applied and review CLEAN: shared timing assertion helpers hoisted into
+  `tests/helpers/timing-capture-test-helpers.js`; duplicated capture plumbing in JDbLogger.test.js
+  unified at module scope; red-phase guard scaffolding removed; change-narrative JSDoc made
+  timeless; duplicate SPEC §4.3 heading removed; doubled assert comment removed; 'standardized'
+  → 'standardised'. Regression gate passed (lint 0/0; 72 files / 800 tests). Recorded follow-ups
+  OUTSIDE this plan's scope (pre-existing): FileService header cache note stale;
+  DocumentOperations header 'Section 6' note stale; CollectionCoordinator dead `_logger`
+  injection parameter; QueryEngine.test.js empty afterAll teardown; eslint.config self-referential
+  files block vs global ignore.
+- Section 8 — IN PROGRESS (documentation follow-through + final review).
 
 ## Global constraints
 

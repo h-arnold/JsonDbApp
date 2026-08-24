@@ -9,20 +9,12 @@
  */
 
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import { captureTimingEvents } from '../../helpers/timing-capture-test-helpers.js';
+import { captureTimingEvents, eventsWithLabel } from '../../helpers/timing-capture-test-helpers.js';
 import {
   assertAcknowledgedWrite,
   createIsolatedTestCollection,
   seedStandardEmployees
 } from '../../helpers/collection-test-helpers.js';
-
-/**
- * Selects captured timing events whose label exactly matches the given value.
- * @param {Array<Object>} events - Captured timing events.
- * @param {string} label - Exact event label to select.
- * @returns {Array<Object>} Events carrying the requested label.
- */
-const eventsWithLabel = (events, label) => events.filter((event) => event.label === label);
 
 /**
  * One entry per timed public CRUD operation.

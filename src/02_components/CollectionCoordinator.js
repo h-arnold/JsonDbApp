@@ -47,8 +47,8 @@ class CollectionCoordinator {
    * @returns {*} Result of the core operation
    * @throws {ErrorHandler.ErrorTypes.*} On lock, conflict or operation errors
    * @remarks Emits a DEBUG-gated coordinator.coordinate timing event through the component
-   *   logger; only this wrapper was added — the raw Date.now() reads feeding timeout, lease,
-   *   and retry decisions remain untouched.
+   *   logger. Timers wrap only these two methods; the raw Date.now() reads feeding timeout,
+   *   lease, and retry decisions are deliberately excluded from the timing facility.
    */
   coordinate(operationName, callback) {
     return this._logger.timeSync('coordinator.coordinate', () => {
