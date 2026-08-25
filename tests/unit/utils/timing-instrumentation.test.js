@@ -1,21 +1,19 @@
 /**
  * Inner Hot-Path Timing Instrumentation Tests
  *
- * Drives representative public operations against the GAS mocks and asserts the
- * full `SPEC.md` §6 instrumentation inventory at both layers: the live
- * `collection.*` boundary wraps plus each inner hot-path label. Timing events
- * are flat (no parent-child nesting), so coordinated work asserts the presence
- * of every participating label rather than any structure. Per-document helpers
- * (`deleteDocument`, `findAllDocuments`) are deliberately not timed, which the
- * deleteMany case guards as negative space.
+ * Drives representative public operations against the GAS mocks and asserts
+ * the `SPEC.md` §6 instrumentation inventory under the stacked-timer
+ * short-circuit contract: while an outer measurement is active, inner timers
+ * run their fn directly, so each driven operation emits exactly its outermost
+ * boundary label and every inner hot-path label stays silent — one event per
+ * operation, no double counting. Coordinated work therefore asserts the
+ * coordinator boundary alone. Per-document helpers (`deleteDocument`,
+ * `findAllDocuments`) remain deliberately untimed, which the deleteMany case
+ * guards as negative space.
  */
 
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
-import {
-  captureTimingEvents,
-  eventsWithLabel,
-  expectLabelsPresent
-} from '../../helpers/timing-capture-test-helpers.js';
+import { afterEach, describe, expect, it } from 'vitest';
+import { captureTimingEvents, eventsWithLabel } from '../../helpers/timing-capture-test-helpers.js';
 import {
   assertAcknowledgedWrite,
   createIsolatedTestCollection,
@@ -27,64 +25,54 @@ import { registerDatabaseFile } from '../../helpers/database-test-helpers.js';
 describe('Inner hot-path timing instrumentation', () => {
   let capture;
 
-  beforeEach(() => {
-    capture = captureTimingEvents();
-  });
-
   afterEach(() => {
-    capture.restore();
+    if (capture) {
+      capture.restore();
+    }
   });
 
-  it('yields boundary and inner labels across the full find-to-query-engine path', () => {
-    // Arrange
+  it('short-circuits inner query timers so find emits exactly its boundary label', () => {
+    // Arrange — the capture starts after the arrange phase because the SPEC §6
+    // instrumentation inventory makes the registration and seeding helpers emit
+    // their own events, which would pollute the exact-label assertion below.
     const { collection } = createIsolatedTestCollection('timingInnerFind');
     seedStandardEmployees(collection);
+    capture = captureTimingEvents();
 
     // Act
     const results = collection.find({ department: 'Engineering' });
 
     // Assert
     expect(results).toHaveLength(2);
-    expectLabelsPresent(capture.events, [
-      'collection.find',
-      'docOps.executeQuery',
-      'queryEngine.executeQuery',
-      'queryEngine.filterDocuments'
-    ]);
+    expect(capture.events.map((event) => event.label)).toEqual(['collection.find']);
   });
 
-  it('yields boundary and inner operator labels when updateMany applies operators', () => {
-    // Arrange
+  it('short-circuits operator timers so updateMany emits exactly its boundary label', () => {
+    // Arrange — capture starts after arrange so only act-phase events are recorded.
     const { collection } = createIsolatedTestCollection('timingInnerUpdateMany');
     seedStandardEmployees(collection);
+    capture = captureTimingEvents();
 
     // Act
     const result = collection.updateMany({ department: 'Engineering' }, { $inc: { salary: 1000 } });
 
     // Assert
     assertAcknowledgedWrite(result, { matchedCount: 2, modifiedCount: 2 });
-    expectLabelsPresent(capture.events, [
-      'collection.updateMany',
-      'docOps.updateWithOperators',
-      'updateEngine.applyOperators'
-    ]);
+    expect(capture.events.map((event) => event.label)).toEqual(['collection.updateMany']);
   });
 
-  it('yields coordination and persistence labels for a coordinated save', () => {
-    // Arrange
+  it('short-circuits coordination-internal timers so a coordinated save emits one outer event', () => {
+    // Arrange — capture starts after arrange so only act-phase events are recorded.
     const { collection } = createIsolatedTestCollection('timingCoordinatedSave');
     seedStandardEmployees(collection);
+    capture = captureTimingEvents();
 
     // Act
     const result = collection.save();
 
     // Assert
     expect(result.acknowledged).toBe(true);
-    expectLabelsPresent(capture.events, [
-      'coordinator.coordinate',
-      'coordinator.updateMasterIndexMetadata',
-      'masterIndex.save'
-    ]);
+    expect(capture.events.map((event) => event.label)).toEqual(['coordinator.coordinate']);
   });
 
   it('attributes FileService cache-path timings to the FileService component despite the injected logger', () => {
@@ -93,6 +81,7 @@ describe('Inner hot-path timing instrumentation', () => {
     // come from FileService's own dedicated timing logger.
     const env = setupCollectionTestEnvironment();
     const payload = { documents: {}, metadata: { documentCount: 0 } };
+    capture = captureTimingEvents();
 
     // Act
     const fileId = env.fileService.createFile('timing-file-cache.json', payload, env.folderId);
@@ -124,6 +113,7 @@ describe('Inner hot-path timing instrumentation', () => {
     // Arrange
     const { collection } = createIsolatedTestCollection('timingDeleteNegativeSpace');
     seedStandardEmployees(collection);
+    capture = captureTimingEvents();
 
     // Act
     const result = collection.deleteMany({ department: 'Marketing' });
