@@ -84,6 +84,10 @@ full suite before hand-off to the next.
   ESM block deleted (global ignore already excludes the file); getLogger() `@returns` corrected
   from {JDbLogger} to {Object} in both engine facades. Code review CLEAN with no findings;
   regression gate passed (lint 0/0; 72 files / 800 tests).
+- Post-plan tooling fix — COMPLETE. `npm run test -- <path>` restored under vitest 4: the test
+  script's bare `--silent` flag consumed appended positionals (`TypeError: Unexpected value
+  "--silent=<path>"`); now `--silent=true`, exactly per vitest's guidance. Targeted single-file
+  and multi-file runs verified; `test:verbose`/`test:coverage` untouched; review CLEAN.
 
 ## Global constraints
 
