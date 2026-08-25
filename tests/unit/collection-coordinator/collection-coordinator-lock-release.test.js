@@ -42,6 +42,31 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
     }).toThrow('test exception');
   });
 
+  it('should include the failure message when logging a swallowed lock release failure', () => {
+    // Arrange — the deliberate swallow keeps the operation result intact, but the
+    // diagnostic log must carry the underlying error detail.
+    const coordinator = createCoordinator();
+    const releaseSpy = vi.spyOn(env.masterIndex, 'releaseCollectionLock').mockImplementation(() => {
+      throw new Error('release exploded');
+    });
+    const errorSpy = vi.spyOn(coordinator._logger, 'error');
+
+    try {
+      // Act
+      const result = coordinator.coordinate('releaseFailureOperation', () => 'done');
+
+      // Assert
+      expect(result).toBe('done');
+      expect(errorSpy).toHaveBeenCalledWith(
+        'Lock release failed',
+        expect.objectContaining({ error: 'release exploded' })
+      );
+    } finally {
+      releaseSpy.mockRestore();
+      errorSpy.mockRestore();
+    }
+  });
+
   it('should throw timeout error for operations exceeding coordinationTimeoutMs', () => {
     const coordinator = createCoordinator({
       collectionLockLeaseMs: 800,

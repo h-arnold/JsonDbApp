@@ -162,9 +162,13 @@ describe('JDbLogger formatMessage context validation', () => {
     try {
       // Act
       JDbLogger.info('plain supplier', () => ({ source: 'level-method' }));
-      const result = JDbLogger.timeSync('plain supplier op', () => 'done', () => ({
-        source: 'timed'
-      }));
+      const result = JDbLogger.timeSync(
+        'plain supplier op',
+        () => 'done',
+        () => ({
+          source: 'timed'
+        })
+      );
 
       // Assert
       expect(result).toBe('done');

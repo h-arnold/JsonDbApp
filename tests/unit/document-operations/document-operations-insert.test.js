@@ -2,7 +2,7 @@
  * DocumentOperations Insert Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createDocumentOperationsContext } from '../../helpers/document-operations-test-helpers.js';
 
 describe('DocumentOperations Insert Operations', () => {
@@ -59,5 +59,30 @@ describe('DocumentOperations Insert Operations', () => {
     expect(() => docOps.insertDocument(undefined)).toThrow(InvalidArgumentError);
     expect(() => docOps.insertDocument('not-an-object')).toThrow(InvalidArgumentError);
     expect(() => docOps.insertDocument([])).toThrow(InvalidArgumentError);
+  });
+
+  it('should throw a typed OperationError when unique ID generation exhausts its attempts', () => {
+    // Arrange — every generated ID collides with an existing document.
+    docOps.insertDocument({ _id: 'collision-id', name: 'Squatter' });
+    const uuidStub = vi.spyOn(IdGenerator, 'generateUUID').mockReturnValue('collision-id');
+
+    try {
+      // Act + Assert
+      expect(() => docOps.insertDocument({ name: 'Collides' })).toThrow(
+        ErrorHandler.ErrorTypes.OPERATION_ERROR
+      );
+
+      let caught;
+      try {
+        docOps.insertDocument({ name: 'Collides' });
+      } catch (error) {
+        caught = error;
+      }
+      expect(caught).toBeDefined();
+      expect(caught.message).toMatch(/^Operation failed:/);
+      expect(caught.code).toBe(ErrorHandler.ERROR_CODES.OPERATION_ERROR);
+    } finally {
+      uuidStub.mockRestore();
+    }
   });
 });

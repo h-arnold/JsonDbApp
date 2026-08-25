@@ -193,7 +193,10 @@ class FileService {
   /**
    * Batch read multiple files for improved efficiency
    * @param {Array<string>} fileIds - Array of Drive file IDs to read
-   * @returns {Array<Object>} Array of file contents (null for failed reads)
+   * @returns {{results: Array<Object|null>, errors: Array<{fileId: string, error: string}>}}
+   *   Index-aligned batch outcome: results[i] holds the contents of fileIds[i] (null for failed
+   *   reads) and errors collects one {fileId, error} entry per failed read.
+   * @throws {InvalidArgumentError} When fileIds is not an array
    */
   batchReadFiles(fileIds) {
     if (!Array.isArray(fileIds)) {
@@ -225,13 +228,16 @@ class FileService {
       errorCount: errors.length
     });
 
-    return results;
+    return { results, errors };
   }
 
   /**
    * Batch get metadata for multiple files
    * @param {Array<string>} fileIds - Array of Drive file IDs
-   * @returns {Array<Object>} Array of metadata objects (null for failed requests)
+   * @returns {{results: Array<Object|null>, errors: Array<{fileId: string, error: string}>}}
+   *   Index-aligned batch outcome: results[i] holds the metadata of fileIds[i] (null for failed
+   *   requests) and errors collects one {fileId, error} entry per failed request.
+   * @throws {InvalidArgumentError} When fileIds is not an array
    */
   batchGetMetadata(fileIds) {
     if (!Array.isArray(fileIds)) {
@@ -263,7 +269,7 @@ class FileService {
       errorCount: errors.length
     });
 
-    return results;
+    return { results, errors };
   }
 
   /**

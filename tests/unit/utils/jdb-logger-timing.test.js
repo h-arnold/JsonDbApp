@@ -108,7 +108,11 @@ describe('JDbLogger timeSync', () => {
 
       try {
         // Act
-        const result = JDbLogger.timeSync('supplied', () => 'ok', () => ({ source: 'object' }));
+        const result = JDbLogger.timeSync(
+          'supplied',
+          () => 'ok',
+          () => ({ source: 'object' })
+        );
 
         // Assert
         expect(result).toBe('ok');

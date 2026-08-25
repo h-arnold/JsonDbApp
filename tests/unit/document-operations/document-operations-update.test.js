@@ -2,11 +2,12 @@
  * DocumentOperations Update Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import {
   createDocumentOperationsContext,
   assertAcknowledgedResult
 } from '../../helpers/document-operations-test-helpers.js';
+import { captureTimingEvents } from '../../helpers/timing-capture-test-helpers.js';
 
 describe('DocumentOperations Update Operations', () => {
   let docOps, reload;
@@ -146,5 +147,47 @@ describe('DocumentOperations Update Operations', () => {
     expect(() => {
       docOps.updateDocumentWithOperators('any-id', { invalidField: 'value' });
     }).toThrow(InvalidArgumentError);
+  });
+
+  describe('query-based bulk timing boundary', () => {
+    let capture;
+
+    afterEach(() => {
+      if (capture) {
+        capture.restore();
+      }
+    });
+
+    it('emits exactly one docOps.applyToMatching event for a direct multi-match bulk update', () => {
+      // Arrange — one event per bulk operation, never one per matched document.
+      docOps.insertDocument({ name: 'Eve', active: false });
+      docOps.insertDocument({ name: 'Frank', active: false });
+      docOps.insertDocument({ name: 'Grace', active: true });
+      capture = captureTimingEvents();
+
+      // Act
+      const count = docOps.updateDocumentByQuery({ active: false }, { $set: { active: true } });
+
+      // Assert
+      expect(count).toBe(2);
+      expect(capture.events.map((event) => event.label)).toEqual(['docOps.applyToMatching']);
+      expect(capture.events[0].component).toBe('DocumentOperations');
+      expect(capture.events[0].error).toBeNull();
+    });
+
+    it('emits exactly one docOps.applyToMatching event for a direct bulk replace', () => {
+      // Arrange
+      docOps.insertDocument({ val: 0 });
+      docOps.insertDocument({ val: 0 });
+      capture = captureTimingEvents();
+
+      // Act
+      const count = docOps.replaceDocumentByQuery({ val: 0 }, { val: 100 });
+
+      // Assert
+      expect(count).toBe(2);
+      expect(capture.events.map((event) => event.label)).toEqual(['docOps.applyToMatching']);
+      expect(capture.events[0].component).toBe('DocumentOperations');
+    });
   });
 });
