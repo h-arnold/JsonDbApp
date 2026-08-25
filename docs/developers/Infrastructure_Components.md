@@ -119,20 +119,47 @@ Implemented in `src/01_utils/JDbLogger.js`. The facility measures synchronous op
 emits a DEBUG-level console record, and delivers structured timing events to registered
 listeners so tests and tooling can assert against deterministic event fields.
 
-#### Public surface
+#### API surface
 
-| Member                                               | Description                                                                                                                                            |
-| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `JDbLogger.timeSync(label, fn, context?)`            | Static entry point: runs `fn` once between two clock reads and returns its result unchanged.                                                           |
-| `logger.timeSync(label, fn, context?)`               | Component-logger form: delegates straight to the internal seam with the component name; events carry `component: '<Name>'` and labels stay unprefixed. |
-| `JDbLogger.addTimingListener(listenerFn)`            | Registers a listener receiving every timing event synchronously, in registration order. Returns an idempotent unsubscribe closure.                     |
-| `JDbLogger._timeSync(component, label, fn, context)` | Private static seam owning every behavioural rule; both entry points delegate here so behaviour cannot drift apart.                                    |
-| `JDbLogger._now()`                                   | Private clock seam over `Date.now()`; the sole clock source of the facility.                                                                           |
+| Member                                    | Description                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `JDbLogger.timeSync(label, fn, context?)` | Static entry point: runs `fn` once between two clock reads and returns its result unchanged.                                                           |
+| `logger.timeSync(label, fn, context?)`    | Component-logger form: delegates straight to the internal seam with the component name; events carry `component: '<Name>'` and labels stay unprefixed. |
+| `JDbLogger.addTimingListener(listenerFn)` | Registers a listener receiving every timing event synchronously, in registration order. Returns an idempotent unsubscribe closure.                     |
+
+#### Internal seams
+
+| Member                                               | Description                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `JDbLogger._timeSync(component, label, fn, context)` | Private static seam owning every behavioural rule; both entry points delegate here so behaviour cannot drift apart. |
 
 Arguments validate before any measurement starts: `label` must be a non-empty string, `fn`
 a function, and `context` an object, a function, or `null` — `undefined` normalises to
-`null`, so context-less calls never throw. Plain `Error`s are thrown throughout;
-`JDbLogger` deliberately holds no `ErrorHandler` dependency.
+`null`, so context-less calls never throw. Violations raise the dependency-free typed
+`JDbLoggerError`, exposed as `JDbLogger.JDbLoggerError`; `JDbLogger` deliberately holds no
+`ErrorHandler` dependency.
+
+**Attaching operation metadata via `context`.** The optional third argument of both `timeSync`
+forms is the supported way to enrich timing output with operation metadata — attach structured
+context rather than adding ad-hoc log lines or changing labels. Pass a plain object, or a
+zero-argument lazy supplier that is invoked at most once and only when the DEBUG gate passes:
+
+```javascript
+const logger = JDbLogger.createComponentLogger('Collection');
+
+// Structured object: cheapest form when metadata already exists
+logger.timeSync('collection.find', () => findDocuments(filter), { filter });
+
+// Lazy supplier: avoids building expensive context when DEBUG is gated off
+logger.timeSync(
+  'collection.find',
+  () => findDocuments(filter),
+  () => ({ filter })
+);
+```
+
+The resolved context appears only on the console record — listener events never carry it (see
+[Timing events](#timing-events)).
 
 #### Timing events
 
@@ -140,7 +167,7 @@ a function, and `context` an object, a function, or `null` — `undefined` norma
 {
   component: 'Collection',               // PascalCase owner, or null for static use
   label: 'collection.find',
-  durationMs: 42, // end − start, both reads taken through _now()
+  durationMs: 42, // end − start from two inline Date.now() reads
   timestamp: '2026-08-24T12:00:00.000Z', // ISO string derived from the measured END reading
   error: null // thrown error message, or null on success
 }
@@ -166,19 +193,36 @@ Records flow through the standard debug pathway (`console.log` via `formatMessag
 Everything downstream of measurement — supplier resolution, formatting, console output,
 listener dispatch — happens only when the level gate passes. Standalone `JDbLogger` defaults
 to DEBUG; `Database` propagates its configured `logLevel`, so set DEBUG to observe timings.
-Measurement itself precedes the gate: **both `_now()` clock reads occur on every call even
+Measurement itself precedes the gate: **both clock reads occur on every ungated call even
 when emission is suppressed**, and the suppressed path still executes `fn`, returning its
-result or rethrowing its error unchanged (an accepted, constant measurement tax).
+result or rethrowing its error unchanged (an accepted, constant measurement tax). Each read
+is contained individually: a failing read inherits its successful counterpart (or zero when
+both fail) so `durationMs` stays numeric, with the failure reported via `console.error`.
 
-Exception handling is asymmetric by design:
+Secondary instrumentation failures are contained identically on both paths — success and
+error alike:
 
-- **Success path**: throwing listeners and throwing context suppliers propagate unchanged
-  (fail loud — there is nothing to mask). A throwing supplier aborts the call after `fn` has
-  run, so the return value is lost.
-- **Error path**: the original operation error always wins. Listener dispatch and supplier
-  resolution are individually guarded; secondary failures surface through `console.error`,
-  remaining listeners still fire, and the original error reaches the caller with its identity
-  intact.
+- **Both paths**: clock reads, supplier resolution, record emission and listener dispatch are
+  individually guarded. A failure is reported through `console.error('Operation failed: ...')`
+  and can never displace `fn`'s result nor mask its original error, which alone reaches the
+  caller with its identity intact.
+- **Listener dispatch**: listeners always fire over a snapshot of the store in registration
+  order; a throwing listener is reported and every remaining listener still receives the event.
+
+#### Stacked timers
+
+While a measurement is active, nested `timeSync` calls validate their arguments then execute
+their operation directly — no clock reads, no record, no dispatch. Each user-visible operation
+therefore emits exactly ONE event for its outermost boundary label:
+
+- A direct bulk call through `_applyToMatchingDocuments` emits a single
+  `docOps.applyToMatching` event regardless of how many documents match — the inner
+  `docOps.executeQuery`, `docOps.updateWithOperators` and `updateEngine.applyOperators`
+  labels stay silent beneath it, keeping bulk-write event volume O(operations), not
+  O(matched documents).
+- Under Collection-level wrappers such as `updateMany`, the outermost
+  `collection.updateMany` measurement is already active, so that inner bulk boundary stays
+  silent too.
 
 #### Lazy context suppliers
 
@@ -186,7 +230,12 @@ Exception handling is asymmetric by design:
 `debug`) and on both `timeSync` forms; component-logger wrappers forward suppliers
 uninvoked. Suppliers resolve after the level check and before `formatMessage`, at most once:
 gated-out calls never invoke them and a function context never reaches stringification
-unresolved.
+unresolved. The at-most-once guarantee assumes suppliers do not return functions: a
+function-valued resolution reaches `formatMessage` as a raw function context, which fails
+validation loudly with `JDbLoggerError` rather than being garbled into output — suppliers must
+resolve to an object or null. On the plain level methods a throwing supplier propagates
+unchanged (fail loud); inside `timeSync`, resolution is contained on both paths per the
+exception rules above.
 
 #### Instrumentation coverage
 
@@ -199,13 +248,15 @@ event volume proportional to operations, not documents:
   Collection component logger.
 - **Inner hot paths**: `queryEngine.executeQuery` and `queryEngine.filterDocuments` (the
   matcher borrows the engine logger via `getLogger()`), `docOps.executeQuery` and
-  `docOps.updateWithOperators` (`src/02_components/DocumentOperations.js`),
+  `docOps.updateWithOperators` plus the single `docOps.applyToMatching` bulk boundary
+  (`src/02_components/DocumentOperations.js`),
   `updateEngine.applyOperators` (`src/02_components/UpdateEngine/99_UpdateEngine.js`),
   `masterIndex.save` (`src/04_core/MasterIndex/99_MasterIndex.js` — the single persist point,
   covering all indirect callers), `coordinator.coordinate` and
   `coordinator.updateMasterIndexMetadata`
   (`src/02_components/CollectionCoordinator.js`), and `fileService.readFile` /
-  `fileService.createFile` (`src/03_services/FileService.js`).
+  `fileService.createFile` (`src/03_services/FileService.js`). See
+  [Stacked timers](#stacked-timers) for which of these labels emit when calls nest.
 
 Labels are lowercase dotted tags independent of the PascalCase `component` field
 (`collection.find` events carry `component: 'Collection'`).
@@ -308,7 +359,7 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
 
 ### 1.2.2. IdGenerator
 
-**Location:** `src/utils/IdGenerator.js`
+**Location:** `src/01_utils/IdGenerator.js`
 
 Provides multiple strategies for generating unique identifiers suitable for different use cases in the database system.
 
@@ -393,7 +444,7 @@ if (IdGenerator.isValidUUID(documentId)) {
 
 ### 1.2.3. ObjectUtils
 
-**Location:** `src/utils/ObjectUtils.js`
+**Location:** `src/01_utils/ObjectUtils.js`
 
 Provides utilities for object manipulation with Date preservation, essential for handling complex data structures and maintaining Date object integrity during JSON serialisation operations.
 
@@ -652,8 +703,8 @@ All infrastructure components are designed to work together seamlessly:
 class Database {
   constructor(config) {
     // Validate configuration
-    ValidationUtils.validateRequired(config, 'config');
-    ValidationUtils.validateType(config.rootFolderId, 'string', 'rootFolderId');
+    Validate.required(config, 'config');
+    Validate.type(config.rootFolderId, 'string', 'rootFolderId');
 
     // Set up logging
     this.logger = JDbLogger.createComponentLogger('Database');
@@ -691,8 +742,8 @@ class Database {
 class Collection {
   findOne(query) {
     try {
-      ValidationUtils.validateRequired(query, 'query');
-      ValidationUtils.validateType(query, 'object', 'query');
+      Validate.required(query, 'query');
+      Validate.type(query, 'object', 'query');
 
       const result = this._performFind(query);
 

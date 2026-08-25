@@ -580,6 +580,10 @@ suites independent.
 ```javascript
 import { describe, it, expect, afterEach } from 'vitest';
 import {
+  createIsolatedTestCollection,
+  seedStandardEmployees
+} from '../../helpers/collection-test-helpers.js';
+import {
   captureTimingEvents,
   eventsWithLabel,
   expectLabelsPresent
@@ -590,8 +594,12 @@ describe('Collection timing', () => {
   afterEach(() => restore());
 
   it('emits boundary and inner labels for find', () => {
-    // Arrange: seeded collection via collection-test-helpers.js
-    collection.find({ group: 'group-3' });
+    // Arrange
+    const { collection } = createIsolatedTestCollection('timingFind');
+    seedStandardEmployees(collection);
+
+    // Act
+    collection.find({ department: 'Engineering' });
 
     // Assert
     expectLabelsPresent(events, [
@@ -616,7 +624,8 @@ describe('Collection timing', () => {
 `createMockClock()`
 ([tests/helpers/mock-time-helpers.js](../../tests/helpers/mock-time-helpers.js)) spies
 `Date.now`, so advancing the fake clock inside the timed operation yields an exact
-`durationMs`:
+`durationMs`. Set up event capture with `captureTimingEvents()` first (previous section) so
+`events` is defined:
 
 ```javascript
 const clock = createMockClock(1000);

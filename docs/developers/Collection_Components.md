@@ -21,7 +21,7 @@ This document explains the role, API surface and usage patterns for the Collecti
       - [getName(): string](#getname-string)
       - [getMetadata(): Object](#getmetadata-object)
       - [isDirty(): boolean](#isdirty-boolean)
-      - [save(): void](#save-void)
+      - [save(): Object](#save-object)
     - [Lazy Loading](#lazy-loading)
   - [CollectionMetadata](#collectionmetadata)
     - [Purpose](#purpose-1)
@@ -136,7 +136,7 @@ const collection = new Collection(
 
 ### Public Methods
 
-> **Timing:** every public CRUD method below (`find`, `findOne`, `countDocuments`,
+> **Timing:** every public CRUD method (`find`, `findOne`, `countDocuments`,
 > `insertOne`, `updateOne`, `updateMany`, `replaceOne`, `deleteOne`, `deleteMany`) wraps its
 > delegate in a DEBUG-gated `collection.<operation>` timing event; see
 > [Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking).
@@ -468,17 +468,19 @@ collection.save();
 console.log('Has changes:', collection.isDirty()); // false
 ```
 
-#### save(): void
+#### save(): Object
 
-Force save collection to Drive.
+Force save collection to Drive when the collection is dirty.
 
+- **Returns**
+  - `{acknowledged: true}` once the save coordination succeeds
 - **Throws**: `OperationError` if save fails
 
 ```javascript
 // Manual save (usually automatic)
 try {
-  collection.save();
-  console.log('Collection saved');
+  const result = collection.save();
+  console.log('Collection saved', result); // { acknowledged: true }
 } catch (error) {
   console.error('Save failed:', error.message);
 }
@@ -1187,7 +1189,8 @@ console.log(`${replacedCount} document(s) replaced.`);
 
 **Bulk Operations (D2 Refactoring):**
 
-- `_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)`: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by `updateDocumentByQuery()` and `replaceDocumentByQuery()`.
+- `_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)`: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by `updateDocumentByQuery()` and `replaceDocumentByQuery()`. Emits a single DEBUG-gated `docOps.applyToMatching` boundary timing event for the whole bulk application — inner per-document timers stay silent beneath it (and the boundary itself is suppressed under Collection-level timers such as `updateMany`); see
+  [Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking).
 
 These private methods ensure data integrity, consistent error handling, and DRY principles within the component.
 

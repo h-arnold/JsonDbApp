@@ -29,14 +29,17 @@ compared when the findings are implemented.
 
 ## 3. Constraints
 
-- GAS V8 runtime: synchronous execution only; no `performance.now` reliance — measurement uses
-  `Date.now()` via an internal seam.
-- `JDbLogger` remains dependency-free (plain `Error` throws, consistent with its existing
-  `setLevelByName` behaviour). It MUST NOT import or reference `ErrorHandler` (load-order coupling).
-- Fail fast and loud: invalid arguments throw immediately; listener/supplier exceptions propagate
-  on the SUCCESS path and are guarded-and-reported (via `console.error`) on the ERROR path, where
-  the original operation error always wins (§4.1/§4.3/§4.4); no silent fallbacks or default
-  swallowing.
+- GAS V8 runtime: synchronous execution only; no `performance.now` reliance — measurement reads
+  `Date.now()` inline, with each read individually contained and a documented degraded mode
+  (§4.1).
+- `JDbLogger` remains dependency-free: validation failures raise the local typed
+  `JDbLoggerError extends Error` declared inside `JDbLogger.js` (no `ErrorHandler` import or
+  reference anywhere in the logger).
+- Fail fast and loud: invalid arguments throw immediately as `JDbLoggerError`; secondary
+  instrumentation failures (clock reads, supplier resolution, record emission, listener dispatch)
+  are contained on BOTH paths, reported via `console.error`, and can never displace `fn`'s result
+  nor mask its original error, which alone reaches the caller (§4.1/§4.3/§4.4); no silent
+  fallbacks or default swallowing.
 - ESLint `max-lines` is a warning at 500 counted lines (`skipBlankLines`, `skipComments`). Every
   file touched by this spec is far enough below that warning for its small additive change (largest
   is `MasterIndex/99_MasterIndex.js` at ≈325 counted lines, gaining ~5): **no multi-file separation
@@ -56,27 +59,38 @@ compared when the findings are implemented.
   seam so both entry points behave identically.
 - Validation before any timing starts: `label` must be a non-empty string; `fn` must be a function;
   `context` must be an object, a function, or `null` — with `undefined` FIRST normalised to `null`
-  by the seam, so context-less calls never throw; otherwise a plain `Error` is thrown.
-- Records `start`, invokes `fn()`, records `end`, computes `durationMs = end - start`.
+  by the entry-point default parameters, so context-less calls never throw. Violations raise the
+  local typed `JDbLoggerError`, exposed as `JDbLogger.JDbLoggerError` so consumers can catch it
+  while the logger stays dependency-free (§3).
+- Stacked-timer short-circuit: while a measurement is active, a nested `timeSync` call validates
+  its arguments then executes `fn` directly — no clock reads, no record, no event. Inner labels
+  therefore emit nothing beneath an outer measurement, and each user-visible operation emits
+  exactly its single outermost boundary label (one boundary event per operation).
+- Records `start`, invokes `fn()`, records `end`, computes `durationMs = end - start`. There is NO
+  clock substitution seam: `Date.now()` is read inline, and each read is contained individually.
+  When a read fails it inherits its successful counterpart (or zero when both fail), keeping
+  `durationMs` numeric instead of NaN or aborted; the failure is reported via `console.error`
+  without disturbing `fn`'s outcome. Tests control time by spying on `Date.now` via the existing
+  mock-clock helper.
 - On success: emits a DEBUG record and dispatches timing events ONLY when the DEBUG gate passes
   (§3), then returns `fn`'s return value unchanged.
 - On throw: computes `durationMs`, emits the DEBUG record/event carrying the thrown message, then
   rethrows the ORIGINAL error unchanged. The same DEBUG gate applies.
-- Error-path precedence: listener dispatch on the error path is guarded. If a listener throws while
-  handling an operation failure, that secondary failure is surfaced through `console.error` and the
-  original operation error is still what reaches the caller (see also §4.3).
+- Secondary-failure containment on BOTH paths: supplier resolution, record emission, event
+  construction and listener dispatch are guarded identically whether `fn` succeeded or threw. Each
+  secondary failure is reported through `console.error('Operation failed: ...')` and can never
+  displace `fn`'s result nor mask its original error, which alone reaches the caller with its
+  identity intact (§4.3 for listener specifics).
 - Console output goes through the standard debug pathway (`console.log`) via `formatMessage` at
   level `DEBUG`, message `[TIMING] <label>` prefixed `[<Component>] ` when a component is supplied,
   and context `{ ...resolvedContext, durationMs }` — `durationMs` wins key collisions.
   `formatMessage` keeps generating its own wall-clock timestamp; only `event.timestamp` (§4.3)
   derives from the measured end value.
-- Context may be an object or a lazy supplier function (§4.4). Suppliers apply here too: invoked at
-  most once and only when the DEBUG gate passes. Supplier resolution follows the SAME precedence
-  rules as listener dispatch (§4.3): on the success path a throwing supplier propagates; on the
-  error path resolution is guarded so a failing supplier can never mask the original operation
-  error.
-- Internal clock seam: private static `_now()` returning `Date.now()`. No public clock API; tests
-  control time through the existing mock-clock helper, which spies `Date.now`.
+- Context may be an object or a lazy supplier function (§4.4). Suppliers are invoked at most once,
+  only after the DEBUG gate passes, with resolution following the containment rule above on both
+  paths: a failing supplier is reported and resolves to null rather than displacing the outcome.
+- Clock reads are part of the contained instrumentation: a broken clock cannot abort a measured
+  operation before, during or after `fn` runs.
 
 ### 4.2 Component logger extension
 
@@ -100,13 +114,15 @@ with two explicitly decided cases:
   an unsubscribe closure; calling it twice is safe (idempotent).
 - Event shape (plain object): `{ component: string|null, label: string, durationMs: number,
 timestamp: string, error: string|null }` where `component` is the PascalCase component name,
-  `timestamp` derives from the measured end value (`_now()`), and `error` is the thrown error's
+  `timestamp` derives from the measured end reading, and `error` is the thrown error's
   message or `null`. The resolved context is INTENTIONALLY excluded from listener events — it
   appears only on the console record (§4.1).
 - Listener registration order is preserved; listeners receive events synchronously.
-- Listener exception precedence mirrors §4.1: on the success path exceptions propagate to the
-  caller (fail loud — there is nothing to mask); on the error path dispatch is guarded, a throwing
-  listener is reported through `console.error`, and the original operation error always wins.
+- Listener exception handling follows §4.1's containment contract on BOTH paths: dispatch iterates
+  a snapshot of the listener store in registration order, so a listener unsubscribing mid-dispatch
+  cannot skip those registered after it. A throwing listener is reported via `console.error` and
+  every remaining listener still fires — on either path a secondary failure can never displace
+  fn's result nor mask its original error.
 - Dispatch is gated identically to console emission (DEBUG gate).
 
 ### 4.4 Lazy log context (finding #6)
@@ -115,13 +131,18 @@ timestamp: string, error: string|null }` where `component` is the PascalCase com
   as either an object or a **function returning the context value**.
 - The supplier is invoked ONLY after the level check passes. If the check fails, the supplier is
   never called (verifiable by spy).
-- Suppliers should be side-effect-free and cheap. On the SUCCESS path a throwing supplier
-  propagates its exception — note this aborts the call after `fn` has already run, so the return
-  value is lost (intended fail-loud behaviour). On the ERROR path, supplier resolution is guarded:
-  a failing supplier is reported via `console.error` and the original operation error always wins,
-  mirroring §4.1/§4.3.
+- Suppliers should be side-effect-free and cheap. Resolution semantics differ by surface: plain
+  level methods resolve unguarded, so a throwing supplier propagates unchanged (fail loud — these
+  logs protect no measured outcome); `timeSync` resolves through the guarded seam path, where a
+  failing supplier is reported via `console.error` and resolution continues with `null` on BOTH the
+  success and error paths of the measured operation (§4.1) — a secondary failure can never displace
+  fn's result nor mask its original error.
+- `formatMessage` itself accepts `Object | null` contexts ONLY: a function reaching it fails
+  validation loudly with `JDbLoggerError` instead of garbling output. Lazy suppliers therefore
+  remain supported at the level methods and at `timeSync`, whose callers resolve them beforehand,
+  so an unresolved function never reaches stringification.
 - Static level methods (`error`, `warn`, `info`, `debug`) resolve suppliers AFTER the level check
-  and BEFORE `formatMessage`, so a function context never reaches stringification.
+  and BEFORE `formatMessage`.
 - Suppliers pass through `createComponentLogger` wrappers uninvoked.
 
 ### 4.5 Call-site fixes for finding #6
@@ -169,8 +190,9 @@ timestamp: string, error: string|null }` where `component` is the PascalCase com
 
 ## 5. State rules
 
-- Static mutable state on `JDbLogger` remains: `LOG_LEVELS`, `currentLevel`, plus a new private
-  listener list. No other module writes these directly except through the public static methods.
+- Static mutable state on `JDbLogger` remains: `LOG_LEVELS`, `currentLevel`, a private listener
+  `Set`, and the private `_measurementDepth` counter driving the stacked-timer short-circuit.
+  No other module writes these directly except through the public static methods.
 - Listeners registered during a test persist until unsubscribed; test helpers own their cleanup via
   the returned closure. Vitest `clearMocks` does not clear listener state — suites must unsubscribe
   explicitly.
@@ -198,6 +220,7 @@ for the `FileService` and matcher cases).
 | `queryEngine.filterDocuments`           | `QueryEngineMatcher.filterDocuments`              | #1       |
 | `docOps.executeQuery`                   | `DocumentOperations._executeQuery`                | #1, #6   |
 | `docOps.updateWithOperators`            | `DocumentOperations.updateDocumentWithOperators`  | #2, #3   |
+| `docOps.applyToMatching`                | `DocumentOperations._applyToMatchingDocuments`    | #2       |
 | `updateEngine.applyOperators`           | `UpdateEngine.applyOperators`                     | #3       |
 | `fileService.readFile`                  | `FileService.readFile`                            | #4       |
 | `fileService.createFile`                | `FileService.createFile`                          | #4       |
@@ -207,6 +230,13 @@ for the `FileService` and matcher cases).
 
 Note: no public `insertMany` exists on the Collection surface today, so there is nothing to
 instrument for batch inserts; if one is added later it should be instrumented identically.
+
+Note on stacking: because of the stacked-timer short-circuit (§4.1), a direct bulk call through
+`_applyToMatchingDocuments` emits exactly ONE `docOps.applyToMatching` boundary event regardless of
+matched-document count — the inner `docOps.executeQuery`, `docOps.updateWithOperators` and
+`updateEngine.applyOperators` timers stay silent beneath it — and under Collection-level wrappers
+such as `updateMany` the outermost `collection.updateMany` measurement suppresses that inner
+boundary too, preserving the O(operations) event-volume contract.
 
 Deliberately NOT instrumented (non-goals, §8): `Collection.aggregate`, per-document helpers
 (`deleteDocument`, `findAllDocuments`), any `Date.now()` read inside `CollectionCoordinator`
