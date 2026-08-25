@@ -97,7 +97,7 @@ class QueryEngine {
 
   /**
    * Retrieve the component logger.
-   * @returns {JDbLogger} Component logger instance.
+   * @returns {Object} Component logger instance.
    */
   getLogger() {
     return this._logger;

@@ -81,7 +81,7 @@ class UpdateEngine {
 
   /**
    * Retrieve the component logger instance.
-   * @returns {JDbLogger} Component logger instance
+   * @returns {Object} Component logger instance
    */
   getLogger() {
     return this._logger;

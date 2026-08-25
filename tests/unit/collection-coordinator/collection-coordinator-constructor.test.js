@@ -21,7 +21,7 @@ describe('CollectionCoordinator Constructor', () => {
   describe('Constructor Validation', () => {
     it('should throw InvalidArgumentError when dependencies are missing', () => {
       expect(() => {
-        new CollectionCoordinator(null, null, null, null);
+        new CollectionCoordinator(null, null, null);
       }).toThrow(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
     });
   });

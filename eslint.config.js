@@ -76,13 +76,6 @@ const nodeHostGlobals = {
 
 export default defineConfig([
   {
-    files: ['eslint.config.js'],
-    languageOptions: {
-      sourceType: 'module',
-      ecmaVersion: 2021
-    }
-  },
-  {
     files: ['**/*.js'],
     languageOptions: {
       sourceType: 'script',

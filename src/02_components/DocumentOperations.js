@@ -3,9 +3,6 @@
  *
  * Handles basic CRUD operations on document collections stored as plain objects.
  * Provides ID-based document manipulation with validation and error handling.
- *
- * Part of Section 5: Collection Components and Basic CRUD Operations
- * Note: Filtering capabilities will be added in Section 6: Query Engine
  */
 
 /**

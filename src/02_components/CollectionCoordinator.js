@@ -18,10 +18,9 @@ class CollectionCoordinator {
    * @param {Collection} collection - Collection instance to coordinate
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
    * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
-   * @param {JDbLogger} _logger - Logger factory override
    * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
    */
-  constructor(collection, masterIndex, config = {}, _logger = JDbLogger) {
+  constructor(collection, masterIndex, config = {}) {
     Validate.object(collection, 'collection');
     Validate.object(masterIndex, 'masterIndex');
     Validate.object(config, 'config');

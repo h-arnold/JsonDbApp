@@ -55,8 +55,7 @@ class Collection {
     this._coordinator = new CollectionCoordinator(
       this,
       this._database._masterIndex,
-      this._database.config,
-      this._logger
+      this._database.config
     );
 
     // Instantiate operation handlers

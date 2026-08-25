@@ -11,7 +11,7 @@
  * - Error handling for invalid queries
  */
 
-import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import MockQueryData from '../../data/MockQueryData.js';
 
 /**
@@ -20,13 +20,6 @@ import MockQueryData from '../../data/MockQueryData.js';
 const setupQueryEngineTestEnvironment = () => {
   MockQueryData.getAllTestDocuments();
   MockQueryData.getEdgeCaseDocuments();
-};
-
-/**
- * Placeholder teardown for future dataset cleanup extensions.
- */
-const cleanupQueryEngineTestEnvironment = () => {
-  // No teardown required for current mock data
 };
 
 describe('QueryEngine', () => {
@@ -40,10 +33,6 @@ describe('QueryEngine', () => {
   beforeEach(() => {
     queryEngine = new QueryEngine();
     testUsers = MockQueryData.getTestUsers();
-  });
-
-  afterAll(() => {
-    cleanupQueryEngineTestEnvironment();
   });
 
   describe('Basic Functionality', () => {

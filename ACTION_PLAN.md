@@ -75,6 +75,15 @@ full suite before hand-off to the next.
   durationMs}, success and error paths), no suite asserts console content, all 19 SPEC §6 sites
   present, coordinator control-flow Date.now reads untouched, docs claims match implementation.
   Report at .opencode/scratchpad/code-review-section8-final.md.
+- Post-plan cleanup — COMPLETE (user-directed). The six follow-up items recorded during the plan
+  are resolved: FileService stale 'caching not implemented' header note removed (caching IS
+  implemented); DocumentOperations planning-narrative header lines ('Section 5'/'Section 6')
+  removed; CollectionCoordinator dead `_logger` constructor parameter deleted together with its
+  `this._logger` pass-through argument in 99_Collection.js; QueryEngine.test.js empty afterAll
+  teardown and no-op placeholder function removed; eslint.config.js unreachable self-referential
+  ESM block deleted (global ignore already excludes the file); getLogger() `@returns` corrected
+  from {JDbLogger} to {Object} in both engine facades. Code review CLEAN with no findings;
+  regression gate passed (lint 0/0; 72 files / 800 tests).
 
 ## Global constraints
 
