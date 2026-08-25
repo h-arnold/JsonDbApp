@@ -9,9 +9,11 @@
  *
  * Mutating scenarios re-establish their preconditions before EVERY measured iteration; events
  * emitted during precondition work are discarded so only the measured body contributes to each
- * label's statistics. Every scenario performs one unmeasured warm-up pass first. The exit code
- * is 0 for any completed run regardless of measurement variance; setup failures throw (fail
- * fast). Not wired into Vitest or CI.
+ * label's statistics. Events reporting a failed operation (an error-carrying event) are counted
+ * per label in the report's errors column instead of inflating the duration statistics. Every
+ * scenario performs one unmeasured warm-up pass first. The exit code is 0 for any completed run
+ * regardless of measurement variance; setup failures throw (fail fast). Not wired into Vitest
+ * or CI.
  *
  * Environment overrides: `BENCH_DOCS` (default 200) seeds the collection; `BENCH_ITERATIONS`
  * (default 5) sets the measured iteration count per scenario. Both must be positive integers.
@@ -21,13 +23,10 @@
 const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
-const vm = require('node:vm');
 
 const { createGasMocks } = require('../gas-mocks/gas-mocks.cjs');
+const { assignGlobalServices, loadLegacyScript } = require('../gas-mocks/legacy-boot.cjs');
 const { legacyScripts } = require('../gas-mocks/script-order.cjs');
-
-/** Repository root; all legacy scripts are resolved relative to it. */
-const REPO_ROOT = path.resolve(__dirname, '..', '..');
 
 /** Bench-only addition appended after the shared manifest (`src/04_core/99_PublicAPI.js`). */
 const PUBLIC_API_SCRIPT = 'src/04_core/99_PublicAPI.js';
@@ -101,11 +100,14 @@ const COORDINATED_WRITE_MARKER_NAME = 'coordinated-write-marker';
 /** Decimal places shown for millisecond figures in the report. */
 const MS_PRECISION_DIGITS = 3;
 
+/** Placeholder printed for duration statistics a label cannot have (no successful samples). */
+const MISSING_VALUE_PLACEHOLDER = '-';
+
 /** Separator between aligned table columns. */
 const COLUMN_SEPARATOR = '   ';
 
 /** Column headings of the per-scenario statistics table. */
-const TABLE_HEADERS = ['Label', 'Count', 'Min (ms)', 'Max (ms)', 'Mean (ms)'];
+const TABLE_HEADERS = ['Label', 'Count', 'Min (ms)', 'Max (ms)', 'Mean (ms)', 'Errors'];
 
 /**
  * Scenario definitions. Each `measure` body is the measured work; an optional `prepare`
@@ -231,12 +233,15 @@ const SCENARIOS = [
   },
   {
     /**
-     * Inserts one marker document so the collection is dirty and every measured coordinated
-     * write persists real work. Marker documents accumulate across iterations by design.
+     * Clears any marker document left by a previous iteration before inserting the fresh one
+     * so every measured coordinated write persists comparable work; without the delete the
+     * markers would accumulate and inflate later saves. Both operations run in the unmeasured
+     * preparation phase.
      * @param {{collection: Object, fileId: string}} state - Shared benchmark state.
      * @returns {void}
      */
     prepare(state) {
+      state.collection.deleteMany({ name: COORDINATED_WRITE_MARKER_NAME });
       state.collection.insertOne({ name: COORDINATED_WRITE_MARKER_NAME });
     },
     /**
@@ -252,33 +257,6 @@ const SCENARIOS = [
     name: 'coordinated write through coordinate'
   }
 ];
-
-/**
- * Loads one legacy src script into the current context exactly as the Vitest setup does.
- * @param {string} relativePath - Path to the script relative to the repository root.
- * @returns {void}
- * @throws {Error} When the script cannot be read or parsed (fail fast).
- */
-function loadLegacyScript(relativePath) {
-  const absolutePath = path.join(REPO_ROOT, relativePath);
-  const source = fs.readFileSync(absolutePath, 'utf8');
-  vm.runInThisContext(source, { filename: absolutePath });
-}
-
-/**
- * Publishes the mocked GAS services onto globalThis in the same shape as the Vitest setup.
- * @param {Object} gasMocks - Mock service bundle returned by `createGasMocks`.
- * @returns {void}
- */
-function assignGlobalServices(gasMocks) {
-  globalThis.DriveApp = gasMocks.DriveApp;
-  globalThis.PropertiesService = gasMocks.PropertiesService;
-  globalThis.ScriptProperties = gasMocks.ScriptProperties;
-  globalThis.LockService = gasMocks.LockService;
-  globalThis.Utilities = gasMocks.Utilities;
-  globalThis.Logger = gasMocks.Logger;
-  globalThis.MimeType = gasMocks.MimeType;
-}
 
 /**
  * Creates the OS-temporary mock Drive, loads every legacy script in manifest order, publishes
@@ -403,23 +381,46 @@ function insertDisposableBatch(state) {
 }
 
 /**
+ * Decides whether one timing event reports a failed operation rather than a successful
+ * measurement.
+ * @param {{error: (string|null)}} event - Timing event emitted by JDbLogger.
+ * @returns {boolean} True when the event carries an operation error.
+ */
+function isFailedOperationEvent(event) {
+  return event.error !== null && event.error !== undefined;
+}
+
+/**
  * Creates the timing-event aggregator backing the harness. Events land in a pending buffer;
  * callers discard precondition events and commit measured events, so per-label statistics
- * accumulate across iterations while preparation costs stay excluded.
- * @returns {Object} Aggregator exposing handleEvent, discardPending, commitPending, and
- *   snapshotTotals.
+ * accumulate across iterations while preparation costs stay excluded. Events carrying an
+ * operation error are never aggregated into the duration statistics; they are counted per
+ * label instead and surfaced through the report's errors column.
+ * @returns {Object} Aggregator exposing handleEvent, discardPending, commitPending,
+ *   snapshotTotals, snapshotErrorCounts, and resetTotals.
  */
 function createTimingAggregator() {
   const pendingByLabel = new Map();
-  const totalsByLabel = new Map();
+  const pendingErrorCountsByLabel = new Map();
+  const totalDurationsByLabel = new Map();
+  const totalErrorCountsByLabel = new Map();
 
   return {
     /**
-     * Receives one timing event dispatched by the facility.
-     * @param {{label: string, durationMs: number}} event - Timing event emitted by JDbLogger.
+     * Receives one timing event dispatched by the facility. Error-carrying events increment
+     * their label's pending error count; successful events buffer their duration.
+     * @param {{label: string, durationMs: number, error: (string|null)}} event - Timing event
+     *   emitted by JDbLogger.
      * @returns {void}
      */
     handleEvent(event) {
+      if (isFailedOperationEvent(event)) {
+        const existingCount = pendingErrorCountsByLabel.has(event.label)
+          ? pendingErrorCountsByLabel.get(event.label)
+          : 0;
+        pendingErrorCountsByLabel.set(event.label, existingCount + 1);
+        return;
+      }
       if (!pendingByLabel.has(event.label)) {
         pendingByLabel.set(event.label, []);
       }
@@ -432,18 +433,28 @@ function createTimingAggregator() {
      */
     discardPending() {
       pendingByLabel.clear();
+      pendingErrorCountsByLabel.clear();
     },
 
     /**
-     * Commits buffered measured events into the accumulated totals.
+     * Commits buffered measured events into the accumulated totals. Durations are pushed
+     * into the stored arrays in place so repeated commits stay linear in buffered size.
      * @returns {void}
      */
     commitPending() {
       for (const [label, durations] of pendingByLabel) {
-        const existing = totalsByLabel.has(label) ? totalsByLabel.get(label) : [];
-        totalsByLabel.set(label, existing.concat(durations));
+        const existing = totalDurationsByLabel.has(label) ? totalDurationsByLabel.get(label) : [];
+        existing.push(...durations);
+        totalDurationsByLabel.set(label, existing);
+      }
+      for (const [label, errorCount] of pendingErrorCountsByLabel) {
+        const existingCount = totalErrorCountsByLabel.has(label)
+          ? totalErrorCountsByLabel.get(label)
+          : 0;
+        totalErrorCountsByLabel.set(label, existingCount + errorCount);
       }
       pendingByLabel.clear();
+      pendingErrorCountsByLabel.clear();
     },
 
     /**
@@ -451,7 +462,15 @@ function createTimingAggregator() {
      * @returns {Map<string, number[]>} Durations observed per label.
      */
     snapshotTotals() {
-      return new Map(totalsByLabel);
+      return new Map(totalDurationsByLabel);
+    },
+
+    /**
+     * Returns a copy of the accumulated per-label failed-operation counts.
+     * @returns {Map<string, number>} Error events observed per label.
+     */
+    snapshotErrorCounts() {
+      return new Map(totalErrorCountsByLabel);
     },
 
     /**
@@ -459,7 +478,8 @@ function createTimingAggregator() {
      * @returns {void}
      */
     resetTotals() {
-      totalsByLabel.clear();
+      totalDurationsByLabel.clear();
+      totalErrorCountsByLabel.clear();
     }
   };
 }
@@ -492,14 +512,37 @@ function summariseDurations(durations) {
 
 /**
  * Converts accumulated totals into ordered per-label summaries (first-observation order).
- * @param {Map<string, number[]>} totalsByLabel - Accumulated durations keyed by label.
- * @returns {Array<{label: string, count: number, minMs: number, maxMs: number, meanMs: number}>}
- *   Per-label summaries ready for rendering.
+ * Labels whose events all carried errors appear too, with empty duration statistics and
+ * their error count, so failures can never disappear from the report silently.
+ * @param {Map<string, number[]>} totalDurationsByLabel - Accumulated durations keyed by label.
+ * @param {Map<string, number>} totalErrorCountsByLabel - Accumulated failed-operation counts
+ *   keyed by label.
+ * @returns {Array<{label: string, count: number, minMs: (?number), maxMs: (?number),
+ *   meanMs: (?number), errorCount: number}>} Per-label summaries ready for rendering; the
+ *   duration statistics are null for labels without successful samples.
  */
-function summariseLabelStats(totalsByLabel) {
+function summariseLabelStats(totalDurationsByLabel, totalErrorCountsByLabel) {
   const summaries = [];
-  for (const [label, durations] of totalsByLabel) {
-    summaries.push({ label: label, ...summariseDurations(durations) });
+  const seenLabels = new Set();
+  for (const [label, durations] of totalDurationsByLabel) {
+    seenLabels.add(label);
+    summaries.push({
+      label: label,
+      errorCount: totalErrorCountsByLabel.has(label) ? totalErrorCountsByLabel.get(label) : 0,
+      ...summariseDurations(durations)
+    });
+  }
+  for (const [label, errorCount] of totalErrorCountsByLabel) {
+    if (!seenLabels.has(label)) {
+      summaries.push({
+        label: label,
+        count: 0,
+        minMs: null,
+        maxMs: null,
+        meanMs: null,
+        errorCount: errorCount
+      });
+    }
   }
   return summaries;
 }
@@ -555,18 +598,25 @@ function runAllScenarios(scenarios, state, iterations, aggregator) {
   for (const scenario of scenarios) {
     aggregator.resetTotals();
     runMeasuredScenario(scenario, state, iterations, aggregator);
-    const labelSummaries = summariseLabelStats(aggregator.snapshotTotals());
+    const labelSummaries = summariseLabelStats(
+      aggregator.snapshotTotals(),
+      aggregator.snapshotErrorCounts()
+    );
     results.push({ name: scenario.name, labelSummaries: labelSummaries });
   }
   return results;
 }
 
 /**
- * Formats one millisecond figure for the report.
- * @param {number} durationMs - Duration in milliseconds.
- * @returns {string} Fixed-precision decimal string.
+ * Formats one millisecond figure for the report, or a placeholder when a label has no
+ * successful samples to summarise.
+ * @param {?number} durationMs - Duration in milliseconds, or null when unavailable.
+ * @returns {string} Fixed-precision decimal string, or the placeholder.
  */
 function formatDurationMs(durationMs) {
+  if (durationMs === null) {
+    return MISSING_VALUE_PLACEHOLDER;
+  }
   return durationMs.toFixed(MS_PRECISION_DIGITS);
 }
 
@@ -620,7 +670,8 @@ function renderScenarioTable(labelSummaries) {
       String(summary.count),
       formatDurationMs(summary.minMs),
       formatDurationMs(summary.maxMs),
-      formatDurationMs(summary.meanMs)
+      formatDurationMs(summary.meanMs),
+      String(summary.errorCount)
     ]);
   }
   const widths = computeColumnWidths(rows);
@@ -688,4 +739,15 @@ function main() {
   }
 }
 
-main();
+// Run the harness only when invoked directly (`npm run bench`); importing the module from
+// unit tests must stay side-effect free so its pure helpers can be exercised in isolation.
+if (require.main === module) {
+  main();
+}
+
+module.exports = {
+  SCENARIOS,
+  createTimingAggregator,
+  summariseLabelStats,
+  renderScenarioTable
+};

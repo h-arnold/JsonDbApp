@@ -155,8 +155,13 @@ The Vitest configuration ([tests/vitest.config.js](../../tests/vitest.config.js)
 The setup file ([tests/setup/gas-mocks.setup.js](../../tests/setup/gas-mocks.setup.js)):
 
 1. Creates GAS mock instances with isolated storage paths
-2. Injects mocks into global scope (`DriveApp`, `PropertiesService`, etc.)
-3. Loads legacy source files into the test context using `vm.runInThisContext()`
+2. Loads legacy source files into the test context using `vm.runInThisContext()`
+3. Injects mocks into global scope (`DriveApp`, `PropertiesService`, etc.)
+
+Steps 2 and 3 use the shared helpers in
+[tools/gas-mocks/legacy-boot.cjs](../../tools/gas-mocks/legacy-boot.cjs), which the benchmark
+harness consumes as well; the loader implementation and published service set therefore cannot
+drift between the two consumers.
 
 ## Writing Tests
 
@@ -648,8 +653,11 @@ Each run:
   facility events per label. Every scenario performs one unmeasured warm-up pass first;
   mutating scenarios re-establish their preconditions before EVERY measured iteration and
   their preparation events are discarded, so only measured bodies contribute to the
-  statistics (read-only scenarios share the seeded state).
-- Prints one aligned table per scenario reporting count/min/max/mean milliseconds per label.
+  statistics (read-only scenarios share the seeded state). Events carrying an operation
+  error are counted per label rather than aggregated into the duration statistics.
+- Prints one aligned table per scenario reporting count/min/max/mean milliseconds per label
+  plus an errors column; labels without successful samples show a placeholder for their
+  duration statistics so failures can never inflate success statistics silently.
 - Honours `BENCH_ITERATIONS` (default 5) for measured iterations per scenario. Both
   environment variables must be positive integers and invalid values fail fast; completed
   runs always exit 0 regardless of measurement variance.
