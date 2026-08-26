@@ -1,9 +1,9 @@
 /**
  * Component Attribution Coverage for the Full Instrumentation Surface
  *
- * Completes PR_REVIEW.md decision I8 (SPEC.md section 6): every instrumented
+ * Completes PR_REVIEW.md decision I8: every instrumented
  * label carries the deliberate PascalCase `component` field. This suite covers
- * the labels whose attribution was previously unasserted; the remaining §6
+ * the labels whose attribution was previously unasserted; the remaining
  * labels are already enforced elsewhere — the nine `collection.*` boundaries in
  * collection-timing.test.js, `fileService.createFile`/`fileService.readFile` in
  * timing-instrumentation.test.js, and `docOps.applyToMatching` in

@@ -2,7 +2,7 @@
  * Inner Hot-Path Timing Instrumentation Tests
  *
  * Drives representative public operations against the GAS mocks and asserts
- * the `SPEC.md` §6 instrumentation inventory under the stacked-timer
+ * the instrumentation inventory under the stacked-timer
  * short-circuit contract: while an outer measurement is active, inner timers
  * run their fn directly, so each driven operation emits exactly its outermost
  * boundary label and every inner hot-path label stays silent — one event per
@@ -32,7 +32,7 @@ describe('Inner hot-path timing instrumentation', () => {
   });
 
   it('short-circuits inner query timers so find emits exactly its boundary label', () => {
-    // Arrange — the capture starts after the arrange phase because the SPEC §6
+    // Arrange — the capture starts after the arrange phase because the
     // instrumentation inventory makes the registration and seeding helpers emit
     // their own events, which would pollute the exact-label assertion below.
     const { collection } = createIsolatedTestCollection('timingInnerFind');

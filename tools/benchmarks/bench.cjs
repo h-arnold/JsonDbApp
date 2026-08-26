@@ -1,5 +1,5 @@
 /**
- * bench.cjs - Execution-time benchmark harness for JsonDbApp (SPEC.md §4.6).
+ * bench.cjs - Execution-time benchmark harness for JsonDbApp.
  *
  * Manual developer tooling, run through `npm run bench`. It boots the full legacy src surface
  * over the mocked GAS services inside an OS-temporary Drive root, seeds one collection

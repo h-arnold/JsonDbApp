@@ -7,7 +7,7 @@
  * facility (`timeSync`) that measures synchronous operations and delivers
  * structured timing events to registered listeners.
  *
- * Per SPEC.md section 3 the logger is deliberately dependency-free: validation
+ * The logger is deliberately dependency-free: validation
  * failures raise the local JDbLoggerError type declared below rather than any
  * ErrorHandler type, and every secondary instrumentation failure is contained
  * and reported through console.error so it can never displace a measured
@@ -17,8 +17,7 @@
 /**
  * Dependency-free typed error raised for every JDbLogger validation failure.
  *
- * Declared locally so the logger never references ErrorHandler (SPEC.md
- * section 3's dependency-free logger design); extending Error satisfies the
+ * Declared locally so the logger never references ErrorHandler; extending Error satisfies the
  * project convention that error names end in 'Error' and gives consumers a
  * catchable type exposed as JDbLogger.JDbLoggerError.
  */
@@ -337,7 +336,7 @@ class JDbLogger {
    *   entry-point default parameters.
    * @returns {void}
    * @throws {JDbLoggerError} Naming the offending argument; local typed errors keep JDbLogger
-   *   dependency-free per SPEC.md section 3 rather than referencing ErrorHandler.
+   *   dependency-free rather than referencing ErrorHandler.
    */
   static _validateTimingArguments(label, fn, context) {
     if (typeof label !== 'string' || label.length === 0) {

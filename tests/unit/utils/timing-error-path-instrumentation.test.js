@@ -1,7 +1,8 @@
 /**
  * Instrumented Call-Site Error-Path Timing Tests
  *
- * Pins the SPEC.md sections 4.1/7 error-fidelity invariant at every instrumented
+ * Pins the error-fidelity invariant (each failing site still emits a boundary event
+ * carrying the thrown error) at every instrumented
  * call site listed in PR_REVIEW.md (Testing gap C1): when a wrapped operation
  * throws, the site's boundary timing event IS still emitted with `error`
  * populated from the thrown value, and the ORIGINAL error alone reaches the
@@ -57,7 +58,7 @@ const catchThrown = (operation) => {
 
 /**
  * Asserts that the failing act emitted exactly one boundary timing event whose
- * fields satisfy the SPEC.md section 4.3 contract and carry the thrown message.
+ * fields satisfy the error-handling contract and carry the thrown message.
  * @param {string} label - Boundary label expected from the failing site.
  * @param {string} component - PascalCase component attributed to the event.
  * @param {*} thrown - Original throwable caught by the caller.
