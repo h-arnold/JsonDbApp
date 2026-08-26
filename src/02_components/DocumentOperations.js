@@ -449,7 +449,7 @@ class DocumentOperations {
    *   boundary unit, so a direct bulk call emits exactly one timing event regardless of how
    *   many documents match — per-document emissions would otherwise grow as O(matched count)
    *   and violate the facility's event-volume contract (one timing event per operation, not per
- *   document). While this measurement is active,
+   *   document). While this measurement is active,
    *   JDbLogger's stacked-timer short-circuit suppresses every inner timer (docOps.executeQuery,
    *   docOps.updateWithOperators, updateEngine.applyOperators); under Collection-level wrappers
    *   such as collection.updateMany the outer boundary is already measuring, so this inner
