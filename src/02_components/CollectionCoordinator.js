@@ -89,7 +89,7 @@ class CollectionCoordinator {
         this._logger.error(`Operation ${operationName} failed`, {
           collection: name,
           opId,
-          error: e.message
+          error: e instanceof Error ? e.message : String(e)
         });
         throw e;
       } finally {
@@ -311,7 +311,7 @@ class CollectionCoordinator {
       this._logger.error('Lock release failed', {
         collection: name,
         operationId,
-        error: e.message
+        error: e instanceof Error ? e.message : String(e)
       });
       // swallow release errors to avoid masking operation errors
     }
