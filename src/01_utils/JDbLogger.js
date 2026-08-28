@@ -368,8 +368,8 @@ class JDbLogger {
     let error = null;
     try {
       result = fn();
-    } catch (caught) {
-      error = caught;
+    } catch (error_) {
+      error = error_;
     }
     const endReading = JDbLogger._readClock();
 

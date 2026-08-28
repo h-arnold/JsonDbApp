@@ -53,8 +53,8 @@ export const createCaptureRegistry = () => {
 export const captureThrow = (action) => {
   try {
     action();
-  } catch (caught) {
-    return caught;
+  } catch (error_) {
+    return error_;
   }
   return null;
 };

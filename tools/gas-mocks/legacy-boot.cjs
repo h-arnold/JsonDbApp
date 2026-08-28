@@ -25,6 +25,9 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 function loadLegacyScript(relativePath) {
   const absolutePath = path.join(REPO_ROOT, relativePath);
   const source = fs.readFileSync(absolutePath, 'utf8');
+  // NOSONAR javascript:S1523 - executes trusted, first-party legacy src files resolved from
+  // REPO_ROOT; never untrusted or external input. Required to load classic (non-module) GAS
+  // scripts into the current context exactly as the GAS runtime would, for tests and benchmarks.
   vm.runInThisContext(source, { filename: absolutePath });
 }
 
