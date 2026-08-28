@@ -133,7 +133,7 @@ class MasterIndex {
    * @throws {MasterIndexError} When the index state is unloaded
    */
   getCollections() {
-    if (!this._data || !this._data.collections) {
+    if (!this._data?.collections) {
       throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
         'getCollections',
         'Master index state is not loaded'
@@ -255,7 +255,7 @@ class MasterIndex {
    * @returns {boolean} True if collection was found and removed, false otherwise
    */
   removeCollection(name) {
-    if (!this._data || !this._data.collections) {
+    if (!this._data?.collections) {
       this._logger.warn('Internal state corrupted', { name });
       return false;
     }
@@ -542,7 +542,7 @@ class MasterIndex {
    */
   _getCollectionData(name) {
     Validate.nonEmptyString(name, 'name');
-    if (!this._data || !this._data.collections) {
+    if (!this._data?.collections) {
       return null;
     }
     return this._data.collections[name] || null;
