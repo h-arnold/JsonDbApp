@@ -92,7 +92,7 @@ export default defineConfig([
     files: ['**/*.cjs'],
     languageOptions: {
       sourceType: 'commonjs',
-      ecmaVersion: 2021,
+      ecmaVersion: 2022,
       globals: nodeHostGlobals
     },
     plugins: {
@@ -113,14 +113,7 @@ export default defineConfig([
     }
   },
   {
-    ignores: [
-      'eslint.config.js',
-      'node_modules/',
-      'tests/data/',
-      '*.log',
-      '*.pid',
-      'tools/gas-mocks/**'
-    ]
+    ignores: ['eslint.config.js', 'node_modules/', 'tests/data/', '*.log', '*.pid']
   },
   prettierConfig
 ]);
