@@ -25,9 +25,9 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..');
 function loadLegacyScript(relativePath) {
   const absolutePath = path.join(REPO_ROOT, relativePath);
   const source = fs.readFileSync(absolutePath, 'utf8');
-  // NOSONAR javascript:S1523 - executes trusted, first-party legacy src files resolved from
-  // REPO_ROOT; never untrusted or external input. Required to load classic (non-module) GAS
-  // scripts into the current context exactly as the GAS runtime would, for tests and benchmarks.
+  // Excluded from SonarCloud analysis via sonar-project.properties (see the
+  // exclusion comment for tools/gas-mocks/legacy-boot.cjs). The vm call is
+  // safe by construction: source is always a first-party file under REPO_ROOT.
   vm.runInThisContext(source, { filename: absolutePath });
 }
 

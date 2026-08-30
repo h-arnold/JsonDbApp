@@ -517,7 +517,7 @@ describe('QueryEngine', () => {
       const query = { 'nestedEmpty.null': null };
       const results = queryEngine.executeQuery(edgeCaseDocuments, query);
 
-      expect(results.length >= 0).toBe(true);
+      expect(Array.isArray(results)).toBe(true);
     });
 
     it('should handle very deeply nested field access', () => {
