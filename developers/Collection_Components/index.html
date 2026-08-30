@@ -1242,10 +1242,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#save-void" class="md-nav__link">
+  <a href="#save-object" class="md-nav__link">
     <span class="md-ellipsis">
       
-        save(): void
+        save(): Object
       
     </span>
   </a>
@@ -2348,10 +2348,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#save-void" class="md-nav__link">
+  <a href="#save-object" class="md-nav__link">
     <span class="md-ellipsis">
       
-        save(): void
+        save(): Object
       
     </span>
   </a>
@@ -2860,7 +2860,7 @@
 <li><a href="#getname-string">getName(): string</a></li>
 <li><a href="#getmetadata-object">getMetadata(): Object</a></li>
 <li><a href="#isdirty-boolean">isDirty(): boolean</a></li>
-<li><a href="#save-void">save(): void</a></li>
+<li><a href="#save-object">save(): Object</a></li>
 <li><a href="#lazy-loading">Lazy Loading</a></li>
 </ul>
 </li>
@@ -2963,6 +2963,12 @@
 <a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a><span class="p">);</span>
 </code></pre></div>
 <h3 id="public-methods">Public Methods<a class="headerlink" href="#public-methods" title="Permanent link">&para;</a></h3>
+<blockquote>
+<p><strong>Timing:</strong> every public CRUD method (<code>find</code>, <code>findOne</code>, <code>countDocuments</code>,
+<code>insertOne</code>, <code>updateOne</code>, <code>updateMany</code>, <code>replaceOne</code>, <code>deleteOne</code>, <code>deleteMany</code>) wraps its
+delegate in a DEBUG-gated <code>collection.&lt;operation&gt;</code> timing event; see
+<a href="../Infrastructure_Components/#1205-execution-time-tracking">Infrastructure Components — Execution-Time Tracking</a>.</p>
+</blockquote>
 <h4 id="insertonedoc-object-object">insertOne(doc: Object): Object<a class="headerlink" href="#insertonedoc-object-object" title="Permanent link">&para;</a></h4>
 <p>Insert a single document with automatic ID generation.</p>
 <ul>
@@ -3247,15 +3253,17 @@
 <a id="__codelineno-13-6" name="__codelineno-13-6" href="#__codelineno-13-6"></a><span class="nx">collection</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
 <a id="__codelineno-13-7" name="__codelineno-13-7" href="#__codelineno-13-7"></a><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Has changes:'</span><span class="p">,</span><span class="w"> </span><span class="nx">collection</span><span class="p">.</span><span class="nx">isDirty</span><span class="p">());</span><span class="w"> </span><span class="c1">// false</span>
 </code></pre></div>
-<h4 id="save-void">save(): void<a class="headerlink" href="#save-void" title="Permanent link">&para;</a></h4>
-<p>Force save collection to Drive.</p>
+<h4 id="save-object">save(): Object<a class="headerlink" href="#save-object" title="Permanent link">&para;</a></h4>
+<p>Force save collection to Drive when the collection is dirty.</p>
 <ul>
+<li><strong>Returns</strong></li>
+<li><code>{acknowledged: true}</code> once the save coordination succeeds</li>
 <li><strong>Throws</strong>: <code>OperationError</code> if save fails</li>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Manual save (usually automatic)</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="nx">collection</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
-<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Collection saved'</span><span class="p">);</span>
+<a id="__codelineno-14-3" name="__codelineno-14-3" href="#__codelineno-14-3"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">collection</span><span class="p">.</span><span class="nx">save</span><span class="p">();</span>
+<a id="__codelineno-14-4" name="__codelineno-14-4" href="#__codelineno-14-4"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">log</span><span class="p">(</span><span class="s1">'Collection saved'</span><span class="p">,</span><span class="w"> </span><span class="nx">result</span><span class="p">);</span><span class="w"> </span><span class="c1">// { acknowledged: true }</span>
 <a id="__codelineno-14-5" name="__codelineno-14-5" href="#__codelineno-14-5"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-14-6" name="__codelineno-14-6" href="#__codelineno-14-6"></a><span class="w">  </span><span class="nx">console</span><span class="p">.</span><span class="nx">error</span><span class="p">(</span><span class="s1">'Save failed:'</span><span class="p">,</span><span class="w"> </span><span class="nx">error</span><span class="p">.</span><span class="nx">message</span><span class="p">);</span>
 <a id="__codelineno-14-7" name="__codelineno-14-7" href="#__codelineno-14-7"></a><span class="p">}</span>
@@ -3832,7 +3840,8 @@ The <code>lockStatus</code> object has the shape: <code>{ isLocked: boolean, loc
 </ul>
 <p><strong>Bulk Operations (D2 Refactoring):</strong></p>
 <ul>
-<li><code>_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)</code>: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by <code>updateDocumentByQuery()</code> and <code>replaceDocumentByQuery()</code>.</li>
+<li><code>_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)</code>: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by <code>updateDocumentByQuery()</code> and <code>replaceDocumentByQuery()</code>. Emits a single DEBUG-gated <code>docOps.applyToMatching</code> boundary timing event for the whole bulk application — inner per-document timers stay silent beneath it (and the boundary itself is suppressed under Collection-level timers such as <code>updateMany</code>); see
+  <a href="../Infrastructure_Components/#1205-execution-time-tracking">Infrastructure Components — Execution-Time Tracking</a>.</li>
 </ul>
 <p>These private methods ensure data integrity, consistent error handling, and DRY principles within the component.</p>
 <hr />

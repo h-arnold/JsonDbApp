@@ -1592,6 +1592,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#timing-assertions-and-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timing Assertions and Benchmarks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Timing Assertions and Benchmarks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capturing-timing-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing timing events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asserting-exact-durations-with-the-mock-clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asserting exact durations with the mock clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-harness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark harness
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#api-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2502,6 +2552,56 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#timing-assertions-and-benchmarks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timing Assertions and Benchmarks
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Timing Assertions and Benchmarks">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#capturing-timing-events" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Capturing timing events
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#asserting-exact-durations-with-the-mock-clock" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Asserting exact durations with the mock clock
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#benchmark-harness" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Benchmark harness
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#api-reference" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2727,6 +2827,12 @@
 <li><a href="#coverage">Coverage</a></li>
 </ul>
 </li>
+<li><a href="#timing-assertions-and-benchmarks">Timing Assertions and Benchmarks</a><ul>
+<li><a href="#capturing-timing-events">Capturing timing events</a></li>
+<li><a href="#asserting-exact-durations-with-the-mock-clock">Asserting exact durations with the mock clock</a></li>
+<li><a href="#benchmark-harness">Benchmark harness</a></li>
+</ul>
+</li>
 <li><a href="#api-reference">API Reference</a><ul>
 <li><a href="#vitest-core-apis">Vitest Core APIs</a></li>
 <li><a href="#test-structure">Test Structure</a></li>
@@ -2836,9 +2942,13 @@
 <p>The setup file (<a href="../../tests/setup/gas-mocks.setup.js">tests/setup/gas-mocks.setup.js</a>):</p>
 <ol>
 <li>Creates GAS mock instances with isolated storage paths</li>
-<li>Injects mocks into global scope (<code>DriveApp</code>, <code>PropertiesService</code>, etc.)</li>
 <li>Loads legacy source files into the test context using <code>vm.runInThisContext()</code></li>
+<li>Injects mocks into global scope (<code>DriveApp</code>, <code>PropertiesService</code>, etc.)</li>
 </ol>
+<p>Steps 2 and 3 use the shared helpers in
+<a href="../../tools/gas-mocks/legacy-boot.cjs">tools/gas-mocks/legacy-boot.cjs</a>, which the benchmark
+harness consumes as well; the loader implementation and published service set therefore cannot
+drift between the two consumers.</p>
 <h2 id="writing-tests">Writing Tests<a class="headerlink" href="#writing-tests" title="Permanent link">&para;</a></h2>
 <h3 id="basic-test-example">Basic Test Example<a class="headerlink" href="#basic-test-example" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">describe</span><span class="p">,</span><span class="w"> </span><span class="nx">it</span><span class="p">,</span><span class="w"> </span><span class="nx">expect</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'vitest'</span><span class="p">;</span>
@@ -3165,6 +3275,105 @@
 <h3 id="coverage">Coverage<a class="headerlink" href="#coverage" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-17-1" name="__codelineno-17-1" href="#__codelineno-17-1"></a>npm<span class="w"> </span>run<span class="w"> </span><span class="nb">test</span><span class="w"> </span>--<span class="w"> </span>--coverage
 </code></pre></div>
+<h2 id="timing-assertions-and-benchmarks">Timing Assertions and Benchmarks<a class="headerlink" href="#timing-assertions-and-benchmarks" title="Permanent link">&para;</a></h2>
+<p>The execution-time logging facility in <code>JDbLogger</code> makes synchronous-operation durations
+deterministically assertable in Vitest, and a manually-run benchmark harness reports
+per-label before/after figures. See
+<a href="../Infrastructure_Components/#1205-execution-time-tracking">Infrastructure Components — Execution-Time Tracking</a>
+for the facility's API surface, event shape, and gating semantics.</p>
+<h3 id="capturing-timing-events">Capturing timing events<a class="headerlink" href="#capturing-timing-events" title="Permanent link">&para;</a></h3>
+<p>Obtain listeners exclusively through <code>captureTimingEvents()</code>
+(<a href="../../tests/helpers/timing-capture-test-helpers.js">tests/helpers/timing-capture-test-helpers.js</a>)
+and call <code>restore()</code> in <code>afterEach</code>. Raw <code>addTimingListener</code> calls in tests are forbidden by
+convention because Vitest's <code>clearMocks</code> resets mocks created with <code>vi.fn()</code>/<code>vi.spyOn()</code>
+but does NOT clear <code>JDbLogger</code>'s static listener list — only explicit unsubscription keeps
+suites independent.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">describe</span><span class="p">,</span><span class="w"> </span><span class="nx">it</span><span class="p">,</span><span class="w"> </span><span class="nx">expect</span><span class="p">,</span><span class="w"> </span><span class="nx">afterEach</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'vitest'</span><span class="p">;</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="nx">createIsolatedTestCollection</span><span class="p">,</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">  </span><span class="nx">seedStandardEmployees</span>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'../../helpers/collection-test-helpers.js'</span><span class="p">;</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="k">import</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a><span class="w">  </span><span class="nx">captureTimingEvents</span><span class="p">,</span>
+<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">  </span><span class="nx">eventsWithLabel</span><span class="p">,</span>
+<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">  </span><span class="nx">expectLabelsPresent</span>
+<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="p">}</span><span class="w"> </span><span class="kr">from</span><span class="w"> </span><span class="s1">'../../helpers/timing-capture-test-helpers.js'</span><span class="p">;</span>
+<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>
+<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="nx">describe</span><span class="p">(</span><span class="s1">'Collection timing'</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">  </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">events</span><span class="p">,</span><span class="w"> </span><span class="nx">restore</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">captureTimingEvents</span><span class="p">();</span>
+<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">  </span><span class="nx">afterEach</span><span class="p">(()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="nx">restore</span><span class="p">());</span>
+<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>
+<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">  </span><span class="nx">it</span><span class="p">(</span><span class="s1">'emits boundary and inner labels for find'</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">    </span><span class="c1">// Arrange</span>
+<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">collection</span><span class="w"> </span><span class="p">}</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">createIsolatedTestCollection</span><span class="p">(</span><span class="s1">'timingFind'</span><span class="p">);</span>
+<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">    </span><span class="nx">seedStandardEmployees</span><span class="p">(</span><span class="nx">collection</span><span class="p">);</span>
+<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a>
+<a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">    </span><span class="c1">// Act</span>
+<a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="w">    </span><span class="nx">collection</span><span class="p">.</span><span class="nx">find</span><span class="p">({</span><span class="w"> </span><span class="nx">department</span><span class="o">:</span><span class="w"> </span><span class="s1">'Engineering'</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a>
+<a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">    </span><span class="c1">// Assert</span>
+<a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">    </span><span class="nx">expectLabelsPresent</span><span class="p">(</span><span class="nx">events</span><span class="p">,</span><span class="w"> </span><span class="p">[</span>
+<a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">      </span><span class="s1">'collection.find'</span><span class="p">,</span>
+<a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="w">      </span><span class="s1">'docOps.executeQuery'</span><span class="p">,</span>
+<a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a><span class="w">      </span><span class="s1">'queryEngine.executeQuery'</span>
+<a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="w">    </span><span class="p">]);</span>
+<a id="__codelineno-18-30" name="__codelineno-18-30" href="#__codelineno-18-30"></a><span class="w">    </span><span class="nx">expect</span><span class="p">(</span><span class="nx">eventsWithLabel</span><span class="p">(</span><span class="nx">events</span><span class="p">,</span><span class="w"> </span><span class="s1">'collection.find'</span><span class="p">)[</span><span class="mf">0</span><span class="p">].</span><span class="nx">component</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="s1">'Collection'</span><span class="p">);</span>
+<a id="__codelineno-18-31" name="__codelineno-18-31" href="#__codelineno-18-31"></a><span class="w">  </span><span class="p">});</span>
+<a id="__codelineno-18-32" name="__codelineno-18-32" href="#__codelineno-18-32"></a><span class="p">});</span>
+</code></pre></div>
+<ul>
+<li><code>captureTimingEvents(sharedEvents?)</code>: registers one listener appending to the returned
+  <code>events</code> array; passing a shared array to several captures lets a test observe the order in
+  which registered listeners fire. Returns <code>{ events, restore }</code>; <code>restore()</code> is idempotent.</li>
+<li><code>eventsWithLabel(events, label)</code>: selects captured events by exact label.</li>
+<li><code>expectLabelsPresent(events, requiredLabels)</code>: asserts each required label was emitted at
+  least once, naming the missing label and the captured alternatives on failure.</li>
+</ul>
+<h3 id="asserting-exact-durations-with-the-mock-clock">Asserting exact durations with the mock clock<a class="headerlink" href="#asserting-exact-durations-with-the-mock-clock" title="Permanent link">&para;</a></h3>
+<p><code>createMockClock()</code>
+(<a href="../../tests/helpers/mock-time-helpers.js">tests/helpers/mock-time-helpers.js</a>) spies
+<code>Date.now</code>, so advancing the fake clock inside the timed operation yields an exact
+<code>durationMs</code>. Set up event capture with <code>captureTimingEvents()</code> first (previous section) so
+<code>events</code> is defined:</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="kd">const</span><span class="w"> </span><span class="nx">clock</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">createMockClock</span><span class="p">(</span><span class="mf">1000</span><span class="p">);</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">timeSync</span><span class="p">(</span><span class="s1">'example'</span><span class="p">,</span><span class="w"> </span><span class="p">()</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">  </span><span class="nx">clock</span><span class="p">.</span><span class="nx">advanceTime</span><span class="p">(</span><span class="mf">42</span><span class="p">);</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="p">});</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a><span class="nx">expect</span><span class="p">(</span><span class="nx">eventsWithLabel</span><span class="p">(</span><span class="nx">events</span><span class="p">,</span><span class="w"> </span><span class="s1">'example'</span><span class="p">)[</span><span class="mf">0</span><span class="p">].</span><span class="nx">durationMs</span><span class="p">).</span><span class="nx">toBe</span><span class="p">(</span><span class="mf">42</span><span class="p">);</span>
+</code></pre></div>
+<p>Restore the clock alongside the listener in teardown (<code>clock.restore()</code>). Because
+<code>event.timestamp</code> derives from the measured end reading while formatted console lines keep
+wall-clock timestamps, assert on captured event fields — never on console content.</p>
+<h3 id="benchmark-harness">Benchmark harness<a class="headerlink" href="#benchmark-harness" title="Permanent link">&para;</a></h3>
+<p><code>npm run bench</code> (<a href="../../tools/benchmarks/bench.cjs">tools/benchmarks/bench.cjs</a>) is manual
+developer tooling for before/after comparisons. It is not wired into Vitest or CI and is not
+part of <code>npm test</code>.</p>
+<p>Each run:</p>
+<ul>
+<li>Boots the full src surface over the mocked GAS services inside an OS-temporary Drive root,
+  loading scripts in the order shared with the Vitest setup
+  (<code>tools/gas-mocks/script-order.cjs</code>) with <code>src/04_core/99_PublicAPI.js</code> appended last,
+  then builds the database via <code>createAndInitialiseDatabase</code> at log level DEBUG — required
+  because timing events only dispatch when the DEBUG gate passes.</li>
+<li>Seeds one collection deterministically (default 200 documents; <code>BENCH_DOCS</code> overrides) and
+  runs eight scenarios: full <code>find</code>, filtered <code>findOne</code>, <code>countDocuments</code>, batch
+  <code>updateMany</code>, batch <code>deleteMany</code>, single-document operator update, repeated cached
+  <code>readFile</code>, and one coordinated write.</li>
+<li>Measures through the timing facility itself — a registered listener aggregates real
+  facility events per label. Every scenario performs one unmeasured warm-up pass first;
+  mutating scenarios re-establish their preconditions before EVERY measured iteration and
+  their preparation events are discarded, so only measured bodies contribute to the
+  statistics (read-only scenarios share the seeded state). Events carrying an operation
+  error are counted per label rather than aggregated into the duration statistics.</li>
+<li>Prints one aligned table per scenario reporting count/min/max/mean milliseconds per label
+  plus an errors column; labels without successful samples show a placeholder for their
+  duration statistics so failures can never inflate success statistics silently.</li>
+<li>Honours <code>BENCH_ITERATIONS</code> (default 5) for measured iterations per scenario. Both
+  environment variables must be positive integers and invalid values fail fast; completed
+  runs always exit 0 regardless of measurement variance.</li>
+</ul>
 <h2 id="api-reference">API Reference<a class="headerlink" href="#api-reference" title="Permanent link">&para;</a></h2>
 <h3 id="vitest-core-apis">Vitest Core APIs<a class="headerlink" href="#vitest-core-apis" title="Permanent link">&para;</a></h3>
 <h4 id="test-structure">Test Structure<a class="headerlink" href="#test-structure" title="Permanent link">&para;</a></h4>

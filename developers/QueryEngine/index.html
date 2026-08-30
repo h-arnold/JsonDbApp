@@ -2439,6 +2439,11 @@
 <a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="kd">const</span><span class="w"> </span><span class="nx">results</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">queryEngine</span><span class="p">.</span><span class="nx">executeQuery</span><span class="p">(</span><span class="nx">docs</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">age</span><span class="o">:</span><span class="w"> </span><span class="mf">30</span><span class="p">,</span><span class="w"> </span><span class="nx">city</span><span class="o">:</span><span class="w"> </span><span class="s1">'New York'</span><span class="w"> </span><span class="p">});</span>
 <a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1">// results: [{ name: "Alice", age: 30, city: "New York" }]</span>
 </code></pre></div>
+<blockquote>
+<p><strong>Timing:</strong> <code>executeQuery</code> emits a DEBUG-gated <code>queryEngine.executeQuery</code> timing event, and
+the matcher emits <code>queryEngine.filterDocuments</code>; see
+<a href="../Infrastructure_Components/#1205-execution-time-tracking">Infrastructure Components — Execution-Time Tracking</a>.</p>
+</blockquote>
 <h3 id="_matchdocumentdocument-query"><code>_matchDocument(document, query)</code><a class="headerlink" href="#_matchdocumentdocument-query" title="Permanent link">&para;</a></h3>
 <p>(Private) Determines if a single document matches the given query. This method iterates through the query conditions and evaluates them against the document, handling both logical operators and field-based queries.</p>
 <p><strong>Parameters:</strong></p>

@@ -2887,6 +2887,9 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li><strong>Primary Operations:</strong> MasterIndex handles all metadata operations</li>
 <li><strong>Backup Operations:</strong> Database synchronises to Drive index file via <code>backupIndexToDrive()</code></li>
 <li><strong>Recovery Operations:</strong> Database can restore from Drive index to MasterIndex if needed</li>
+<li><strong>Timing:</strong> all metadata persistence funnels through <code>save()</code>, which emits a DEBUG-gated
+  <code>masterIndex.save</code> timing event; see
+  <a href="../Infrastructure_Components/#1205-execution-time-tracking">Infrastructure Components — Execution-Time Tracking</a></li>
 </ul>
 <h3 id="locking-coordination">Locking Coordination<a class="headerlink" href="#locking-coordination" title="Permanent link">&para;</a></h3>
 <p>Database class uses MasterIndex locking for thread safety:</p>
