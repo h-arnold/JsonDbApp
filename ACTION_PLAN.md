@@ -1,5 +1,7 @@
 # ACTION PLAN — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
 
+> **Current status:** Section 1 COMPLETE (red+green+reviews clean; 876 tests pass; `99_MasterIndex.js`=353 counted LOC, under 500 gate). Section 2 (Red loop) next.
+
 Derived from `SPEC.md` (final, reviewer-approved). Workflow: Red-Green-Refactor per
 section; sections are sequenced so enabling contracts land before dependent
 orchestration work. Every section must leave the tree green: `npm run lint`
@@ -67,7 +69,7 @@ gate, stop and re-plan separation using the numbered multi-file pattern
 
 ---
 
-## 1. Section 1 — MasterIndex: single raw reader and save-failure resynchronisation (Case 3 / D3)
+## 1. Section 1 — MasterIndex: single raw reader and save-failure resynchronisation (Case 3 / D3) — **[COMPLETE]**
 
 **Objective.** Make `MasterIndex.save()` failures resynchronise in-memory state
 with the stored snapshot before throwing the original `MasterIndexError('save')`,
