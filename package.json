@@ -7,9 +7,10 @@
     "doc": "docs"
   },
   "scripts": {
-    "test": "vitest run --config tests/vitest.config.js --silent",
+    "test": "vitest run --config tests/vitest.config.js --silent=true",
     "test:verbose": "vitest run --config tests/vitest.config.js",
     "test:coverage": "vitest run --config tests/vitest.config.js --coverage",
+    "bench": "node tools/benchmarks/bench.cjs",
     "push": "clasp push",
     "pull": "clasp pull",
     "deploy": "clasp deploy",
@@ -36,6 +37,7 @@
     "eslint-config-prettier": "^10.1.8",
     "eslint-plugin-googleappsscript": "^1.0.5",
     "eslint-plugin-jsdoc": "^64.2.1",
+    "eslint-plugin-sonarjs": "^4.2.0",
     "husky": "^9.1.7",
     "prettier": "^3.8.1",
     "vitest": "^4.0.18"

@@ -57,6 +57,9 @@ class IdGenerator {
    * @returns {string} A UUID-like string
    */
   static generateFallbackUUID() {
+    // Math.random() is acceptable here: this generates non-cryptographic document IDs
+    // where collision resistance is the only requirement (not unpredictability).
+    /* eslint-disable sonarjs/pseudo-random */
     // Generate a UUID v4-like string manually
     const chars = '0123456789abcdef';
     let result = '';
@@ -73,6 +76,7 @@ class IdGenerator {
       }
     }
 
+    /* eslint-enable sonarjs/pseudo-random */
     return result;
   }
 
@@ -83,6 +87,9 @@ class IdGenerator {
    */
   static generateTimestampId(prefix = '') {
     const timestamp = Date.now();
+    // Math.random() is acceptable here: timestamp + random suffix provides sufficient
+    // collision resistance for non-cryptographic document IDs.
+    /* eslint-disable-next-line sonarjs/pseudo-random */
     const random = Math.floor(Math.random() * TIMESTAMP_RANDOM_MAX)
       .toString()
       .padStart(TIMESTAMP_RANDOM_PAD, '0');
@@ -98,9 +105,12 @@ class IdGenerator {
     const chars = '0123456789abcdefghijklmnopqrstuvwxyz';
     let result = '';
 
+    // Math.random() is acceptable here: short non-cryptographic IDs need only collision resistance.
+    /* eslint-disable sonarjs/pseudo-random */
     for (let i = 0; i < length; i++) {
       result += chars[Math.floor(Math.random() * chars.length)];
     }
+    /* eslint-enable sonarjs/pseudo-random */
 
     return result;
   }
@@ -114,9 +124,12 @@ class IdGenerator {
     const chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz';
     let result = '';
 
+    // Math.random() is acceptable here: alphanumeric IDs are non-cryptographic.
+    /* eslint-disable sonarjs/pseudo-random */
     for (let i = 0; i < length; i++) {
       result += chars[Math.floor(Math.random() * chars.length)];
     }
+    /* eslint-enable sonarjs/pseudo-random */
 
     return result;
   }
@@ -130,6 +143,8 @@ class IdGenerator {
     const chars = '0123456789';
     let result = '';
 
+    // Math.random() is acceptable here: numeric IDs are non-cryptographic.
+    /* eslint-disable sonarjs/pseudo-random */
     // Ensure first digit is not 0
     const nonZeroDigits = chars.substring(NUMERIC_NON_ZERO_START_INDEX);
     result += nonZeroDigits[Math.floor(Math.random() * nonZeroDigits.length)];
@@ -137,6 +152,7 @@ class IdGenerator {
     for (let i = 1; i < length; i++) {
       result += chars[Math.floor(Math.random() * chars.length)];
     }
+    /* eslint-enable sonarjs/pseudo-random */
 
     return result;
   }
@@ -150,6 +166,8 @@ class IdGenerator {
       .toString(HEX_BASE)
       .padStart(OBJECT_ID_TIMESTAMP_HEX_LENGTH, '0');
 
+    // Math.random() is acceptable here: ObjectId needs collision resistance, not unpredictability.
+    /* eslint-disable sonarjs/pseudo-random */
     // Generate 5 random bytes (10 hex chars)
     let randomBytes = '';
     for (let i = 0; i < OBJECT_ID_RANDOM_HEX_LENGTH; i++) {
@@ -160,6 +178,7 @@ class IdGenerator {
     const counter = Math.floor(Math.random() * OBJECT_ID_COUNTER_MAX)
       .toString(HEX_BASE)
       .padStart(OBJECT_ID_COUNTER_HEX_LENGTH, '0');
+    /* eslint-enable sonarjs/pseudo-random */
 
     return timestamp + randomBytes + counter;
   }
@@ -226,8 +245,12 @@ class IdGenerator {
       'moon'
     ];
 
+    // Math.random() is acceptable here: human-readable IDs need only collision resistance.
+    /* eslint-disable-next-line sonarjs/pseudo-random */
     const adjective = adjectives[Math.floor(Math.random() * adjectives.length)];
+    /* eslint-disable-next-line sonarjs/pseudo-random */
     const noun = nouns[Math.floor(Math.random() * nouns.length)];
+    /* eslint-disable-next-line sonarjs/pseudo-random */
     const number = Math.floor(Math.random() * READABLE_ID_NUMBER_MAX);
 
     return `${adjective}-${noun}-${number}`;

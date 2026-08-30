@@ -1,7 +1,7 @@
 ---
 description: Creates SPEC.md and ACTION_PLAN.md through clarification-driven planning
 mode: all
-model: opencode/x-preview-f-free
+model: opencode-go/glm-5.3-flash
 steps: 100
 permission:
   question: allow

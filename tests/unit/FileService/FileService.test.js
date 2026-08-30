@@ -302,12 +302,13 @@ describe('FileService Batch Operations', () => {
     }));
 
     const fileIds = ['file-1', 'file-2', 'file-3'];
-    const results = fileService.batchReadFiles(fileIds);
+    const { results, errors } = fileService.batchReadFiles(fileIds);
 
     expect(results.length).toBe(3);
     expect(results[0].id).toBe('file-1');
     expect(results[1].id).toBe('file-2');
     expect(results[2].id).toBe('file-3');
+    expect(errors).toEqual([]);
   });
 
   it('should handle errors in batch read operations', () => {
@@ -318,12 +319,13 @@ describe('FileService Batch Operations', () => {
       return { id: fileId, content: `Content for ${fileId}` };
     });
 
-    const results = fileService.batchReadFiles(['file-1', 'invalid-file', 'file-2']);
+    const { results, errors } = fileService.batchReadFiles(['file-1', 'invalid-file', 'file-2']);
 
     expect(results.length).toBe(3);
     expect(results[0]).not.toBeNull();
     expect(results[1]).toBeNull();
     expect(results[2]).not.toBeNull();
+    expect(errors).toEqual([{ fileId: 'invalid-file', error: 'File not found: invalid-file' }]);
   });
 
   it('should batch get metadata for multiple files', () => {
@@ -334,12 +336,13 @@ describe('FileService Batch Operations', () => {
       size: 1024
     }));
 
-    const results = fileService.batchGetMetadata(['file-1', 'file-2', 'file-3']);
+    const { results, errors } = fileService.batchGetMetadata(['file-1', 'file-2', 'file-3']);
 
     expect(results.length).toBe(3);
     expect(results[0].id).toBe('file-1');
     expect(results[1].id).toBe('file-2');
     expect(results[2].id).toBe('file-3');
+    expect(errors).toEqual([]);
   });
 
   it('should handle errors in batch metadata operations', () => {
@@ -350,12 +353,13 @@ describe('FileService Batch Operations', () => {
       return { id: fileId, name: `${fileId}.json` };
     });
 
-    const results = fileService.batchGetMetadata(['file-1', 'invalid-file', 'file-2']);
+    const { results, errors } = fileService.batchGetMetadata(['file-1', 'invalid-file', 'file-2']);
 
     expect(results.length).toBe(3);
     expect(results[0]).not.toBeNull();
     expect(results[1]).toBeNull();
     expect(results[2]).not.toBeNull();
+    expect(errors).toEqual([{ fileId: 'invalid-file', error: 'File not found: invalid-file' }]);
   });
 
   it('should throw error for invalid fileIds parameter in batchReadFiles', () => {
@@ -425,12 +429,18 @@ describe('FileService Error Handling', () => {
       return { id: fileId, data: 'success' };
     });
 
-    const results = fileService.batchReadFiles(['success-file', 'error-file', 'another-success']);
+    const { results, errors } = fileService.batchReadFiles([
+      'success-file',
+      'error-file',
+      'another-success'
+    ]);
 
     expect(results.length).toBe(3);
     expect(results[0]).not.toBeNull();
     expect(results[1]).toBeNull();
     expect(results[2]).not.toBeNull();
+    expect(errors).toHaveLength(1);
+    expect(errors[0].fileId).toBe('error-file');
   });
 
   it('should surface quota exceeded errors from FileOperations', () => {

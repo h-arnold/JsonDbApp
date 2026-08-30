@@ -9,6 +9,7 @@
 
 ## Core Principles
 
+- **Prime Directive — No planning-artefact references in permanent documentation**: Never reference `SPEC.md`, `ACTION_PLAN.md`, or any 'spec'/'action plan' planning document in code comments, JSDoc, or other permanent documentation (including `docs/` and this file). Planning artefacts are transient working documents; durable requirements, rationale, and contracts belong in the implementation, its tests, and `docs/developers/`. Do not cite planning files for authority or historical reasoning.
 - **TDD**: Red-Green-Refactor. Write failing tests first, minimal passing code, then refactor.
 - **Component Separation**: Single responsibility, dependency injection via constructor.
 - **SOLID**: Follow SOLID principles.
@@ -100,8 +101,8 @@ MANDATORY: Every sub-agent delegation must explicitly name the target agent (nam
 The following specialized agents are available (names are case-sensitive; definition path in parentheses):
 
 1. **Agent Orchestrator** (`.opencode/agents/agent-orchestrator.md`) - Coordinates subagents through structured implement/review loops
-2. **Action Plan Implementer** (`.opencode/agents/action-plan-implementer.md`) - Delivers `ACTION_PLAN.md` in a strict TDD-first workflow with baseline/regression/commit gates
-3. **Planner** (`.opencode/agents/planner.md`) - Creates `SPEC.md` and `ACTION_PLAN.md` through clarification-driven planning
+2. **Action Plan Implementer** (`.opencode/agents/action-plan-implementer.md`) - Delivers the step-by-step implementation plan in a strict TDD-first workflow with baseline/regression/commit gates
+3. **Planner** (`.opencode/agents/planner.md`) - Creates the feature specification and action plan through clarification-driven planning
 4. **Planner Reviewer** (`.opencode/agents/planner-reviewer.md`) - Impartial second-pass review of planning artefacts
 5. **Implementation** (`.opencode/agents/implementation.md`) - Implements code changes; handoff blocked until lint/tests pass with zero errors and zero warnings
 6. **Testing Specialist** (`.opencode/agents/testing-specialist.md`) - Creates, maintains, and debugs Vitest unit tests using the GAS mocks
@@ -150,7 +151,7 @@ The following specialized agents are available (names are case-sensitive; defini
 
 **Planning Artefacts:**
 
-- New features or multi-step work → `Planner` for `SPEC.md`/`ACTION_PLAN.md`, reviewed by `Planner Reviewer`
+- New features or multi-step work → `Planner` for the feature specification and action plan, reviewed by `Planner Reviewer`
 
 **What Counts as Trivial:**
 
@@ -174,7 +175,7 @@ When delegating, name the target agent, state the outcome required, and pass tas
 
 ```text
 Mandatory reading:
-- @ACTION_PLAN.md (section 3)
+- @docs/developers/UpdateEngine.md
 - @src/02_components/UpdateEngine/99_UpdateEngine.js
 - @tests/unit/update-engine/update-engine-operators.test.js
 

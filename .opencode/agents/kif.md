@@ -1,7 +1,7 @@
 ---
 description: Performs simple, straightforward menial tasks with minimal judgement required
 mode: all
-model: opencode/x-preview-f-free
+model: opencode/big-pickle
 steps: 50
 permission:
   bash:

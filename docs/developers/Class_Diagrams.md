@@ -224,8 +224,8 @@ classDiagram
         +deleteFile(fileId): Boolean
         +fileExists(fileId): Boolean
         +getFileMetadata(fileId): Object
-        +batchReadFiles(fileIds): Array~Object~
-        +batchGetMetadata(fileIds): Array~Object~
+        +batchReadFiles(fileIds): Object
+        +batchGetMetadata(fileIds): Object
         +clearCache(): void
         +getCacheStats(): Object
         +setCacheEnabled(enabled): void
@@ -343,6 +343,9 @@ classDiagram
         +info(message, context): void
         +debug(message, context): void
         +createComponentLogger(component): Object
+        +timeSync(label, fn, context)
+        +addTimingListener(listenerFn): Function
+        +JDbLoggerError: JDbLoggerError
     }
 ```
 

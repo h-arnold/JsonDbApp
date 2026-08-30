@@ -61,9 +61,13 @@ class QueryEngineMatcher {
    * @param {Array<Object>} documents - Documents to evaluate.
    * @param {Object} query - MongoDB-compatible query.
    * @returns {Array<Object>} Matching documents.
+   * @remarks Emits a DEBUG-gated queryEngine.filterDocuments timing event through the engine
+   *   logger obtained via getLogger().
    */
   filterDocuments(documents, query) {
-    return documents.filter((document) => this._matchDocument(document, query));
+    return this._logger.timeSync('queryEngine.filterDocuments', () =>
+      documents.filter((document) => this._matchDocument(document, query))
+    );
   }
 
   /**

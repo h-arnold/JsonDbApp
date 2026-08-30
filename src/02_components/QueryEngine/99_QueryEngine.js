@@ -69,31 +69,35 @@ class QueryEngine {
    * @param {Array<Object>} documents - Documents to filter.
    * @param {Object} query - MongoDB-compatible query object.
    * @returns {Array<Object>} Matching documents.
+   * @remarks Emits a DEBUG-gated queryEngine.executeQuery timing event through the component
+   *   logger; the whole scan is timed as one unit.
    */
   executeQuery(documents, query) {
-    this._validation.validateQuery(documents, query);
+    return this._logger.timeSync('queryEngine.executeQuery', () => {
+      this._validation.validateQuery(documents, query);
 
-    this._logger.debug('Executing query', {
-      documentCount: documents.length,
-      query: JSON.stringify(query)
+      this._logger.debug('Executing query', () => ({
+        documentCount: documents.length,
+        query: JSON.stringify(query)
+      }));
+
+      if (Object.keys(query).length === 0) {
+        return documents.slice();
+      }
+
+      const results = this._matcher.filterDocuments(documents, query);
+
+      this._logger.debug('Query execution complete', {
+        resultCount: results.length
+      });
+
+      return results;
     });
-
-    if (Object.keys(query).length === 0) {
-      return documents.slice();
-    }
-
-    const results = this._matcher.filterDocuments(documents, query);
-
-    this._logger.debug('Query execution complete', {
-      resultCount: results.length
-    });
-
-    return results;
   }
 
   /**
    * Retrieve the component logger.
-   * @returns {JDbLogger} Component logger instance.
+   * @returns {Object} Component logger instance.
    */
   getLogger() {
     return this._logger;

@@ -6,6 +6,7 @@ test-execution.log
 *.pid
 node_modules
 .env
+.opencode/scratchpad/
 tests/.gas-drive/
 tests/.gas-script-properties.json
 coverage

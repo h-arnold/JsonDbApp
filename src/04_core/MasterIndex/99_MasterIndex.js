@@ -93,47 +93,52 @@ class MasterIndex {
    * @param {Object} [dataOverride] - Optional data to save instead of internal state
    * @param {Date} [timestamp] - Optional timestamp override
    * @returns {void}
+   * @remarks Emits a DEBUG-gated masterIndex.save timing event through the component logger;
+   *   save is the single persist point timed for all indirect callers.
    */
   save(dataOverride, timestamp = this._getCurrentTimestamp()) {
-    try {
-      const dataToSave = dataOverride || this._data;
-      const effectiveTimestamp =
-        timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
-          ? new Date(timestamp.getTime())
-          : this._getCurrentTimestamp();
-      dataToSave.lastUpdated = effectiveTimestamp;
-      const dataString = ObjectUtils.serialise(dataToSave);
-      PropertiesService.getScriptProperties().setProperty(this._config.masterIndexKey, dataString);
-    } catch (error) {
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
-    }
+    return this._logger.timeSync('masterIndex.save', () => {
+      try {
+        const dataToSave = dataOverride || this._data;
+        const effectiveTimestamp =
+          timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
+            ? new Date(timestamp.getTime())
+            : this._getCurrentTimestamp();
+        dataToSave.lastUpdated = effectiveTimestamp;
+        const dataString = ObjectUtils.serialise(dataToSave);
+        PropertiesService.getScriptProperties().setProperty(
+          this._config.masterIndexKey,
+          dataString
+        );
+      } catch (error) {
+        throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
+      }
+    });
   }
 
   /**
    * Load master index from ScriptProperties
-   * @returns {Object|null} Deserialised index data
+   * @returns {Object|null} Deserialised index data, or null when no snapshot exists
+   * @remarks Public entry point over the single shared ScriptProperties loader (see
+   *   _loadFromScriptProperties) used by this facade, the constructor bootstrap, and the
+   *   under-lock reload path.
    */
   load() {
-    try {
-      const dataString = PropertiesService.getScriptProperties().getProperty(
-        this._config.masterIndexKey
-      );
-      const data = dataString ? ObjectUtils.deserialise(dataString) : null;
-      this._data = data;
-      if (this._data) {
-        this._ensureStateShape();
-      }
-      return data;
-    } catch (error) {
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('load', error.message);
-    }
+    return this._loadFromScriptProperties();
   }
 
   /**
    * Get all collections
    * @returns {Object<string, CollectionMetadata>} Map of CollectionMetadata keyed by collection name
+   * @throws {MasterIndexError} When the index state is unloaded
    */
   getCollections() {
+    if (!this._data?.collections) {
+      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR(
+        'getCollections',
+        'Master index state is not loaded'
+      );
+    }
     const collections = {};
     const collectionNames = Object.keys(this._data.collections);
     for (const name of collectionNames) {
@@ -250,7 +255,7 @@ class MasterIndex {
    * @returns {boolean} True if collection was found and removed, false otherwise
    */
   removeCollection(name) {
-    if (!this._data || !this._data.collections) {
+    if (!this._data?.collections) {
       this._logger.warn('Internal state corrupted', { name });
       return false;
     }
@@ -277,7 +282,7 @@ class MasterIndex {
    * @param {string} operationId - A unique identifier for the operation acquiring the lock.
    * @param {number} [timeout=this._config.lockTimeout] - The duration for which the lock is valid in milliseconds.
    * @returns {boolean} True if the lock was acquired successfully, false otherwise.
-   * @throws {ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND} If the collection does not exist.
+   * @throws {CollectionNotFoundError} If the collection does not exist.
    */
   acquireCollectionLock(collectionName, operationId, timeout = this._config.lockTimeout) {
     return this._lockManager.acquireCollectionLock(collectionName, operationId, timeout);
@@ -386,7 +391,7 @@ class MasterIndex {
    * Assert that DatabaseConfig exposes the default providers required by MasterIndex.
    * @param {Object} config - Raw configuration input.
    * @returns {void}
-   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When DatabaseConfig or a required method is unavailable.
+   * @throws {ConfigurationError} When DatabaseConfig or a required method is unavailable.
    * @private
    */
   _assertRequiredDatabaseConfigDefaults(config) {
@@ -402,7 +407,7 @@ class MasterIndex {
    * Assert that DatabaseConfig exposes a required default provider.
    * @param {string} methodName - DatabaseConfig static method required by MasterIndex.
    * @returns {void}
-   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When DatabaseConfig or the required method is unavailable.
+   * @throws {ConfigurationError} When DatabaseConfig or the required method is unavailable.
    * @private
    */
   _assertDatabaseConfigDefault(methodName) {
@@ -438,7 +443,14 @@ class MasterIndex {
   }
 
   /**
-   * Load data from ScriptProperties
+   * Load data from ScriptProperties into internal state.
+   *
+   * The single ScriptProperties loader implementation, shared by load(), the constructor
+   * bootstrap and _reloadLatestStateUnderLock(): read, deserialise, then shape-check. There is
+   * exactly one MASTER_INDEX_ERROR wrap point and one failure-log site here so the loading
+   * behaviour of every caller stays identical.
+   * @returns {Object|null} Deserialised index data, or null when no snapshot exists
+   * @throws {MasterIndexError} When reading or deserialising the stored snapshot fails
    * @private
    */
   _loadFromScriptProperties() {
@@ -446,12 +458,12 @@ class MasterIndex {
       const dataString = PropertiesService.getScriptProperties().getProperty(
         this._config.masterIndexKey
       );
-      if (dataString) {
-        this._data = ObjectUtils.deserialise(dataString);
+      const data = dataString ? ObjectUtils.deserialise(dataString) : null;
+      this._data = data;
+      if (this._data) {
         this._ensureStateShape();
-      } else {
-        this._data = null;
       }
+      return data;
     } catch (error) {
       this._logger.error('Failed to load master index from ScriptProperties', {
         error: error.message
@@ -530,7 +542,7 @@ class MasterIndex {
    */
   _getCollectionData(name) {
     Validate.nonEmptyString(name, 'name');
-    if (!this._data || !this._data.collections) {
+    if (!this._data?.collections) {
       return null;
     }
     return this._data.collections[name] || null;

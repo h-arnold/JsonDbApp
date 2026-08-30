@@ -1,7 +1,7 @@
 ---
 description: Keeps project documentation accurate, current, and aligned with actual code behaviour
 mode: all
-model: opencode/x-preview-f-free
+model: opencode-go/glm-5.3-flash
 steps: 100
 ---
 

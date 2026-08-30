@@ -9,6 +9,7 @@
     - [1.2.0.2. Core Methods](#1202-core-methods)
     - [1.2.0.3. Usage Examples](#1203-usage-examples)
     - [1.2.0.4. Best Practices](#1204-best-practices)
+    - [1.2.0.5. Execution-Time Tracking](#1205-execution-time-tracking)
     - [1.2.1. ErrorHandler](#121-errorhandler)
       - [1.2.1.1. Error Type Hierarchy](#1211-error-type-hierarchy)
       - [1.2.1.2. Error Management Methods](#1212-error-management-methods)
@@ -112,6 +113,165 @@ dbLogger.info('Collection created', { name: 'users' });
    const logger = JDbLogger.createComponentLogger('Collection');
    ```
 
+### 1.2.0.5. Execution-Time Tracking
+
+Implemented in `src/01_utils/JDbLogger.js`. The facility measures synchronous operations,
+emits a DEBUG-level console record, and delivers structured timing events to registered
+listeners so tests and tooling can assert against deterministic event fields.
+
+#### API surface
+
+| Member                                    | Description                                                                                                                                            |
+| ----------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `JDbLogger.timeSync(label, fn, context?)` | Static entry point: runs `fn` once between two clock reads and returns its result unchanged.                                                           |
+| `logger.timeSync(label, fn, context?)`    | Component-logger form: delegates straight to the internal seam with the component name; events carry `component: '<Name>'` and labels stay unprefixed. |
+| `JDbLogger.addTimingListener(listenerFn)` | Registers a listener receiving every timing event synchronously, in registration order. Returns an idempotent unsubscribe closure.                     |
+
+#### Internal seams
+
+| Member                                               | Description                                                                                                         |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `JDbLogger._timeSync(component, label, fn, context)` | Private static seam owning every behavioural rule; both entry points delegate here so behaviour cannot drift apart. |
+
+Arguments validate before any measurement starts: `label` must be a non-empty string, `fn`
+a function, and `context` an object, a function, or `null` — `undefined` normalises to
+`null`, so context-less calls never throw. Violations raise the dependency-free typed
+`JDbLoggerError`, exposed as `JDbLogger.JDbLoggerError`; `JDbLogger` deliberately holds no
+`ErrorHandler` dependency.
+
+**Attaching operation metadata via `context`.** The optional third argument of both `timeSync`
+forms is the supported way to enrich timing output with operation metadata — attach structured
+context rather than adding ad-hoc log lines or changing labels. Pass a plain object, or a
+zero-argument lazy supplier that is invoked at most once and only when the DEBUG gate passes:
+
+```javascript
+const logger = JDbLogger.createComponentLogger('Collection');
+
+// Structured object: cheapest form when metadata already exists
+logger.timeSync('collection.find', () => findDocuments(filter), { filter });
+
+// Lazy supplier: avoids building expensive context when DEBUG is gated off
+logger.timeSync(
+  'collection.find',
+  () => findDocuments(filter),
+  () => ({ filter })
+);
+```
+
+The resolved context appears only on the console record — listener events never carry it (see
+[Timing events](#timing-events)).
+
+#### Timing events
+
+```javascript
+{
+  component: 'Collection',               // PascalCase owner, or null for static use
+  label: 'collection.find',
+  durationMs: 42, // end − start from two inline Date.now() reads
+  timestamp: '2026-08-24T12:00:00.000Z', // ISO string derived from the measured END reading
+  error: null // thrown error message, or null on success
+}
+```
+
+The resolved context is intentionally excluded from events; it appears only on the console
+record.
+
+#### Console output contract
+
+Records flow through the standard debug pathway (`console.log` via `formatMessage`):
+
+- Static use: `[TIMING] <label> | Context: { ...resolvedContext, durationMs }` —
+  `durationMs` wins key collisions.
+- Component use: `[<Component>] [TIMING] <label> | Context: { ...resolvedContext, durationMs }`.
+- `formatMessage` stamps its own wall-clock timestamp; only `event.timestamp` derives from
+  the measured end value, which is why test assertions target listener events rather than
+  console lines (see
+  [Testing Framework](Testing_Framework.md#timing-assertions-and-benchmarks)).
+
+#### DEBUG gating and exception rules
+
+Everything downstream of measurement — supplier resolution, formatting, console output,
+listener dispatch — happens only when the level gate passes. Standalone `JDbLogger` defaults
+to DEBUG; `Database` propagates its configured `logLevel`, so set DEBUG to observe timings.
+Measurement itself precedes the gate: **both clock reads occur on every ungated call even
+when emission is suppressed**, and the suppressed path still executes `fn`, returning its
+result or rethrowing its error unchanged (an accepted, constant measurement tax). Each read
+is contained individually: a failing read inherits its successful counterpart (or zero when
+both fail) so `durationMs` stays numeric, with the failure reported via `console.error`.
+
+Secondary instrumentation failures are contained identically on both paths — success and
+error alike:
+
+- **Both paths**: clock reads, supplier resolution, record emission and listener dispatch are
+  individually guarded. A failure is reported through `console.error('Operation failed: ...')`
+  and can never displace `fn`'s result nor mask its original error, which alone reaches the
+  caller with its identity intact.
+- **Listener dispatch**: listeners always fire over a snapshot of the store in registration
+  order; a throwing listener is reported and every remaining listener still receives the event.
+
+#### Stacked timers
+
+While a measurement is active, nested `timeSync` calls validate their arguments then execute
+their operation directly — no clock reads, no record, no dispatch. Each user-visible operation
+therefore emits exactly ONE event for its outermost boundary label:
+
+- A direct bulk call through `_applyToMatchingDocuments` emits a single
+  `docOps.applyToMatching` event regardless of how many documents match — the inner
+  `docOps.executeQuery`, `docOps.updateWithOperators` and `updateEngine.applyOperators`
+  labels stay silent beneath it, keeping bulk-write event volume O(operations), not
+  O(matched documents).
+- Under Collection-level wrappers such as `updateMany`, the outermost
+  `collection.updateMany` measurement is already active, so that inner bulk boundary stays
+  silent too.
+
+#### Lazy context suppliers
+
+`context` accepts `Object | Function | null` on all four levels (`error`, `warn`, `info`,
+`debug`) and on both `timeSync` forms; component-logger wrappers forward suppliers
+uninvoked. Suppliers resolve after the level check and before `formatMessage`, at most once:
+gated-out calls never invoke them and a function context never reaches stringification
+unresolved. The at-most-once guarantee assumes suppliers do not return functions: a
+function-valued resolution reaches `formatMessage` as a raw function context, which fails
+validation loudly with `JDbLoggerError` rather than being garbled into output — suppliers must
+resolve to an object or null. On the plain level methods a throwing supplier propagates
+unchanged (fail loud); inside `timeSync`, resolution is contained on both paths per the
+exception rules above.
+
+#### Instrumentation coverage
+
+Timers wrap whole batches and scans — never individual documents inside loops — keeping
+event volume proportional to operations, not documents:
+
+- **Boundary layer** (`src/04_core/Collection/99_Collection.js`): all nine public CRUD
+  methods (`find`, `findOne`, `countDocuments`, `insertOne`, `updateOne`, `updateMany`,
+  `replaceOne`, `deleteOne`, `deleteMany`) emit `collection.<operation>` events through the
+  Collection component logger.
+- **Inner hot paths**: `queryEngine.executeQuery` and `queryEngine.filterDocuments` (the
+  matcher borrows the engine logger via `getLogger()`), `docOps.executeQuery` and
+  `docOps.updateWithOperators` plus the single `docOps.applyToMatching` bulk boundary
+  (`src/02_components/DocumentOperations.js`),
+  `updateEngine.applyOperators` (`src/02_components/UpdateEngine/99_UpdateEngine.js`),
+  `masterIndex.save` (`src/04_core/MasterIndex/99_MasterIndex.js` — the single persist point,
+  covering all indirect callers), `coordinator.coordinate` and
+  `coordinator.updateMasterIndexMetadata`
+  (`src/02_components/CollectionCoordinator.js`), and `fileService.readFile` /
+  `fileService.createFile` (`src/03_services/FileService.js`). See
+  [Stacked timers](#stacked-timers) for which of these labels emit when calls nest.
+
+Labels are lowercase dotted tags independent of the PascalCase `component` field
+(`collection.find` events carry `component: 'Collection'`).
+
+**FileService attribution rule.** `FileService` receives its working logger by injection
+(`Database` passes its own), so timing through it would mislabel `fileService.*` events as
+`Database`. It therefore constructs a dedicated `createComponentLogger('FileService')` used
+ONLY for `timeSync`; the injected logger keeps its existing debug/warn/error duties.
+
+**Deliberate non-instrumentations.** `Collection.aggregate`, per-document helpers
+(`deleteDocument`, `findAllDocuments`), the raw `Date.now()` reads inside
+`CollectionCoordinator` control flow (they feed timeout enforcement, lease renewal, and
+retry/backoff decisions and must stay outside the logging facility), `DbLockService`, and
+`Database` lifecycle methods emit no timing events.
+
 ---
 
 ### 1.2.1. ErrorHandler
@@ -199,7 +359,7 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
 
 ### 1.2.2. IdGenerator
 
-**Location:** `src/utils/IdGenerator.js`
+**Location:** `src/01_utils/IdGenerator.js`
 
 Provides multiple strategies for generating unique identifiers suitable for different use cases in the database system.
 
@@ -284,7 +444,7 @@ if (IdGenerator.isValidUUID(documentId)) {
 
 ### 1.2.3. ObjectUtils
 
-**Location:** `src/utils/ObjectUtils.js`
+**Location:** `src/01_utils/ObjectUtils.js`
 
 Provides utilities for object manipulation with Date preservation, essential for handling complex data structures and maintaining Date object integrity during JSON serialisation operations.
 
@@ -543,8 +703,8 @@ All infrastructure components are designed to work together seamlessly:
 class Database {
   constructor(config) {
     // Validate configuration
-    ValidationUtils.validateRequired(config, 'config');
-    ValidationUtils.validateType(config.rootFolderId, 'string', 'rootFolderId');
+    Validate.required(config, 'config');
+    Validate.type(config.rootFolderId, 'string', 'rootFolderId');
 
     // Set up logging
     this.logger = JDbLogger.createComponentLogger('Database');
@@ -582,8 +742,8 @@ class Database {
 class Collection {
   findOne(query) {
     try {
-      ValidationUtils.validateRequired(query, 'query');
-      ValidationUtils.validateType(query, 'object', 'query');
+      Validate.required(query, 'query');
+      Validate.type(query, 'object', 'query');
 
       const result = this._performFind(query);
 

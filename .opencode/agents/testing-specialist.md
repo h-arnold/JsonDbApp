@@ -1,7 +1,7 @@
 ---
 description: Creates, maintains, and debugs Vitest unit tests for the GAS codebase
 mode: all
-model: opencode/x-preview-f-free
+model: opencode/hy3-free
 steps: 100
 ---
 

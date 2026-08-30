@@ -68,6 +68,9 @@ class MasterIndexConflictResolver {
    */
   generateModificationToken() {
     const timestamp = this._masterIndex._getCurrentTimestamp().getTime();
+    // Math.random() is acceptable here: modification tokens need only collision resistance
+    // (uniqueness within the script run), not cryptographic unpredictability.
+    /* eslint-disable-next-line sonarjs/pseudo-random */
     const randomPart = Math.random()
       .toString(RANDOM_TOKEN_RADIX)
       .slice(RANDOM_TOKEN_OFFSET, RANDOM_TOKEN_OFFSET + RANDOM_TOKEN_LENGTH);
@@ -121,15 +124,13 @@ class MasterIndexConflictResolver {
 
     const collectionMetadata = this._resolveCollectionMetadata(collectionName);
 
-    switch (strategy) {
-      case DEFAULT_CONFLICT_STRATEGY:
-        this._applyLastWriteWins(collectionMetadata, newData);
-        return { success: true, data: collectionMetadata, strategy };
-      default:
-        throw new this._ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
-          `Unknown conflict resolution strategy: ${strategy}`
-        );
+    if (strategy === DEFAULT_CONFLICT_STRATEGY) {
+      this._applyLastWriteWins(collectionMetadata, newData);
+      return { success: true, data: collectionMetadata, strategy };
     }
+    throw new this._ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
+      `Unknown conflict resolution strategy: ${strategy}`
+    );
   }
 
   /**

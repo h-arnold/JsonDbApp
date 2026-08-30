@@ -1,6 +1,7 @@
 ---
 description: Orchestrates delivery against ACTION_PLAN.md in a strict TDD-first workflow
 mode: all
+model: opencode-go/glm-5.3-flash
 steps: 100
 ---
 

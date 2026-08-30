@@ -55,8 +55,7 @@ class Collection {
     this._coordinator = new CollectionCoordinator(
       this,
       this._database._masterIndex,
-      this._database.config,
-      this._logger
+      this._database.config
     );
 
     // Instantiate operation handlers
@@ -198,52 +197,64 @@ class Collection {
    * Inserts a single document into the collection.
    * @param {Object} doc - The document to insert.
    * @returns {Object} Result of the insert operation.
+   * @remarks Emits a DEBUG-gated collection.insertOne timing event through the component logger.
    */
   insertOne(doc) {
-    return this._writeOps.insertOne(doc);
+    return this._logger.timeSync('collection.insertOne', () => this._writeOps.insertOne(doc));
   }
   /**
    * Updates a single document matching the filter or _id.
    * @param {Object|string} filterOrId - Filter object or document _id.
    * @param {Object} update - Update operations to apply.
    * @returns {Object} Result of the update operation.
+   * @remarks Emits a DEBUG-gated collection.updateOne timing event through the component logger.
    */
   updateOne(filterOrId, update) {
-    return this._writeOps.updateOne(filterOrId, update);
+    return this._logger.timeSync('collection.updateOne', () =>
+      this._writeOps.updateOne(filterOrId, update)
+    );
   }
   /**
    * Updates multiple documents matching the filter.
    * @param {Object} filter - Filter object to match documents.
    * @param {Object} update - Update operations to apply.
    * @returns {Object} Result of the update operation.
+   * @remarks Emits a DEBUG-gated collection.updateMany timing event through the component logger.
    */
   updateMany(filter, update) {
-    return this._writeOps.updateMany(filter, update);
+    return this._logger.timeSync('collection.updateMany', () =>
+      this._writeOps.updateMany(filter, update)
+    );
   }
   /**
    * Replaces a single document matching the filter or _id.
    * @param {Object|string} filterOrId - Filter object or document _id.
    * @param {Object} doc - The replacement document.
    * @returns {Object} Result of the replace operation.
+   * @remarks Emits a DEBUG-gated collection.replaceOne timing event through the component logger.
    */
   replaceOne(filterOrId, doc) {
-    return this._writeOps.replaceOne(filterOrId, doc);
+    return this._logger.timeSync('collection.replaceOne', () =>
+      this._writeOps.replaceOne(filterOrId, doc)
+    );
   }
   /**
    * Deletes a single document matching the filter.
    * @param {Object} filter - Filter object to match documents.
    * @returns {Object} Result of the delete operation.
+   * @remarks Emits a DEBUG-gated collection.deleteOne timing event through the component logger.
    */
   deleteOne(filter) {
-    return this._writeOps.deleteOne(filter);
+    return this._logger.timeSync('collection.deleteOne', () => this._writeOps.deleteOne(filter));
   }
   /**
    * Deletes multiple documents matching the filter.
    * @param {Object} filter - Filter object to match documents.
    * @returns {Object} Result of the delete operation.
+   * @remarks Emits a DEBUG-gated collection.deleteMany timing event through the component logger.
    */
   deleteMany(filter) {
-    return this._writeOps.deleteMany(filter);
+    return this._logger.timeSync('collection.deleteMany', () => this._writeOps.deleteMany(filter));
   }
 
   // --- Delegated Read Operations ---
@@ -251,25 +262,30 @@ class Collection {
    * Finds a single document matching the filter.
    * @param {Object} filter - Filter object to match documents.
    * @returns {Object|null} The found document or null if not found.
+   * @remarks Emits a DEBUG-gated collection.findOne timing event through the component logger.
    */
   findOne(filter) {
-    return this._readOps.findOne(filter);
+    return this._logger.timeSync('collection.findOne', () => this._readOps.findOne(filter));
   }
   /**
    * Finds all documents matching the filter.
    * @param {Object} filter - Filter object to match documents.
    * @returns {Array<Object>} Array of matching documents.
+   * @remarks Emits a DEBUG-gated collection.find timing event through the component logger.
    */
   find(filter) {
-    return this._readOps.find(filter);
+    return this._logger.timeSync('collection.find', () => this._readOps.find(filter));
   }
   /**
    * Counts the number of documents matching the filter.
    * @param {Object} filter - Filter object to match documents.
    * @returns {number} Number of matching documents.
+   * @remarks Emits a DEBUG-gated collection.countDocuments timing event through the component logger.
    */
   countDocuments(filter) {
-    return this._readOps.countDocuments(filter);
+    return this._logger.timeSync('collection.countDocuments', () =>
+      this._readOps.countDocuments(filter)
+    );
   }
   /**
    * Runs an aggregation pipeline on the collection.

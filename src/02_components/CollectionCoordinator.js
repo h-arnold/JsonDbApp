@@ -18,10 +18,9 @@ class CollectionCoordinator {
    * @param {Collection} collection - Collection instance to coordinate
    * @param {MasterIndex} masterIndex - MasterIndex for cross-instance coordination
    * @param {Object|DatabaseConfig} config - Coordination settings or DatabaseConfig
-   * @param {JDbLogger} _logger - Logger factory override
-   * @throws {ErrorHandler.ErrorTypes.INVALID_ARGUMENT} When dependencies or config invalid
+   * @throws {InvalidArgumentError} When dependencies or config invalid
    */
-  constructor(collection, masterIndex, config = {}, _logger = JDbLogger) {
+  constructor(collection, masterIndex, config = {}) {
     Validate.object(collection, 'collection');
     Validate.object(masterIndex, 'masterIndex');
     Validate.object(config, 'config');
@@ -45,54 +44,72 @@ class CollectionCoordinator {
    * @param {string} operationName - Name of the CRUD operation
    * @param {Function} callback - Core operation callback
    * @returns {*} Result of the core operation
-   * @throws {ErrorHandler.ErrorTypes.*} On lock, conflict or operation errors
+   * @throws {InvalidArgumentError} When arguments are invalid
+   * @throws {CoordinationTimeoutError} When lock acquisition or the operation exceeds timeouts
+   * @throws {LockAcquisitionFailureError} When the collection lock cannot be acquired after retries
+   * @throws {ModificationConflictError} When modification tokens mismatch
+   * @throws {MasterIndexError} When master index metadata finalisation fails
+   * @throws {*} Whatever the core operation callback throws, propagated unchanged
+   * @remarks Emits a DEBUG-gated coordinator.coordinate timing event through the component
+   *   logger. Timers wrap only these two methods; the raw Date.now() reads feeding timeout,
+   *   lease, and retry decisions are deliberately excluded from the timing facility. Failure
+   *   logging for the whole coordinated flow is owned by this method's boundary catch alone —
+   *   inner layers wrap errors without re-logging them.
    */
   coordinate(operationName, callback) {
-    Validate.nonEmptyString(operationName, 'operationName');
-    Validate.type(callback, 'function', 'callback');
+    return this._logger.timeSync('coordinator.coordinate', () => {
+      Validate.nonEmptyString(operationName, 'operationName');
+      Validate.type(callback, 'function', 'callback');
 
-    const opId = IdGenerator.generateUUID();
-    const name = this._collection.getName();
-    let lockAcquired = false;
-    let lockAcquiredAt = null;
-    const startTime = Date.now();
+      const opId = IdGenerator.generateUUID();
+      const name = this._collection.getName();
+      let lockAcquired = false;
+      let lockAcquiredAt = null;
+      let succeeded = false;
+      const startTime = Date.now();
 
-    this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
+      this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
 
-    try {
-      lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
-      lockAcquired = true;
-      this._resolveConflictsIfPresent(name);
-      const result = this._executeOperationWithTimeout(
-        callback,
-        operationName,
-        opId,
-        name,
-        startTime
-      );
-      this._renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, name);
-      this.updateMasterIndexMetadata();
-      return result;
-    } catch (e) {
-      this._logger.error(`Operation ${operationName} failed`, {
-        collection: name,
-        opId,
-        error: e.message
-      });
-      throw e;
-    } finally {
-      if (lockAcquired) {
-        this.releaseOperationLock(opId);
+      try {
+        lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
+        lockAcquired = true;
+        this._resolveConflictsIfPresent(name);
+        const result = this._executeOperationWithTimeout(
+          callback,
+          operationName,
+          opId,
+          name,
+          startTime
+        );
+        this._renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, name);
+        this.updateMasterIndexMetadata();
+        succeeded = true;
+        return result;
+      } catch (e) {
+        this._logger.error(`Operation ${operationName} failed`, {
+          collection: name,
+          opId,
+          error: e instanceof Error ? e.message : String(e)
+        });
+        throw e;
+      } finally {
+        if (lockAcquired) {
+          this.releaseOperationLock(opId);
+        }
+        // Failures are already reported by the catch above; claiming completion here would
+        // misrepresent a failed operation as finished.
+        if (succeeded) {
+          this._logger.info(`Operation ${operationName} complete`, { collection: name, opId });
+        }
       }
-      this._logger.info(`Operation ${operationName} complete`, { collection: name, opId });
-    }
+    });
   }
 
   /**
    * Validate modification tokens match before operation
    * @param {string} localToken - Local collection metadata token
    * @param {string|null} remoteToken - Master index metadata token
-   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When tokens differ
+   * @throws {ModificationConflictError} When tokens differ
    */
   validateModificationToken(localToken, remoteToken) {
     if (remoteToken !== null && remoteToken !== undefined && localToken !== remoteToken) {
@@ -112,8 +129,8 @@ class CollectionCoordinator {
    * @param {string} operationName - Operation name for error context
    * @param {string} collectionName - Collection name for logging
    * @returns {number} Timestamp recorded after the lock was acquired.
-   * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When lock acquisition times out
-   * @throws {ErrorHandler.ErrorTypes.*} For other lock acquisition failures
+   * @throws {CoordinationTimeoutError} When lock acquisition times out
+   * @throws {*} Any other lock acquisition failure, rethrown unchanged
    * @private
    */
   _acquireLockWithTimeoutMapping(opId, operationName, collectionName) {
@@ -141,7 +158,8 @@ class CollectionCoordinator {
    * @param {string} opId - Operation identifier.
    * @param {string} operationName - Operation name for error context.
    * @param {string} collectionName - Collection name for logging.
-   * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When the lease can no longer be renewed safely.
+   * @returns {void}
+   * @throws {CoordinationTimeoutError} When the lease can no longer be renewed safely.
    * @private
    */
   _renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, operationName, collectionName) {
@@ -204,7 +222,7 @@ class CollectionCoordinator {
    * @param {string} collectionName - Collection name for logging
    * @param {number} startTime - Operation start timestamp
    * @returns {*} Operation result
-   * @throws {ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT} When operation exceeds timeout
+   * @throws {CoordinationTimeoutError} When operation exceeds timeout
    * @private
    */
   _executeOperationWithTimeout(callback, operationName, opId, collectionName, startTime) {
@@ -228,8 +246,8 @@ class CollectionCoordinator {
    * Acquire operation lock with retry/backoff
    * @param {string} operationId - Unique operation identifier
    * @returns {number} Timestamp recorded after the lock was acquired.
-   * @throws {ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE} When lock cannot be acquired
-   * @throws {Error} For unexpected errors during lock acquisition.
+   * @throws {LockAcquisitionFailureError} When lock cannot be acquired
+   * @throws {*} For unexpected errors during lock acquisition, rethrown unchanged.
    */
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
@@ -282,13 +300,19 @@ class CollectionCoordinator {
   /**
    * Release operation lock
    * @param {string} operationId - Unique operation identifier
+   * @remarks Release failures are deliberately swallowed so they cannot mask the coordinated
+   *   operation's own outcome, but the diagnostic log records the underlying error message.
    */
   releaseOperationLock(operationId) {
     const name = this._collection.getName();
     try {
       this._masterIndex.releaseCollectionLock(name, operationId);
-    } catch {
-      this._logger.error('Lock release failed', { collection: name, operationId });
+    } catch (e) {
+      this._logger.error('Lock release failed', {
+        collection: name,
+        operationId,
+        error: e instanceof Error ? e.message : String(e)
+      });
       // swallow release errors to avoid masking operation errors
     }
   }
@@ -307,7 +331,7 @@ class CollectionCoordinator {
 
   /**
    * Resolve a metadata conflict. Only reload is supported, so just reload.
-   * @throws {ErrorHandler.ErrorTypes.CONFLICT_ERROR} When resolution fails
+   * @throws {*} Whatever the underlying collection reload throws (e.g. file access errors)
    */
   resolveConflict() {
     // Only reload is supported, so always reload
@@ -316,28 +340,32 @@ class CollectionCoordinator {
 
   /**
    * Update the master index with latest collection metadata
+   * @returns {void}
+   * @throws {MasterIndexError} When the metadata update fails
+   * @remarks Emits a DEBUG-gated coordinator.updateMasterIndexMetadata timing event through the
+   *   component logger; the whole metadata update is timed as one unit. Failures are wrapped in
+   *   a MasterIndexError WITHOUT logging here — failure logging for coordinated operations is
+   *   owned by coordinate's boundary catch, keeping exactly one diagnostic record per failure.
    */
   updateMasterIndexMetadata() {
-    const name = this._collection.getName();
-    const meta = this._collection._metadata;
-    const updates = {
-      documentCount: meta.documentCount,
-      modificationToken: meta.getModificationToken()
-    };
-    try {
-      if (this._masterIndex.getCollection(name)) {
-        this._masterIndex.updateCollectionMetadata(name, updates);
-      } else {
-        // Initial registration of new collection
-        this._masterIndex.addCollection(name, meta);
+    return this._logger.timeSync('coordinator.updateMasterIndexMetadata', () => {
+      const name = this._collection.getName();
+      const meta = this._collection._metadata;
+      const updates = {
+        documentCount: meta.documentCount,
+        modificationToken: meta.getModificationToken()
+      };
+      try {
+        if (this._masterIndex.getCollection(name)) {
+          this._masterIndex.updateCollectionMetadata(name, updates);
+        } else {
+          // Initial registration of new collection
+          this._masterIndex.addCollection(name, meta);
+        }
+      } catch (e) {
+        // Wrap only; coordinate's catch owns the failure log entry.
+        throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('updateCollectionMetadata', e.message);
       }
-    } catch (e) {
-      // Log and wrap any failure in a MasterIndexError
-      this._logger.error('Master index metadata update failed', {
-        collection: name,
-        error: e.message
-      });
-      throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('updateCollectionMetadata', e.message);
-    }
+    });
   }
 }

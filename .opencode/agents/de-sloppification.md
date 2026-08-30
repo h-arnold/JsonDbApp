@@ -1,7 +1,7 @@
 ---
 description: Inspects code for AI-slop, duplication, unnecessary complexity, and stale code
 mode: all
-model: opencode/x-preview-f-free
+model: opencode-go/glm-5.3-flash
 steps: 100
 ---
 

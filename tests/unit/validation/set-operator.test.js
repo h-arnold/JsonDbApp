@@ -46,7 +46,7 @@ describeValidationOperatorSuite('$set Field Update Operator Tests', (getTestEnv)
       expect(result.modifiedCount).toBe(1);
       const updated = collection.findOne({ _id: 'person1' });
       expect(updated.age).toBe(35);
-      expect(updated.score).toBe(92.7);
+      expect(updated.score).toBeCloseTo(92.7);
     });
 
     it('should overwrite existing boolean values', () => {

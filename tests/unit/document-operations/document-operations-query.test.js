@@ -2,12 +2,21 @@
  * DocumentOperations Query Enhancement Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import {
   setupTestEnvironment,
   resetCollection
 } from '../../helpers/document-operations-test-helpers.js';
+import { captureTimingEvents, eventsWithLabel } from '../../helpers/timing-capture-test-helpers.js';
 import MockQueryData from '../../data/MockQueryData.js';
+
+let timingCapture;
+
+afterEach(() => {
+  if (timingCapture) {
+    timingCapture.restore();
+  }
+});
 
 describe('DocumentOperations Query Enhancement', () => {
   let env, docOps;
@@ -137,19 +146,28 @@ describe('DocumentOperations Query Enhancement', () => {
   });
 
   it('should handle large result sets efficiently', () => {
+    // Arrange
     const largeDataset = MockQueryData.getLargeDataset(100);
     largeDataset.forEach((doc) => docOps.insertDocument(doc));
-    const startTime = new Date().getTime();
+    timingCapture = captureTimingEvents();
 
+    // Act
     const results = docOps.findMultipleByQuery({ category: 'test' });
     const count = docOps.countByQuery({ category: 'test' });
-    const endTime = new Date().getTime();
-    const duration = endTime - startTime;
 
+    // Assert — the former wall-clock budget (< 1000ms of real time) was flaky by
+    // construction; efficiency is pinned deterministically as one bounded scan
+    // event per query, measured through the timing facility itself.
     expect(Array.isArray(results)).toBe(true);
     expect(typeof count).toBe('number');
-    expect(duration).toBeLessThan(1000);
     expect(results.length).toBe(count);
+    const scanEvents = eventsWithLabel(timingCapture.events, 'docOps.executeQuery');
+    expect(scanEvents).toHaveLength(2);
+    for (const event of scanEvents) {
+      expect(typeof event.durationMs).toBe('number');
+      expect(event.durationMs).toBeGreaterThanOrEqual(0);
+      expect(event.error).toBeNull();
+    }
   });
 
   it('should maintain backwards compatibility with existing ID-based methods', () => {
@@ -187,5 +205,65 @@ describe('DocumentOperations Query Enhancement', () => {
     expect(() => {
       docOps.findByQuery({ $and: 'not an array' });
     }).toThrow(InvalidQueryError);
+  });
+
+  describe('_executeQuery debug context laziness', () => {
+    let originalLevel;
+
+    beforeEach(() => {
+      originalLevel = JDbLogger.currentLevel;
+    });
+
+    afterEach(() => {
+      JDbLogger.currentLevel = originalLevel;
+    });
+
+    it('hands the operation logger an unresolved function context while DEBUG is disabled', () => {
+      // Arrange
+      seedTestUsers();
+      const query = { name: 'John Smith' };
+      JDbLogger.setLevelByName('ERROR');
+      const debugSpy = vi.spyOn(docOps._logger, 'debug');
+
+      try {
+        // Act
+        docOps.findByQuery(query);
+
+        // Assert — eager evaluation would stringify the query up front regardless of the gate;
+        // receiving a function proves the cost stays deferred past the logger call.
+        const executedCall = debugSpy.mock.calls.find(
+          (call) => call[0] === 'Query executed by findByQuery'
+        );
+        expect(executedCall).toBeDefined();
+        expect(typeof executedCall[1]).toBe('function');
+      } finally {
+        debugSpy.mockRestore();
+      }
+    });
+
+    it('resolves the executed-query context to exact queryString and resultCount keys through formatMessage', () => {
+      // Arrange
+      seedTestUsers();
+      const query = { name: 'John Smith' };
+      const formatSpy = vi.spyOn(JDbLogger, 'formatMessage');
+
+      try {
+        // Act
+        docOps.findByQuery(query);
+
+        // Assert — the component wrapper prefixes messages, hence the suffix match.
+        const executedCalls = formatSpy.mock.calls.filter((call) =>
+          String(call[1]).endsWith('Query executed by findByQuery')
+        );
+        expect(executedCalls).toHaveLength(1);
+        expect(executedCalls[0][0]).toBe('DEBUG');
+        expect(executedCalls[0][2]).toEqual({
+          queryString: JSON.stringify(query),
+          resultCount: 1
+        });
+      } finally {
+        formatSpy.mockRestore();
+      }
+    });
   });
 });

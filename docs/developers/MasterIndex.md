@@ -401,6 +401,9 @@ The Database class maintains consistency between MasterIndex and Drive-based sto
 - **Primary Operations:** MasterIndex handles all metadata operations
 - **Backup Operations:** Database synchronises to Drive index file via `backupIndexToDrive()`
 - **Recovery Operations:** Database can restore from Drive index to MasterIndex if needed
+- **Timing:** all metadata persistence funnels through `save()`, which emits a DEBUG-gated
+  `masterIndex.save` timing event; see
+  [Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking)
 
 ### Locking Coordination
 
