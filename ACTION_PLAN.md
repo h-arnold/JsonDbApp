@@ -8,6 +8,7 @@ orchestration work. Every section must leave the tree green: `npm run lint`
 ## 0. Baseline and shared constraints
 
 **Baseline verification (before Section 1):**
+
 - Run `npm run lint` and `npm run test` — both must be clean on the untouched tree;
   record results.
 - Record counted (non-blank, non-comment) line counts for the two files in scope:
@@ -16,16 +17,17 @@ orchestration work. Every section must leave the tree green: `npm run lint`
 
 **Module sizing (applies to Sections 1–3):**
 
-| File | Current counted LOC | Projected after this work | Verdict |
-|------|--------------------:|--------------------------:|---------|
-| `src/04_core/MasterIndex/99_MasterIndex.js` | ≈324 | ≈365 (raw reader ~15, resync block ~25, loader refactor net ~0) | Under the 500 `max-lines` gate — **no file separation** |
-| `src/02_components/CollectionCoordinator.js` | 225 | ≈300–310 (pre-flight ~10, unified algorithm net ~50–60, reason constants ~5, JSDoc growth) | Under the 500 `max-lines` gate — **no file separation** |
+| File                                         | Current counted LOC |                                                                  Projected after this work | Verdict                                                 |
+| -------------------------------------------- | ------------------: | -----------------------------------------------------------------------------------------: | ------------------------------------------------------- |
+| `src/04_core/MasterIndex/99_MasterIndex.js`  |                ≈324 |                            ≈365 (raw reader ~15, resync block ~25, loader refactor net ~0) | Under the 500 `max-lines` gate — **no file separation** |
+| `src/02_components/CollectionCoordinator.js` |                 225 | ≈300–310 (pre-flight ~10, unified algorithm net ~50–60, reason constants ~5, JSDoc growth) | Under the 500 `max-lines` gate — **no file separation** |
 
 Re-measure counted lines at the end of each section; if any file approaches the
 gate, stop and re-plan separation using the numbered multi-file pattern
 (`01_*`–`98_*`, `99_*` composing) before adding more.
 
 **Shared constraints (all sections):**
+
 - Zero lint warnings gate: `complexity` warn at 7, `max-len` 160, sonarjs
   recommended, `no-magic-numbers` as an error in source. Decompose new coordinator
   branches into private helpers (below complexity 7) and use named module
@@ -72,6 +74,7 @@ with the stored snapshot before throwing the original `MasterIndexError('save')`
 via a single composed raw reader, with no save↔reload recursion possible.
 
 **Constraints.**
+
 - `save()` ordering unchanged (memory advances first, then persists).
 - `_readStoredSnapshot()`: reads + deserialises only — never assigns `this._data`,
   never runs `_ensureStateShape()`, never calls `save()`.
@@ -87,6 +90,7 @@ via a single composed raw reader, with no save↔reload recursion possible.
 - All documentation for the new methods lands in Section 5 (no doc-prep here).
 
 **Red-first test cases** (new suite `tests/unit/master-index/MasterIndex.save-resync.test.js`):
+
 1. save failure with an existing snapshot → `MasterIndexError('save')` thrown AND
    `this._data` equals the stored snapshot (staged collection-entry and
    `lastUpdated` advances discarded).
@@ -110,8 +114,8 @@ via a single composed raw reader, with no save↔reload recursion possible.
 6. Composition: `_loadFromScriptProperties` still wraps failures as
    `MASTER_INDEX_ERROR('load')` exactly once and still assigns/shape-checks
    (protects the pinned single-wrap-point contract).
-Existing pinned suites (`master-index-script-properties-loading.test.js`,
-`MasterIndex.test.js`) must pass unmodified.
+   Existing pinned suites (`master-index-script-properties-loading.test.js`,
+   `MasterIndex.test.js`) must pass unmodified.
 
 **Green.** Implement the raw reader, loader composition, and resync catch block.
 **Refactor.** Extract the resync outcome handling into one private helper if
@@ -122,6 +126,7 @@ Existing pinned suites (`master-index-script-properties-loading.test.js`,
 lint clean; counted LOC recorded and under gate.
 
 **Section checks.**
+
 1. `npx vitest run --config tests/vitest.config.js tests/unit/master-index/`
 2. `npm run lint`
 3. `npm run test`
@@ -136,6 +141,7 @@ site 1) and give the pre-existing lock-acquisition timeout mapping a `reason`
 (throw site 0). No post-callback behaviour changes in this section.
 
 **Constraints.**
+
 - Pre-flight check sits after conflict resolution and immediately before the
   callback; uses the same `startTime` captured at the top of `coordinate()`
   (single clock source — spec §4.2).
@@ -149,6 +155,7 @@ site 1) and give the pre-existing lock-acquisition timeout mapping a `reason`
 **Red-first test cases** (extend
 `tests/unit/collection-coordinator/collection-coordinator-lock-release.test.js`
 or a new `collection-coordinator-preflight.test.js`):
+
 1. Pre-flight violation: spied conflict-resolution step advances the mocked clock
    past `coordinationTimeoutMs` → `COORDINATION_TIMEOUT` thrown with the pre-flight
    reason AND the callback is never invoked (spy records zero calls) AND the lock
@@ -158,9 +165,9 @@ or a new `collection-coordinator-preflight.test.js`):
 3. Site-0 reason: `acquireCollectionLock` throwing `LOCK_TIMEOUT` →
    `COORDINATION_TIMEOUT` carries the **exact** lock-acquisition reason constant
    in `error.context` (not merely a truthy reason).
-Reachability note (spec §4.1): the retry loop aborts before sleeping once backoff
-reaches the lease — drive elapsed time via a spied clock-advancing step rather
-than retries.
+   Reachability note (spec §4.1): the retry loop aborts before sleeping once backoff
+   reaches the lease — drive elapsed time via a spied clock-advancing step rather
+   than retries.
 
 **Green.** Add the pre-flight check, site-0 reason, and reason constants.
 **Refactor.** Extract the check into a small private helper if `coordinate()`
@@ -172,6 +179,7 @@ coordinationTimeoutMs" — the post-callback throw still exists at this point);
 lint clean.
 
 **Section checks.**
+
 1. `npx vitest run --config tests/vitest.config.js tests/unit/collection-coordinator/`
 2. `npm run lint`
 3. `npm run test`
@@ -187,6 +195,7 @@ single re-acquisition) → finalise-or-skip → throw sites 2/3 with the logging
 contract (spec §4.1–4.2).
 
 **Constraints.**
+
 - Internal contract changes (spec §4.2): `_executeOperationWithTimeout` loses its
   elapsed check/throw entirely; `_renewLeaseForFinalisationIfRequired` stops
   throwing and reports the renewal outcome.
@@ -214,11 +223,12 @@ contract (spec §4.1–4.2).
 
 **Red-first test cases** (extend `collection-coordinator-lock-release.test.js`;
 new `collection-coordinator-violation-policy.test.js`):
+
 1. Over-budget success path: mocked clock inside the callback exceeds the budget →
    master index metadata **was updated** (spy/assert `updateCollectionMetadata` or
    the metadata effect) AND `COORDINATION_TIMEOUT` thrown with the **exact** site-2
    reason constant in `error.context` (upgrades the pinned throw test with
-   finalisation assertions). *Clock guidance*: with
+   finalisation assertions). _Clock guidance_: with
    `collectionLockLeaseMs = coordinationTimeoutMs = 700`, advance >700 ms in the
    callback — unambiguously over budget.
 2. Over-budget + finalisation failure (spy `updateCollectionMetadata` to throw) →
@@ -227,7 +237,7 @@ new `collection-coordinator-violation-policy.test.js`):
 3. Renewal failure + re-acquisition succeeds (`renewCollectionLock → false`,
    `acquireCollectionLock → true`): metadata finalised exactly once, WARN recovery
    log, `COORDINATION_TIMEOUT` thrown with the exact site-2 reason constant.
-   *Clock guidance*: with `collectionLockLeaseMs = coordinationTimeoutMs = 700`,
+   _Clock guidance_: with `collectionLockLeaseMs = coordinationTimeoutMs = 700`,
    advance ~750 ms in the callback — over budget AND renewal-due, so the intended
    throw side is reached for the right reason.
 4. Renewal failure + re-acquisition returns `false`: metadata **not** written,
@@ -238,7 +248,7 @@ new `collection-coordinator-violation-policy.test.js`):
 6. Within-budget restored path: renewal fails, re-acquisition succeeds, budget not
    exceeded → operation **returns successfully** (with the §4.2 ERROR-may-co-occur-
    with-success caveat asserted via the renewal-failure ERROR record).
-   *Clock guidance*: with `collectionLockLeaseMs = coordinationTimeoutMs = 700`,
+   _Clock guidance_: with `collectionLockLeaseMs = coordinationTimeoutMs = 700`,
    advance ~600 ms — renewal-due (≥ lease − 250 window) but within budget, so the
    intended success side is reached for the right reason.
 7. Logging shape: violation-path operations produce the enumerated
@@ -246,10 +256,10 @@ new `collection-coordinator-violation-policy.test.js`):
    the completion INFO.
 8. Lock always released in `finally` on every violation path (extends the existing
    release test).
-Existing pinned invariants that must stay green: exactly one boundary ERROR per
-within-budget metadata failure; exactly one INFO per success; "should renew the
-lease before finalising a near-expiry write"; "should keep the collection locked
-for a long-running write that stays within the lease".
+   Existing pinned invariants that must stay green: exactly one boundary ERROR per
+   within-budget metadata failure; exactly one INFO per success; "should renew the
+   lease before finalising a near-expiry write"; "should keep the collection locked
+   for a long-running write that stays within the lease".
 
 **Green.** Implement the algorithm (decompose: ownership resolution, finalise-or-
 skip, and throw-site construction as private helpers to stay under complexity 7).
@@ -261,6 +271,7 @@ ERROR-may-co-occur-with-success note).
 (including complexity); counted LOC recorded and under gate.
 
 **Section checks.**
+
 1. `npx vitest run --config tests/vitest.config.js tests/unit/collection-coordinator/`
 2. `npm run lint`
 3. `npm run test`
@@ -273,6 +284,7 @@ ERROR-may-co-occur-with-success note).
 cases are closed end-to-end.
 
 **Tasks.**
+
 - Full suite: `npm run test` (and `npm run test:coverage` — coverage must not
   regress materially on the two touched files; the v8 provider with `all: true` is
   already configured in `tests/vitest.config.js`, so the gate is enforceable).
@@ -295,6 +307,7 @@ cases are closed end-to-end.
 LOC under gate; the three integrated scenarios demonstrably pass.
 
 **Section checks.**
+
 1. `npm run test:coverage`
 2. `npm run lint`
 3. `npm run test`
@@ -307,6 +320,7 @@ LOC under gate; the three integrated scenarios demonstrably pass.
 documentation for the new/changed contracts.
 
 **Tasks.**
+
 - **New** `docs/developers/CollectionCoordinator.md` (canonical home for the
   coordination contract): revised `coordinate()` flow, unified violation
   algorithm, four throw sites + reason values, deliberate swallows (release,
@@ -341,6 +355,7 @@ planning-artefact references anywhere in `docs/` (prime directive); the
 here).
 
 **Section checks.**
+
 1. `npm run lint` (docs-referenced code samples unchanged, tree still clean)
 2. `npm run test`
 3. Manual grep: no `SPEC.md`/`ACTION_PLAN.md` references in `docs/` or source.
@@ -349,14 +364,14 @@ here).
 
 ## Sequencing summary
 
-| Order | Section | Depends on |
-|-------|---------|------------|
-| 0 | Baseline verification | — |
-| 1 | MasterIndex raw reader + resync | Baseline |
-| 2 | Pre-flight check + site-0 reason | Baseline (independent of 1) |
-| 3 | Unified post-callback algorithm | 2 (shares `startTime`/constants/flow) |
-| 4 | Regression hardening | 1, 2, 3 |
-| 5 | Documentation follow-through | 4 (post code review) |
+| Order | Section                          | Depends on                            |
+| ----- | -------------------------------- | ------------------------------------- |
+| 0     | Baseline verification            | —                                     |
+| 1     | MasterIndex raw reader + resync  | Baseline                              |
+| 2     | Pre-flight check + site-0 reason | Baseline (independent of 1)           |
+| 3     | Unified post-callback algorithm  | 2 (shares `startTime`/constants/flow) |
+| 4     | Regression hardening             | 1, 2, 3                               |
+| 5     | Documentation follow-through     | 4 (post code review)                  |
 
 Sections 1 and 2 are independent and could run in parallel; the numbered order
 keeps the tree single-threaded for the TDD gates.

@@ -23,7 +23,7 @@ metadata, or the in-memory master index snapshot) divergent:
    metadata finalisation.
 3. **`MasterIndex.save` mutates memory before persist** — `save()` advances
    `lastUpdated` (and its internal callers advance collection entries and
-   `_touchIndex`) *before* the ScriptProperties write; on persistence failure the
+   `_touchIndex`) _before_ the ScriptProperties write; on persistence failure the
    in-memory state diverges from the stored snapshot.
 
 Source: [Issue #61](https://github.com/h-arnold/JsonDbApp/issues/61) (consolidated
@@ -33,11 +33,11 @@ ticket from the `feat/execution-time-logging` pre-PR review).
 
 The following were decided with the user and are binding for implementation:
 
-| # | Decision | Choice |
-|---|----------|--------|
-| D1 | Post-completion coordination-budget overrun (Case 1) | **1A** — keep throwing `CoordinationTimeoutError` (documented contract preserved), but complete metadata finalisation best-effort *before* throwing. A pre-flight budget check is added before the callback runs. |
-| D2 | Lease-renewal failure after a successful callback (Case 2) | **2A** — attempt exactly **one** re-acquisition of the lease for the same `opId`. If re-acquired, finalise metadata safely and then apply the D1 policy (throw `CoordinationTimeoutError`). If not re-acquired, skip finalisation, log a loud ERROR flagging the possible divergence, and throw `CoordinationTimeoutError`. |
-| D3 | `MasterIndex.save` memory/persist ordering (Case 3) | **3B** — keep the current ordering; on save failure, resynchronise in-memory state with the stored snapshot before throwing; if resynchronisation cannot be completed, keep the staged state, log loudly, and throw the **original** `MasterIndexError`. |
+| #   | Decision                                                   | Choice                                                                                                                                                                                                                                                                                                                      |
+| --- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Post-completion coordination-budget overrun (Case 1)       | **1A** — keep throwing `CoordinationTimeoutError` (documented contract preserved), but complete metadata finalisation best-effort _before_ throwing. A pre-flight budget check is added before the callback runs.                                                                                                           |
+| D2  | Lease-renewal failure after a successful callback (Case 2) | **2A** — attempt exactly **one** re-acquisition of the lease for the same `opId`. If re-acquired, finalise metadata safely and then apply the D1 policy (throw `CoordinationTimeoutError`). If not re-acquired, skip finalisation, log a loud ERROR flagging the possible divergence, and throw `CoordinationTimeoutError`. |
+| D3  | `MasterIndex.save` memory/persist ordering (Case 3)        | **3B** — keep the current ordering; on save failure, resynchronise in-memory state with the stored snapshot before throwing; if resynchronisation cannot be completed, keep the staged state, log loudly, and throw the **original** `MasterIndexError`.                                                                    |
 
 ## 3. Constraints
 
@@ -57,7 +57,7 @@ The following were decided with the user and are binding for implementation:
   the throw.
 - **Lease-ownership gating**: metadata finalisation requires lease ownership to be
   intact or re-established for the same `opId`. Residual risk: re-acquiring an
-  *expired* lease does not prove no intervening writer finalised newer metadata in
+  _expired_ lease does not prove no intervening writer finalised newer metadata in
   the meantime; overwriting it would be last-write-wins on collection metadata. This
   residual risk is accepted and documented (§7.5) rather than guarded by a staleness
   check, which the current token semantics cannot support (see §7.6).
@@ -74,7 +74,7 @@ The following were decided with the user and are binding for implementation:
   shape, and ScriptProperties keys are unchanged. This is ordering and error-path
   work only. `docs/developers/data-shapes/` does not exist and requires no entries
   for this work; the action plan deliberately omits data-shape blocks.
-- **Lint gate**: the project requires zero lint errors *and* zero warnings. Relevant
+- **Lint gate**: the project requires zero lint errors _and_ zero warnings. Relevant
   active rules: `max-lines` warn at 500 counted lines (blanks/comments skipped),
   `complexity` warn at 7, `max-len` 160, sonarjs recommended set, and
   `no-magic-numbers` as an **error** in source. The new branches must therefore use
@@ -97,7 +97,7 @@ The following were decided with the user and are binding for implementation:
    (budget already consumed by lock acquisition and conflict resolution), log an
    ERROR and throw `CoordinationTimeoutError` (throw site 1, §4.2). The callback is
    never invoked on this path, so no operation side effects exist.
-   *Reachability note for tests*: the branch requires the pre-callback work to
+   _Reachability note for tests_: the branch requires the pre-callback work to
    consume more than `coordinationTimeoutMs` (minimum 500 ms per config validation);
    the reachable route in vitest is a spied conflict-resolution/lock step that
    advances the mocked clock past the budget, since the retry loop aborts before
@@ -151,7 +151,7 @@ an over-budget operation in all but the exact-equality boundary case.
   throwing, the post-hoc timeout would again skip finalisation and reintroduce the
   Case-1 hazard.
 - **Single clock source**: the step-3 pre-flight check and the step-5
-  `overBudget` verdict are two reads of the *same* elapsed measurement
+  `overBudget` verdict are two reads of the _same_ elapsed measurement
   (`Date.now() - startTime`, with `startTime` captured once at the top of
   `coordinate()`); implementations must not introduce a fresh start time for
   either check.
@@ -163,12 +163,12 @@ mapping in `_acquireLockWithTimeoutMapping`, which gains a `reason` value (e.g.
 lock-acquisition-timeout) for consistency — it is pre-callback, so no side effects
 exist there either:
 
-| Site | Trigger | Finalisation state at throw |
-|------|---------|------------------------------|
-| 0 — lock-acquisition timeout (pre-existing) | `LOCK_TIMEOUT` during lock acquisition | None possible; no side effects |
-| 1 — pre-flight | Budget exhausted before the callback | None possible; no side effects |
-| 2 — post-operation overrun | Callback completed, `overBudget` true, ownership intact or restored | Applied; finalised (or finalisation failed loudly) |
-| 3 — lease not recoverable | Renewal failed and single re-acquisition failed | Applied; **skipped** — divergence logged |
+| Site                                        | Trigger                                                             | Finalisation state at throw                        |
+| ------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
+| 0 — lock-acquisition timeout (pre-existing) | `LOCK_TIMEOUT` during lock acquisition                              | None possible; no side effects                     |
+| 1 — pre-flight                              | Budget exhausted before the callback                                | None possible; no side effects                     |
+| 2 — post-operation overrun                  | Callback completed, `overBudget` true, ownership intact or restored | Applied; finalised (or finalisation failed loudly) |
+| 3 — lease not recoverable                   | Renewal failed and single re-acquisition failed                     | Applied; **skipped** — divergence logged           |
 
 **Renewal-failure causes**: renewal can fail for two reasons — lease expiry
 (which, given `collectionLockLeaseMs ≥ coordinationTimeoutMs`, implies `overBudget`
@@ -193,13 +193,13 @@ uniformly: one re-acquisition attempt, then recover or route to throw site 3.
    `coordinate()` remains the single operation-level failure record and continues to
    log once per failed operation):
 
-   | Situation | Level | Content |
-   |-----------|-------|---------|
-   | Pre-flight budget exhausted | ERROR | collection, opId, timeoutMs |
-   | Renewal failure (before re-acquisition) | ERROR | collection, opId, leaseMs |
-   | Re-acquisition attempt outcome (recovered) | WARN | collection, opId, outcome |
-   | Finalisation failure on a violation path (swallowed) | ERROR | collection, opId, underlying error |
-   | Finalisation skipped (divergence warning) | ERROR | collection, opId, explicit divergence statement |
+   | Situation                                                | Level | Content                                                      |
+   | -------------------------------------------------------- | ----- | ------------------------------------------------------------ |
+   | Pre-flight budget exhausted                              | ERROR | collection, opId, timeoutMs                                  |
+   | Renewal failure (before re-acquisition)                  | ERROR | collection, opId, leaseMs                                    |
+   | Re-acquisition attempt outcome (recovered)               | WARN  | collection, opId, outcome                                    |
+   | Finalisation failure on a violation path (swallowed)     | ERROR | collection, opId, underlying error                           |
+   | Finalisation skipped (divergence warning)                | ERROR | collection, opId, explicit divergence statement              |
    | Post-operation overrun (immediately before site-2 throw) | ERROR | collection, opId, timeoutMs, elapsedMs, finalisation outcome |
 
    Existing pinned invariants that must keep holding: exactly one ERROR from the
@@ -213,9 +213,10 @@ uniformly: one re-acquisition attempt, then recover or route to throw site 3.
    (b) on the within-budget restored path an ERROR-level renewal-failure record may
    co-occur with a **successful** result — log-based alerting and tests must not
    assume ERROR implies operation failure.
+
 4. **Test reachability**: the lease-loss branches are exercised by spying on the
    master index (`renewCollectionLock → false`, then `acquireCollectionLock →
-   true/false/throws`), consistent with the existing coordinator and lock-manager
+true/false/throws`), consistent with the existing coordinator and lock-manager
    suites; no multi-actor simulation is required.
 
 ### 4.3 `MasterIndex.save()` — resynchronisation on failure
@@ -307,7 +308,7 @@ uniformly: one re-acquisition attempt, then recover or route to throw site 3.
     operation now finalises metadata before throwing.
   - User-facing: relevant guide under `docs/` and a release-notes entry
     (`docs/release-notes/`) — user-visible change: `CoordinationTimeoutError` can
-    now be thrown *after* an operation's effects were applied (and, at sites 1–2,
+    now be thrown _after_ an operation's effects were applied (and, at sites 1–2,
     after metadata finalisation); the `reason` context distinguishes the sites.
 
 ### Out of scope
@@ -323,7 +324,7 @@ uniformly: one re-acquisition attempt, then recover or route to throw site 3.
 - **Callback-failure path**: a throwing callback continues to skip finalisation
   entirely, unchanged. Rationale: the operation failed, so publishing its metadata
   could misrepresent an incomplete operation; the callback error propagates
-  unchanged. Best-effort finalisation is deliberately *not* generalised to this
+  unchanged. Best-effort finalisation is deliberately _not_ generalised to this
   path.
 
 ## 6. Non-goals
