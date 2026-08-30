@@ -1,7 +1,7 @@
 ---
 description: Coordinates subagents to implement changes following a structured implement/review loop
 mode: all
-model: opencode/x-preview-f-free
+model: opencode-go/glm-5.3-flash
 steps: 100
 ---
 

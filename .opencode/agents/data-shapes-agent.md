@@ -1,7 +1,7 @@
 ---
 description: Creates and maintains canonical data-shape specifications across all persistence and library API boundaries
 mode: all
-model: opencode/x-preview-f-free
+model: opencode/hy3-free
 steps: 100
 permission:
   edit:
