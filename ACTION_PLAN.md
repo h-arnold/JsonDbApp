@@ -1,6 +1,6 @@
 # ACTION PLAN — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
 
-> **Current status:** Section 1 COMPLETE (red+green+reviews clean; 876 tests pass; `99_MasterIndex.js`=353 counted LOC, under 500 gate). Section 2 (Red loop) next.
+> **Current status:** Section 2 COMPLETE (red+green+reviews clean; 879 tests pass; `CollectionCoordinator.js`=245 counted LOC, under 500 gate). Section 3 (Red loop) next.
 
 Derived from `SPEC.md` (final, reviewer-approved). Workflow: Red-Green-Refactor per
 section; sections are sequenced so enabling contracts land before dependent
@@ -136,7 +136,7 @@ lint clean; counted LOC recorded and under gate.
 
 ---
 
-## 2. Section 2 — CollectionCoordinator: pre-flight budget check and site-0 reason (Case 1, pre-callback half)
+## 2. Section 2 — CollectionCoordinator: pre-flight budget check and site-0 reason (Case 1, pre-callback half) — **[COMPLETE]**
 
 **Objective.** Enforce the coordination budget **before** the callback runs (throw
 site 1) and give the pre-existing lock-acquisition timeout mapping a `reason`

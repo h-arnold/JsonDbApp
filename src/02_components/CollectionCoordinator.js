@@ -8,6 +8,8 @@
  */
 /* exported CollectionCoordinator */
 const LEASE_RENEWAL_WINDOW_MS = 250;
+const LOCK_ACQUISITION_TIMEOUT_REASON = 'lock-acquisition-timeout';
+const PREFLIGHT_BUDGET_EXHAUSTED_REASON = 'preflight-budget-exhausted';
 /**
  * Orchestrates coordinated collection operations by applying locking,
  * conflict detection, and metadata synchronisation around core CRUD actions.
@@ -74,6 +76,7 @@ class CollectionCoordinator {
         lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
         lockAcquired = true;
         this._resolveConflictsIfPresent(name);
+        this._enforcePreflightBudget(operationName, opId, name, startTime);
         const result = this._executeOperationWithTimeout(
           callback,
           operationName,
@@ -129,7 +132,9 @@ class CollectionCoordinator {
    * @param {string} operationName - Operation name for error context
    * @param {string} collectionName - Collection name for logging
    * @returns {number} Timestamp recorded after the lock was acquired.
-   * @throws {CoordinationTimeoutError} When lock acquisition times out
+   * @throws {CoordinationTimeoutError} When lock acquisition times out; the thrown error carries
+   *   the LOCK_ACQUISITION_TIMEOUT_REASON value in its context to distinguish the pre-callback
+   *   site-0 throw from the other coordination timeout sites.
    * @throws {*} Any other lock acquisition failure, rethrown unchanged
    * @private
    */
@@ -141,11 +146,13 @@ class CollectionCoordinator {
         this._logger.error('Lock acquisition timed out', {
           collection: collectionName,
           operationId: opId,
-          timeout: this._config.coordinationTimeoutMs
+          timeout: this._config.coordinationTimeoutMs,
+          reason: LOCK_ACQUISITION_TIMEOUT_REASON
         });
         throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
           operationName,
-          this._config.coordinationTimeoutMs
+          this._config.coordinationTimeoutMs,
+          LOCK_ACQUISITION_TIMEOUT_REASON
         );
       }
       throw e;
@@ -211,6 +218,36 @@ class CollectionCoordinator {
     if (this.hasConflict()) {
       this._logger.warn('Conflict detected, resolving', { collection: collectionName });
       this.resolveConflict();
+    }
+  }
+
+  /**
+   * Enforce the coordination budget before the operation callback runs.
+   * @param {string} operationName - Operation name for error context.
+   * @param {string} opId - Operation identifier for logging.
+   * @param {string} collectionName - Collection name for logging.
+   * @param {number} startTime - Operation start timestamp captured once by coordinate().
+   * @returns {void}
+   * @throws {CoordinationTimeoutError} When the budget is already exhausted before the callback.
+   * @private
+   * @remarks Single clock source: elapsed time is measured from the startTime captured at the top
+   *   of coordinate() so the pre-flight verdict and the later over-budget verdict share one
+   *   measurement. On violation the callback never runs because this check throws before
+   *   _executeOperationWithTimeout is reached, so no operation side effects can occur.
+   */
+  _enforcePreflightBudget(operationName, opId, collectionName, startTime) {
+    const elapsedMs = Date.now() - startTime;
+    if (elapsedMs > this._config.coordinationTimeoutMs) {
+      this._logger.error('Pre-flight budget exhausted before callback', {
+        collection: collectionName,
+        opId,
+        timeoutMs: this._config.coordinationTimeoutMs
+      });
+      throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+        operationName,
+        this._config.coordinationTimeoutMs,
+        PREFLIGHT_BUDGET_EXHAUSTED_REASON
+      );
     }
   }
 
