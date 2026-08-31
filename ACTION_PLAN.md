@@ -1,6 +1,6 @@
 # ACTION PLAN — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
 
-> **Current status:** Section 2 COMPLETE (red+green+reviews clean; 879 tests pass; `CollectionCoordinator.js`=245 counted LOC, under 500 gate). Section 3 (Red loop) next.
+> **Current status:** Section 3 COMPLETE (red+green+reviews clean; 888 tests pass; `CollectionCoordinator.js`=310 counted LOC, under 500 gate). Section 4 (Regression hardening) next.
 
 Derived from `SPEC.md` (final, reviewer-approved). Workflow: Red-Green-Refactor per
 section; sections are sequenced so enabling contracts land before dependent
@@ -188,7 +188,7 @@ lint clean.
 
 ---
 
-## 3. Section 3 — CollectionCoordinator: unified post-callback algorithm (Cases 1–2, post-callback half)
+## 3. Section 3 — CollectionCoordinator: unified post-callback algorithm (Cases 1–2, post-callback half) — **[COMPLETE]**
 
 **Objective.** Replace the post-callback throw in
 `_executeOperationWithTimeout` and the throwing renewal helper with the unified
@@ -221,7 +221,29 @@ contract (spec §4.1–4.2).
   clause — currently "lock acquisition or the operation exceeds timeouts" —
   expanded to enumerate the four `CoordinationTimeoutError` sites and their
   reasons) are updated **in this section** together with the code change; the
-  Section-5 sweep then reconciles the developer docs.
+   Section-5 sweep then reconciles the developer docs.
+
+**Pinned logging + reason contract (authoritative for Section 3 implementation AND tests — do not reword).**
+The exact strings below are the contract; the implementation must emit them verbatim and the
+tests assert them. The four `CoordinationTimeoutError` reason constants:
+
+- site 0 (lock-acquisition timeout): `'lock-acquisition-timeout'`
+- site 1 (pre-flight budget exhausted): `'preflight-budget-exhausted'`
+- site 2 (post-operation overrun): `'post-operation-overrun'`
+- site 3 (lease not recoverable): `'lease-not-recoverable'`
+
+Point-of-occurrence / divergence records (message substring + context keys):
+
+- Pre-flight budget exhausted (ERROR): `'Coordination budget exhausted before the operation callback'` · `{ collection, opId, timeoutMs }`
+- Renewal failure, before re-acquisition (ERROR): `'Collection lock lease expired before finalisation could complete'` · `{ collection, opId, leaseMs }`
+- Re-acquisition recovered (WARN): `'Collection lock re-acquired for finalisation after renewal failure'` · `{ collection, opId, outcome: 'recovered' }`
+- Finalisation failure on a violation path, swallowed (ERROR): `'Metadata finalisation failed on a violation path; the coordination timeout propagates'` · `{ collection, opId, error }`
+- Finalisation skipped (divergence) (ERROR): `'Metadata finalisation skipped; collection and master index may be divergent'` · `{ collection, opId, operation }`
+- Post-operation overrun, immediately before site-2 throw (ERROR): `'Operation exceeded the coordination budget after effects were applied'` · `{ collection, opId, timeoutMs, elapsedMs, finalisationOutcome }` where `finalisationOutcome ∈ {'finalised','finalisation-failed'}`
+- Boundary catch, single per failed operation (ERROR): `'Operation ' + operationName + ' failed'` · `{ collection, opId, error }`
+
+`finalisationOutcome` is `'finalised'` when `updateMasterIndexMetadata()` succeeded on the path, or
+`'finalisation-failed'` when it threw and was swallowed on an over-budget path.
 
 **Red-first test cases** (extend `collection-coordinator-lock-release.test.js`;
 new `collection-coordinator-violation-policy.test.js`):
