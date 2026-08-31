@@ -11,6 +11,7 @@
   - [Core Workflow](#core-workflow)
     - [Collection Access Protocol](#collection-access-protocol)
     - [Virtual Locking](#virtual-locking)
+    - [Save Persistence and Failure Resynchronisation](#save-persistence-and-failure-resynchronisation)
     - [Data Structure](#data-structure)
   - [Constructor](#constructor)
   - [API Reference](#api-reference)
@@ -145,7 +146,7 @@ Prevents concurrent modifications across script instances:
 
 - Locks expire automatically (default: 30 seconds)
 - Operation ID required for lock acquisition/release
-- Active locks may be renewed by the owning operation before final metadata persistence
+- Active locks may be renewed by the owning operation before final metadata persistence. Within `CollectionCoordinator` the renewal helper is non-throwing: a failed renewal is reported as a boolean and the coordinator attempts exactly one re-acquisition for the same operation ID, with all throw decisions centralised in `coordinate()` (see [CollectionCoordinator](CollectionCoordinator.md))
 - Expired locks may be explicitly removed by calling `cleanupExpiredLocks()`
 - All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata
 
@@ -160,6 +161,28 @@ Prevents concurrent modifications across script instances:
 - resolve conflicts that persist metadata back to the index
 
 This closes the stale-instance window where one execution could acquire the ScriptLock yet still overwrite a newer lock or collection update using outdated in-memory state.
+
+### Save Persistence and Failure Resynchronisation
+
+`MasterIndex.save()` is the single persist point for all metadata writes (direct and indirect). Its ordering is unchanged: in-memory state is advanced first (including caller-side advances of collection entries and `lastUpdated`), then persisted to ScriptProperties.
+
+**On a persistence failure** (serialisation or the `setProperty` write throws), `save()` resynchronises in-memory state with the stored snapshot — via `_resyncAfterSaveFailure()` — **before** re-throwing the original `MasterIndexError('save', …)`. Three outcomes are possible, and each is recorded with a loud ERROR naming the outcome:
+
+1. **Snapshot found** → `this._data` is reassigned to the stored snapshot; the staged, un-persisted advances are discarded.
+2. **No snapshot** (stored key absent, e.g. a failure during initial creation) → the staged in-memory state is kept, and the absence of a resynchronisation source is logged.
+3. **Reader failure** (the raw read or deserialisation throws) → the staged in-memory state is kept, and a loud ERROR warns that memory may be diverged from the stored snapshot.
+
+In all three outcomes the original `MasterIndexError('save', …)` is thrown; a reader failure must never mask it.
+
+**Design notes:**
+
+- Resynchronisation always targets `this._data`. A `dataOverride` passed to `save()` is never adopted as master state (the override object may itself be mutated by the pre-persist `lastUpdated` assignment, but it is not re-read as master state).
+- Shape normalisation is **intentionally skipped** on the resync path. `_ensureStateShape()` performs a self-saving normalisation that would re-enter `save()`; a stored payload that still needs normalisation is re-normalised on the next lock-protected reload (`_withScriptLock()` → `_reloadLatestStateUnderLock()`).
+- After a successful resynchronisation the index's metadata objects are freshly deserialised — de-aliased from any live `Collection._metadata` instances. This is acceptable: the divergence self-heals on the next successful coordinated finalisation, and `CollectionCoordinator.hasConflict()` does not detect this divergence class (write-path modification tokens are not regenerated).
+
+**The raw reader.** `_readStoredSnapshot()` is the single read-and-deserialise implementation for ScriptProperties snapshots. It reads the configured key and deserialises the payload — and deliberately never assigns `this._data`, never runs `_ensureStateShape()`, and never calls `save()`. Those guarantees are what make save↔reload recursion impossible, even when the stored snapshot is a legacy payload and the persist path is broken. Key absence returns `null`; read or deserialisation failures propagate to the caller unchanged.
+
+**Loader composition.** `_loadFromScriptProperties()` composes the raw reader: it calls `_readStoredSnapshot()`, assigns the result to `this._data`, and runs `_ensureStateShape()` when data is present. Its single `MASTER_INDEX_ERROR('load', …)` wrap point and failure log are preserved, so every loader caller (the public `load()`, the constructor bootstrap, and the under-lock reload) keeps identical behaviour.
 
 ### Data Structure
 
@@ -277,7 +300,7 @@ Renews an active virtual lock for a collection owned by the same operation.
 
 - **Parameters:** `timeout` is optional and defaults to the configured lock lease duration
 - **Returns:** `true` if the active lock was renewed, `false` if it was missing, expired, or owned by another operation
-- **Database Integration:** Used by `CollectionCoordinator` to extend a near-expiry lease before final metadata persistence
+- **Database Integration:** Used by `CollectionCoordinator` to extend a near-expiry lease before final metadata persistence. The coordinator treats a `false` return as a renewal failure and attempts exactly one `acquireCollectionLock()` for the same operation ID; the coordinator's renewal helper is non-throwing and reports the outcome as a boolean (see [CollectionCoordinator](CollectionCoordinator.md))
 - **Concurrency behaviour:** Reloads the latest lock state under ScriptLock before renewing, so stale instances cannot extend a newer lock they do not own
 
 #### `releaseCollectionLock(collectionName, operationId)`

@@ -1,14 +1,13 @@
 /* global ErrorHandler, PropertiesService, ObjectUtils */
 
 /**
- * MasterIndex.save() resynchronisation on failure — RED phase.
+ * MasterIndex.save() resynchronisation on persistence failure.
  *
- * When ScriptProperties persistence fails, MasterIndex.save() must resynchronise
- * in-memory state with the stored snapshot, or keep the staged state with a loud
- * ERROR, and then throw the ORIGINAL MasterIndexError('save'). The behaviour does not
- * yet exist, so cases 1–5 are expected to FAIL here (clean lint, correct failing
- * assertions). Case 6 pins the existing single-wrap-point loader contract and may
- * already pass.
+ * When ScriptProperties persistence fails, MasterIndex.save() resynchronises in-memory
+ * state with the stored snapshot (or retains the staged state when no snapshot exists),
+ * records a loud ERROR, and always re-throws the ORIGINAL MasterIndexError('save').
+ * The resync path must not recurse into save() or normalisation. Case 6 pins the existing
+ * single-wrap-point loader contract for _loadFromScriptProperties.
  */
 
 import { afterEach, describe, expect, it, vi } from 'vitest';
@@ -85,7 +84,7 @@ describe('MasterIndex.save resynchronisation on failure', () => {
     expect(caught.context.operation).toBe('save');
 
     // Staged lastUpdated advance must be discarded; in-memory state must equal the
-    // stored snapshot once the missing resync is implemented.
+    // stored snapshot.
     expect(masterIndex._data).toEqual(expectedSnapshot);
   });
 
@@ -110,7 +109,7 @@ describe('MasterIndex.save resynchronisation on failure', () => {
     // Staged state must be retained (no snapshot available to resync from).
     expect(masterIndex._data).toBe(beforeData);
 
-    // Loud ERROR recording the missing-snapshot outcome is absent until resync exists.
+    // A loud ERROR must record the missing-snapshot outcome.
     expect(loggerErrorSpy).toHaveBeenCalled();
   });
 
@@ -145,7 +144,7 @@ describe('MasterIndex.save resynchronisation on failure', () => {
     // Staged state retained; the original save error (not a load error) must propagate.
     expect(masterIndex._data).toBe(beforeData);
 
-    // Loud ERROR stating memory may be diverged is absent until resync exists.
+    // A loud ERROR must state that memory may be diverged from the stored snapshot.
     expect(loggerErrorSpy).toHaveBeenCalled();
   });
 

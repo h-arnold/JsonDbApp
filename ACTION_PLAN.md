@@ -1,6 +1,6 @@
 # ACTION PLAN — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
 
-> **Current status:** Section 4 COMPLETE (verification: 888 tests green, coverage non-regressed, lint 0/0, LOC 355/324 under gate). Section 5 (Documentation follow-through) next.
+> **Current status:** Section 5 (Documentation follow-through) in progress — delegating to the Docs agent. Sections 1–4 committed (abd66e8, 5cbf62d, 3677bfb, 9021c07).
 
 Derived from `SPEC.md` (final, reviewer-approved). Workflow: Red-Green-Refactor per
 section; sections are sequenced so enabling contracts land before dependent
@@ -328,6 +328,7 @@ cases are closed end-to-end.
 - Re-measure counted LOC for both files; record against the §0 projections.
 
 **Section 4 results (verification, no code change).**
+
 - `npm run test:coverage`: full suite 888 passed; `CollectionCoordinator.js` lines 97.79%
   (stmts 97.81 / branch 87.03 / funcs 100), `99_MasterIndex.js` lines 89.14%
   (stmts 89.26 / branch 79.79 / funcs 95.55). Both well covered; new behaviour

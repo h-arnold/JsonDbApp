@@ -100,11 +100,7 @@ class MasterIndex {
    *   available) before the `MasterIndexError('save')` is re-thrown.
    * @remarks Emits a DEBUG-gated masterIndex.save timing event through the component logger;
    *   save is the single persist point timed for all indirect callers. Ordering is unchanged:
-   *   in-memory state is advanced first, then persisted. On a persistence failure the original
-   *   exception is caught and, before the resulting `MasterIndexError('save')` is thrown,
-   *   `_resyncAfterSaveFailure()` reconciles in-memory state with the stored snapshot so the
-   *   staged, un-persisted advances are discarded whenever a snapshot is available. The original
-   *   `MasterIndexError('save')` is always re-thrown regardless of the resync outcome.
+   *   in-memory state is advanced first, then persisted.
    */
   save(dataOverride, timestamp = this._getCurrentTimestamp()) {
     return this._logger.timeSync('masterIndex.save', () => {
@@ -506,8 +502,7 @@ class MasterIndex {
    *   exception propagates unchanged)
    * @remarks Absence of the key (null or undefined) is returned as null rather than
    *   thrown; any other failure from `getProperty` or `ObjectUtils.deserialise` is
-   *   allowed to surface naturally. This method is strictly a reader: it never mutates
-   *   state, so callers may invoke it freely on error paths.
+   *   allowed to surface naturally.
    * @private
    */
   _readStoredSnapshot() {

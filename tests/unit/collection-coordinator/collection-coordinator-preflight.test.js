@@ -1,14 +1,12 @@
 /**
  * CollectionCoordinator pre-flight budget check and lock-acquisition reason tests.
  *
- * These are RED-phase tests for the pre-flight coordination budget check (throw site 1)
- * and the lock-acquisition timeout reason (throw site 0). The behaviours under test do
- * not yet exist in CollectionCoordinator, so the assertions below are expected to fail
- * until the implementation lands. The suite is intentionally separate from the pinned
- * lock-release suite so it cannot disturb those invariants.
- *
- * Failures here must be assertion-based (missing reason, callback wrongly invoked), not
- * reference errors caused by missing globals.
+ * Asserts the pre-flight coordination budget check (throw site 1) surfaces as a
+ * CoordinationTimeoutError carrying the reason 'preflight-budget-exhausted' and never
+ * invokes the callback, and that a failed lock acquisition (throw site 0) is mapped to
+ * a CoordinationTimeoutError carrying the distinct reason 'lock-acquisition-timeout'.
+ * The suite is intentionally separate from the pinned lock-release suite so it cannot
+ * disturb those invariants.
  */
 
 /* global ErrorHandler */

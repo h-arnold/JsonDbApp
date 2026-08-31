@@ -92,7 +92,14 @@ class CollectionCoordinator {
         this._enforcePreflightBudget(operationName, opId, name, startTime);
         const result = callback();
         const overBudget = Date.now() - startTime > this._config.coordinationTimeoutMs;
-        this._finaliseAfterOperation(operationName, opId, name, lockAcquiredAt, startTime, overBudget);
+        this._finaliseAfterOperation(
+          operationName,
+          opId,
+          name,
+          lockAcquiredAt,
+          startTime,
+          overBudget
+        );
         succeeded = true;
         return result;
       } catch (e) {
@@ -284,18 +291,24 @@ class CollectionCoordinator {
    *   violation-path operation. The elapsedMs read here is for the overrun log only and is not a
    *   second budget verdict.
    */
-  _finaliseAfterOperation(operationName, opId, collectionName, lockAcquiredAt, startTime, overBudget) {
-    const ownershipOutcome = this._resolveOwnership(
-      opId,
-      collectionName,
-      lockAcquiredAt
-    );
+  _finaliseAfterOperation(
+    operationName,
+    opId,
+    collectionName,
+    lockAcquiredAt,
+    startTime,
+    overBudget
+  ) {
+    const ownershipOutcome = this._resolveOwnership(opId, collectionName, lockAcquiredAt);
     if (ownershipOutcome === 'lost-unrecoverable') {
-      this._logger.error('Metadata finalisation skipped; collection and master index may be divergent', {
-        collection: collectionName,
-        opId,
-        operation: operationName
-      });
+      this._logger.error(
+        'Metadata finalisation skipped; collection and master index may be divergent',
+        {
+          collection: collectionName,
+          opId,
+          operation: operationName
+        }
+      );
       throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
         operationName,
         this._config.coordinationTimeoutMs,
@@ -313,7 +326,10 @@ class CollectionCoordinator {
           {
             collection: collectionName,
             opId,
-            error: finalisationError instanceof Error ? finalisationError.message : String(finalisationError)
+            error:
+              finalisationError instanceof Error
+                ? finalisationError.message
+                : String(finalisationError)
           }
         );
         finalisationOutcome = 'finalisation-failed';

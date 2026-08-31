@@ -474,7 +474,9 @@ Force save collection to Drive when the collection is dirty.
 
 - **Returns**
   - `{acknowledged: true}` once the save coordination succeeds
-- **Throws**: `OperationError` if save fails
+- **Throws**
+  - `OperationError` if save fails
+  - `CoordinationTimeoutError` when the coordinated save violates its coordination window or loses its lock lease; depending on the throw site the error may arrive after the save's effects were applied — see [CollectionCoordinator](CollectionCoordinator.md)
 
 ```javascript
 // Manual save (usually automatic)

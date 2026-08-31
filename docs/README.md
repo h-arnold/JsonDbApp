@@ -194,8 +194,11 @@ Common error codes:
 - `DUPLICATE_KEY`
 - `INVALID_QUERY`
 - `LOCK_TIMEOUT`
+- `COORDINATION_TIMEOUT`
 - `FILE_IO_ERROR`
 - `COLLECTION_NOT_FOUND`
+
+**Coordination timeouts and applied effects.** A `CoordinationTimeoutError` (code `COORDINATION_TIMEOUT`) is thrown when a coordinated write exceeds its coordination window or loses its lock lease. Depending on where the violation occurred, the error MAY arrive **after** the operation's effects were applied: an over-budget operation finalises the collection metadata in the master index best-effort before the error is thrown, while an unrecoverable lease skips that finalisation (the possible divergence is logged loudly). The `reason` field in `error.context` distinguishes the throw sites: `'lock-acquisition-timeout'` and `'preflight-budget-exhausted'` (no effects applied), `'post-operation-overrun'` (effects applied and finalised), and `'lease-not-recoverable'` (effects applied, finalisation skipped). See the [Collection Coordinator developer documentation](developers/CollectionCoordinator.md) for the full contract.
 
 ## Testing
 
