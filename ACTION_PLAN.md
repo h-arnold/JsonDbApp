@@ -1,6 +1,6 @@
 # ACTION PLAN — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
 
-> **Current status:** Section 5 (Documentation follow-through) in progress — delegating to the Docs agent. Sections 1–4 committed (abd66e8, 5cbf62d, 3677bfb, 9021c07).
+> **Current status:** ALL SECTIONS COMPLETE. Sections 1–5 committed (abd66e8, 5cbf62d, 3677bfb, 9021c07, a8530f1). Final suite 888 green; lint 0/0; docs delivered.
 
 Derived from `SPEC.md` (final, reviewer-approved). Workflow: Red-Green-Refactor per
 section; sections are sequenced so enabling contracts land before dependent
@@ -362,7 +362,7 @@ LOC under gate; the three integrated scenarios demonstrably pass.
 
 ---
 
-## 5. Section 5 — Documentation follow-through
+## 5. Section 5 — Documentation follow-through — **[COMPLETE]**
 
 **Objective.** Make the docs match the delivered behaviour; add all method-level
 documentation for the new/changed contracts.
