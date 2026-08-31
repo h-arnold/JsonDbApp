@@ -5,7 +5,7 @@ This document explains the role, API surface and usage patterns for the Collecti
 - [Collection Components Developer Guide](#collection-components-developer-guide)
   - [Overview](#overview)
     - [Architecture](#architecture)
-    - [Current Limitations (Section 5)](#current-limitations-section-5)
+    - [Current Limitations](#current-limitations)
   - [Collection](#collection)
     - [Purpose](#purpose)
     - [Constructor](#constructor)
@@ -81,9 +81,9 @@ graph TD
     DocumentOperations --> UpdateEngine[UpdateEngine (Update operation processing)]
 ```
 
-### Current Limitations (Section 5)
+### Current Limitations
 
-This section describes the capabilities as of Section 5. The `Collection` class has since been enhanced. Refer to the method descriptions below for current capabilities.
+The `Collection` class has been enhanced since these limitations were first recorded. Refer to the method descriptions below for current capabilities.
 
 - **findOne()**: Only supports `{}` (empty) and `{_id: "id"}` filters
 - **find()**: Only supports `{}` (empty) filters
@@ -91,7 +91,7 @@ This section describes the capabilities as of Section 5. The `Collection` class 
 - **deleteOne()**: Only supports `{_id: "id"}` filters
 - **countDocuments()**: Only supports `{}` (empty) filters
 
-Advanced query capabilities will be added in Section 6 (Query Engine) and Section 7 (Update Engine).
+Advanced query and update capabilities are provided by the `QueryEngine` and `UpdateEngine`.
 
 ---
 
@@ -1185,11 +1185,11 @@ console.log(`${replacedCount} document(s) replaced.`);
 - `_validateQuery(query)`: Basic validation for query objects.
 - `_validateUpdateOperators(updateOps)`: Basic validation for update operator objects.
 
-**Query Execution (D1 Refactoring):**
+**Query Execution:**
 
 - `_executeQuery(query, operation)`: Consolidates query validation, document retrieval, QueryEngine execution, and logging. Used by `findByQuery()`, `findMultipleByQuery()`, and `countByQuery()`.
 
-**Bulk Operations (D2 Refactoring):**
+**Bulk Operations:**
 
 - `_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)`: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by `updateDocumentByQuery()` and `replaceDocumentByQuery()`. Emits a single DEBUG-gated `docOps.applyToMatching` boundary timing event for the whole bulk application — inner per-document timers stay silent beneath it (and the boundary itself is suppressed under Collection-level timers such as `updateMany`); see
   [Infrastructure Components — Execution-Time Tracking](Infrastructure_Components.md#1205-execution-time-tracking).

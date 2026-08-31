@@ -45,7 +45,7 @@
 
 ## Overview
 
-The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. Following the Section 4 refactoring, `MasterIndex` serves as the **primary source of truth** for collection metadata, with the `Database` class delegating all collection management operations to it.
+The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. `MasterIndex` serves as the **primary source of truth** for collection metadata, with the `Database` class delegating all collection management operations to it.
 
 **Key Responsibilities:**
 
@@ -76,8 +76,6 @@ Encapsulates the transformation of incoming metadata into `CollectionMetadata` i
 
 **Location:** [src/04_core/MasterIndex/02_MasterIndexLockManager.js](../../src/04_core/MasterIndex/02_MasterIndexLockManager.js)
 
-**Added in:** MI2 refactoring
-
 #### `_setAndPersistLockStatus(collectionName, collection, lockStatus)`
 
 Centralized helper for setting and persisting lock status with guaranteed ordering.
@@ -95,8 +93,6 @@ Centralized helper for setting and persisting lock status with guaranteed orderi
 ### MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5
 
 **Location:** [src/04_core/MasterIndex/04_MasterIndexConflictResolver.js](../../src/04_core/MasterIndex/04_MasterIndexConflictResolver.js)
-
-**Added in:** MI1 refactoring
 
 #### `_applyMetadataUpdates(collectionMetadata, updates)`
 
