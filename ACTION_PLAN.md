@@ -1,6 +1,6 @@
 # ACTION PLAN — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
 
-> **Current status:** Section 3 COMPLETE (red+green+reviews clean; 888 tests pass; `CollectionCoordinator.js`=310 counted LOC, under 500 gate). Section 4 (Regression hardening) next.
+> **Current status:** Section 4 COMPLETE (verification: 888 tests green, coverage non-regressed, lint 0/0, LOC 355/324 under gate). Section 5 (Documentation follow-through) next.
 
 Derived from `SPEC.md` (final, reviewer-approved). Workflow: Red-Green-Refactor per
 section; sections are sequenced so enabling contracts land before dependent
@@ -221,7 +221,7 @@ contract (spec §4.1–4.2).
   clause — currently "lock acquisition or the operation exceeds timeouts" —
   expanded to enumerate the four `CoordinationTimeoutError` sites and their
   reasons) are updated **in this section** together with the code change; the
-   Section-5 sweep then reconciles the developer docs.
+  Section-5 sweep then reconciles the developer docs.
 
 **Pinned logging + reason contract (authoritative for Section 3 implementation AND tests — do not reword).**
 The exact strings below are the contract; the implementation must emit them verbatim and the
@@ -302,7 +302,7 @@ ERROR-may-co-occur-with-success note).
 
 ---
 
-## 4. Section 4 — Regression hardening
+## 4. Section 4 — Regression hardening — **[COMPLETE]**
 
 **Objective.** Prove the changes hold across the whole system and the three issue
 cases are closed end-to-end.
@@ -326,6 +326,29 @@ cases are closed end-to-end.
      error thrown (Case 3).
 - Re-run `npm run lint` — 0 errors, 0 warnings.
 - Re-measure counted LOC for both files; record against the §0 projections.
+
+**Section 4 results (verification, no code change).**
+- `npm run test:coverage`: full suite 888 passed; `CollectionCoordinator.js` lines 97.79%
+  (stmts 97.81 / branch 87.03 / funcs 100), `99_MasterIndex.js` lines 89.14%
+  (stmts 89.26 / branch 79.79 / funcs 95.55). Both well covered; new behaviour
+  exercised by the Section 1–3 suites — no material regression on either file.
+- Cross-suite sweep: full `npm run test` green (888/888) including `tests/unit/database/`,
+  `tests/unit/Collection/`, and the legacy `CollectionCoordinator`/coordinator folders —
+  every suite exercising `coordinate()` or `MasterIndex.save()` indirectly passes unmodified;
+  no incidental-coupling fallout found.
+- Three issue scenarios demonstrably pass via existing suites (data-shape-free, spy-level):
+  1. **Case 1** (over-budget write → metadata finalised + typed throw):
+     `collection-coordinator-violation-policy.test.js` cases 1 & 2
+     (`POST_OPERATION_OVERRUN_REASON`, `updateCollectionMetadata` invoked / swallowed).
+  2. **Case 2** (lease-loss after success → recovered-finalised or skipped-with-divergence,
+     typed throw either way): `collection-coordinator-violation-policy.test.js` cases 3, 4, 5, 6
+     (`LEASE_NOT_RECOVERABLE_REASON` / restored success with renewal-failure ERROR co-occurring).
+  3. **Case 3** (save failure → memory matches storage or staged state + loud log; original
+     error thrown): `MasterIndex.save-resync.test.js` cases 1–5 (three resync outcomes,
+     no-recursion guarantee, override not adopted).
+- `npm run lint` → 0 errors, 0 warnings.
+- Counted LOC re-measured: `99_MasterIndex.js` = 355 (§0 projected ≈365; gate 500),
+  `CollectionCoordinator.js` = 324 (§0 projected ≈300–310; gate 500). Both under gate.
 
 **Acceptance criteria.** Full suite green; coverage non-regressed; lint clean;
 LOC under gate; the three integrated scenarios demonstrably pass.
