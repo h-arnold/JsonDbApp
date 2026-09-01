@@ -53,6 +53,71 @@ const captureThrow = (fn) => {
   return caught;
 };
 
+/**
+ * Seeds a minimal master index snapshot and loads it into a fresh MasterIndex instance.
+ * @param {number} documentCount - Number of documents to record against the seeded
+ *   'users' collection.
+ * @returns {{ masterIndex: Object, expectedSnapshot: Object }} The loaded instance and the
+ *   deserialised stored snapshot used for resync assertions.
+ * @remarks The seeded payload uses version 1 with a fixed lastUpdated; the returned
+ *   expectedSnapshot mirrors what persistence holds so tests can assert resync fidelity.
+ */
+const seedAndLoadIndex = (documentCount) => {
+  const key = createMasterIndexKey();
+  const seededData = {
+    version: 1,
+    lastUpdated: new Date('2025-03-01T00:00:00Z'),
+    collections: { users: buildSeededCollection('users', { documentCount }) }
+  };
+  seedMasterIndex(key, seededData);
+  const { masterIndex } = createTestMasterIndex({ masterIndexKey: key });
+  const expectedSnapshot = ObjectUtils.deserialise(scriptProperties.getProperty(key));
+  return { masterIndex, expectedSnapshot };
+};
+
+/**
+ * Installs the forced-persistence-failure mocks, captures the pre-save in-memory
+ * reference, and runs MasterIndex.save() while trapping any thrown error.
+ * @param {Object} masterIndex - MasterIndex instance under test.
+ * @param {Object} [options] - Control flags.
+ * @param {boolean} [options.breakReads=false] - When true, also forces ScriptProperties
+ *   reads to throw so the resync reader path is exercised.
+ * @returns {{ beforeData: Object, caught: *, loggerErrorSpy: Object }} Captured pre-save
+ *   data reference, the thrown error (or null), and the logger error spy.
+ * @remarks The setProperty mock always throws to simulate a persistence failure; when
+ *   breakReads is set the getProperty mock also throws to simulate a resync reader failure.
+ */
+const runFailingSave = (masterIndex, { breakReads = false } = {}) => {
+  const loggerErrorSpy = vi.spyOn(masterIndex._logger, 'error');
+  vi.spyOn(scriptProperties, 'setProperty').mockImplementation(() => {
+    throw new Error('forced persist failure');
+  });
+  if (breakReads) {
+    vi.spyOn(scriptProperties, 'getProperty').mockImplementation(() => {
+      throw new Error('forced read failure');
+    });
+  }
+  const beforeData = masterIndex._data;
+  const caught = captureThrow(() => masterIndex.save());
+  return { beforeData, caught, loggerErrorSpy };
+};
+
+/**
+ * Asserts that a forced-failure save produced the canonical staged-save error and
+ * retained the pre-save in-memory state while recording a loud ERROR.
+ * @param {Object} masterIndex - MasterIndex instance under test.
+ * @param {{ beforeData: Object, caught: *, loggerErrorSpy: Object }} captured - Output of
+ *   runFailingSave for the same instance.
+ * @remarks Verifies the re-thrown error is MASTER_INDEX_ERROR('save'), that this._data was
+ *   left referencing the staged pre-save object, and that the logger error spy was invoked.
+ */
+const expectStagedSaveFailure = (masterIndex, captured) => {
+  expect(captured.caught).toBeInstanceOf(ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR);
+  expect(captured.caught.context.operation).toBe('save');
+  expect(masterIndex._data).toBe(captured.beforeData);
+  expect(captured.loggerErrorSpy).toHaveBeenCalled();
+};
+
 afterEach(() => {
   cleanupMasterIndexTests();
   vi.restoreAllMocks();
@@ -61,16 +126,7 @@ afterEach(() => {
 describe('MasterIndex.save resynchronisation on failure', () => {
   it('resyncs in-memory state to the stored snapshot when save fails with an existing snapshot', () => {
     // Arrange
-    const key = createMasterIndexKey();
-    const seededData = {
-      version: 1,
-      lastUpdated: new Date('2025-03-01T00:00:00Z'),
-      collections: { users: buildSeededCollection('users', { documentCount: 3 }) }
-    };
-    seedMasterIndex(key, seededData);
-
-    const { masterIndex } = createTestMasterIndex({ masterIndexKey: key });
-    const expectedSnapshot = ObjectUtils.deserialise(scriptProperties.getProperty(key));
+    const { masterIndex, expectedSnapshot } = seedAndLoadIndex(3);
 
     vi.spyOn(scriptProperties, 'setProperty').mockImplementation(() => {
       throw new Error('forced persist failure');
@@ -93,59 +149,22 @@ describe('MasterIndex.save resynchronisation on failure', () => {
     const { key, masterIndex } = createTestMasterIndex();
     scriptProperties.deleteProperty(key);
 
-    const loggerErrorSpy = vi.spyOn(masterIndex._logger, 'error');
-    vi.spyOn(scriptProperties, 'setProperty').mockImplementation(() => {
-      throw new Error('forced persist failure');
-    });
-
     // Act
-    const beforeData = masterIndex._data;
-    const caught = captureThrow(() => masterIndex.save());
+    const captured = runFailingSave(masterIndex);
 
     // Assert
-    expect(caught).toBeInstanceOf(ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR);
-    expect(caught.context.operation).toBe('save');
-
-    // Staged state must be retained (no snapshot available to resync from).
-    expect(masterIndex._data).toBe(beforeData);
-
-    // A loud ERROR must record the missing-snapshot outcome.
-    expect(loggerErrorSpy).toHaveBeenCalled();
+    expectStagedSaveFailure(masterIndex, captured);
   });
 
   it('keeps staged state and throws the original save error when resync reader also fails', () => {
     // Arrange
-    const key = createMasterIndexKey();
-    const seededData = {
-      version: 1,
-      lastUpdated: new Date('2025-03-01T00:00:00Z'),
-      collections: { users: buildSeededCollection('users', { documentCount: 2 }) }
-    };
-    seedMasterIndex(key, seededData);
-
-    const { masterIndex } = createTestMasterIndex({ masterIndexKey: key });
-
-    const loggerErrorSpy = vi.spyOn(masterIndex._logger, 'error');
-    vi.spyOn(scriptProperties, 'setProperty').mockImplementation(() => {
-      throw new Error('forced persist failure');
-    });
-    vi.spyOn(scriptProperties, 'getProperty').mockImplementation(() => {
-      throw new Error('forced read failure');
-    });
+    const { masterIndex } = seedAndLoadIndex(2);
 
     // Act
-    const beforeData = masterIndex._data;
-    const caught = captureThrow(() => masterIndex.save());
+    const captured = runFailingSave(masterIndex, { breakReads: true });
 
     // Assert
-    expect(caught).toBeInstanceOf(ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR);
-    expect(caught.context.operation).toBe('save');
-
-    // Staged state retained; the original save error (not a load error) must propagate.
-    expect(masterIndex._data).toBe(beforeData);
-
-    // A loud ERROR must state that memory may be diverged from the stored snapshot.
-    expect(loggerErrorSpy).toHaveBeenCalled();
+    expectStagedSaveFailure(masterIndex, captured);
   });
 
   it('does not recurse into save or normalisation on the resync path with a legacy payload', () => {
@@ -199,16 +218,7 @@ describe('MasterIndex.save resynchronisation on failure', () => {
 
   it('resyncs this._data (not the override) when save(dataOverride) fails with an existing snapshot', () => {
     // Arrange
-    const key = createMasterIndexKey();
-    const seededData = {
-      version: 1,
-      lastUpdated: new Date('2025-03-01T00:00:00Z'),
-      collections: { users: buildSeededCollection('users', { documentCount: 5 }) }
-    };
-    seedMasterIndex(key, seededData);
-
-    const { masterIndex } = createTestMasterIndex({ masterIndexKey: key });
-    const expectedSnapshot = ObjectUtils.deserialise(scriptProperties.getProperty(key));
+    const { masterIndex, expectedSnapshot } = seedAndLoadIndex(5);
     const beforeData = masterIndex._data;
 
     const dataOverride = {
