@@ -106,7 +106,7 @@ class CollectionCoordinator {
         this._logger.error(`Operation ${operationName} failed`, {
           collection: name,
           opId,
-          error: e instanceof Error ? e.message : String(e)
+          error: ErrorHandler.safeErrorMessage(e)
         });
         throw e;
       } finally {
@@ -160,14 +160,11 @@ class CollectionCoordinator {
         this._logger.error('Lock acquisition timed out', {
           collection: collectionName,
           operationId: opId,
+          opId,
           timeout: this._config.coordinationTimeoutMs,
           reason: LOCK_ACQUISITION_TIMEOUT_REASON
         });
-        throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
-          operationName,
-          this._config.coordinationTimeoutMs,
-          LOCK_ACQUISITION_TIMEOUT_REASON
-        );
+        this._throwCoordinationTimeout(operationName, LOCK_ACQUISITION_TIMEOUT_REASON);
       }
       throw e;
     }
@@ -309,11 +306,7 @@ class CollectionCoordinator {
           operation: operationName
         }
       );
-      throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
-        operationName,
-        this._config.coordinationTimeoutMs,
-        LEASE_UNRECOVERABLE_REASON
-      );
+      this._throwCoordinationTimeout(operationName, LEASE_UNRECOVERABLE_REASON);
     }
 
     let finalisationOutcome = 'finalised';
@@ -326,10 +319,7 @@ class CollectionCoordinator {
           {
             collection: collectionName,
             opId,
-            error:
-              finalisationError instanceof Error
-                ? finalisationError.message
-                : String(finalisationError)
+            error: ErrorHandler.safeErrorMessage(finalisationError)
           }
         );
         finalisationOutcome = 'finalisation-failed';
@@ -347,12 +337,29 @@ class CollectionCoordinator {
         elapsedMs,
         finalisationOutcome
       });
-      throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
-        operationName,
-        this._config.coordinationTimeoutMs,
-        POST_OPERATION_OVERRUN_REASON
-      );
+      this._throwCoordinationTimeout(operationName, POST_OPERATION_OVERRUN_REASON);
     }
+  }
+
+  /**
+   * Construct and throw a reason-coded CoordinationTimeoutError for one of the unified
+   * coordination throw sites.
+   * @param {string} operationName - Operation name for error context.
+   * @param {string} reason - Reason code carried in the error context (one of the four
+   *   LOCK_ACQUISITION_TIMEOUT_REASON / PREFLIGHT_BUDGET_EXHAUSTED_REASON /
+   *   POST_OPERATION_OVERRUN_REASON / LEASE_UNRECOVERABLE_REASON values).
+   * @returns {void} Never returns; always throws.
+   * @throws {CoordinationTimeoutError} Always, with the caller-supplied reason code.
+   * @private
+   * @remarks Single construction point for all four reason-coded throw sites so the error
+   *   arguments (operation name and the coordination budget) stay consistent across sites.
+   */
+  _throwCoordinationTimeout(operationName, reason) {
+    throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
+      operationName,
+      this._config.coordinationTimeoutMs,
+      reason
+    );
   }
 
   /**
@@ -404,11 +411,7 @@ class CollectionCoordinator {
         opId,
         timeoutMs: this._config.coordinationTimeoutMs
       });
-      throw new ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT(
-        operationName,
-        this._config.coordinationTimeoutMs,
-        PREFLIGHT_BUDGET_EXHAUSTED_REASON
-      );
+      this._throwCoordinationTimeout(operationName, PREFLIGHT_BUDGET_EXHAUSTED_REASON);
     }
   }
 
@@ -481,7 +484,7 @@ class CollectionCoordinator {
       this._logger.error('Lock release failed', {
         collection: name,
         operationId,
-        error: e instanceof Error ? e.message : String(e)
+        error: ErrorHandler.safeErrorMessage(e)
       });
       // swallow release errors to avoid masking operation errors
     }
