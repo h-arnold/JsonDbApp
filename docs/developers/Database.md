@@ -69,7 +69,7 @@ The `Database` class is the main entry point for GAS DB operations, providing hi
 
 ### Refactored Design (Single Source of Truth)
 
-Following the initialization refactoring, the Database class now enforces MasterIndex as the single source of truth:
+The Database class enforces MasterIndex as the single source of truth:
 
 ```text
 Database (Orchestrator)
@@ -385,8 +385,6 @@ Centralises collection resolution for `getCollection()` after the public wrapper
 
 #### `_buildCollectionMetadataPayload(name, fileId, documentCount = 0)` ⭐ NEW in v0.0.5
 
-**Added in:** DB3 refactoring
-
 Centralized helper for constructing collection metadata payloads with consistent field structure.
 
 - **Parameters:**
@@ -409,8 +407,6 @@ Centralized helper for constructing collection metadata payloads with consistent
 
 #### `_wrapMasterIndexError(operation, error, messagePrefix)` ⭐ NEW in v0.0.5
 
-**Added in:** DB2 refactoring
-
 Wraps non-GASDB errors into MasterIndexError with consistent formatting.
 
 - **Parameters:**
@@ -427,13 +423,13 @@ Wraps non-GASDB errors into MasterIndexError with consistent formatting.
 
 #### `_createCollectionObject(name, driveFileId)`
 
-Creates a minimal collection object (placeholder for full Collection class).
+Creates a `Collection` instance for the given collection name and Drive file ID.
 
 - **Parameters:**
   - `name` (String): Collection name
   - `driveFileId` (String): Drive file ID
-- **Returns:** `Object` - Collection object
-- **Note:** Currently returns minimal object; will integrate with full Collection class in Section 5
+- **Returns:** `Collection` - Collection instance wired to this database and `FileService`
+- **Note:** Metadata and documents load lazily on first access
 
 #### `_normaliseIndexData(rawData)`
 

@@ -644,6 +644,17 @@ class ErrorHandler {
   }
 
   /**
+   * Safely extract a display message from a thrown value, which may not be an Error instance
+   * (e.g. a string or object thrown by third-party code). Guarantees a string so diagnostics
+   * and logs never record `undefined` for the root cause.
+   * @param {*} error - The thrown value (Error instance or any other throwable)
+   * @returns {string} The error message for Error instances, otherwise the stringified value
+   */
+  static safeErrorMessage(error) {
+    return error instanceof Error ? error.message : String(error);
+  }
+
+  /**
    * Detects if someone is trying to JSON.parse() an already-parsed object
    * Provides helpful error message for this common mistake
    * @param {any} data - The data being parsed

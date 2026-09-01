@@ -15,6 +15,7 @@
       - [1.2.1.2. Error Management Methods](#1212-error-management-methods)
       - [1.2.1.3. Usage Examples](#1213-usage-examples)
       - [1.2.1.4. Best Practices](#1214-best-practices)
+      - [1.2.1.5. Coordination Timeout Errors](#1215-coordination-timeout-errors)
     - [1.2.2. IdGenerator](#122-idgenerator)
       - [1.2.2.1. ID Generation Strategies](#1221-id-generation-strategies)
       - [1.2.2.2. Validation Methods](#1222-validation-methods)
@@ -354,6 +355,28 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
    ```javascript
    ErrorHandler.handleError(error, 'Collection.findOne', true);
    ```
+
+#### 1.2.1.5. Coordination Timeout Errors
+
+`CoordinationTimeoutError` (code `COORDINATION_TIMEOUT`) is thrown by `CollectionCoordinator.coordinate()` when a coordinated operation violates its coordination window or loses its lock lease. Every such throw carries a distinct machine-readable `reason` string in the error context (`error.context.reason`, alongside `operation` and `timeout`) so callers and tests can distinguish the sites:
+
+| Site | Reason (`error.context.reason`) | Trigger                                                                | Effects / finalisation state at throw                                                |
+| ---- | ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
+| 0    | `'lock-acquisition-timeout'`    | `LOCK_TIMEOUT` during lock acquisition                                 | None possible; pre-callback                                                          |
+| 1    | `'preflight-budget-exhausted'`  | Coordination budget exhausted before the operation callback runs       | None possible; callback never invoked                                                |
+| 2    | `'post-operation-overrun'`      | Callback completed over budget; lease ownership intact or restored     | Effects applied; metadata finalised before the throw (or finalisation failed loudly) |
+| 3    | `'lease-not-recoverable'`       | Renewal failed and the single re-acquisition returned `false` or threw | Effects applied; metadata finalisation **skipped** — divergence logged               |
+
+Note the observable ordering: at sites 2 and 3 the error arrives **after** the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort _before_ the throw.
+
+**Deliberate swallows in the coordinator.** Two swallows exist, each paired with a loud ERROR log:
+
+- **Lock release** (`releaseOperationLock`): release failures are logged and swallowed so they cannot mask the operation's own outcome (long-standing behaviour).
+- **Best-effort finalisation on violation paths**: on an over-budget path a `MasterIndexError` from the metadata finalisation is logged loudly and swallowed so it cannot mask the primary `CoordinationTimeoutError`. Within-budget finalisation failures continue to propagate as `MasterIndexError`.
+
+**Failure logging.** The `coordinate()` boundary catch remains the single operation-level failure record per failed operation, but on violation paths it is deliberately supplemented by point-of-occurrence records (renewal failure, re-acquisition outcome, finalisation failure swallowed, finalisation skipped, post-operation overrun) emitted by the unified post-callback algorithm — two or more records per failed violation-path operation are intended. The completion INFO record fires only on the success path. One caveat for alerting: a within-budget lease recovery can emit a renewal-failure ERROR yet the operation still returns successfully, so an ERROR record does not imply operation failure.
+
+The full coordination contract — flow, violation algorithm, logging table, and residual risks — is documented in [CollectionCoordinator](CollectionCoordinator.md).
 
 ---
 

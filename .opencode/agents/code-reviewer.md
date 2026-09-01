@@ -2,7 +2,7 @@
 description: Reviews code for quality, standards adherence, and defects using project-specific checklists
 mode: all
 steps: 100
-model: opencode/hy3-free
+model: opencode-go/hy3
 permission:
   edit:
     '*': 'deny'
@@ -52,6 +52,7 @@ Consult these resources before and during review. Local docs contain project-spe
 
 - [Database.md](../../docs/developers/Database.md) — Database lifecycle and public API
 - [Collection_Components.md](../../docs/developers/Collection_Components.md) — Collection multi-file components
+- [CollectionCoordinator.md](../../docs/developers/CollectionCoordinator.md) — Coordination contract (locking, violation policy, throw sites, logging)
 - [QueryEngine.md](../../docs/developers/QueryEngine.md) — Query semantics
 - [UpdateEngine.md](../../docs/developers/UpdateEngine.md) — Update operator semantics
 - [MasterIndex.md](../../docs/developers/MasterIndex.md) — Consistency layer

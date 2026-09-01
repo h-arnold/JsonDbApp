@@ -93,8 +93,14 @@ class MasterIndex {
    * @param {Object} [dataOverride] - Optional data to save instead of internal state
    * @param {Date} [timestamp] - Optional timestamp override
    * @returns {void}
+   * @throws {MasterIndexError} When ScriptProperties persistence fails — either serialisation of
+   *   the staged state via ObjectUtils.serialise or the PropertiesService.setProperty write. The
+   *   in-memory state is first resynchronised with the stored snapshot through
+   *   `_resyncAfterSaveFailure()` (discarding the un-persisted advances whenever a snapshot is
+   *   available) before the `MasterIndexError('save')` is re-thrown.
    * @remarks Emits a DEBUG-gated masterIndex.save timing event through the component logger;
-   *   save is the single persist point timed for all indirect callers.
+   *   save is the single persist point timed for all indirect callers. Ordering is unchanged:
+   *   in-memory state is advanced first, then persisted.
    */
   save(dataOverride, timestamp = this._getCurrentTimestamp()) {
     return this._logger.timeSync('masterIndex.save', () => {
@@ -111,9 +117,52 @@ class MasterIndex {
           dataString
         );
       } catch (error) {
+        this._resyncAfterSaveFailure();
         throw new ErrorHandler.ErrorTypes.MASTER_INDEX_ERROR('save', error.message);
       }
     });
+  }
+
+  /**
+   * Reconcile in-memory state with the stored snapshot after a failed save.
+   * @private
+   * @returns {void}
+   * @remarks Three outcomes are possible, and each is recorded with a loud ERROR: (1) a stored
+   *   snapshot is found and assigned to `this._data`, discarding the staged, un-persisted
+   *   advances; (2) no snapshot is available, so the staged in-memory state is retained and the
+   *   absence is logged; (3) the raw reader itself fails, so the staged state is also retained and
+   *   the possible divergence is logged. Shape normalisation is deliberately skipped on this path:
+   *   `_ensureStateShape()` would trigger a self-saving normalisation that re-enters `save()` and
+   *   re-introduces the recursion this design removes — a stored payload needing normalisation is
+   *   re-normalised on the next lock-protected reload instead. Resynchronisation always targets
+   *   `this._data`; a `dataOverride` passed to `save()` is never adopted as master state. In every
+   *   outcome the original `MasterIndexError('save')` thrown by `save()` is re-thrown by the
+   *   caller; a reader failure must never mask it.
+   */
+  _resyncAfterSaveFailure() {
+    try {
+      const snapshot = this._readStoredSnapshot();
+      if (snapshot === null || snapshot === undefined) {
+        this._logger.error(
+          'Master index save failed; no stored snapshot was available to resynchronise in-memory state from',
+          { masterIndexKey: this._config.masterIndexKey }
+        );
+        return;
+      }
+      this._data = snapshot;
+      this._logger.error(
+        'Master index save failed; in-memory state resynchronised with the stored snapshot',
+        { masterIndexKey: this._config.masterIndexKey }
+      );
+    } catch (readError) {
+      this._logger.error(
+        'Master index save failed; in-memory state may be diverged from the stored snapshot',
+        {
+          masterIndexKey: this._config.masterIndexKey,
+          error: ErrorHandler.safeErrorMessage(readError)
+        }
+      );
+    }
   }
 
   /**
@@ -443,22 +492,47 @@ class MasterIndex {
   }
 
   /**
+   * Read and deserialise the stored ScriptProperties snapshot without touching
+   * in-memory state.
+   *
+   * This is the single raw read-and-deserialise implementation for ScriptProperties
+   * snapshots, composed by `_loadFromScriptProperties` and reused by the save-failure
+   * resynchronisation path. It deliberately never assigns `this._data`, never runs
+   * `_ensureStateShape()`, and never calls `save()` — that third property is what makes
+   * the save↔reload recursion impossible even when the stored payload is a legacy one.
+   * @returns {Object|null} Deserialised index data, or null when the key is absent
+   * @throws {Error} When the underlying read or deserialisation fails (the original
+   *   exception propagates unchanged)
+   * @remarks Absence of the key (null or undefined) is returned as null rather than
+   *   thrown; any other failure from `getProperty` or `ObjectUtils.deserialise` is
+   *   allowed to surface naturally.
+   * @private
+   */
+  _readStoredSnapshot() {
+    const dataString = PropertiesService.getScriptProperties().getProperty(
+      this._config.masterIndexKey
+    );
+    if (!dataString) {
+      return null;
+    }
+    return ObjectUtils.deserialise(dataString);
+  }
+
+  /**
    * Load data from ScriptProperties into internal state.
    *
    * The single ScriptProperties loader implementation, shared by load(), the constructor
-   * bootstrap and _reloadLatestStateUnderLock(): read, deserialise, then shape-check. There is
-   * exactly one MASTER_INDEX_ERROR wrap point and one failure-log site here so the loading
-   * behaviour of every caller stays identical.
+   * bootstrap and _reloadLatestStateUnderLock(): it composes `_readStoredSnapshot()` to
+   * perform the raw read, assigns the result, then shape-checks. There is exactly one
+   * MASTER_INDEX_ERROR wrap point and one failure-log site here so the loading behaviour
+   * of every caller stays identical.
    * @returns {Object|null} Deserialised index data, or null when no snapshot exists
    * @throws {MasterIndexError} When reading or deserialising the stored snapshot fails
    * @private
    */
   _loadFromScriptProperties() {
     try {
-      const dataString = PropertiesService.getScriptProperties().getProperty(
-        this._config.masterIndexKey
-      );
-      const data = dataString ? ObjectUtils.deserialise(dataString) : null;
+      const data = this._readStoredSnapshot();
       this._data = data;
       if (this._data) {
         this._ensureStateShape();

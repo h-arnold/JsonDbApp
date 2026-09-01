@@ -34,7 +34,7 @@ You will fail the task unless you read _the entirety_ of the relevant context be
 ## 1. Primary Responsibilities
 
 1. **Developer documentation updates**:
-   - Update relevant docs in `docs/developers/` for behavioural, architectural, config, or workflow changes. Canonical mappings: database/collection lifecycle → `Database.md`; queries → `QueryEngine.md`; updates → `UpdateEngine.md`; master index → `MasterIndex.md`; collection internals → `Collection_Components.md`; locking/files/services → `Infrastructure_Components.md`; testing → `Testing_Framework.md`.
+   - Update relevant docs in `docs/developers/` for behavioural, architectural, config, or workflow changes. Canonical mappings: database/collection lifecycle → `Database.md`; queries → `QueryEngine.md`; updates → `UpdateEngine.md`; master index → `MasterIndex.md`; coordination contract (CollectionCoordinator) → `CollectionCoordinator.md`; collection internals → `Collection_Components.md`; locking/files/services → `Infrastructure_Components.md`; testing → `Testing_Framework.md`.
    - Keep updates concrete, implementation-grounded, and concise.
    - When planning docs introduced planned entries marked `Not implemented` (including data-shape entries under `docs/developers/data-shapes/`), reconcile those entries against actual implementation during this pass.
 
@@ -167,6 +167,7 @@ Provide a concise handoff summary including:
 │   │   ├── README.md                                    # Developer documentation index
 │   │   ├── Class_Diagrams.md                            # Class relationship diagrams
 │   │   ├── Collection_Components.md                     # Collection multi-file components
+│   │   ├── CollectionCoordinator.md                     # Coordination contract: locking, violation policy, throw sites, logging
 │   │   ├── Database.md                                  # Database lifecycle and API
 │   │   ├── DatabaseConfig.md                            # Configuration component
 │   │   ├── Infrastructure_Components.md                 # DbLockService, FileService and related infrastructure
@@ -183,7 +184,8 @@ Provide a concise handoff summary including:
 │       ├── release-notes-v0.0.4.md
 │       ├── release-notes-v0.1.0.md
 │       ├── release-notes-v0.1.1.md
-│       └── release-notes-v0.2.0.md
+│       ├── release-notes-v0.2.0.md
+│       └── release-notes-v0.3.0.md
 │
 └── tests/
     └── README.md                                        # Vitest suite layout, GAS mocks bootstrap, isolation notes

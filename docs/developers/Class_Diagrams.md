@@ -10,6 +10,7 @@ This document contains updated class diagrams for the JsonDbApp library, optimis
     - [Database Class Diagram](#database-class-diagram)
     - [DatabaseConfig Class Diagram](#databaseconfig-class-diagram)
     - [Collection Facade and Operations](#collection-facade-and-operations)
+    - [CollectionCoordinator Class Diagram](#collectioncoordinator-class-diagram)
     - [DocumentOperations Class Diagram](#documentoperations-class-diagram)
     - [CollectionMetadata Class Diagram](#collectionmetadata-class-diagram)
     - [FileService Class Diagram](#fileservice-class-diagram)
@@ -39,7 +40,6 @@ classDiagram
         -_masterIndex: MasterIndex
         -_fileService: FileService
         -_logger: JDbLogger
-        -_collectionCoordinator: CollectionCoordinator
         -_initialised: boolean
         -_collections: Map
         +constructor(config)
@@ -154,6 +154,39 @@ classDiagram
         -_updateOneWithReplacement(filter, update): Object
     }
 ```
+
+### CollectionCoordinator Class Diagram
+
+```mermaid
+classDiagram
+    class CollectionCoordinator {
+        -_collection: Collection
+        -_masterIndex: MasterIndex
+        -_logger: JDbLogger
+        -_config: Object
+        +constructor(collection, masterIndex, config)
+        +coordinate(operationName, callback): *
+        +validateModificationToken(localToken, remoteToken): void
+        +acquireOperationLock(operationId): Number
+        +releaseOperationLock(operationId): void
+        +hasConflict(): Boolean
+        +resolveConflict(): void
+        +updateMasterIndexMetadata(): void
+        -_acquireLockWithTimeoutMapping(opId, operationName, collectionName): Number
+        -_enforcePreflightBudget(operationName, opId, collectionName, startTime): void
+        -_finaliseAfterOperation(operationName, opId, collectionName, lockAcquiredAt, startTime, overBudget): void
+        -_resolveOwnership(opId, collectionName, lockAcquiredAt): String
+        -_attemptSingleReacquisition(collectionName, opId): Boolean
+        -_renewLeaseForFinalisationIfRequired(lockAcquiredAt, opId, collectionName): Boolean
+        -_shouldRenewLease(lockAcquiredAt): Boolean
+        -_resolveConflictsIfPresent(collectionName): void
+    }
+
+    Collection "1" -- "1" CollectionCoordinator : coordinates
+    CollectionCoordinator "1" -- "1" MasterIndex : coordinates via
+```
+
+The coordinator defines module-level reason constants for its four `CoordinationTimeoutError` throw sites — `'lock-acquisition-timeout'`, `'preflight-budget-exhausted'`, `'post-operation-overrun'`, and `'lease-not-recoverable'` — carried in `error.context.reason` so callers can distinguish the throw sites. See [CollectionCoordinator.md](CollectionCoordinator.md) for the full contract: the `coordinate()` flow, the unified violation algorithm, the logging contract, and the deliberate swallows.
 
 ### DocumentOperations Class Diagram
 
@@ -428,38 +461,62 @@ classDiagram
 ```mermaid
 classDiagram
     class MasterIndex {
-        -_dbLockService: DbLockService
-        -_logger: JDbLogger
         -_config: Object
-        -_masterIndexData: MasterIndexData
-        -_isInitialised: boolean
-        +constructor(dbLockService, logger, config)
-        +load(): void
-        +isInitialised(): boolean
-        +addCollections(collections): void
-        +getCollectionMetadata(collectionName): Object
-        +updateCollectionMetadata(collectionName, metadata): void
-        +getAllCollections(): Object
-        +removeCollection(collectionName): void
-        +acquireCollectionLock(collectionName, operationId): Object
-        +releaseCollectionLock(collectionName, operationId): void
-        +getCollectionLockStatus(collectionName): Object
+        -_logger: JDbLogger
+        -_dbLockService: DbLockService
+        -_metadataNormaliser: MasterIndexMetadataNormaliser
+        -_lockManager: MasterIndexLockManager
+        -_conflictResolver: MasterIndexConflictResolver
+        -_simpleUpdateHandlers: Object
+        -_data: Object
+        +constructor(config)
+        +isInitialised(): Boolean
+        +addCollection(name, metadata): CollectionMetadata
+        +addCollections(collectionsMap): Array~CollectionMetadata~
+        +save(dataOverride?, timestamp?): void
+        +load(): Object | null
+        +getCollections(): Object
+        +getCollection(name): CollectionMetadata | null
+        +updateCollectionMetadata(name, updates): CollectionMetadata
+        +removeCollection(name): Boolean
+        +acquireCollectionLock(collectionName, operationId, timeout?): Boolean
+        +renewCollectionLock(collectionName, operationId, timeout?): Boolean
+        +releaseCollectionLock(collectionName, operationId): Boolean
+        +isCollectionLocked(collectionName): Boolean
         +cleanupExpiredLocks(): void
-        +save(): void
-        -_loadFromScriptProperties(): void
-        -_saveToScriptProperties(): void
-        -_withScriptLock(operation): *
-        -_isLockExpired(lock): boolean
+        +generateModificationToken(): String
+        +hasConflict(collectionName, expectedToken): Boolean
+        +resolveConflict(collectionName, newData, strategy): Object
+        +validateModificationToken(token): Boolean
+        -_addCollectionInternal(name, metadata): CollectionMetadata
+        -_updateCollectionMetadataInternal(name, updates): CollectionMetadata
+        -_applyCollectionUpdate(collection, key, value): void
+        -_buildSimpleUpdateHandlers(): Object
+        -_resyncAfterSaveFailure(): void
+        -_initialiseConfig(config): Object
+        -_assertRequiredDatabaseConfigDefaults(config): void
+        -_assertDatabaseConfigDefault(methodName): void
+        -_initialiseDataState(): void
+        -_readStoredSnapshot(): Object | null
+        -_loadFromScriptProperties(): Object | null
+        -_withScriptLock(operation, timeout): *
+        -_reloadLatestStateUnderLock(): void
+        -_normaliseCollectionMetadata(name, metadata): CollectionMetadata
+        -_persistCollectionMetadata(name, metadata, timestamp): void
+        -_getCollectionData(name): CollectionMetadata | Object | null
+        -_getCurrentTimestamp(): Date
+        -_touchIndex(timestamp): void
+        -_ensureStateShape(): void
+        -_resolveExistingTimestamp(candidate): Date
     }
 
-    class MasterIndexData {
-        version: String
-        lastUpdated: String
-        collections: Map
-    }
-
-    MasterIndex "1" -- "1" MasterIndexData : contains
+    MasterIndex "1" -- "1" DbLockService : uses
+    MasterIndex "1" -- "1" MasterIndexMetadataNormaliser : delegates to
+    MasterIndex "1" -- "1" MasterIndexLockManager : delegates to
+    MasterIndex "1" -- "1" MasterIndexConflictResolver : delegates to
 ```
+
+`-_data` holds the versioned index snapshot (`version`, `lastUpdated`, `collections`) as a plain object; there is no dedicated data class. See [MasterIndex.md](MasterIndex.md) for the `save()` failure-resynchronisation semantics and the raw-reader guarantees of `_readStoredSnapshot()`.
 
 ## Class Relationships
 
@@ -481,6 +538,8 @@ classDiagram
     FileService "1" -- "1" FileCache : contains
     FileService "1" -- "1" FileOperations : contains
     FileOperations "1" -- "1" JDbLogger : uses
+    Collection "1" -- "1" CollectionCoordinator : coordinates
+    CollectionCoordinator "1" -- "1" MasterIndex : coordinates via
 ```
 
 ## Sequence Diagrams
