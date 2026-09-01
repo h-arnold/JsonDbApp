@@ -15,7 +15,7 @@
         <link rel="canonical" href="https://h-arnold.github.io/JsonDbApp/developers/Infrastructure_Components/">
       
       
-        <link rel="prev" href="../Collection_Components/">
+        <link rel="prev" href="../CollectionCoordinator/">
       
       
         <link rel="next" href="../Testing_Framework/">
@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.1.1/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
           
   
   
@@ -1001,6 +1001,34 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="../CollectionCoordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Coordinator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -1285,6 +1313,17 @@
     <span class="md-ellipsis">
       
         1.2.1.4. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1215-coordination-timeout-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.5. Coordination Timeout Errors
       
     </span>
   </a>
@@ -1910,6 +1949,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../release-notes/release-notes-v0.1.1/" class="md-nav__link">
         
   
@@ -2270,6 +2365,17 @@
     <span class="md-ellipsis">
       
         1.2.1.4. Best Practices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#1215-coordination-timeout-errors" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.1.5. Coordination Timeout Errors
       
     </span>
   </a>
@@ -2666,6 +2772,7 @@
 <li><a href="#1212-error-management-methods">1.2.1.2. Error Management Methods</a></li>
 <li><a href="#1213-usage-examples">1.2.1.3. Usage Examples</a></li>
 <li><a href="#1214-best-practices">1.2.1.4. Best Practices</a></li>
+<li><a href="#1215-coordination-timeout-errors">1.2.1.5. Coordination Timeout Errors</a></li>
 <li><a href="#122-idgenerator">1.2.2. IdGenerator</a></li>
 <li><a href="#1221-id-generation-strategies">1.2.2.1. ID Generation Strategies</a></li>
 <li><a href="#1222-validation-methods">1.2.2.2. Validation Methods</a></li>
@@ -3124,6 +3231,52 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
 </ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="s1">'Collection.findOne'</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
 </code></pre></div>
+<h4 id="1215-coordination-timeout-errors">1.2.1.5. Coordination Timeout Errors<a class="headerlink" href="#1215-coordination-timeout-errors" title="Permanent link">&para;</a></h4>
+<p><code>CoordinationTimeoutError</code> (code <code>COORDINATION_TIMEOUT</code>) is thrown by <code>CollectionCoordinator.coordinate()</code> when a coordinated operation violates its coordination window or loses its lock lease. Every such throw carries a distinct machine-readable <code>reason</code> string in the error context (<code>error.context.reason</code>, alongside <code>operation</code> and <code>timeout</code>) so callers and tests can distinguish the sites:</p>
+<table>
+<thead>
+<tr>
+<th>Site</th>
+<th>Reason (<code>error.context.reason</code>)</th>
+<th>Trigger</th>
+<th>Effects / finalisation state at throw</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>'lock-acquisition-timeout'</code></td>
+<td><code>LOCK_TIMEOUT</code> during lock acquisition</td>
+<td>None possible; pre-callback</td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>'preflight-budget-exhausted'</code></td>
+<td>Coordination budget exhausted before the operation callback runs</td>
+<td>None possible; callback never invoked</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>'post-operation-overrun'</code></td>
+<td>Callback completed over budget; lease ownership intact or restored</td>
+<td>Effects applied; metadata finalised before the throw (or finalisation failed loudly)</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>'lease-not-recoverable'</code></td>
+<td>Renewal failed and the single re-acquisition returned <code>false</code> or threw</td>
+<td>Effects applied; metadata finalisation <strong>skipped</strong> — divergence logged</td>
+</tr>
+</tbody>
+</table>
+<p>Note the observable ordering: at sites 2 and 3 the error arrives <strong>after</strong> the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort <em>before</em> the throw.</p>
+<p><strong>Deliberate swallows in the coordinator.</strong> Two swallows exist, each paired with a loud ERROR log:</p>
+<ul>
+<li><strong>Lock release</strong> (<code>releaseOperationLock</code>): release failures are logged and swallowed so they cannot mask the operation's own outcome (long-standing behaviour).</li>
+<li><strong>Best-effort finalisation on violation paths</strong>: on an over-budget path a <code>MasterIndexError</code> from the metadata finalisation is logged loudly and swallowed so it cannot mask the primary <code>CoordinationTimeoutError</code>. Within-budget finalisation failures continue to propagate as <code>MasterIndexError</code>.</li>
+</ul>
+<p><strong>Failure logging.</strong> The <code>coordinate()</code> boundary catch remains the single operation-level failure record per failed operation, but on violation paths it is deliberately supplemented by point-of-occurrence records (renewal failure, re-acquisition outcome, finalisation failure swallowed, finalisation skipped, post-operation overrun) emitted by the unified post-callback algorithm — two or more records per failed violation-path operation are intended. The completion INFO record fires only on the success path. One caveat for alerting: a within-budget lease recovery can emit a renewal-failure ERROR yet the operation still returns successfully, so an ERROR record does not imply operation failure.</p>
+<p>The full coordination contract — flow, violation algorithm, logging table, and residual risks — is documented in <a href="../CollectionCoordinator/">CollectionCoordinator</a>.</p>
 <hr />
 <h3 id="122-idgenerator">1.2.2. IdGenerator<a class="headerlink" href="#122-idgenerator" title="Permanent link">&para;</a></h3>
 <p><strong>Location:</strong> <code>src/01_utils/IdGenerator.js</code></p>
@@ -3749,7 +3902,7 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="../Collection_Components/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Collection Components">
+          <a href="../CollectionCoordinator/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Collection Coordinator">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
@@ -3759,7 +3912,7 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
                 Previous
               </span>
               <div class="md-ellipsis">
-                Collection Components
+                Collection Coordinator
               </div>
             </div>
           </a>

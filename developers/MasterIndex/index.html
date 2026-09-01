@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.1.1/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
           
   
   
@@ -1035,6 +1035,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#save-persistence-and-failure-resynchronisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Save Persistence and Failure Resynchronisation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#data-structure" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1579,6 +1590,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../CollectionCoordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Coordinator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Infrastructure_Components/" class="md-nav__link">
         
   
@@ -1848,6 +1887,62 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2137,6 +2232,17 @@
         
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#save-persistence-and-failure-resynchronisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Save Persistence and Failure Resynchronisation
+      
+    </span>
+  </a>
   
 </li>
         
@@ -2557,6 +2663,7 @@
 <li><a href="#core-workflow">Core Workflow</a><ul>
 <li><a href="#collection-access-protocol">Collection Access Protocol</a></li>
 <li><a href="#virtual-locking">Virtual Locking</a></li>
+<li><a href="#save-persistence-and-failure-resynchronisation">Save Persistence and Failure Resynchronisation</a></li>
 <li><a href="#data-structure">Data Structure</a></li>
 </ul>
 </li>
@@ -2597,7 +2704,7 @@
 <li><a href="#best-practices">Best Practices</a></li>
 </ul>
 <h2 id="overview">Overview<a class="headerlink" href="#overview" title="Permanent link">&para;</a></h2>
-<p>The <code>MasterIndex</code> class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. Following the Section 4 refactoring, <code>MasterIndex</code> serves as the <strong>primary source of truth</strong> for collection metadata, with the <code>Database</code> class delegating all collection management operations to it.</p>
+<p>The <code>MasterIndex</code> class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. <code>MasterIndex</code> serves as the <strong>primary source of truth</strong> for collection metadata, with the <code>Database</code> class delegating all collection management operations to it.</p>
 <p><strong>Key Responsibilities:</strong></p>
 <ul>
 <li>Cross-instance coordination via ScriptProperties</li>
@@ -2620,7 +2727,6 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <p>Encapsulates the transformation of incoming metadata into <code>CollectionMetadata</code> instances. The normaliser clamps timestamps, clones lock status payloads, and ensures modification tokens are generated when missing. This keeps <code>_addCollectionInternal</code> and bulk operations lean while guaranteeing consistent metadata regardless of input type (plain object or existing <code>CollectionMetadata</code>).</p>
 <h3 id="masterindexlockmanager-helper-methods-new-in-v005">MasterIndexLockManager Helper Methods ⭐ NEW in v0.0.5<a class="headerlink" href="#masterindexlockmanager-helper-methods-new-in-v005" title="Permanent link">&para;</a></h3>
 <p><strong>Location:</strong> <a href="../../src/04_core/MasterIndex/02_MasterIndexLockManager.js">src/04_core/MasterIndex/02_MasterIndexLockManager.js</a></p>
-<p><strong>Added in:</strong> MI2 refactoring</p>
 <h4 id="_setandpersistlockstatuscollectionname-collection-lockstatus"><code>_setAndPersistLockStatus(collectionName, collection, lockStatus)</code><a class="headerlink" href="#_setandpersistlockstatuscollectionname-collection-lockstatus" title="Permanent link">&para;</a></h4>
 <p>Centralized helper for setting and persisting lock status with guaranteed ordering.</p>
 <ul>
@@ -2636,7 +2742,6 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 </ul>
 <h3 id="masterindexconflictresolver-helper-methods-new-in-v005">MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5<a class="headerlink" href="#masterindexconflictresolver-helper-methods-new-in-v005" title="Permanent link">&para;</a></h3>
 <p><strong>Location:</strong> <a href="../../src/04_core/MasterIndex/04_MasterIndexConflictResolver.js">src/04_core/MasterIndex/04_MasterIndexConflictResolver.js</a></p>
-<p><strong>Added in:</strong> MI1 refactoring</p>
 <h4 id="_applymetadataupdatescollectionmetadata-updates"><code>_applyMetadataUpdates(collectionMetadata, updates)</code><a class="headerlink" href="#_applymetadataupdatescollectionmetadata-updates" title="Permanent link">&para;</a></h4>
 <p>Centralized helper for applying metadata field updates during conflict resolution.</p>
 <ul>
@@ -2678,7 +2783,7 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <ul>
 <li>Locks expire automatically (default: 30 seconds)</li>
 <li>Operation ID required for lock acquisition/release</li>
-<li>Active locks may be renewed by the owning operation before final metadata persistence</li>
+<li>Active locks may be renewed by the owning operation before final metadata persistence. Within <code>CollectionCoordinator</code> the renewal helper is non-throwing: a failed renewal is reported as a boolean and the coordinator attempts exactly one re-acquisition for the same operation ID, with all throw decisions centralised in <code>coordinate()</code> (see <a href="../CollectionCoordinator/">CollectionCoordinator</a>)</li>
 <li>Expired locks may be explicitly removed by calling <code>cleanupExpiredLocks()</code></li>
 <li>All ScriptLock-protected mutation paths reload the latest ScriptProperties snapshot after acquiring the lock, so read-modify-write operations do not act on stale in-memory metadata</li>
 </ul>
@@ -2692,6 +2797,23 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li>resolve conflicts that persist metadata back to the index</li>
 </ul>
 <p>This closes the stale-instance window where one execution could acquire the ScriptLock yet still overwrite a newer lock or collection update using outdated in-memory state.</p>
+<h3 id="save-persistence-and-failure-resynchronisation">Save Persistence and Failure Resynchronisation<a class="headerlink" href="#save-persistence-and-failure-resynchronisation" title="Permanent link">&para;</a></h3>
+<p><code>MasterIndex.save()</code> is the single persist point for all metadata writes (direct and indirect). Its ordering is unchanged: in-memory state is advanced first (including caller-side advances of collection entries and <code>lastUpdated</code>), then persisted to ScriptProperties.</p>
+<p><strong>On a persistence failure</strong> (serialisation or the <code>setProperty</code> write throws), <code>save()</code> resynchronises in-memory state with the stored snapshot — via <code>_resyncAfterSaveFailure()</code> — <strong>before</strong> re-throwing the original <code>MasterIndexError('save', …)</code>. Three outcomes are possible, and each is recorded with a loud ERROR naming the outcome:</p>
+<ol>
+<li><strong>Snapshot found</strong> → <code>this._data</code> is reassigned to the stored snapshot; the staged, un-persisted advances are discarded.</li>
+<li><strong>No snapshot</strong> (stored key absent, e.g. a failure during initial creation) → the staged in-memory state is kept, and the absence of a resynchronisation source is logged.</li>
+<li><strong>Reader failure</strong> (the raw read or deserialisation throws) → the staged in-memory state is kept, and a loud ERROR warns that memory may be diverged from the stored snapshot.</li>
+</ol>
+<p>In all three outcomes the original <code>MasterIndexError('save', …)</code> is thrown; a reader failure must never mask it.</p>
+<p><strong>Design notes:</strong></p>
+<ul>
+<li>Resynchronisation always targets <code>this._data</code>. A <code>dataOverride</code> passed to <code>save()</code> is never adopted as master state (the override object may itself be mutated by the pre-persist <code>lastUpdated</code> assignment, but it is not re-read as master state).</li>
+<li>Shape normalisation is <strong>intentionally skipped</strong> on the resync path. <code>_ensureStateShape()</code> performs a self-saving normalisation that would re-enter <code>save()</code>; a stored payload that still needs normalisation is re-normalised on the next lock-protected reload (<code>_withScriptLock()</code> → <code>_reloadLatestStateUnderLock()</code>).</li>
+<li>After a successful resynchronisation the index's metadata objects are freshly deserialised — de-aliased from any live <code>Collection._metadata</code> instances. This is acceptable: the divergence self-heals on the next successful coordinated finalisation, and <code>CollectionCoordinator.hasConflict()</code> does not detect this divergence class (write-path modification tokens are not regenerated).</li>
+</ul>
+<p><strong>The raw reader.</strong> <code>_readStoredSnapshot()</code> is the single read-and-deserialise implementation for ScriptProperties snapshots. It reads the configured key and deserialises the payload — and deliberately never assigns <code>this._data</code>, never runs <code>_ensureStateShape()</code>, and never calls <code>save()</code>. Those guarantees are what make save↔reload recursion impossible, even when the stored snapshot is a legacy payload and the persist path is broken. Key absence returns <code>null</code>; read or deserialisation failures propagate to the caller unchanged.</p>
+<p><strong>Loader composition.</strong> <code>_loadFromScriptProperties()</code> composes the raw reader: it calls <code>_readStoredSnapshot()</code>, assigns the result to <code>this._data</code>, and runs <code>_ensureStateShape()</code> when data is present. Its single <code>MASTER_INDEX_ERROR('load', …)</code> wrap point and failure log are preserved, so every loader caller (the public <code>load()</code>, the constructor bootstrap, and the under-lock reload) keeps identical behaviour.</p>
 <h3 id="data-structure">Data Structure<a class="headerlink" href="#data-structure" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
 <a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">version</span><span class="o">:</span><span class="w"> </span><span class="nb">Number</span><span class="p">,</span>
@@ -2789,7 +2911,7 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <ul>
 <li><strong>Parameters:</strong> <code>timeout</code> is optional and defaults to the configured lock lease duration</li>
 <li><strong>Returns:</strong> <code>true</code> if the active lock was renewed, <code>false</code> if it was missing, expired, or owned by another operation</li>
-<li><strong>Database Integration:</strong> Used by <code>CollectionCoordinator</code> to extend a near-expiry lease before final metadata persistence</li>
+<li><strong>Database Integration:</strong> Used by <code>CollectionCoordinator</code> to extend a near-expiry lease before final metadata persistence. The coordinator treats a <code>false</code> return as a renewal failure and attempts exactly one <code>acquireCollectionLock()</code> for the same operation ID; the coordinator's renewal helper is non-throwing and reports the outcome as a boolean (see <a href="../CollectionCoordinator/">CollectionCoordinator</a>)</li>
 <li><strong>Concurrency behaviour:</strong> Reloads the latest lock state under ScriptLock before renewing, so stale instances cannot extend a newer lock they do not own</li>
 </ul>
 <h4 id="releasecollectionlockcollectionname-operationid"><code>releaseCollectionLock(collectionName, operationId)</code><a class="headerlink" href="#releasecollectionlockcollectionname-operationid" title="Permanent link">&para;</a></h4>

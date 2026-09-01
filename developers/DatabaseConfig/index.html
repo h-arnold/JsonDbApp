@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.1.1/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
           
   
   
@@ -1456,6 +1456,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../CollectionCoordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Coordinator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Infrastructure_Components/" class="md-nav__link">
         
   
@@ -1725,6 +1753,62 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2589,6 +2673,7 @@
 <li>The legacy <code>lockTimeout</code> key in the constructor input object is accepted as a backward-compatible alias for <code>collectionLockLeaseMs</code>; new code should use <code>collectionLockLeaseMs</code> directly</li>
 <li><code>collectionLockLeaseMs</code> must be greater than or equal to <code>coordinationTimeoutMs</code></li>
 <li><code>CollectionCoordinator</code> may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback</li>
+<li>An operation that overruns <code>coordinationTimeoutMs</code> now finalises collection metadata best-effort <strong>before</strong> the <code>CoordinationTimeoutError</code> is thrown, so the metadata update may be observable even though the call failed; when the lease cannot be recovered, finalisation is skipped and the divergence is logged loudly. Renewal failure has two causes — lease expiry, or concurrent collection removal / lock-record loss — and both are handled identically (one re-acquisition attempt, then recover or throw). See <a href="../CollectionCoordinator/">CollectionCoordinator</a></li>
 <li>Recommended range: 5000-60000ms unless you have a measured need for longer operations</li>
 <li>Zero is invalid because the minimum is enforced during validation</li>
 </ul>
@@ -2814,7 +2899,7 @@
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Validate early:</strong> Create DatabaseConfig instances explicitly to catch errors</li>
-<li><strong>Use appropriate timeouts:</strong> Size <code>collectionLockLeaseMs</code> to cover the whole write, and keep <code>coordinationTimeoutMs</code> within that lease</li>
+<li><strong>Use appropriate timeouts:</strong> Size <code>collectionLockLeaseMs</code> to cover the whole write, and keep <code>coordinationTimeoutMs</code> within that lease; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases</li>
 <li><strong>Environment-specific configs:</strong> Create different configurations for dev/test/prod</li>
 <li><strong>Immutable configurations:</strong> Don't modify config properties after creation</li>
 <li><strong>Proper folder permissions:</strong> Ensure root folder is accessible to the script</li>

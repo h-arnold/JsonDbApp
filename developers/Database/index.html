@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.1.1/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
           
   
   
@@ -1599,6 +1599,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../CollectionCoordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Coordinator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Infrastructure_Components/" class="md-nav__link">
         
   
@@ -1868,6 +1896,62 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2659,7 +2743,7 @@
 </ul>
 <h2 id="architecture-masterindex-integration">Architecture &amp; MasterIndex Integration<a class="headerlink" href="#architecture-masterindex-integration" title="Permanent link">&para;</a></h2>
 <h3 id="refactored-design-single-source-of-truth">Refactored Design (Single Source of Truth)<a class="headerlink" href="#refactored-design-single-source-of-truth" title="Permanent link">&para;</a></h3>
-<p>Following the initialization refactoring, the Database class now enforces MasterIndex as the single source of truth:</p>
+<p>The Database class enforces MasterIndex as the single source of truth:</p>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>Database (Orchestrator)
 <a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>├── MasterIndex (Single source of truth - ScriptProperties)
 <a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>├── Drive Index File (Backup only)
@@ -2920,7 +3004,6 @@
 <li>Creates and caches new collections (via <code>createCollection(originalName)</code>) when auto-create is permitted</li>
 </ul>
 <h4 id="_buildcollectionmetadatapayloadname-fileid-documentcount-0-new-in-v005"><code>_buildCollectionMetadataPayload(name, fileId, documentCount = 0)</code> ⭐ NEW in v0.0.5<a class="headerlink" href="#_buildcollectionmetadatapayloadname-fileid-documentcount-0-new-in-v005" title="Permanent link">&para;</a></h4>
-<p><strong>Added in:</strong> DB3 refactoring</p>
 <p>Centralized helper for constructing collection metadata payloads with consistent field structure.</p>
 <ul>
 <li><strong>Parameters:</strong></li>
@@ -2941,7 +3024,6 @@
 <li><strong>Benefits:</strong> Single source of truth for metadata structure, guaranteed field alignment</li>
 </ul>
 <h4 id="_wrapmasterindexerroroperation-error-messageprefix-new-in-v005"><code>_wrapMasterIndexError(operation, error, messagePrefix)</code> ⭐ NEW in v0.0.5<a class="headerlink" href="#_wrapmasterindexerroroperation-error-messageprefix-new-in-v005" title="Permanent link">&para;</a></h4>
-<p><strong>Added in:</strong> DB2 refactoring</p>
 <p>Wraps non-GASDB errors into MasterIndexError with consistent formatting.</p>
 <ul>
 <li><strong>Parameters:</strong></li>
@@ -2957,13 +3039,13 @@
 <li><strong>Benefits:</strong> Consistent error wrapping, preserves error types for tests</li>
 </ul>
 <h4 id="_createcollectionobjectname-drivefileid"><code>_createCollectionObject(name, driveFileId)</code><a class="headerlink" href="#_createcollectionobjectname-drivefileid" title="Permanent link">&para;</a></h4>
-<p>Creates a minimal collection object (placeholder for full Collection class).</p>
+<p>Creates a <code>Collection</code> instance for the given collection name and Drive file ID.</p>
 <ul>
 <li><strong>Parameters:</strong></li>
 <li><code>name</code> (String): Collection name</li>
 <li><code>driveFileId</code> (String): Drive file ID</li>
-<li><strong>Returns:</strong> <code>Object</code> - Collection object</li>
-<li><strong>Note:</strong> Currently returns minimal object; will integrate with full Collection class in Section 5</li>
+<li><strong>Returns:</strong> <code>Collection</code> - Collection instance wired to this database and <code>FileService</code></li>
+<li><strong>Note:</strong> Metadata and documents load lazily on first access</li>
 </ul>
 <h4 id="_normaliseindexdatarawdata"><code>_normaliseIndexData(rawData)</code><a class="headerlink" href="#_normaliseindexdatarawdata" title="Permanent link">&para;</a></h4>
 <p>Prepares parsed index content for validation and repair.</p>

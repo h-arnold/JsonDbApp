@@ -18,7 +18,7 @@
         <link rel="prev" href="../UpdateEngine/">
       
       
-        <link rel="next" href="../Infrastructure_Components/">
+        <link rel="next" href="../CollectionCoordinator/">
       
       
         
@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.1.1/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
           
   
   
@@ -1059,10 +1059,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#current-limitations-section-5" class="md-nav__link">
+  <a href="#current-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Limitations (Section 5)
+        Current Limitations
       
     </span>
   </a>
@@ -1726,6 +1726,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../CollectionCoordinator/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Collection Coordinator
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../Infrastructure_Components/" class="md-nav__link">
         
   
@@ -2003,6 +2031,62 @@
   
   
     <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.2.0/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../release-notes/release-notes-v0.1.1/" class="md-nav__link">
         
   
@@ -2165,10 +2249,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#current-limitations-section-5" class="md-nav__link">
+  <a href="#current-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Current Limitations (Section 5)
+        Current Limitations
       
     </span>
   </a>
@@ -2842,7 +2926,7 @@
 <li><a href="#collection-components-developer-guide">Collection Components Developer Guide</a></li>
 <li><a href="#overview">Overview</a><ul>
 <li><a href="#architecture">Architecture</a></li>
-<li><a href="#current-limitations-section-5">Current Limitations (Section 5)</a></li>
+<li><a href="#current-limitations">Current Limitations</a></li>
 </ul>
 </li>
 <li><a href="#collection">Collection</a><ul>
@@ -2921,8 +3005,8 @@
 <a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>    DocumentOperations --&gt; QueryEngine[QueryEngine (Query processing)]
 <a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>    DocumentOperations --&gt; UpdateEngine[UpdateEngine (Update operation processing)]
 </code></pre></div>
-<h3 id="current-limitations-section-5">Current Limitations (Section 5)<a class="headerlink" href="#current-limitations-section-5" title="Permanent link">&para;</a></h3>
-<p>This section describes the capabilities as of Section 5. The <code>Collection</code> class has since been enhanced. Refer to the method descriptions below for current capabilities.</p>
+<h3 id="current-limitations">Current Limitations<a class="headerlink" href="#current-limitations" title="Permanent link">&para;</a></h3>
+<p>The <code>Collection</code> class has been enhanced since these limitations were first recorded. Refer to the method descriptions below for current capabilities.</p>
 <ul>
 <li><strong>findOne()</strong>: Only supports <code>{}</code> (empty) and <code>{_id: "id"}</code> filters</li>
 <li><strong>find()</strong>: Only supports <code>{}</code> (empty) filters</li>
@@ -2930,7 +3014,7 @@
 <li><strong>deleteOne()</strong>: Only supports <code>{_id: "id"}</code> filters</li>
 <li><strong>countDocuments()</strong>: Only supports <code>{}</code> (empty) filters</li>
 </ul>
-<p>Advanced query capabilities will be added in Section 6 (Query Engine) and Section 7 (Update Engine).</p>
+<p>Advanced query and update capabilities are provided by the <code>QueryEngine</code> and <code>UpdateEngine</code>.</p>
 <hr />
 <h2 id="collection">Collection<a class="headerlink" href="#collection" title="Permanent link">&para;</a></h2>
 <h3 id="purpose">Purpose<a class="headerlink" href="#purpose" title="Permanent link">&para;</a></h3>
@@ -3258,7 +3342,9 @@ delegate in a DEBUG-gated <code>collection.&lt;operation&gt;</code> timing event
 <ul>
 <li><strong>Returns</strong></li>
 <li><code>{acknowledged: true}</code> once the save coordination succeeds</li>
-<li><strong>Throws</strong>: <code>OperationError</code> if save fails</li>
+<li><strong>Throws</strong></li>
+<li><code>OperationError</code> if save fails</li>
+<li><code>CoordinationTimeoutError</code> when the coordinated save violates its coordination window or loses its lock lease; depending on the throw site the error may arrive after the save's effects were applied — see <a href="../CollectionCoordinator/">CollectionCoordinator</a></li>
 </ul>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-14-1" name="__codelineno-14-1" href="#__codelineno-14-1"></a><span class="c1">// Manual save (usually automatic)</span>
 <a id="__codelineno-14-2" name="__codelineno-14-2" href="#__codelineno-14-2"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
@@ -3834,11 +3920,11 @@ The <code>lockStatus</code> object has the shape: <code>{ isLocked: boolean, loc
 <li><code>_validateQuery(query)</code>: Basic validation for query objects.</li>
 <li><code>_validateUpdateOperators(updateOps)</code>: Basic validation for update operator objects.</li>
 </ul>
-<p><strong>Query Execution (D1 Refactoring):</strong></p>
+<p><strong>Query Execution:</strong></p>
 <ul>
 <li><code>_executeQuery(query, operation)</code>: Consolidates query validation, document retrieval, QueryEngine execution, and logging. Used by <code>findByQuery()</code>, <code>findMultipleByQuery()</code>, and <code>countByQuery()</code>.</li>
 </ul>
-<p><strong>Bulk Operations (D2 Refactoring):</strong></p>
+<p><strong>Bulk Operations:</strong></p>
 <ul>
 <li><code>_applyToMatchingDocuments(query, applyFn, throwIfNoMatches)</code>: Unifies match/apply pattern for query-based bulk operations. Finds matching documents, applies callback function, and accumulates affected count. Used by <code>updateDocumentByQuery()</code> and <code>replaceDocumentByQuery()</code>. Emits a single DEBUG-gated <code>docOps.applyToMatching</code> boundary timing event for the whole bulk application — inner per-document timers stay silent beneath it (and the boundary itself is suppressed under Collection-level timers such as <code>updateMany</code>); see
   <a href="../Infrastructure_Components/#1205-execution-time-tracking">Infrastructure Components — Execution-Time Tracking</a>.</li>
@@ -3897,13 +3983,13 @@ The <code>lockStatus</code> object has the shape: <code>{ isLocked: boolean, loc
         
         
           
-          <a href="../Infrastructure_Components/" class="md-footer__link md-footer__link--next" aria-label="Next: Infrastructure Components">
+          <a href="../CollectionCoordinator/" class="md-footer__link md-footer__link--next" aria-label="Next: Collection Coordinator">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Infrastructure Components
+                Collection Coordinator
               </div>
             </div>
             <div class="md-footer__button md-icon">
