@@ -404,7 +404,11 @@ describe('FileService _batchWithFallback helper', () => {
     expect(operation).toHaveBeenNthCalledWith(1, 'a');
     expect(operation).toHaveBeenNthCalledWith(2, 'b');
     expect(operation).toHaveBeenNthCalledWith(3, 'c');
-    expect(results).toEqual([{ id: 'a', ok: true }, { id: 'b', ok: true }, { id: 'c', ok: true }]);
+    expect(results).toEqual([
+      { id: 'a', ok: true },
+      { id: 'b', ok: true },
+      { id: 'c', ok: true }
+    ]);
     expect(errors).toEqual([]);
   });
 
@@ -431,6 +435,22 @@ describe('FileService _batchWithFallback helper', () => {
       'failed',
       expect.objectContaining({ fileId: 'bad', error: 'boom' })
     );
+  });
+
+  it('should normalise non-Error throwables into a string for errors', () => {
+    const operation = vi.fn((id) => {
+      if (id === 'bad') throw 'raw-string-error';
+      return { id };
+    });
+
+    const { results, errors } = fileService._batchWithFallback(
+      ['ok', 'bad'],
+      { start: 'starting', completion: 'finished', warn: 'failed' },
+      operation
+    );
+
+    expect(results).toEqual([{ id: 'ok' }, null]);
+    expect(errors).toEqual([{ fileId: 'bad', error: 'raw-string-error' }]);
   });
 
   it('should emit the supplied start and completion debug messages with fileCount and counts', () => {

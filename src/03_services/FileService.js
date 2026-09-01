@@ -272,8 +272,8 @@ class FileService {
    * @param {Array<string>} fileIds - File IDs to process
    * @param {{start: string, completion: string, warn: string}} logContext - Log message strings
    *   emitted at the start, on completion, and per failed entry.
-   * @param {function(string): *} operation - Per-file delegate returning the success value or
-   *   throwing. Called once per fileId in array order.
+   * @param {Function} operation - Per-file delegate. Receives a fileId and returns the success
+   *   value, or throws. Called once per fileId in array order.
    * @returns {{results: Array<*|null>, errors: Array<{fileId: string, error: string}>}}
    *   Index-aligned batch outcome: results[i] holds the delegate return value of fileIds[i]
    *   (null for failed entries) and errors collects one {fileId, error} entry per failed entry.
@@ -281,7 +281,7 @@ class FileService {
    */
   _batchWithFallback(fileIds, logContext, operation) {
     if (!Array.isArray(fileIds)) {
-      throw new InvalidArgumentError('fileIds must be an array');
+      throw new InvalidArgumentError('fileIds', fileIds, 'must be an array');
     }
 
     this._logger.debug(logContext.start, { fileCount: fileIds.length });
@@ -293,9 +293,10 @@ class FileService {
       try {
         results.push(operation(fileId));
       } catch (error) {
-        this._logger.warn(logContext.warn, { fileId, error: error.message });
+        const message = error instanceof Error ? error.message : String(error);
+        this._logger.warn(logContext.warn, { fileId, error: message });
         results.push(null);
-        errors.push({ fileId, error: error.message });
+        errors.push({ fileId, error: message });
       }
     }
 
