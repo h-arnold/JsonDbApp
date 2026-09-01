@@ -157,7 +157,10 @@ class MasterIndex {
     } catch (readError) {
       this._logger.error(
         'Master index save failed; in-memory state may be diverged from the stored snapshot',
-        { masterIndexKey: this._config.masterIndexKey, error: ErrorHandler.safeErrorMessage(readError) }
+        {
+          masterIndexKey: this._config.masterIndexKey,
+          error: ErrorHandler.safeErrorMessage(readError)
+        }
       );
     }
   }
