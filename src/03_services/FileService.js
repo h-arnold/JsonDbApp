@@ -199,36 +199,15 @@ class FileService {
    * @throws {InvalidArgumentError} When fileIds is not an array
    */
   batchReadFiles(fileIds) {
-    if (!Array.isArray(fileIds)) {
-      throw new InvalidArgumentError('fileIds must be an array');
-    }
-
-    this._logger.debug('Batch reading files', { fileCount: fileIds.length });
-
-    const results = [];
-    const errors = [];
-
-    for (const fileId of fileIds) {
-      try {
-        const content = this.readFile(fileId);
-        results.push(content);
-      } catch (error) {
-        this._logger.warn('Failed to read file in batch operation', {
-          fileId,
-          error: error.message
-        });
-        results.push(null);
-        errors.push({ fileId, error: error.message });
-      }
-    }
-
-    this._logger.debug('Batch read completed', {
-      totalFiles: fileIds.length,
-      successCount: results.filter((r) => r !== null).length,
-      errorCount: errors.length
-    });
-
-    return { results, errors };
+    return this._batchWithFallback(
+      fileIds,
+      {
+        start: 'Batch reading files',
+        completion: 'Batch read completed',
+        warn: 'Failed to read file in batch operation'
+      },
+      (fileId) => this.readFile(fileId)
+    );
   }
 
   /**
@@ -240,36 +219,15 @@ class FileService {
    * @throws {InvalidArgumentError} When fileIds is not an array
    */
   batchGetMetadata(fileIds) {
-    if (!Array.isArray(fileIds)) {
-      throw new InvalidArgumentError('fileIds must be an array');
-    }
-
-    this._logger.debug('Batch getting metadata', { fileCount: fileIds.length });
-
-    const results = [];
-    const errors = [];
-
-    for (const fileId of fileIds) {
-      try {
-        const metadata = this.getFileMetadata(fileId);
-        results.push(metadata);
-      } catch (error) {
-        this._logger.warn('Failed to get metadata in batch operation', {
-          fileId,
-          error: error.message
-        });
-        results.push(null);
-        errors.push({ fileId, error: error.message });
-      }
-    }
-
-    this._logger.debug('Batch metadata retrieval completed', {
-      totalFiles: fileIds.length,
-      successCount: results.filter((r) => r !== null).length,
-      errorCount: errors.length
-    });
-
-    return { results, errors };
+    return this._batchWithFallback(
+      fileIds,
+      {
+        start: 'Batch getting metadata',
+        completion: 'Batch metadata retrieval completed',
+        warn: 'Failed to get metadata in batch operation'
+      },
+      (fileId) => this.getFileMetadata(fileId)
+    );
   }
 
   /**
@@ -303,6 +261,51 @@ class FileService {
       this.clearCache();
     }
     this._logger.debug('Cache enabled status changed', { enabled });
+  }
+
+  /**
+   * Run a per-file delegate across many file IDs, collecting index-aligned results and errors.
+   *
+   * Centralises the validate → loop → try/catch collect → debug-summary flow shared by
+   * `batchReadFiles` and `batchGetMetadata` so behavioural changes apply in one place.
+   * @private
+   * @param {Array<string>} fileIds - File IDs to process
+   * @param {{start: string, completion: string, warn: string}} logContext - Log message strings
+   *   emitted at the start, on completion, and per failed entry.
+   * @param {function(string): *} operation - Per-file delegate returning the success value or
+   *   throwing. Called once per fileId in array order.
+   * @returns {{results: Array<*|null>, errors: Array<{fileId: string, error: string}>}}
+   *   Index-aligned batch outcome: results[i] holds the delegate return value of fileIds[i]
+   *   (null for failed entries) and errors collects one {fileId, error} entry per failed entry.
+   * @throws {InvalidArgumentError} When fileIds is not an array
+   */
+  _batchWithFallback(fileIds, logContext, operation) {
+    if (!Array.isArray(fileIds)) {
+      throw new InvalidArgumentError('fileIds must be an array');
+    }
+
+    this._logger.debug(logContext.start, { fileCount: fileIds.length });
+
+    const results = [];
+    const errors = [];
+
+    for (const fileId of fileIds) {
+      try {
+        results.push(operation(fileId));
+      } catch (error) {
+        this._logger.warn(logContext.warn, { fileId, error: error.message });
+        results.push(null);
+        errors.push({ fileId, error: error.message });
+      }
+    }
+
+    this._logger.debug(logContext.completion, {
+      totalFiles: fileIds.length,
+      successCount: results.filter((r) => r !== null).length,
+      errorCount: errors.length
+    });
+
+    return { results, errors };
   }
 
   /**

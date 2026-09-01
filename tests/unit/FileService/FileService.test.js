@@ -371,6 +371,85 @@ describe('FileService Batch Operations', () => {
   });
 });
 
+describe('FileService _batchWithFallback helper', () => {
+  let fileService;
+  let mockLogger;
+
+  beforeEach(() => {
+    ({ fileService, mockLogger } = createFileServiceTestContext());
+  });
+
+  it('should validate fileIds and throw InvalidArgumentError for non-array input', () => {
+    const operation = vi.fn();
+
+    expect(() => fileService._batchWithFallback('not-an-array', {}, operation)).toThrow(
+      ERROR_TYPES.INVALID_ARGUMENT
+    );
+    expect(() => fileService._batchWithFallback(null, {}, operation)).toThrow(
+      ERROR_TYPES.INVALID_ARGUMENT
+    );
+    expect(operation).not.toHaveBeenCalled();
+  });
+
+  it('should run a custom delegate and return index-aligned results with no errors on full success', () => {
+    const operation = vi.fn((id) => ({ id, ok: true }));
+
+    const { results, errors } = fileService._batchWithFallback(
+      ['a', 'b', 'c'],
+      { start: 'starting', completion: 'finished', warn: 'failed' },
+      operation
+    );
+
+    expect(operation).toHaveBeenCalledTimes(3);
+    expect(operation).toHaveBeenNthCalledWith(1, 'a');
+    expect(operation).toHaveBeenNthCalledWith(2, 'b');
+    expect(operation).toHaveBeenNthCalledWith(3, 'c');
+    expect(results).toEqual([{ id: 'a', ok: true }, { id: 'b', ok: true }, { id: 'c', ok: true }]);
+    expect(errors).toEqual([]);
+  });
+
+  it('should catch arbitrary errors thrown by the delegate and collect them per fileId', () => {
+    const operation = vi.fn((id) => {
+      if (id === 'bad') {
+        throw new Error('boom');
+      }
+      return { id };
+    });
+
+    const { results, errors } = fileService._batchWithFallback(
+      ['ok-1', 'bad', 'ok-2'],
+      { start: 'starting', completion: 'finished', warn: 'failed' },
+      operation
+    );
+
+    expect(results).toHaveLength(3);
+    expect(results[0]).toEqual({ id: 'ok-1' });
+    expect(results[1]).toBeNull();
+    expect(results[2]).toEqual({ id: 'ok-2' });
+    expect(errors).toEqual([{ fileId: 'bad', error: 'boom' }]);
+    expect(mockLogger.warn).toHaveBeenCalledWith(
+      'failed',
+      expect.objectContaining({ fileId: 'bad', error: 'boom' })
+    );
+  });
+
+  it('should emit the supplied start and completion debug messages with fileCount and counts', () => {
+    const operation = vi.fn((id) => ({ id }));
+
+    fileService._batchWithFallback(
+      ['x', 'y'],
+      { start: 'custom start', completion: 'custom done', warn: 'custom warn' },
+      operation
+    );
+
+    expect(mockLogger.debug).toHaveBeenCalledWith('custom start', { fileCount: 2 });
+    expect(mockLogger.debug).toHaveBeenCalledWith(
+      'custom done',
+      expect.objectContaining({ totalFiles: 2, successCount: 2, errorCount: 0 })
+    );
+  });
+});
+
 describe('FileService Error Handling', () => {
   let fileService;
   let mockFileOps;
