@@ -263,6 +263,7 @@ classDiagram
         +getCacheStats(): Object
         +setCacheEnabled(enabled): void
         -_addToCache(fileId, content): void
+        -_batchWithFallback(fileIds, logContext, operation): Object
     }
 ```
 
