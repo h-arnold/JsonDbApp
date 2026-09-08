@@ -26,6 +26,7 @@ Use the top-level library functions instead of constructing classes directly:
 Within this repo (`old_tests/`), you can still use `new Database(config)` then call `createDatabase()`/`initialise()` explicitly.
 
 - [**Collection Components**](./Collection_Components.md) - Detailed explanation of Collection, CollectionMetadata, and DocumentOperations classes for MongoDB-compatible document operations
+- [**Collection Coordinator**](./CollectionCoordinator.md) - Cross-instance coordination contract: locking, budget enforcement, violation policy, throw sites and logging
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex
 - [**DatabaseConfig**](./DatabaseConfig.md) - Database configuration management with validation and defaults
 - [**Infrastructure Components**](./Infrastructure_Components.md) - Complete reference for logging, error handling, and ID generation utilities

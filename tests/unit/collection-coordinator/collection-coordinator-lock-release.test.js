@@ -4,7 +4,7 @@
  * Tests for CollectionCoordinator lock release and timeout behaviour.
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   setupCoordinatorTestEnvironment,
   createTestCollection,
@@ -22,6 +22,12 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
     env = setupCoordinatorTestEnvironment();
     ({ collection, fileId } = createTestCollection(env, 'coordinatorTest'));
     resetCollectionState(collection, fileId);
+  });
+
+  // Defensive catch-all: any spy not explicitly restored in a per-test finally
+  // block is reverted here so it cannot leak into other suites.
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   /**
@@ -68,20 +74,40 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
   });
 
   it('should throw timeout error for operations exceeding coordinationTimeoutMs', () => {
+    // Arrange — an over-budget callback must still finalise metadata before the timeout throws,
+    // and the thrown error must identify the post-operation overrun site.
     const coordinator = createCoordinator({
       collectionLockLeaseMs: 800,
       coordinationTimeoutMs: 500
     });
+    const metadataSpy = vi.spyOn(env.masterIndex, 'updateCollectionMetadata');
     const clock = createMockClock(1000);
-    try {
-      expect(() => {
+    let caught;
+    /**
+     * Runs the over-budget operation, recording the thrown error before rethrowing it.
+     * @returns {void}
+     * @throws {*} Whatever coordinate() throws, rethrown unchanged.
+     */
+    const act = () => {
+      try {
         coordinator.coordinate('longOperation', () => {
           clock.advanceTime(600);
           return 'should not reach here';
         });
-      }).toThrow(ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT);
+      } catch (error) {
+        caught = error;
+        throw error;
+      }
+    };
+
+    try {
+      // Act + Assert
+      expect(act).toThrow(ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT);
+      expect(caught.context.reason).toBe('post-operation-overrun');
+      expect(metadataSpy).toHaveBeenCalled();
     } finally {
       clock.restore();
+      metadataSpy.mockRestore();
     }
   });
 

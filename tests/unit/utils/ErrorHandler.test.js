@@ -145,3 +145,15 @@ describe('ErrorHandler validation', () => {
     expect(() => ErrorHandler.validateNotEmpty('', 'testParam')).toThrow(Error);
   });
 });
+
+describe('ErrorHandler safeErrorMessage', () => {
+  it('should return the message for an Error instance', () => {
+    expect(ErrorHandler.safeErrorMessage(new Error('boom'))).toBe('boom');
+  });
+
+  it('should return a stringified value for non-Error throwables', () => {
+    expect(ErrorHandler.safeErrorMessage('plain string failure')).toBe('plain string failure');
+    expect(ErrorHandler.safeErrorMessage(42)).toBe('42');
+    expect(ErrorHandler.safeErrorMessage(null)).toBe('null');
+  });
+});

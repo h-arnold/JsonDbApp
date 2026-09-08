@@ -201,6 +201,7 @@ Validates optional operator arrays against type constraints and preserves the or
 - The legacy `lockTimeout` key in the constructor input object is accepted as a backward-compatible alias for `collectionLockLeaseMs`; new code should use `collectionLockLeaseMs` directly
 - `collectionLockLeaseMs` must be greater than or equal to `coordinationTimeoutMs`
 - `CollectionCoordinator` may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback
+- An operation that overruns `coordinationTimeoutMs` now finalises collection metadata best-effort **before** the `CoordinationTimeoutError` is thrown, so the metadata update may be observable even though the call failed; when the lease cannot be recovered, finalisation is skipped and the divergence is logged loudly. Renewal failure has two causes — lease expiry, or concurrent collection removal / lock-record loss — and both are handled identically (one re-acquisition attempt, then recover or throw). See [CollectionCoordinator](CollectionCoordinator.md)
 - Recommended range: 5000-60000ms unless you have a measured need for longer operations
 - Zero is invalid because the minimum is enforced during validation
 
@@ -427,7 +428,7 @@ Independent of this flag, explicit calls to `database.backupIndexToDrive()` will
 ## Best Practices
 
 1. **Validate early:** Create DatabaseConfig instances explicitly to catch errors
-2. **Use appropriate timeouts:** Size `collectionLockLeaseMs` to cover the whole write, and keep `coordinationTimeoutMs` within that lease
+2. **Use appropriate timeouts:** Size `collectionLockLeaseMs` to cover the whole write, and keep `coordinationTimeoutMs` within that lease; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases
 3. **Environment-specific configs:** Create different configurations for dev/test/prod
 4. **Immutable configurations:** Don't modify config properties after creation
 5. **Proper folder permissions:** Ensure root folder is accessible to the script
