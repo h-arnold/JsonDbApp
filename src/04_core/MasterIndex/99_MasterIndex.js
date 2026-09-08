@@ -91,7 +91,9 @@ class MasterIndex {
   /**
    * Save master index to ScriptProperties
    * @param {Object} [dataOverride] - Optional data to save instead of internal state
-   * @param {Date} [timestamp] - Optional timestamp override
+   * @param {Date|string|number} [timestamp] - Optional timestamp override; accepts a valid
+   *   Date, an ISO date string, or an epoch-millisecond number, each coerced to a defensive
+   *   copy. Any other value (including null/undefined/invalid) falls back to the current time.
    * @returns {void}
    * @throws {MasterIndexError} When ScriptProperties persistence fails — either serialisation of
    *   the staged state via ObjectUtils.serialise or the PropertiesService.setProperty write. The
@@ -106,10 +108,7 @@ class MasterIndex {
     return this._logger.timeSync('masterIndex.save', () => {
       try {
         const dataToSave = dataOverride || this._data;
-        const effectiveTimestamp =
-          timestamp instanceof Date && !Number.isNaN(timestamp.getTime())
-            ? new Date(timestamp.getTime())
-            : this._getCurrentTimestamp();
+        const effectiveTimestamp = this._normaliseTimestamp(timestamp);
         dataToSave.lastUpdated = effectiveTimestamp;
         const dataString = ObjectUtils.serialise(dataToSave);
         PropertiesService.getScriptProperties().setProperty(
@@ -591,17 +590,14 @@ class MasterIndex {
    * Persist collection metadata to internal state.
    * @param {string} name - Collection identifier
    * @param {CollectionMetadata} metadata - Normalised metadata instance
-   * @param {Date} timestamp - Timestamp applied to state change
+   * @param {Date|string|number} timestamp - Timestamp applied to state change
    * @private
    */
   _persistCollectionMetadata(name, metadata, timestamp) {
     Validate.nonEmptyString(name, 'name');
     Validate.required(metadata, 'metadata');
 
-    const effectiveTimestamp =
-      timestamp instanceof Date && !isNaN(timestamp.getTime())
-        ? new Date(timestamp.getTime())
-        : this._getCurrentTimestamp();
+    const effectiveTimestamp = this._normaliseTimestamp(timestamp);
 
     this._data.collections[name] = metadata;
     this._touchIndex(effectiveTimestamp);
@@ -632,18 +628,51 @@ class MasterIndex {
   }
 
   /**
+   * Normalise arbitrary timestamp input into a valid Date.
+   *
+   * Coerces string and number inputs via the Date constructor, so ISO date strings and
+   * epoch-millisecond values are accepted in addition to Date instances. A valid Date is
+   * returned as a defensive copy so the caller cannot mutate the stored timestamp. Only
+   * Date, string, and number inputs are considered: null, undefined, unsupported values
+   * (such as booleans, arrays, or objects), invalid Dates (getTime() is NaN), and unparseable
+   * values all fall back to the current timestamp. null/undefined are guarded explicitly
+   * because `new Date(null)` is epoch 0 (1970-01-01), a valid date that would otherwise
+   * stamp the index incorrectly.
+   * @param {*} candidate - Candidate timestamp input (Date, string, or number)
+   * @returns {Date} Normalised timestamp
+   * @private
+   */
+  _normaliseTimestamp(candidate) {
+    if (candidate === null || candidate === undefined) {
+      return this._getCurrentTimestamp();
+    }
+
+    if (
+      typeof candidate !== 'string' &&
+      typeof candidate !== 'number' &&
+      !(candidate instanceof Date)
+    ) {
+      return this._getCurrentTimestamp();
+    }
+
+    const parsed = new Date(candidate);
+    if (Number.isNaN(parsed.getTime())) {
+      return this._getCurrentTimestamp();
+    }
+
+    return new Date(parsed);
+  }
+
+  /**
    * Update the master index lastUpdated timestamp.
-   * @param {Date} timestamp - Timestamp to apply
+   * @param {Date|string|number} timestamp - Timestamp to apply
    * @private
    */
   _touchIndex(timestamp) {
     if (!this._data) {
       return;
     }
-    const effectiveTimestamp =
-      timestamp instanceof Date && !isNaN(timestamp.getTime())
-        ? new Date(timestamp.getTime())
-        : this._getCurrentTimestamp();
+    const effectiveTimestamp = this._normaliseTimestamp(timestamp);
     this._data.lastUpdated = effectiveTimestamp;
   }
 
@@ -667,22 +696,8 @@ class MasterIndex {
 
     if (this._data.modificationHistory) {
       delete this._data.modificationHistory;
-      this.save(undefined, this._resolveExistingTimestamp(this._data.lastUpdated));
+      this.save(undefined, this._data.lastUpdated);
     }
-  }
-
-  /**
-   * Resolve a safe timestamp for persistence updates.
-   * @param {*} candidate - Candidate timestamp input
-   * @returns {Date} Resolved timestamp
-   * @private
-   */
-  _resolveExistingTimestamp(candidate) {
-    const resolved = candidate instanceof Date ? candidate : new Date(candidate);
-    if (!isNaN(resolved.getTime())) {
-      return new Date(resolved.getTime());
-    }
-    return this._getCurrentTimestamp();
   }
 }
 
