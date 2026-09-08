@@ -559,8 +559,8 @@ class MasterIndex {
    * Coerces string and number inputs via the Date constructor, so ISO date strings and
    * epoch-millisecond values are accepted in addition to Date instances. A valid Date is
    * returned as a defensive copy so the caller cannot mutate the stored timestamp. Only
-   * Date, string, and number inputs are considered: null, undefined, non-primitives (such
-   * as booleans, arrays, or objects), invalid Dates (getTime() is NaN), and unparseable
+   * Date, string, and number inputs are considered: null, undefined, unsupported values
+   * (such as booleans, arrays, or objects), invalid Dates (getTime() is NaN), and unparseable
    * values all fall back to the current timestamp. null/undefined are guarded explicitly
    * because `new Date(null)` is epoch 0 (1970-01-01), a valid date that would otherwise
    * stamp the index incorrectly.
@@ -586,7 +586,7 @@ class MasterIndex {
       return this._getCurrentTimestamp();
     }
 
-    return new Date(parsed.getTime());
+    return new Date(parsed);
   }
 
   /**
@@ -622,7 +622,7 @@ class MasterIndex {
 
     if (this._data.modificationHistory) {
       delete this._data.modificationHistory;
-      this.save(undefined, this._normaliseTimestamp(this._data.lastUpdated));
+      this.save(undefined, this._data.lastUpdated);
     }
   }
 }

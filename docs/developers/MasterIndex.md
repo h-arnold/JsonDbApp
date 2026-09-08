@@ -200,7 +200,7 @@ in memory and persisted.
 - **Accepted inputs:** a valid `Date` (returned as a defensive copy so callers cannot mutate the
   stored timestamp), an ISO date string, or an epoch-millisecond number. Strings and numbers are
   coerced via the `Date` constructor.
-- **Fallback to now:** `null`, `undefined`, non-primitives (booleans, arrays, objects), invalid
+- **Fallback to now:** `null`, `undefined`, unsupported values/types (booleans, arrays, objects), invalid
   `Date`s (`getTime()` is `NaN`), and unparseable values all fall back to the current timestamp.
   `null`/`undefined` are guarded explicitly because `new Date(null)` is epoch 0 (1970-01-01), a
   valid date that would otherwise stamp the index incorrectly.

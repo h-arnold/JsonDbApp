@@ -19,11 +19,11 @@ currently fall back to "now" for non-Dates; after the fix they coerce.
 
 ## Target contract for `_normaliseTimestamp(candidate)`
 
-| Input                                                                 | Result                                             |
-| --------------------------------------------------------------------- | -------------------------------------------------- |
-| valid `Date`                                                          | Defensive copy (fresh `Date`, same instant)        |
-| `string` / `number`                                                   | `new Date(candidate)`; used when valid, else `now` |
-| `null`, `undefined`, non-primitives, invalid `Date` (`new Date(NaN)`) | current timestamp                                  |
+| Input                                                                           | Result                                             |
+| ------------------------------------------------------------------------------- | -------------------------------------------------- |
+| valid `Date`                                                                    | Defensive copy (fresh `Date`, same instant)        |
+| `string` / `number`                                                             | `new Date(candidate)`; used when valid, else `now` |
+| `null`, `undefined`, unsupported values/types, invalid `Date` (`new Date(NaN)`) | current timestamp                                  |
 
 Must guard `null`/`undefined` explicitly — plain `new Date(null)` is epoch 0
 (1970-01-01), a valid date that would otherwise stamp the index incorrectly.
@@ -54,7 +54,7 @@ coercion, separately tested — `MasterIndex.test.js:149-169`).
      coerced; with epoch-millis number → coerced.
    - Group 2 (characterisation, green before AND after): defensive copy of
      supplied Date; invalid Date → now; `null`/explicit `undefined` → now
-     (not epoch 0); unparseable string and non-primitives (boolean, array,
+     (not epoch 0); unparseable string and unsupported values/types (boolean, array,
      object) → now; `updateCollectionMetadata()` advances index `lastUpdated`
      (site 3); `addCollection()` persists timestamp (site 2, only if not
      already covered at `MasterIndex.test.js:522-530`); legacy
@@ -107,15 +107,20 @@ npm run format      # prettier check
 ## Current completion state
 
 - Testing Specialist completed the Red phase: 10 initial tests produced exactly
-  the two intended failures; three additional non-primitive regression tests
+  the two intended failures; three additional unsupported-value regression tests
   were added during review correction.
 - Implementation completed and corrected: `_normaliseTimestamp` now accepts
-  only Date/string/number inputs and falls back for all non-primitives.
-- Code Reviewer returned clean after the correction; no Critical, Improvement,
-  or Nitpick findings remain.
+  only Date/string/number inputs and falls back for all unsupported values/types.
+- PR review findings addressed: the Sonar-approved Date copy form is used, the
+  legacy repair path now normalises only once through `save()`, and source/docs
+  terminology is technically accurate.
+- Code Reviewer returned clean after the correction and follow-up fixes; no
+  Critical, Improvement, or Nitpick findings remain.
 - Docs review completed; `docs/developers/MasterIndex.md` now documents the
   durable timestamp-normalisation contract.
 - Final validation: lint 0 errors/0 warnings, format clean, coverage clean,
   and 883 tests passing across 80 files (baseline: 870/79).
-- Remaining action: stage and commit the issue #58 source, tests, docs, and the
-  user's model-config changes, then push the branch.
+- Agent body model notes now match their configured
+  `opencode-go/deepseek-v4-flash` frontmatter.
+- Remaining action: stage and commit the corrective changes, then push the
+  branch.
