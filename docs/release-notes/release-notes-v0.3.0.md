@@ -165,3 +165,18 @@ the master-index metadata was finalised. Handle the error based on
   events, register via `addTimingListener`, and restore listeners in
   `afterEach` in tests (see `captureTimingEvents()` helper).
 - Full contracts: [CollectionCoordinator](../developers/CollectionCoordinator.md), [MasterIndex](../developers/MasterIndex.md), and the [error catalogue](../developers/Infrastructure_Components.md).
+
+### Getting the new script
+
+A copy of this release is available at:
+
+https://drive.google.com/drive/folders/1U0xNtFrf2RSNlIonmZ56KRhvoYdicawT
+
+Open the link, make a copy of the script into your own Google Drive, then migrate your `MasterIndex`:
+
+1. Open your **old** copy of JsonDbApp in the Apps Script editor.
+2. Go to **Project Settings** → **Script Properties** and locate the `MasterIndex` entry.
+3. Copy the entire value.
+4. Open your **new** copy of JsonDbApp (the one you just copied from the link above).
+5. Go to **Project Settings** → **Script Properties** and create a new property with the key `MasterIndex` and paste the copied value.
+6. Your collections, data and configuration are now preserved in the new version.
