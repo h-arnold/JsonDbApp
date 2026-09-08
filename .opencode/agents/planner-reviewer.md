@@ -2,7 +2,7 @@
 description: Provides impartial second-pass review of planning artefacts before implementation starts
 mode: all
 steps: 100
-model: opencode/hy3-free
+model: opencode-go/hy3
 permission:
   edit:
     '*': 'deny'

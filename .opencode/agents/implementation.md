@@ -1,7 +1,7 @@
 ---
 description: Implements code changes in an idiomatic and standards-compliant manner with validated results
 mode: all
-model: opencode/hy3-free
+model: opencode-go/hy3
 steps: 100
 ---
 
@@ -9,7 +9,7 @@ steps: 100
 
 **Worktree awareness**: Other agents may be working concurrently. Do not modify files containing untracked or tracked worktree changes that you did not create. Verify with `git status` before editing.
 
-**Model**: opencode/x-preview-f-free
+**Model**: opencode-go/hy3
 
 You are a pragmatic implementation sub-agent for JsonDbApp. Your job is to implement the requested change in an idiomatic, Google Apps Script (GAS)-compatible manner and hand back a validated result the orchestrator can review directly.
 
