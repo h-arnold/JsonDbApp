@@ -19,23 +19,23 @@ currently fall back to "now" for non-Dates; after the fix they coerce.
 
 ## Target contract for `_normaliseTimestamp(candidate)`
 
-| Input | Result |
-|-------|--------|
-| valid `Date` | Defensive copy (fresh `Date`, same instant) |
-| `string` / `number` | `new Date(candidate)`; used when valid, else `now` |
-| `null`, `undefined`, non-primitives, invalid `Date` (`new Date(NaN)`) | current timestamp |
+| Input                                                                 | Result                                             |
+| --------------------------------------------------------------------- | -------------------------------------------------- |
+| valid `Date`                                                          | Defensive copy (fresh `Date`, same instant)        |
+| `string` / `number`                                                   | `new Date(candidate)`; used when valid, else `now` |
+| `null`, `undefined`, non-primitives, invalid `Date` (`new Date(NaN)`) | current timestamp                                  |
 
 Must guard `null`/`undefined` explicitly — plain `new Date(null)` is epoch 0
 (1970-01-01), a valid date that would otherwise stamp the index incorrectly.
 
 ## Four sites to change
 
-| # | Site | Current lines | Change |
-|---|------|---------------|--------|
-| 1 | `save()` | ~:103–106 | → `this._normaliseTimestamp(timestamp)`; JSDoc `@param` widened to `Date\|string\|number` |
-| 2 | `_persistCollectionMetadata()` | ~:527–530 | → helper call |
-| 3 | `_touchIndex()` | ~:569–572 | → helper call |
-| 4 | `_resolveExistingTimestamp()` (~:606–612) | delete; caller `_ensureStateShape()` (~:596) calls helper directly |
+| #   | Site                                      | Current lines                                                      | Change                                                                                    |
+| --- | ----------------------------------------- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| 1   | `save()`                                  | ~:103–106                                                          | → `this._normaliseTimestamp(timestamp)`; JSDoc `@param` widened to `Date\|string\|number` |
+| 2   | `_persistCollectionMetadata()`            | ~:527–530                                                          | → helper call                                                                             |
+| 3   | `_touchIndex()`                           | ~:569–572                                                          | → helper call                                                                             |
+| 4   | `_resolveExistingTimestamp()` (~:606–612) | delete; caller `_ensureStateShape()` (~:596) calls helper directly |
 
 Helper placement: private method in `99_MasterIndex.js` near
 `_getCurrentTimestamp()`. Use `Number.isNaN`. Full JSDoc (`@param`, `@returns`,
@@ -86,7 +86,7 @@ npm run format      # prettier check
    - `npm run lint` → 0 errors, 0 warnings
    - `npm run test` → 870 tests passing, 79 files
 3. **Agent environment repair** — committed as `2409087
-   "chore: repoint agent model references to opencode-go/hy3"`:
+"chore: repoint agent model references to opencode-go/hy3"`:
    - Blocks the sub-agent workflow: several `.opencode/agents/*.md` referenced
      the retired model `opencode/hy3-free`; `task` tool delegation failed with
      "Model not found: opencode/hy3-free".
