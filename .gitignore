@@ -7,6 +7,9 @@ test-execution.log
 node_modules
 .env
 .opencode/scratchpad/
+# Default transcript file written by the util-linux `script` command, used by
+# the deploy-gas login helper (login-pty.mjs)
+/typescript
 tests/.gas-drive/
 tests/.gas-script-properties.json
 coverage
