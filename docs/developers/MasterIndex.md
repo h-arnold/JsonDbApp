@@ -12,6 +12,7 @@
     - [Collection Access Protocol](#collection-access-protocol)
     - [Virtual Locking](#virtual-locking)
     - [Data Structure](#data-structure)
+    - [Timestamp normalisation](#timestamp-normalisation)
   - [Constructor](#constructor)
   - [API Reference](#api-reference)
     - [Core Methods](#core-methods)
@@ -188,6 +189,27 @@ This closes the stale-instance window where one execution could acquire the Scri
 
 `lockStatus` may be `null`, an active lock object, or a persisted unlocked object with
 `isLocked: false` and null-valued lock fields immediately after an explicit release.
+
+#### Timestamp normalisation
+
+Every path that stamps the index `lastUpdated` — `save()`, `_persistCollectionMetadata()`,
+`_touchIndex()`, and the legacy `modificationHistory` repair in `_ensureStateShape()` — funnels
+through `_normaliseTimestamp()`, which coerces arbitrary input into a `Date` before it is held
+in memory and persisted.
+
+- **Accepted inputs:** a valid `Date` (returned as a defensive copy so callers cannot mutate the
+  stored timestamp), an ISO date string, or an epoch-millisecond number. Strings and numbers are
+  coerced via the `Date` constructor.
+- **Fallback to now:** `null`, `undefined`, non-primitives (booleans, arrays, objects), invalid
+  `Date`s (`getTime()` is `NaN`), and unparseable values all fall back to the current timestamp.
+  `null`/`undefined` are guarded explicitly because `new Date(null)` is epoch 0 (1970-01-01), a
+  valid date that would otherwise stamp the index incorrectly.
+
+**In-memory vs persisted form:** internally `_data.lastUpdated` is a `Date` instance;
+`ObjectUtils.serialise()` writes it to ScriptProperties as an ISO string, so the persisted shape
+shows `lastUpdated: String` (e.g. `'2025-06-02T10:00:00.000Z'`) while the in-memory state keeps a
+`Date`. Collection metadata `created`/`lastUpdated` fields follow the same serialise/deserialise
+convention.
 
 ## Constructor
 

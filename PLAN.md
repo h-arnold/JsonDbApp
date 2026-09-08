@@ -54,18 +54,19 @@ coercion, separately tested — `MasterIndex.test.js:149-169`).
      coerced; with epoch-millis number → coerced.
    - Group 2 (characterisation, green before AND after): defensive copy of
      supplied Date; invalid Date → now; `null`/explicit `undefined` → now
-     (not epoch 0); unparseable string → now; `updateCollectionMetadata()`
-     advances index `lastUpdated` (site 3); `addCollection()` persists
-     timestamp (site 2, only if not already covered at `MasterIndex.test.js:522-530`);
-     legacy `modificationHistory` repair path resolves stored `lastUpdated`
-     (site 4).
+     (not epoch 0); unparseable string and non-primitives (boolean, array,
+     object) → now; `updateCollectionMetadata()` advances index `lastUpdated`
+     (site 3); `addCollection()` persists timestamp (site 2, only if not
+     already covered at `MasterIndex.test.js:522-530`); legacy
+     `modificationHistory` repair path resolves stored `lastUpdated` (site 4).
    - Do NOT modify `src/`. Confirm exactly Group 1 fails; rest of suite green;
      lint 0/0.
 3. **Implementation**: add helper, rewire four sites, delete
    `_resolveExistingTimestamp`, update JSDoc. Lint 0 errors / 0 warnings.
-4. **Verification**: full suite green; grep confirms the timestamp ternary
-   idiom exists exactly once (inside the helper); `_resolveExistingTimestamp`
-   has zero references.
+4. **Verification**: full suite green; grep confirms the old duplicated
+   timestamp-normalisation idiom is absent; `_normaliseTimestamp` is the sole
+   normalisation implementation and `_resolveExistingTimestamp` has zero
+   references.
 5. **Code Reviewer**: review source + test diffs; must pass clean.
 6. **Docs**: sweep `docs/developers/` (esp. `MasterIndex.md`) for
    timestamp-normalisation references; update if needed.
@@ -103,16 +104,18 @@ npm run format      # prettier check
      `hy3-free` — changed to `hy3` deliberately to match the user direction
      and keep body/frontmatter consistent.
 
-## Blocker / next action
+## Current completion state
 
-- The running opencode session cached agent config at startup; agent definition
-  changes do NOT hot-reload. **A quit + restart of opencode is REQUIRED** before
-  the `task` tool will resolve `opencode-go/hy3`.
-- After restart, resume at step 2 (Testing Specialist Red-phase tests). The
-  todo list is:
-  1. Testing Specialist: Red tests (in_progress → resume)
-  2. Implementation: helper + 4-site rewire
-  3. Regression check vs baseline
-  4. Code Reviewer (source + tests)
-  5. Docs sweep
-  6. Commit + push
+- Testing Specialist completed the Red phase: 10 initial tests produced exactly
+  the two intended failures; three additional non-primitive regression tests
+  were added during review correction.
+- Implementation completed and corrected: `_normaliseTimestamp` now accepts
+  only Date/string/number inputs and falls back for all non-primitives.
+- Code Reviewer returned clean after the correction; no Critical, Improvement,
+  or Nitpick findings remain.
+- Docs review completed; `docs/developers/MasterIndex.md` now documents the
+  durable timestamp-normalisation contract.
+- Final validation: lint 0 errors/0 warnings, format clean, coverage clean,
+  and 883 tests passing across 80 files (baseline: 870/79).
+- Remaining action: stage and commit the issue #58 source, tests, docs, and the
+  user's model-config changes, then push the branch.

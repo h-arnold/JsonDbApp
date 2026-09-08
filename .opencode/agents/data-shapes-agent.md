@@ -1,7 +1,7 @@
 ---
 description: Creates and maintains canonical data-shape specifications across all persistence and library API boundaries
 mode: all
-model: opencode-go/hy3
+model: opencode-go/deepseek-v4-flash
 steps: 100
 permission:
   edit:
