@@ -1054,6 +1054,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Data Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#timestamp-normalisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timestamp normalisation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -2255,6 +2272,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Data Structure">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#timestamp-normalisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Timestamp normalisation
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
         
       </ul>
@@ -2665,6 +2699,7 @@
 <li><a href="#virtual-locking">Virtual Locking</a></li>
 <li><a href="#save-persistence-and-failure-resynchronisation">Save Persistence and Failure Resynchronisation</a></li>
 <li><a href="#data-structure">Data Structure</a></li>
+<li><a href="#timestamp-normalisation">Timestamp normalisation</a></li>
 </ul>
 </li>
 <li><a href="#constructor">Constructor</a></li>
@@ -2838,6 +2873,25 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 </code></pre></div>
 <p><code>lockStatus</code> may be <code>null</code>, an active lock object, or a persisted unlocked object with
 <code>isLocked: false</code> and null-valued lock fields immediately after an explicit release.</p>
+<h4 id="timestamp-normalisation">Timestamp normalisation<a class="headerlink" href="#timestamp-normalisation" title="Permanent link">&para;</a></h4>
+<p>Every path that stamps the index <code>lastUpdated</code> — <code>save()</code>, <code>_persistCollectionMetadata()</code>,
+<code>_touchIndex()</code>, and the legacy <code>modificationHistory</code> repair in <code>_ensureStateShape()</code> — funnels
+through <code>_normaliseTimestamp()</code>, which coerces arbitrary input into a <code>Date</code> before it is held
+in memory and persisted.</p>
+<ul>
+<li><strong>Accepted inputs:</strong> a valid <code>Date</code> (returned as a defensive copy so callers cannot mutate the
+  stored timestamp), an ISO date string, or an epoch-millisecond number. Strings and numbers are
+  coerced via the <code>Date</code> constructor.</li>
+<li><strong>Fallback to now:</strong> <code>null</code>, <code>undefined</code>, unsupported values/types (booleans, arrays, objects), invalid
+  <code>Date</code>s (<code>getTime()</code> is <code>NaN</code>), and unparseable values all fall back to the current timestamp.
+  <code>null</code>/<code>undefined</code> are guarded explicitly because <code>new Date(null)</code> is epoch 0 (1970-01-01), a
+  valid date that would otherwise stamp the index incorrectly.</li>
+</ul>
+<p><strong>In-memory vs persisted form:</strong> internally <code>_data.lastUpdated</code> is a <code>Date</code> instance;
+<code>ObjectUtils.serialise()</code> writes it to ScriptProperties as an ISO string, so the persisted shape
+shows <code>lastUpdated: String</code> (e.g. <code>'2025-06-02T10:00:00.000Z'</code>) while the in-memory state keeps a
+<code>Date</code>. Collection metadata <code>created</code>/<code>lastUpdated</code> fields follow the same serialise/deserialise
+convention.</p>
 <h2 id="constructor">Constructor<a class="headerlink" href="#constructor" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="kd">class</span><span class="w"> </span><span class="nx">MasterIndex</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">{})</span><span class="w"> </span><span class="p">{</span>
