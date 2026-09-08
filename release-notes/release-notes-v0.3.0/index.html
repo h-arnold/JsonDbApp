@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#jsondbapp-v030-coordination-consistency-release" class="md-skip">
+        <a href="#jsondbapp-v030-coordination-consistency-and-timing-release" class="md-skip">
           Skip to content
         </a>
       
@@ -1301,8 +1301,6 @@
       <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
       
       
-        
-      
       
         <label class="md-nav__link md-nav__link--active" for="__toc">
           
@@ -1345,8 +1343,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1355,6 +1351,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#jsondbapp-v030-coordination-consistency-and-timing-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JsonDbApp v0.3.0 — Coordination consistency and timing release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JsonDbApp v0.3.0 — Coordination consistency and timing release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#summary" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1364,8 +1372,19 @@
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
       
-        <li class="md-nav__item">
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#behaviour-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1374,9 +1393,59 @@
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Behaviour changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coordination-consistency-issue-61" class="md-nav__link">
+    <span class="md-ellipsis">
       
-        <li class="md-nav__item">
+        Coordination consistency (Issue #61)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#execution-time-logging-facility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution-time logging facility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#masterindex-timestamp-normalisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MasterIndex timestamp normalisation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fileservice-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FileService refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#new-coordinationtimeouterror-reason-values" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1386,8 +1455,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#logging-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1397,12 +1466,28 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#commits" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#prs-merged" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Commits
+        PRs merged
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#65-fix-consolidate-masterindex-timestamp-normalisation-58" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        65 — fix: consolidate MasterIndex timestamp normalisation (#58)
       
     </span>
   </a>
@@ -1410,6 +1495,51 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#64-refactorfileservice-extract-_batchwithfallback-57" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        64 — refactor(FileService): extract _batchWithFallback (#57)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-fix-eliminate-coordinationmasterindex-partial-write-hazards-61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        63 — fix: eliminate coordination/MasterIndex partial-write hazards (#61)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-execution-time-logging-facility-implementreview-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        62 — Execution-time logging facility: implement/review hardening
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="62 — Execution-time logging facility: implement/review hardening">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-changelog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full changelog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#upgrade-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1417,6 +1547,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1593,8 +1728,6 @@
   
   
   
-    
-  
   
     <label class="md-nav__title" for="__toc">
       <span class="md-nav__icon md-icon"></span>
@@ -1603,6 +1736,18 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#jsondbapp-v030-coordination-consistency-and-timing-release" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        JsonDbApp v0.3.0 — Coordination consistency and timing release
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="JsonDbApp v0.3.0 — Coordination consistency and timing release">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#summary" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1612,8 +1757,19 @@
   </a>
   
 </li>
+        
+          <li class="md-nav__item">
+  <a href="#highlights" class="md-nav__link">
+    <span class="md-ellipsis">
       
-        <li class="md-nav__item">
+        Highlights
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#behaviour-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1622,9 +1778,59 @@
     </span>
   </a>
   
-</li>
+    <nav class="md-nav" aria-label="Behaviour changes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#coordination-consistency-issue-61" class="md-nav__link">
+    <span class="md-ellipsis">
       
-        <li class="md-nav__item">
+        Coordination consistency (Issue #61)
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#execution-time-logging-facility" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Execution-time logging facility
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#masterindex-timestamp-normalisation" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        MasterIndex timestamp normalisation
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fileservice-refactor" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        FileService refactor
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#new-coordinationtimeouterror-reason-values" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1634,8 +1840,8 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
+        
+          <li class="md-nav__item">
   <a href="#logging-changes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1645,12 +1851,28 @@
   </a>
   
 </li>
-      
-        <li class="md-nav__item">
-  <a href="#commits" class="md-nav__link">
+        
+          <li class="md-nav__item">
+  <a href="#prs-merged" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Commits
+        PRs merged
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#65-fix-consolidate-masterindex-timestamp-normalisation-58" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        65 — fix: consolidate MasterIndex timestamp normalisation (#58)
       
     </span>
   </a>
@@ -1658,6 +1880,51 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#64-refactorfileservice-extract-_batchwithfallback-57" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        64 — refactor(FileService): extract _batchWithFallback (#57)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#63-fix-eliminate-coordinationmasterindex-partial-write-hazards-61" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        63 — fix: eliminate coordination/MasterIndex partial-write hazards (#61)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#62-execution-time-logging-facility-implementreview-hardening" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        62 — Execution-time logging facility: implement/review hardening
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="62 — Execution-time logging facility: implement/review hardening">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#full-changelog" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Full changelog
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#upgrade-notes" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -1665,6 +1932,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -1688,25 +1960,103 @@
   
 
 
-<h1 id="jsondbapp-v030-coordination-consistency-release">JsonDbApp v0.3.0 — Coordination consistency release<a class="headerlink" href="#jsondbapp-v030-coordination-consistency-release" title="Permanent link">&para;</a></h1>
-<p>Release date: 2026-08-31</p>
+<h2 id="jsondbapp-v030-coordination-consistency-and-timing-release">JsonDbApp v0.3.0 — Coordination consistency and timing release<a class="headerlink" href="#jsondbapp-v030-coordination-consistency-and-timing-release" title="Permanent link">&para;</a></h2>
+<p>Release date: 2026-09-08</p>
 <h3 id="summary">Summary<a class="headerlink" href="#summary" title="Permanent link">&para;</a></h3>
-<p>This release eliminates three related partial-write hazards in which error or timeout signalling fired <strong>after</strong> side effects had already happened, leaving coordination state (master-index metadata, or the in-memory master-index snapshot) divergent. The hazards and their resolutions (<a href="https://github.com/h-arnold/JsonDbApp/issues/61">Issue #61</a>):</p>
-<ol>
-<li><strong>Post-hoc coordination timeout</strong> — a coordinated operation that overran <code>coordinationTimeoutMs</code> used to throw <code>CoordinationTimeoutError</code> after its effects were applied, and the throw skipped metadata finalisation, diverging the collection and the master index. The coordinator now runs a pre-flight budget check before the callback and, when an operation still overruns, finalises the collection metadata best-effort <strong>before</strong> throwing.</li>
-<li><strong>Lease-renewal failure after a successful operation</strong> — a failed lease renewal used to throw <code>CoordinationTimeoutError</code> after the operation succeeded, again skipping metadata finalisation. The coordinator now attempts exactly one re-acquisition of the lease for the same operation ID; if it recovers ownership the metadata is finalised and the timeout then throws, and if the lease is truly lost the finalisation is skipped with a loud divergence log before the timeout throws.</li>
-<li><strong><code>MasterIndex.save()</code> mutated memory before persist</strong> — on a persistence failure the in-memory state used to stay advanced beyond the stored snapshot. <code>save()</code> now resynchronises in-memory state with the stored snapshot before re-throwing the original <code>MasterIndexError('save')</code>.</li>
-</ol>
-<h3 id="behaviour-changes">Behaviour changes<a class="headerlink" href="#behaviour-changes" title="Permanent link">&para;</a></h3>
+<p>This minor release hardens coordination consistency and adds an execution-time
+logging facility, alongside a timestamp normalisation fix and internal cleanups.
+It eliminates three related partial-write hazards in which error or timeout
+signalling fired <strong>after</strong> side effects had already happened (<a href="https://github.com/h-arnold/JsonDbApp/issues/61">Issue #61</a>),
+adds DEBUG-gated <code>timeSync</code> timing events across all major components with a
+benchmark harness, unifies <code>MasterIndex</code> timestamp coercion, and de-duplicates
+the <code>FileService</code> batch paths. No persisted data-shape changes; no migration required.</p>
+<h3 id="highlights">Highlights<a class="headerlink" href="#highlights" title="Permanent link">&para;</a></h3>
 <ul>
-<li><strong>Pre-flight budget check</strong> (<code>CollectionCoordinator</code>): if lock acquisition and conflict resolution have already consumed more than <code>coordinationTimeoutMs</code>, <code>CoordinationTimeoutError</code> is thrown before the operation callback runs — no side effects exist on that path.</li>
-<li><strong>Unified post-callback violation policy</strong> (<code>CollectionCoordinator</code>): the budget verdict is computed once immediately after the callback; lease ownership is resolved with a non-throwing renewal plus at most one re-acquisition; metadata finalisation then runs (or is skipped loudly when the lease is unrecoverable) before any violation throw.</li>
-<li><strong>Best-effort finalisation before the over-budget throw</strong>: a <code>MasterIndexError</code> during finalisation on an over-budget path is logged loudly and swallowed so it cannot mask the primary <code>CoordinationTimeoutError</code>. Within-budget finalisation failures continue to propagate as <code>MasterIndexError</code>.</li>
-<li><strong><code>MasterIndex.save()</code> failure resynchronisation</strong>: three outcomes — the stored snapshot is adopted as master state (staged advances discarded), no snapshot exists so the staged state is kept with a loud ERROR, or the raw read fails so the staged state is kept with a divergence warning. The original <code>MasterIndexError('save')</code> is always thrown. Shape normalisation is intentionally skipped on the resync path; a payload needing normalisation is re-normalised on the next lock-protected reload.</li>
-<li><strong>Lock release and finalisation swallows</strong>: both deliberate swallows (lock release; best-effort finalisation on violation paths) log loudly. On violation paths a point-of-occurrence record fires <strong>in addition to</strong> the single boundary operation-failure record.</li>
+<li>Coordination consistency: pre-flight budget check, unified post-callback
+  violation policy, and <code>MasterIndex.save()</code> failure resynchronisation.</li>
+<li>Execution-time logging: <code>JDbLogger.timeSync</code> / <code>addTimingListener</code> facility
+  instrumenting Collection, QueryEngine, DocumentOperations, MasterIndex,
+  CollectionCoordinator and FileService, plus <code>npm run bench</code>.</li>
+<li>MasterIndex timestamp normalisation: <code>Date</code>, ISO string and epoch-millis
+  inputs coerced consistently across all persistence paths.</li>
+<li>FileService refactor: <code>batchReadFiles</code> / <code>batchGetMetadata</code> de-duplicated
+  behind <code>_batchWithFallback</code> with no behaviour change.</li>
+<li>Tooling: devDependencies bumped, opencode agent suite migrated, SonarCloud
+  gate wired in (<code>eslint-plugin-sonarjs</code>, <code>sonar-project.properties</code>).</li>
+</ul>
+<h3 id="behaviour-changes">Behaviour changes<a class="headerlink" href="#behaviour-changes" title="Permanent link">&para;</a></h3>
+<h4 id="coordination-consistency-issue-61">Coordination consistency (Issue #61)<a class="headerlink" href="#coordination-consistency-issue-61" title="Permanent link">&para;</a></h4>
+<ul>
+<li><strong>Pre-flight budget check</strong> (<code>CollectionCoordinator</code>): if lock acquisition
+  and conflict resolution have already consumed more than
+  <code>coordinationTimeoutMs</code>, <code>CoordinationTimeoutError</code> is thrown before the
+  operation callback runs — no side effects exist on that path.</li>
+<li><strong>Unified post-callback violation policy</strong> (<code>CollectionCoordinator</code>): the
+  budget verdict is computed once immediately after the callback; lease
+  ownership is resolved with a non-throwing renewal plus at most one
+  re-acquisition; metadata finalisation then runs (or is skipped loudly when
+  the lease is unrecoverable) before any violation throw.</li>
+<li><strong>Best-effort finalisation before the over-budget throw</strong>: a
+  <code>MasterIndexError</code> during finalisation on an over-budget path is logged
+  loudly and swallowed so it cannot mask the primary
+  <code>CoordinationTimeoutError</code>. Within-budget finalisation failures continue to
+  propagate as <code>MasterIndexError</code>.</li>
+<li><strong><code>MasterIndex.save()</code> failure resynchronisation</strong>: three outcomes — the
+  stored snapshot is adopted as master state (staged advances discarded), no
+  snapshot exists so the staged state is kept with a loud ERROR, or the raw
+  read fails so the staged state is kept with a divergence warning. The
+  original <code>MasterIndexError('save')</code> is always thrown. Shape normalisation is
+  intentionally skipped on the resync path; a payload needing normalisation is
+  re-normalised on the next lock-protected reload.</li>
+<li><strong>Lock release and finalisation swallows</strong>: both deliberate swallows (lock
+  release; best-effort finalisation on violation paths) log loudly. On
+  violation paths a point-of-occurrence record fires <strong>in addition to</strong> the
+  single boundary operation-failure record.</li>
+</ul>
+<h4 id="execution-time-logging-facility">Execution-time logging facility<a class="headerlink" href="#execution-time-logging-facility" title="Permanent link">&para;</a></h4>
+<ul>
+<li>New <code>JDbLogger.timeSync(label, fn, context?)</code> seam plus <code>addTimingListener</code>
+  with idempotent unsubscribe; component loggers from
+  <code>createComponentLogger()</code> gain their own <code>timeSync</code>.</li>
+<li>Timing events carry <code>{ label, component, durationMs, ... }</code> and are
+  DEBUG-gated; success returns propagate unchanged, error paths contain
+  secondary listener/supplier failures via <code>console.error</code> so the original
+  error always wins.</li>
+<li>All four log levels accept lazy <code>Object|Function|null</code> contexts, resolved
+  post-level-check at most once; hot-path <code>JSON.stringify(query)</code> debug sites
+  converted to suppliers with byte-identical emitted shapes.</li>
+<li>Instrumented labels: <code>collection.find|findOne|countDocuments|insertOne|</code>
+  <code>updateOne|updateMany|replaceOne|deleteOne|deleteMany</code>,
+  <code>queryEngine.executeQuery|filterDocuments</code>, <code>docOps.executeQuery|</code>
+  <code>applyToMatching</code>, <code>updateEngine.applyOperators</code>, <code>masterIndex.save</code>,
+  <code>coordinator.coordinate|updateMasterIndexMetadata</code>,
+  <code>fileService.readFile|createFile</code>. <code>Collection.aggregate</code> stays untimed.</li>
+<li>New benchmark harness: <code>npm run bench</code> (<code>tools/benchmarks/bench.cjs</code>,
+  default 200 seeded docs, eight scenarios, count/min/max/mean table plus
+  per-label error counts).</li>
+</ul>
+<h4 id="masterindex-timestamp-normalisation">MasterIndex timestamp normalisation<a class="headerlink" href="#masterindex-timestamp-normalisation" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>save(dataOverride, timestamp)</code> now accepts a <code>Date</code>, ISO date string or
+  epoch-millisecond number, each coerced to a defensive copy. Any other value
+  (including null/undefined/invalid) falls back to the current time.</li>
+<li><code>getCollections()</code> now throws <code>MasterIndexError</code> on unloaded state instead
+  of returning an empty map; <code>removeCollection</code> uses optional chaining.</li>
+</ul>
+<h4 id="fileservice-refactor">FileService refactor<a class="headerlink" href="#fileservice-refactor" title="Permanent link">&para;</a></h4>
+<ul>
+<li><code>batchReadFiles</code> and <code>batchGetMetadata</code> extracted behind private
+  <code>_batchWithFallback(fileIds, logContext, operation)</code> owning the
+  validate → loop → try/catch-collect → debug-summary flow. Public
+  signatures, JSDoc and emitted log messages unchanged; per-file failures
+  return <code>{ results, errors }</code> with <code>errors[].error</code> always a string.</li>
+<li>Stale <code>caching not implemented</code> header removed; dedicated FileService timing
+  logger added so <code>fileService.*</code> events attribute correctly despite the
+  injected Database logger.</li>
 </ul>
 <h3 id="new-coordinationtimeouterror-reason-values">New <code>CoordinationTimeoutError</code> reason values<a class="headerlink" href="#new-coordinationtimeouterror-reason-values" title="Permanent link">&para;</a></h3>
-<p>Every <code>CoordinationTimeoutError</code> from <code>CollectionCoordinator.coordinate()</code> now carries a machine-readable <code>reason</code> in <code>error.context.reason</code>, so callers can distinguish the throw sites:</p>
+<p>Every <code>CoordinationTimeoutError</code> from <code>CollectionCoordinator.coordinate()</code> now
+carries a machine-readable <code>reason</code> in <code>error.context.reason</code>:</p>
 <table>
 <thead>
 <tr>
@@ -1743,25 +2093,68 @@
 </tr>
 </tbody>
 </table>
-<p><strong>User-visible consequence:</strong> <code>CoordinationTimeoutError</code> MAY now arrive <strong>after</strong> an operation's effects were applied (sites 2–3), and at site 2 after the master-index metadata was finalised. Handle the error based on <code>error.context.reason</code> rather than assuming the operation had no effect.</p>
+<p><strong>User-visible consequence:</strong> <code>CoordinationTimeoutError</code> MAY now arrive
+<strong>after</strong> an operation's effects were applied (sites 2–3), and at site 2 after
+the master-index metadata was finalised. Handle the error based on
+<code>error.context.reason</code> rather than assuming the operation had no effect.</p>
 <h3 id="logging-changes">Logging changes<a class="headerlink" href="#logging-changes" title="Permanent link">&para;</a></h3>
 <ul>
-<li>New point-of-occurrence records on violation paths: pre-flight budget exhausted, lease expired before finalisation, lease re-acquired (WARN), finalisation failed on a violation path (swallowed), finalisation skipped with possible divergence, and post-operation overrun with the finalisation outcome.</li>
-<li>Completion INFO still fires only on success; the boundary operation-failure ERROR still fires exactly once per failed operation — but co-occurs with the point-of-occurrence records on violation paths.</li>
-<li>Caveat for alerting: a within-budget lease recovery emits a renewal-failure ERROR yet the operation returns successfully, so an ERROR record does not imply operation failure.</li>
+<li>New point-of-occurrence records on violation paths: pre-flight budget
+  exhausted, lease expired before finalisation, lease re-acquired (WARN),
+  finalisation failed on a violation path (swallowed), finalisation skipped
+  with possible divergence, and post-operation overrun with the finalisation
+  outcome.</li>
+<li>Completion INFO still fires only on success; the boundary operation-failure
+  ERROR still fires exactly once per failed operation — but co-occurs with the
+  point-of-occurrence records on violation paths.</li>
+<li>Caveat for alerting: a within-budget lease recovery emits a renewal-failure
+  ERROR yet the operation returns successfully, so an ERROR record does not
+  imply operation failure.</li>
+<li>New <code>ErrorHandler.safeErrorMessage(error)</code> helper guaranteeing a string for
+  non-Error throwables at diagnostic sites.</li>
+<li><code>JDbLogger.setLevelByName()</code> with an unknown name and
+  <code>JDbLogger.formatMessage()</code> with a non-object context now throw typed
+  <code>JDbLogger.JDbLoggerError</code> instead of silently ignoring / garbling output.</li>
 </ul>
-<h3 id="commits">Commits<a class="headerlink" href="#commits" title="Permanent link">&para;</a></h3>
+<h3 id="prs-merged">PRs merged<a class="headerlink" href="#prs-merged" title="Permanent link">&para;</a></h3>
 <ul>
-<li>abd66e8 — MasterIndex raw reader + save-failure resynchronisation</li>
-<li>5cbf62d — CollectionCoordinator pre-flight budget check + lock-acquisition reason</li>
-<li>3677bfb — CollectionCoordinator unified post-callback violation algorithm</li>
-<li>9021c07 — Regression hardening verification</li>
+<li>
+<h1 id="65-fix-consolidate-masterindex-timestamp-normalisation-58">65 — fix: consolidate MasterIndex timestamp normalisation (#58)<a class="headerlink" href="#65-fix-consolidate-masterindex-timestamp-normalisation-58" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="64-refactorfileservice-extract-_batchwithfallback-57">64 — refactor(FileService): extract <code>_batchWithFallback</code> (#57)<a class="headerlink" href="#64-refactorfileservice-extract-_batchwithfallback-57" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="63-fix-eliminate-coordinationmasterindex-partial-write-hazards-61">63 — fix: eliminate coordination/MasterIndex partial-write hazards (#61)<a class="headerlink" href="#63-fix-eliminate-coordinationmasterindex-partial-write-hazards-61" title="Permanent link">&para;</a></h1>
+</li>
+<li>
+<h1 id="62-execution-time-logging-facility-implementreview-hardening">62 — Execution-time logging facility: implement/review hardening<a class="headerlink" href="#62-execution-time-logging-facility-implementreview-hardening" title="Permanent link">&para;</a></h1>
+</li>
+</ul>
+<h3 id="full-changelog">Full changelog<a class="headerlink" href="#full-changelog" title="Permanent link">&para;</a></h3>
+<ul>
+<li>4457d64 — fix: consolidate MasterIndex timestamp normalisation (#58) (#65)</li>
+<li>5624a76 — refactor(FileService): extract <code>_batchWithFallback</code> (#64)</li>
+<li>1b89814 — fix: eliminate coordination/MasterIndex partial-write hazards (#63)</li>
+<li>dc7dfbf — Execution-time logging facility: implement/review hardening (#62)</li>
+<li>24136c3 — chore: bump all devDependencies to latest versions</li>
+<li>725731f — docs: add migrated opencode agent suite and align AGENTS.md</li>
+<li>e337b24 — chore: point flash-model agents to opencode/x-preview-f-free</li>
 </ul>
 <h3 id="upgrade-notes">Upgrade notes<a class="headerlink" href="#upgrade-notes" title="Permanent link">&para;</a></h3>
 <ul>
-<li>No breaking changes and no persisted data-shape changes: master-index schema, collection metadata shape, and ScriptProperties keys are unchanged — no migration is required.</li>
-<li>If you catch <code>CoordinationTimeoutError</code> and assume the operation had no effect, inspect <code>error.context.reason</code> and the documentation above; at sites 2–3 the effects were applied.</li>
-<li>If you alert on ERROR log records, note that a renewal-failure ERROR can co-occur with a successful result, and that violation-path operations now produce two or more ERROR records.</li>
+<li>No breaking changes and no persisted data-shape changes: master-index
+  schema, collection metadata shape, and ScriptProperties keys are unchanged
+  — no migration is required.</li>
+<li>If you catch <code>CoordinationTimeoutError</code> and assume the operation had no
+  effect, inspect <code>error.context.reason</code> and the table above; at sites 2–3 the
+  effects were applied.</li>
+<li>If you alert on ERROR log records, note that a renewal-failure ERROR can
+  co-occur with a successful result, and that violation-path operations now
+  produce two or more ERROR records.</li>
+<li>Timing instrumentation is DEBUG-gated and additive; enable DEBUG to receive
+  events, register via <code>addTimingListener</code>, and restore listeners in
+  <code>afterEach</code> in tests (see <code>captureTimingEvents()</code> helper).</li>
 <li>Full contracts: <a href="../../developers/CollectionCoordinator/">CollectionCoordinator</a>, <a href="../../developers/MasterIndex/">MasterIndex</a>, and the <a href="../../developers/Infrastructure_Components/">error catalogue</a>.</li>
 </ul>
 
