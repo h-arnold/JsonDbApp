@@ -31,13 +31,13 @@ The `CollectionCoordinator` orchestrates cross-instance operations for a single 
 
 **Configuration** (resolved through `DatabaseConfig` when a config object is supplied):
 
-| Key                     | Use                                                                         |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `collectionLockLeaseMs` | Lock lease duration; also the re-acquisition lease and renewal window basis |
-| `coordinationTimeoutMs` | The coordination budget enforced before and after the callback              |
-| `retryAttempts`         | Lock acquisition retry attempts                                             |
-| `retryDelayMs`          | Base delay between lock retries                                             |
-| `lockRetryBackoffBase`  | Exponential backoff base for lock retries                                   |
+| Key                     | Use                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `collectionLockLeaseMs` | Lock lease, re-acquisition lease and renewal basis; also the lock acquisition wait window                |
+| `coordinationTimeoutMs` | The coordination budget enforced before and after the callback                                           |
+| `retryAttempts`         | Legacy for lock acquisition: still validated with default `3`, but no longer bounds the acquisition wait |
+| `retryDelayMs`          | Base delay feeding the floored and capped acquisition backoff                                            |
+| `lockRetryBackoffBase`  | Exponential base feeding the floored and capped acquisition backoff                                      |
 
 **Single clock source.** `coordinate()` captures `startTime = Date.now()` once, immediately after successful lock acquisition. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (`Date.now() - startTime`); no fresh start time is introduced anywhere in the flow. Acquisition wait is excluded from this measurement; conflict resolution and the callback still count. The verdict is taken after the callback and before finalisation, and the ownership step still measures lease renewal from `lockAcquiredAt`. As a result, `coordinationTimeoutMs` no longer bounds total operation wall-clock: acquisition wait can consume most of the lease before the callback starts.
 
@@ -106,7 +106,7 @@ Every `CoordinationTimeoutError` raised by `coordinate()` carries a distinct mac
 | 2    | `'post-operation-overrun'`      | Callback completed over budget; ownership intact or restored           | Effects applied; finalised (or finalisation failed loudly)    |
 | 3    | `'lease-not-recoverable'`       | Renewal failed and the single re-acquisition returned `false` or threw | Effects applied; finalisation **skipped** — divergence logged |
 
-Other errors thrown by `coordinate()`: `InvalidArgumentError` (invalid arguments), `LockAcquisitionFailureError` (retries exhausted without a timeout), `ModificationConflictError` (token mismatch surfaced during conflict resolution), `MasterIndexError` (finalisation failure on the within-budget path), and whatever the callback throws (propagated unchanged).
+Other errors thrown by `coordinate()`: `InvalidArgumentError` (invalid arguments), `LockAcquisitionFailureError` (acquisition deadline exhausted and the final attempt failed without a `LOCK_TIMEOUT`), `ModificationConflictError` (token mismatch surfaced during conflict resolution), `MasterIndexError` (finalisation failure on the within-budget path), and whatever the callback throws (propagated unchanged).
 
 ## Deliberate Swallows
 
@@ -123,15 +123,18 @@ Nothing else is swallowed: callback errors propagate unchanged, and a throwing c
 
 **Point-of-occurrence records.** On violation paths the unified algorithm emits additional records at the point each event occurs:
 
-| Situation                                            | Level | Message substring                                                                       | Context keys                                                          |
-| ---------------------------------------------------- | ----- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Lock acquisition timed out (site 0)                  | ERROR | `Lock acquisition timed out`                                                            | `collection`, `operationId`, `timeout`, `reason`                      |
-| Pre-flight budget exhausted (site 1)                 | ERROR | `Coordination budget exhausted before the operation callback`                           | `collection`, `opId`, `timeoutMs`                                     |
-| Renewal failure, before re-acquisition               | ERROR | `Collection lock lease expired before finalisation could complete`                      | `collection`, `opId`, `leaseMs`                                       |
-| Re-acquisition recovered                             | WARN  | `Collection lock re-acquired for finalisation after renewal failure`                    | `collection`, `opId`, `outcome: 'recovered'`                          |
-| Finalisation failure on a violation path (swallowed) | ERROR | `Metadata finalisation failed on a violation path; the coordination timeout propagates` | `collection`, `opId`, `error`                                         |
-| Finalisation skipped (divergence)                    | ERROR | `Metadata finalisation skipped; collection and master index may be divergent`           | `collection`, `opId`, `operation`                                     |
-| Post-operation overrun, immediately before site 2    | ERROR | `Operation exceeded the coordination budget after effects were applied`                 | `collection`, `opId`, `timeoutMs`, `elapsedMs`, `finalisationOutcome` |
+| Situation                                            | Level | Message substring                                                                       | Context keys                                                                                    |
+| ---------------------------------------------------- | ----- | --------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Lock held on an acquisition attempt (MasterIndex)    | WARN  | `Failed to acquire lock; collection is already locked.`                                 | `collectionName`, `operationId`, `lockedBy`, `lockedAt`, `lockTimeout`, `expiry`, `remainingMs` |
+| Lock acquisition timed out (site 0)                  | ERROR | `Lock acquisition timed out`                                                            | `collection`, `operationId`, `timeout`, `reason`                                                |
+| Pre-flight budget exhausted (site 1)                 | ERROR | `Coordination budget exhausted before the operation callback`                           | `collection`, `opId`, `timeoutMs`                                                               |
+| Renewal failure, before re-acquisition               | ERROR | `Collection lock lease expired before finalisation could complete`                      | `collection`, `opId`, `leaseMs`                                                                 |
+| Re-acquisition recovered                             | WARN  | `Collection lock re-acquired for finalisation after renewal failure`                    | `collection`, `opId`, `outcome: 'recovered'`                                                    |
+| Finalisation failure on a violation path (swallowed) | ERROR | `Metadata finalisation failed on a violation path; the coordination timeout propagates` | `collection`, `opId`, `error`                                                                   |
+| Finalisation skipped (divergence)                    | ERROR | `Metadata finalisation skipped; collection and master index may be divergent`           | `collection`, `opId`, `operation`                                                               |
+| Post-operation overrun, immediately before site 2    | ERROR | `Operation exceeded the coordination budget after effects were applied`                 | `collection`, `opId`, `timeoutMs`, `elapsedMs`, `finalisationOutcome`                           |
+
+The MasterIndex contention WARN above fires once per failed acquisition attempt; its `expiry` is `lockedAt + lockTimeout` and `remainingMs` is `expiry - now`. It is distinct from the coordinator's single end-of-window `Could not acquire lock after retries` WARN (context `{ collection, operationId }`), which precedes `LockAcquisitionFailureError`.
 
 **Intended co-occurrence.** On violation paths the boundary record and the point-of-occurrence records fire together — two (or more) records per failed violation-path operation are deliberate. They answer different questions: the point-of-occurrence records explain _why_ the violation happened, the boundary record records _what_ the operation outcome was.
 

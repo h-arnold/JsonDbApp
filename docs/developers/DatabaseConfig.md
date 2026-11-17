@@ -75,9 +75,9 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
 | `lockTimeout`                             | Number   | `30000`                            | Legacy input alias for `collectionLockLeaseMs` accepted by the constructor only; the instance property has been removed — use `collectionLockLeaseMs`                                                                                              |
-| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds; must be at least as long as `coordinationTimeoutMs`                                                                                                                                                |
+| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds and the lock acquisition wait window; must be at least as long as `coordinationTimeoutMs`                                                                                                           |
 | `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                                                                    |
-| `retryAttempts`                           | Number   | `3`                                | Lock acquisition retry attempts                                                                                                                                                                                                                    |
+| `retryAttempts`                           | Number   | `3`                                | Legacy for lock acquisition: still validated (positive integer) with default `3`, but no longer bounds the acquisition wait                                                                                                                        |
 | `retryDelayMs`                            | Number   | `1000`                             | Delay between lock retries                                                                                                                                                                                                                         |
 | `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for lock retries                                                                                                                                                                                                          |
 | `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
@@ -207,9 +207,9 @@ Validates optional operator arrays against type constraints and preserves the or
 
 **retryAttempts / retryDelayMs / lockRetryBackoffBase:**
 
-- `retryAttempts` must be a positive integer
-- `retryDelayMs` must be a non-negative number
-- `lockRetryBackoffBase` must be a positive number
+- `retryAttempts` must be a positive integer (default `3`); now legacy for lock acquisition — the wait window is `collectionLockLeaseMs`
+- `retryDelayMs` must be a non-negative number; it feeds the floored and capped acquisition backoff
+- `lockRetryBackoffBase` must be a positive number; it feeds the same acquisition backoff
 
 **logLevel:**
 
@@ -428,7 +428,7 @@ Independent of this flag, explicit calls to `database.backupIndexToDrive()` will
 ## Best Practices
 
 1. **Validate early:** Create DatabaseConfig instances explicitly to catch errors
-2. **Use appropriate timeouts:** Size `collectionLockLeaseMs` to cover the whole write, and keep `coordinationTimeoutMs` within that lease; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases
+2. **Use appropriate timeouts:** `collectionLockLeaseMs` is both the acquisition wait window and the lease, so size it to cover the whole write and keep `coordinationTimeoutMs` within it; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases
 3. **Environment-specific configs:** Create different configurations for dev/test/prod
 4. **Immutable configurations:** Don't modify config properties after creation
 5. **Proper folder permissions:** Ensure root folder is accessible to the script

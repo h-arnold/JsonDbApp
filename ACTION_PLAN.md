@@ -1,7 +1,7 @@
 # ACTION PLAN — Lock acquisition window and coordination-budget separation (Issue #67)
 
-> **Current status:** IN PROGRESS — Section 4, regression hardening (Sections 1–3 complete
-> and pushed). Derived from `SPEC.md` (final, reviewer-confirmed).
+> **Current status:** IN PROGRESS — Section 5, documentation follow-through (Sections 1–4
+> complete and pushed). Derived from `SPEC.md` (final, reviewer-confirmed).
 > Workflow: Red–Green–Refactor per section; enabling contracts (acquisition loop) land
 > before the clock-origin change that depends on them. Every section leaves the tree
 > green: `npm run lint` (0 errors, 0 warnings) and the full suite passing.
@@ -337,52 +337,74 @@ tests/unit/collection/ tests/unit/master-index/ tests/unit/collection-coordinato
   (0 errors / 0 warnings); Vitest 86 files / 924 tests passed — identical to the
   post-Section-3 tree (no source or test changes in this section). Zero regressions,
   zero unaccounted failures. Run once at section completion after compaction.
-- Commit record: pending.
+- Commit record: SHA `648ca21`, message `docs(plan): record issue #67 regression hardening
+evidence`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
+  (`5fc5564..648ca21` to `origin/plan/issue-67-lock-acquisition-window`). Only the plan was
+  staged; the four pre-existing `.opencode/agents/*.md` edits remain unstaged and untouched.
 
 ---
 
 ## 5. Section 5 — Documentation follow-through
 
-**Objective.** Make documentation and JSDoc match the delivered behaviour, with no
-planning-artefact references in permanent docs.
+**Outcome (compacted).** Documentation and JSDoc now match the delivered
+acquisition-window, clock-origin and contention-warning behaviour, and a new v0.3.1
+release note was added. No planning-artefact references were introduced.
 
-**Tasks.**
+**Retained for later sections.** Exact figures and commands are in the Implementation
+notes below; only results later sections depend on are listed here.
 
-- `docs/developers/CollectionCoordinator.md`: rewrite the `Single clock source`
-  paragraph and `coordinate()` flow **step 1 ("Validate and prepare")** for the
-  post-acquisition clock; add the acquisition-window contract (deadline, backoff floor
-  and cap, final attempt), the enriched contention warning, and the note that
-  `coordinationTimeoutMs` no longer bounds total wall-clock.
-- `docs/developers/DatabaseConfig.md`: describe `retryAttempts` as legacy for lock
-  acquisition; keep its validation and default documented; note that
-  `collectionLockLeaseMs` is now the acquisition wait window.
-- `docs/developers/Class_Diagrams.md`: reflect the acquisition-window behaviour of
-  `acquireOperationLock` if the method summary describes retry/backoff.
-- `docs/developers/Infrastructure_Components.md`: keep the site-0 distinction explicit
-  (thrown `LOCK_TIMEOUT` maps to site 0; deadline exhaustion yields
-  `LockAcquisitionFailureError`) if the coordination-timeout section mentions lock
-  acquisition.
-- Add a **new** file `docs/release-notes/release-notes-v0.3.1.md`, following the
-  structure (not the filename) of the existing `release-notes-v0.3.0.md`, which must
-  not be overwritten. Describe the deadline-based acquisition, the clock-origin
-  change and the richer warning, and state that no data-shape or migration change is
-  required. The filename is fixed as `release-notes-v0.3.1.md`; no other version label
-  is introduced. The release-note sequence (latest `v0.3.0`) is authoritative for the
-  label; `package.json` currently reads `0.1.0`, a pre-existing inconsistency that
-  this work does not change.
-- Verify all code examples are current and cross-references intact; manual grep for
-  planning-artefact references in `docs/` and `src/`.
-- Route: `Docs` agent review after `Code Reviewer` approval of the source/test changes,
-  per the repository review process.
+- **Files updated (exact).** `docs/developers/CollectionCoordinator.md`,
+  `docs/developers/DatabaseConfig.md`,
+  `docs/developers/Infrastructure_Components.md`, `mkdocs.yml` (+1 nav entry), and the
+  new `docs/release-notes/release-notes-v0.3.1.md` (fixed label; v0.3.0 untouched).
+  `package.json` unchanged (reads `0.1.0`, a pre-existing inconsistency).
+- **Docs-sync decisions.** `DatabaseConfig.md` config table marks `retryAttempts`
+  legacy for lock acquisition (validation and default kept) and names
+  `collectionLockLeaseMs` as the acquisition wait window. `CollectionCoordinator.md`
+  adds the enriched contention WARN to the logging contract.
+  `Infrastructure_Components.md` keeps the site-0 distinction: a thrown `LOCK_TIMEOUT`
+  maps to site 0, deadline exhaustion raises `LockAcquisitionFailureError`. The
+  Section 2 wall-clock note was not duplicated. `docs/developers/Class_Diagrams.md`
+  needed no change (its `acquireOperationLock` entry is a bare signature with no
+  retry/backoff description).
+- **Planning-artefact grep.** No matches for `SPEC.md`, `ACTION_PLAN.md`, 'action plan'
+  or 'planning artefact' across `docs/` and `src/`; none introduced.
+- **Out-of-scope follow-ups.** Both recorded as `noted` in
+  `.opencode/scratchpad/plan-issue-67-lock-acquisition-window-deferred-findings.md`:
+  the stale `retryAttempts` JSDoc in `src/04_core/DatabaseConfig.js` (Section 0 excludes
+  code changes there) and the un-updated documentation-landscape file lists in
+  `.opencode/agents/docs.md` / `code-reviewer.md` (pre-existing user edits outside this
+  plan's change surface).
 
-**Acceptance criteria.** No doc contradicts the delivered behaviour; no planning-artefact
-references anywhere in `docs/` or source; `npm run lint` and `npm run test` still clean.
+**Section checks.** Docs agent reported `npm run lint` 0 errors / 0 warnings and
+`npm run test` 86 files / 924 tests; full section regression gate pending at the
+orchestrator.
 
-**Section checks.**
+**Implementation notes.**
 
-1. `npm run lint`
-2. `npm run test`
-3. Manual grep: no `SPEC.md`/`ACTION_PLAN.md` references in `docs/` or source.
+- Docs follow-through delivered: `docs/developers/CollectionCoordinator.md` (+3 net),
+  `docs/developers/DatabaseConfig.md` (net 0), `docs/developers/Infrastructure_Components.md`
+  (net 0), `mkdocs.yml` (+1 nav entry), and the new
+  `docs/release-notes/release-notes-v0.3.1.md` (86 lines). All changed Markdown and
+  `mkdocs.yml` pass `npx prettier --check`. The wall-clock note added in Section 2 was not
+  duplicated. `docs/developers/Class_Diagrams.md` needed no change: its `acquireOperationLock`
+  entry is a bare signature with no retry/backoff description.
+- Planning-artefact grep (`SPEC.md`, `ACTION_PLAN.md`, 'action plan', 'planning artefact')
+  across `docs/` and `src/`: no matches. No planning-artefact references were introduced.
+- Out-of-scope follow-ups recorded in the deferred-findings log (both `noted`): the stale
+  `retryAttempts` JSDoc in `src/04_core/DatabaseConfig.js` (the plan's §0 excludes code
+  changes to that file) and the un-updated documentation-landscape file lists in
+  `.opencode/agents/docs.md` / `code-reviewer.md` (pre-existing user edits outside this
+  plan's change surface). The historical `release-notes-v0.3.0.md` wording is intentionally
+  unchanged; v0.3.1 supersedes it.
+- Route compliance: source and test changes for Sections 1–3 each passed `Code Reviewer`
+  with no outstanding findings before their docs-sync passes. This section is the Docs
+  follow-through required by the repository review process.
+- Full-section regression report: `npm run lint && npm run test` exit 0. Lint clean
+  (0 errors / 0 warnings); Vitest 86 files / 924 tests passed — unchanged from the
+  Section 4 tree (documentation-only section). Zero regressions, zero unaccounted failures.
+  Run once at section completion after compaction.
+- Commit record: pending.
 
 ---
 
