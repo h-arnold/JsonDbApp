@@ -425,6 +425,18 @@ orchestrator.
   suites; zero regressions, zero unaccounted new failures. Evidence:
   `.opencode/scratchpad/final-post-cleanup-gate.txt`. The branch is ready for the final
   documentation sync.
+- Cleanup commit: SHA `aca4351`, message `docs: align backoff wording in DatabaseConfig
+table`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
+  (`98f63a0..aca4351` to `origin/plan/issue-67-lock-acquisition-window`). Only the plan
+  and that doc were staged; the four pre-existing `.opencode/agents/*.md` edits remain
+  unstaged and untouched.
+- Final documentation pass (post-cleanup comparison was clean, so the gate for this pass was
+  satisfied): updated `docs/developers/Infrastructure_Components.md` (+1 / −1, net 0) — a
+  residual "retry/backoff decisions" phrase became "lock-acquisition deadline and backoff
+  decisions". No other doc changed; all change-set Markdown and `mkdocs.yml` pass prettier;
+  planning-artefact grep across `docs/` and `src/` returned no matches. All previously
+  reported out-of-scope findings were confirmed already dispositioned.
+- Final documentation commit: pending.
 
 ---
 

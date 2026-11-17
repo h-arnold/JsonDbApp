@@ -270,7 +270,7 @@ ONLY for `timeSync`; the injected logger keeps its existing debug/warn/error dut
 **Deliberate non-instrumentations.** `Collection.aggregate`, per-document helpers
 (`deleteDocument`, `findAllDocuments`), the raw `Date.now()` reads inside
 `CollectionCoordinator` control flow (they feed timeout enforcement, lease renewal, and
-retry/backoff decisions and must stay outside the logging facility), `DbLockService`, and
+lock-acquisition deadline and backoff decisions and must stay outside the logging facility), `DbLockService`, and
 `Database` lifecycle methods emit no timing events.
 
 ---
