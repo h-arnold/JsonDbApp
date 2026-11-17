@@ -16,6 +16,26 @@
 - **Reuse**: Check for existing functionality before new code.
 - **GAS Limitations**: V8 engine, not full JS support.
 - **Style**: Concise, analytical, British English (except for American APIs). Challenge incorrect assumptions.
+- **Explicit request only**: Fulfil only the explicit request; do not expand scope speculatively.
+- **No test-driven production code**: Do not add production code purely to satisfy tests.
+- **Minimal changes**: Keep changes minimal, localised, and consistent with existing patterns.
+- **Defaults belong in constructors**: Default values must be set in a module's constructor only. Where a default is explicitly required, set it there; if defaults are found elsewhere, move them to the constructor opportunistically when touching that code. This does not override the fail-fast directive: do not introduce defaults that were not requested.
+- **No filler adjectives**: Avoid empty filler adjectives and phrases (for example canonical, load-bearing, invariant, robust, comprehensive, idiomatic) in comments, docs, and user-facing text. If the sentence keeps its meaning without the word, omit it; otherwise use a plain-English term. Reserve 'canonical' for its technical meaning — a single source of truth that other representations derive from. Aim for the simplest and most concise explanation that preserves meaning.
+
+## Codebase Conduct
+
+- Never disable lint rules without express permission from the user. If a rule triggers cascading failures, stop and ask before turning it off.
+- **Never push commits that fail pre-commit hooks (lint, tests).** Fix every error before committing. Do not use `--no-verify` or any other method to bypass hooks.
+
+## Working Environment
+
+### Temporary Workspace
+
+All agents **must** use `.opencode/scratchpad/` as the temporary workspace for files that should not be tracked by git. Use it instead of `/tmp` or other system temporary directories when writing ephemeral artefacts (for example diagnostic dumps, intermediate reports, exploration notes). The directory is already covered by `.gitignore` and will never be committed.
+
+### Ambiguity Rule
+
+State 1-2 concise assumptions and proceed with the simplest compliant implementation. The prime directives still apply when you make assumptions.
 
 ## File Structure
 
@@ -96,6 +116,18 @@ Agent definitions live in `.opencode/agents/` (one Markdown config per agent). T
 
 MANDATORY: Every sub-agent delegation must explicitly name the target agent (names are case-sensitive). Delegations that omit the agent name violate the workflow contract and should be rejected/retried.
 
+Resume a sub-agent session using its session ID only when the agent returns an error or an empty response. In every other case, start a fresh session with fresh context, including review and implementation follow-ups.
+
+Provide explicit context in prompts:
+
+- Relevant source snippets, concrete requirements, error/output details, and exact changes already made.
+- Mandatory task-specific documentation, written as `@`-prefixed worktree-relative paths. The at-mention mechanism injects the line-numbered contents of each `@path` token into the sub-agent's prompt automatically; never paste file contents into the prompt body. Always follow the token with a space: it ends only at whitespace, a comma, a backtick or a period, so other trailing punctuation becomes part of the path and the mention is skipped.
+- Do not attach agent definition files (`.opencode/agents/*.md`) or agent instruction files (`AGENTS.md`). Sub-agents already have their own instructions injected.
+
+Sub-agent handoffs must include a `Mandatory Reading` section listing mandatory task-specific files as `@`-prefixed paths. Do not re-list documentation the sub-agent is already required to read per its own instructions. Injection of these paths is what makes the documentation available, so no further read-evidence gate is required.
+
+Prompt sub-agents in unambiguous, imperative language. State the required deliverable and the constraints explicitly: name what the sub-agent must produce, and set out the scope limits, forbidden actions, and conventions to follow. Sub-agents cannot infer unstated intent, so do not rely on implication.
+
 ### Available Sub-Agents
 
 The following specialized agents are available (names are case-sensitive; definition path in parentheses):
@@ -141,6 +173,11 @@ The following specialized agents are available (names are case-sensitive; defini
 - Must pass lint with 0 errors, 0 warnings
 - Must maintain or improve coverage
 
+**Data-Shape Changes:**
+
+- If the change affects data persistence, transport, or validation boundaries → `Data Shapes Agent` to update the canonical data-shape specifications under `docs/developers/data-shapes/`
+- Data-shape docs must be updated before code-review sign-off when shapes are contractually affected
+
 **Documentation Review (Final Step):**
 
 - After code review passes → `Docs`
@@ -171,10 +208,10 @@ The following specialized agents are available (names are case-sensitive; defini
 
 ### Usage Example
 
-When delegating, name the target agent, state the outcome required, and pass task-specific context as `@`-prefixed worktree-relative paths (opencode injects the contents of each `@path` token automatically):
+When delegating, name the target agent, state the outcome required, and pass task-specific context as `@`-prefixed worktree-relative paths (opencode injects the line-numbered contents of each `@path` token automatically):
 
 ```text
-Mandatory reading:
+Mandatory Reading:
 - @docs/developers/UpdateEngine.md
 - @src/02_components/UpdateEngine/99_UpdateEngine.js
 - @tests/unit/update-engine/update-engine-operators.test.js
@@ -192,7 +229,19 @@ For source code review, the same pattern applies with `Code Reviewer` as the nam
 3. **Call Review Agent**: Pass to appropriate review agent (`Code Reviewer` for source and test changes)
 4. **Address Feedback**: Fix any issues identified by review agent
 5. **Final Verification**: Confirm 0 lint errors/warnings and all tests pass
-6. **Documentation Review**: Pass to `Docs` to update docs
+6. **Documentation Review**: Pass to `Docs` to update docs; pass contractually affected shape changes to `Data Shapes Agent` before review sign-off
 7. **Complete Task**: Only mark complete after all reviews approved
+
+## Documentation Governance
+
+### Policy Source-of-Truth Signposts
+
+To avoid policy drift, keep detailed policy in dedicated documents under `docs/developers/` and the user guides under `docs/`, and use AGENTS files as brief routing signposts only. Module-specific test file naming and location conventions belong in the testing documentation under `docs/developers/`; do not duplicate them in `AGENTS.md`.
+
+If guidance appears in multiple places, update the document first, then keep AGENTS references brief and consistent. Do not add links to documents that do not exist.
+
+### Same-Change Documentation Obligation
+
+Any change that alters documented behaviour must carry its documentation update in the same change. Delegate documentation updates to the `Docs` agent (`.opencode/agents/docs.md`) and canonical data-shape specification updates to the `Data Shapes Agent` (`.opencode/agents/data-shapes-agent.md`).
 
 **Always write concisely in British English.**

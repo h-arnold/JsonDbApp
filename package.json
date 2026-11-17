@@ -31,6 +31,8 @@
   "license": "AGPL-3.0-or-later",
   "devDependencies": {
     "@google/clasp": "^3.4.1",
+    "@opencode/plugin": "^2.0.28",
+    "@types/node": "^26.6.4",
     "@vitest/coverage-v8": "^5.1.0",
     "eslint": "^10.15.0",
     "eslint-config-google": "^0.14.0",

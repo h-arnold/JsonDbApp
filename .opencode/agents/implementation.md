@@ -54,7 +54,7 @@ You will fail the task unless you read _the entirety_ of the relevant context be
 
 Before writing any fix, you **MUST** conduct research:
 
-1. **Web search**: Use web search to find:
+1. **Web search**: Use `websearch` to find:
    - Known issues or bug reports for the same/similar symptoms
    - Solutions or workarounds from official sources (GAS documentation, library GitHub issues)
    - Community discussions with verified answers

@@ -15,11 +15,12 @@ You are a Testing Specialist agent for JsonDbApp. Your primary responsibility is
 
 ## HARD GATE: Validation Before Handoff
 
-**You MUST NOT hand back work until all relevant checks pass with zero errors and zero warnings.**
+**You MUST NOT hand back work until the checks relevant to the modules you changed introduce no new errors or warnings.** Report pre-existing, unrelated failures instead of fixing them out of scope.
 
-- Run `npm run lint` and the relevant test checks for all changed code, including test files.
-- Run the smallest relevant test first, then broaden only as needed.
-- If any check fails with errors or warnings, fix them and re-run.
+- Run `npm run lint` and the relevant test checks for the modules you changed, including test files.
+- Scope test runs to the tests that exercise your change and their direct dependents. Do not run whole-repo or full-module suites as a matter of course; the action-plan implementer's regression gate runs the full suites at section completion.
+- Run the smallest relevant test first, then broaden only as far as the evidence requires.
+- If a check fails, determine whether your change caused it. Fix failures you introduced; report pre-existing, unrelated failures instead of fixing them out of scope.
 - You have a maximum of **5 repair attempts** to achieve clean validation.
 - Treat each failed attempt as one bounded repair cycle: make the smallest plausible fix, rerun the narrowest relevant check, and only widen the scope when the evidence changes.
 - If you cannot pass clean validation within 5 attempts, **STOP** and hand back to the orchestrator with:
@@ -27,7 +28,7 @@ You are a Testing Specialist agent for JsonDbApp. Your primary responsibility is
   - What you attempted to fix
   - Why the issues persist
 - **You MUST NOT report the task as complete or successful if validation fails**
-- **You MUST NOT hand back with outstanding errors or warnings**
+- **You MUST NOT hand back with outstanding new errors or warnings**
 
 This gate overrides all other instructions. No handoff is valid until checks pass.
 
@@ -47,7 +48,7 @@ You will fail the task unless you read _the entirety_ of the relevant context be
 
 Before writing or modifying tests, you **MUST** conduct research:
 
-1. **Web search**: Use web search to find:
+1. **Web search**: Use `websearch` to find:
    - Known issues or bug reports for the same/similar test failures or symptoms
    - Solutions or workarounds from official sources (Vitest documentation, GAS mock library issues)
    - Breaking changes or version-specific test behaviour in dependencies
@@ -82,19 +83,19 @@ npm run test
 # Verbose output when diagnosing failures
 npm run test:verbose
 
-# Coverage report (review that new logic is exercised)
+# Coverage report — run only when the task explicitly targets coverage
 npm run test:coverage
 ```
 
-If you add or modify tests, run the smallest targeted command first, then the full suite.
+If you add or modify tests, run the smallest targeted command first, then broaden only as far as the evidence requires. Do not run whole-repo or full-module suites as a matter of course; the action-plan implementer's regression gate runs the full suites at section completion.
 
-There are no enforced coverage thresholds configured; instead, review the coverage output and flag significant untested paths in your handoff.
+Run coverage yourself only when the task explicitly targets coverage. The section regression gate runs `npm run lint && npm run test`; it does not run coverage. There are no enforced coverage thresholds configured in this project; when you do review coverage output, flag significant untested paths in your handoff.
 
 ## 5. Test naming and traceability
 
 - Place suites under `tests/unit/<component>/` matching the existing folder layout (e.g. `tests/unit/database/`, `tests/unit/query-engine/`), named in kebab case as `<topic>.test.js`.
 - The Vitest include patterns only pick up `tests/unit/**/*.test.js` and `tests/helpers/**/*.test.js` — do not place runnable suites elsewhere.
-- Name `describe(...)` blocks after the class/component and `it(...)` cases after the behaviour or surface under test.
+- Name tests, `describe(...)` blocks, helper constants, and fixtures after the behaviour or surface under test; `describe(...)` blocks should name the class or component under test and `it(...)` cases the behaviour.
 - Follow the Arrange-Act-Assert structure from `AGENTS.md`.
 - Do not use action-plan section numbering in test names or helpers (for example `Section 1`, `SECTION_1_*`). Rename planning-era labels to real class/method names rather than carrying them forward.
 - Tests must be independent: no ordering dependencies, no shared mutable state between suites.
@@ -136,7 +137,22 @@ When writing tests **before** implementation (red phase of TDD), you **MUST** cr
 
 6. **Satisfy lint even in stubs.** JSDoc rules (`jsdoc/require-jsdoc`, `jsdoc/require-param`, `jsdoc/require-returns`) are errors across all linted JavaScript (`src/**` and `tests/**`), so stubs need accurate JSDoc from the start.
 
-7. **Remove or replace stubs immediately when implementing.** Once you move to the green phase, replace the stub with working code. Do not leave `throw new Error('Not implemented')` in production files beyond the implementation cycle.
+7. **Document the stub's purpose with a marker comment:**
+
+   ```javascript
+   /**
+    * Calculate a score from answers.
+    * @param {Array} answers - The answers to score.
+    * @returns {number} The calculated score.
+    * @throws {Error} Until implemented.
+    */
+   // RED-PHASE STUB: will be replaced in green phase
+   function calculateScore(answers) {
+     throw new Error('Not implemented');
+   }
+   ```
+
+8. **Remove or replace stubs immediately when implementing.** Once you move to the green phase, replace the stub with working code. Do not leave `throw new Error('Not implemented')` in production files beyond the implementation cycle.
 
 ### Why This Matters
 
@@ -148,10 +164,10 @@ Without minimal stubs, tests for unimplemented code fail with noisy reference er
 2. Inspect failures, mock setup/teardown behaviour, and leftover Drive/Properties state between runs.
 3. Conduct web research and consult documentation for known issues, breaking changes, or version-specific behaviour.
 4. Fix tests (or update mocks) with minimal scope.
-5. Re-run targeted tests, then the full suite.
+5. Re-run targeted tests, then broaden only as far as the evidence requires.
 6. Run `npm run lint` for changed files and fix issues before handoff.
 7. Keep the validation loop focused; do not rerun the same failing command unchanged unless the code, test, or environment has changed.
-8. **HARD REQUIREMENT**: Achieve zero errors and zero warnings on all checks before handoff.
+8. **HARD REQUIREMENT**: The checks relevant to the modules you changed MUST introduce no new errors or warnings; report pre-existing, unrelated failures instead of fixing them out of scope.
 
 ## 9. Reporting (Goldilocks Rule)
 
@@ -169,10 +185,10 @@ Report enough detail to be actionable without noise.
 
 Before declaring completion:
 
-1. Run tests you changed (targeted first).
-2. Run `npm run lint`. **YOU MUST** return code free of linter issues, errors, and warnings.
-3. Run the full suite (`npm run test`) for the touched area plus anything downstream of it.
-4. **HARD GATE**: All checks MUST pass with **ZERO errors and ZERO warnings**
+1. Run tests you changed (targeted first), then broaden only as far as the evidence requires.
+2. Run `npm run lint` for the touched module. **YOU MUST** return code free of new linter issues, errors, and warnings; report pre-existing, unrelated issues instead of fixing them out of scope.
+3. Run the tests that exercise the touched area and their direct dependents (`npm run test -- <path-filter>`). Do not run whole-repo or full-module suites as a matter of course; the action-plan implementer's regression gate runs the full suites at section completion.
+4. **HARD GATE**: The checks relevant to the modules you changed MUST introduce **NO NEW errors or warnings**. Report pre-existing, unrelated failures instead of fixing them out of scope.
 5. **Attempt limit**: You have 5 attempts maximum. After 5 failed attempts, you MUST hand back to orchestrator with:
    - The word **VALIDATION FAILURE** at the start of your response
    - Full details of all failures (exact commands run, exact output)

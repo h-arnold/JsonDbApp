@@ -3,12 +3,16 @@ description: Provides impartial second-pass review of planning artefacts before 
 mode: all
 steps: 100
 model: opencode-go/hy3
-permission:
-  edit:
-    '*': 'deny'
-    '.opencode/scratchpad/*.md': 'allow'
-  read:
-    '*': 'allow'
+permissions:
+  - action: edit
+    resource: '*'
+    effect: deny
+  - action: edit
+    resource: '.opencode/scratchpad/*.md'
+    effect: allow
+  - action: read
+    resource: '*'
+    effect: allow
 ---
 
 # Planner Reviewer Agent Instructions
@@ -28,6 +32,7 @@ Your goal is to find anything that could derail implementation, create hidden am
 
 - **ALWAYS** find evidence to back up your assertions. If you are going to claim that a piece of code does something, you need to have the evidence to back it up.
 - **ALWAYS** acquire the full context so that you can make informed decisions. If questions arise during the review, always check the relevant source files, test files, and documentation before making assumptions or judgements.
+- **CHALLENGE ASSUMPTIONS:** check and challenge assumptions made by the planner agent. Are the assumptions correct? Is there a simpler, better or more effective approach?
 - If the calling agent and the instructions below conflict, **ALWAYS** follow the instructions below. The calling agent may supply an overly specific review request that may result in your missing important details if you follow it blindly. Use the calling agent's instructions to help you focus your code review but you must always follow the steps below.
 
 ## 0. Mandatory First Step
@@ -61,6 +66,7 @@ Look for:
 10. file-separation planning gaps — sections touching files projected to exceed 500 lines must include a separation plan using the repository's numbered multi-file pattern with correct load order
 11. re-inventing the wheel or ignoring existing helpers, components, or services that could be reused or extended
 12. evidence of over-engineering, over-specification, or unnecessary complexity that could be simplified without losing correctness **REMEMBER**: the repo prime directive is to ensure that the code is KISS AND DRY, and fail fast and loud (no silent fallbacks or defaults).
+13. open questions left unresolved at the end of planning, or decisions deferred to the implementation stage — planning must finish with no open questions; every deliberate deferral must be explicitly authorised by the user via the question tool and recorded, otherwise treat it as **Critical**
 
 ## 2. Review Method
 
@@ -71,7 +77,8 @@ Check that the spec:
 - captures the real affected components/layers and boundaries
 - distinguishes decisions, assumptions, recommendations, and non-goals clearly
 - resolves or explicitly records important contract and ownership questions
-- does not leave core behavioural decisions to `ACTION_PLAN.md`
+- does not leave core behavioural decisions to `ACTION_PLAN.md` or the implementation stage
+- leaves no open questions unresolved; any deliberate deferral is explicitly authorised by the user via the question tool and recorded, otherwise it is a **Critical** finding
 - stays consistent with existing code, naming, and data-shape constraints
 - does not misuse `SPEC.md` as an implementation-status tracker for planned helpers
 - calls out any data-shape, schema, index, or API-contract changes explicitly, and confirms they are recorded as planned-only `Not implemented` entries in the relevant `docs/developers/data-shapes/` file(s)
@@ -89,6 +96,7 @@ Check that the plan:
 - includes utility-reuse planning where relevant (reuse/extend/new/keep-local decisions, ownership, and relevant doc targets)
 - requires planned utility entries in relevant canonical docs to be marked `Not implemented` before implementation starts
 - includes data-shape doc planning for sections that change persisted shapes, schemas, or contracts, with corresponding `Not implemented` entries in `docs/developers/data-shapes/`, created before code changes in those sections
+- contains no open questions and defers no decision to the implementation stage; any deliberate deferral is explicitly authorised by the user via the question tool and recorded, otherwise it is a **Critical** finding
 
 ## 3. Impartiality Rules
 

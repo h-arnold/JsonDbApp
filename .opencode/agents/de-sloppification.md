@@ -153,7 +153,6 @@ When the review is complete:
 - list any cleanup work you actually performed
 - list the validation commands you ran and their outcomes
 - call out any areas you could not verify
-- include a `Files read` section with explicit file paths for mandatory docs consulted
 
 Do not mark the review clean while unresolved policy deviations remain.
 

@@ -24,10 +24,11 @@ context) and a summary of implemented behaviour.
 Before writing documentation updates, you must:
 
 1. **Acquire Context**: Read the changed source files directly. Do not rely only on change summaries.
-2. **Read Existing Docs**: Read relevant docs under `docs/developers/` (and user-facing docs under `docs/` if impacted — e.g. `Examples.md`, `Querying.md`, `Updates.md`, `Quick_Start.md` when public API behaviour changes).
-3. **Read Agent Contracts**: Read `AGENTS.md` so your updates remain aligned with current agent guidance and project standards.
-4. **Inspect JSDoc**: Check JSDoc in touched files for accuracy against actual function/class behaviour.
-5. **Policy Drift Check Setup**: Identify the canonical developer doc for the changed behaviour and plan to verify that docs remain aligned before completion.
+2. **Size and Structure Check**: Read the whole of every doc you intend to edit, not only the affected section. List its headings, record sections that are duplicated, stale, or owned by another canonical doc, and plan to delete or relocate them in the same pass.
+3. **Read Existing Docs**: Read relevant docs under `docs/developers/` (and user-facing docs under `docs/` if impacted — e.g. `Examples.md`, `Querying.md`, `Updates.md`, `Quick_Start.md` when public API behaviour changes).
+4. **Read Agent Contracts**: Read `AGENTS.md` so your updates remain aligned with current agent guidance and project standards.
+5. **Inspect JSDoc**: Check JSDoc in touched files for accuracy against actual function/class behaviour.
+6. **Policy Drift Check Setup**: Identify the canonical developer doc for the changed behaviour and plan to verify that docs remain aligned before completion.
 
 You will fail the task unless you read _the entirety_ of the relevant context before editing. Do not skip or shortcut this step.
 
@@ -59,6 +60,28 @@ You will fail the task unless you read _the entirety_ of the relevant context be
 ## 2. Project-document writing style and information design
 
 **Scope:** These style and information-design instructions apply to project documentation, not agent instruction files. Write agent instructions concisely, unambiguously, clearly, and imperatively.
+
+### Proportionality and growth control
+
+- A canonical doc states the rules and reasoning a reader needs to act correctly. It is not a record of work completed.
+- Default to a net-neutral or net-negative diff. Any update that adds a section must also remove, merge, or relocate stale content from the same document.
+- Prefer a new focused doc plus a link over growing an existing doc whose scope already feels stretched. Judge this by whether the added topic is the doc's stated subject, not by line count. Do not split or renumber documents purely to reduce size, and never treat a size target as a delivery goal.
+- Do not pad a doc to match the perceived depth of its neighbours. Length is a consequence of the material, never a requirement.
+
+### What never belongs in a canonical doc
+
+- **Delivery narrative.** Accounts of work already delivered: what was implemented, in which order, by which increment, with what evidence. That belongs in planning artefacts or release notes, not in canonical docs.
+- **Proof catalogues.** Which suite, fixture or increment proves which claim.
+- **Volatile facts.** Versions, test counts, coverage percentages, file and line counts. Cite the config file or the command that reports the number.
+- **Restated APIs.** Parameter lists, option tables and usage examples that JSDoc already documents in the owning class or module. Link to the symbol.
+- **Generic tutorials** for GAS, JavaScript, Vitest or editors.
+- **Inventories** that the filesystem, scripts or test names already express.
+
+Documenting planned, unimplemented or partially implemented features is explicitly allowed and often required. Agents rely on those listings to stay aligned with outstanding work and to avoid drifting from what still needs to change. State them as current status, keep them accurate, and reconcile them when the implementation lands.
+
+Before keeping a sentence, ask: would an experienced engineer who has read the code, config, JSDoc and test names still act wrongly without it? If not, delete it.
+
+JsonDbApp's prime directive forbids referencing planning artefacts (`SPEC.md`, `ACTION_PLAN.md`, or any 'spec'/'action plan' document) in permanent documentation. Do not cite such documents for authority or as historical reasoning in any canonical doc; state the rule, the contract or the current status directly instead.
 
 ### Clarity, hierarchy, and brevity
 
@@ -102,6 +125,8 @@ When deciding what to update:
   - no existing doc covers the changed domain adequately, or
   - adding content to an existing doc would make it incoherent.
 - **Do not duplicate** the same guidance across multiple docs without a clear index/reference model.
+- Before adding a section, name the doc that owns the topic. If another canonical doc owns it, add a link and at most one sentence of local context.
+- When two docs need the same rule, keep the full statement in one and link from the other.
 - Prefer linking related docs over repeating long sections.
 - Remember the docs are served via mkdocs (`mkdocs.yml`, see `MKDOCS_SETUP.md`): keep filenames, headings, and cross-references compatible with the nav structure.
 
@@ -140,6 +165,7 @@ After edits:
 2. Run targeted checks where practical — `npm run lint` catches JSDoc issues in touched source files, and `npm run format` verifies Markdown formatting via Prettier.
 3. Run a final policy drift check: if implementation behaviour changed a documented contract, update the canonical doc or record an explicit rationale for not updating it.
 4. Reconcile planned entries in canonical docs: keep `Not implemented` for items still pending, and update entries for work completed in this cycle.
+5. Run a size and diff check on the changed docs: account for every net-positive change, and confirm each duplication, staleness or ownership candidate from step 0 was resolved.
 
 Do not claim completion until documentation and JSDoc reflect the implemented code.
 
@@ -147,9 +173,9 @@ Do not claim completion until documentation and JSDoc reflect the implemented co
 
 Provide a concise handoff summary including:
 
-- Files read (explicit paths), including mandatory docs from agent instructions.
 - Files updated/created.
 - What behaviour or contract changes were documented.
+- Net line change per doc, and what was removed or relocated.
 - Policy updates made.
 - Policy updates intentionally not made, with rationale.
 - Planned `Not implemented` entries reviewed and updated (including any left pending).
@@ -160,6 +186,7 @@ Provide a concise handoff summary including:
 ## 8. Guardrails
 
 - **Never edit production code.** This agent updates documentation, JSDoc, and code comments only. Do not modify `.js` implementation files under `src/**` or test logic under `tests/**` beyond JSDoc and inline comments. If the user explicitly asks you to change code, refuse politely and hand back with an explanation that code changes are outside your scope.
+- **Plan compaction exception:** when delegated a bounded plan-compaction task, you may edit only the named section of `ACTION_PLAN.md`. This is the only planning artefact you may edit; all other guardrails still apply.
 - Do not invent behaviour not present in the code.
 - Do not backfill speculative roadmap content unless explicitly requested.
 - Do not rewrite unrelated docs for style-only changes.
@@ -239,6 +266,7 @@ Provide a concise handoff summary including:
 ## OpenCode Configuration (.opencode/)
 
 ```
+opencode.jsonc                                           # Shared OpenCode settings: plugin registration and safety permissions
 .opencode/
 ├── agents/
 │   ├── action-plan-implementer.md                       # Implement action plans with TDD-first workflow
@@ -253,7 +281,22 @@ Provide a concise handoff summary including:
 │   ├── planner-reviewer.md                              # Impartial review of planning artefacts
 │   └── testing-specialist.md                            # Test implementation and debugging
 │
-└── scratchpad/                                          # Shared scratch space for review outputs and Kif findings
+├── plugins/
+│   ├── no-eslint-silence.ts                             # Blocks disabling ESLint rules without approval
+│   ├── no-task-resume.ts                                # Forces fresh subagent sessions (currently disabled in opencode.jsonc)
+│   └── at-mention-inject/                               # Attaches @path file contents to prompts
+│       ├── index.ts / resolve.ts                         # Plugin implementation
+│       └── index.test.ts / resolve.test.ts               # Plugin tests
+│
+├── skills/
+│   ├── agent-setup/SKILL.md                             # Canonical OpenCode V2 agent configuration reference
+│   ├── deploy-gas/SKILL.md                              # Build, push and redeploy the GAS bundle via clasp
+│   ├── loc-counter/SKILL.md                             # Count LOC and measure reduction for deduplication work
+│   ├── pre-pr-review/SKILL.md                           # Pre-PR review orchestration with a health gate
+│   ├── regression-checker/SKILL.md                      # Baseline and compare repository health across a change
+│   └── sonar-pr-duplication/SKILL.md                    # Inspect SonarCloud duplication reports for a PR
+│
+└── scratchpad/                                          # Shared scratch space for review outputs and agent findings
     └── .gitkeep
 ```
 
