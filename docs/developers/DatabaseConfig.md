@@ -79,7 +79,7 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                                                                    |
 | `retryAttempts`                           | Number   | `3`                                | Legacy for lock acquisition: still validated (positive integer) with default `3`, but no longer bounds the acquisition wait                                                                                                                        |
 | `retryDelayMs`                            | Number   | `1000`                             | Base delay for acquisition backoff, floored at 500 ms and capped at 5000 ms                                                                                                                                                                        |
-| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential growth base for the acquisition backoff                                                                                                                                                                                                |
+| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential growth base for the acquisition backoff; must be at least 1                                                                                                                                                                            |
 | `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
 | `logLevel`                                | String   | `DEFAULT_LOG_LEVEL` ('INFO')       | Log level constrained to the values declared in `LOG_LEVELS`                                                                                                                                                                                       |
 | `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                                                                      |
@@ -169,7 +169,8 @@ Initialises boolean feature toggles such as `autoCreateCollections` and `backupO
 Determines the default root folder ID.
 
 - **Returns:** `String` - Drive root folder ID
-- **Throws:** `Error` if unable to access Drive
+- **Throws:** `ConfigurationError` (`CONFIGURATION_ERROR`) if unable to access Drive
+- **Error details:** message `Invalid configuration for rootFolderId: <original Drive error message>`; context `{ setting: 'rootFolderId', value: <original Drive error message>, reason: 'Failed to get default root folder' }`
 - **Behaviour:** Uses `DriveApp.getRootFolder().getId()`
 
 #### `_validateConfig()`
@@ -209,7 +210,7 @@ Validates optional operator arrays against type constraints and preserves the or
 
 - `retryAttempts` must be a positive integer (default `3`); now legacy for lock acquisition — the wait window is `collectionLockLeaseMs`
 - `retryDelayMs` must be a non-negative number; it feeds the floored and capped acquisition backoff
-- `lockRetryBackoffBase` must be a positive number; it feeds the same acquisition backoff
+- `lockRetryBackoffBase` must be at least 1; it feeds the same acquisition backoff
 
 **logLevel:**
 
@@ -259,7 +260,7 @@ Common validation errors and their meanings:
 | "Lock timeout must be a number"                      | Invalid timeout value                                           | Use a number of at least 500ms       |
 | "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level                                               | Use exact string match               |
 | "Auto create collections must be a boolean"          | Non-boolean value                                               | Use true or false explicitly         |
-| "Failed to get default root folder"                  | Drive access issue                                              | Check permissions and authentication |
+| "Invalid configuration for rootFolderId: <message>"  | Drive access issue; reason `Failed to get default root folder`  | Check permissions and authentication |
 | "Collection sanitisation flag must be a boolean"     | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
 
 ## Usage Examples

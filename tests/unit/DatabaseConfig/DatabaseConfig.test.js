@@ -81,6 +81,32 @@ describe('DatabaseConfig Creation and Default Values', () => {
     DatabaseConfig._defaultRootFolderId = null;
   });
 
+  it('should throw a configuration error when the default root folder cannot be resolved', () => {
+    const rootFolderErrorMessage = 'Drive root folder access denied';
+    const originalRootFolder = DriveApp.getRootFolder;
+    const spy = vi.spyOn(DriveApp, 'getRootFolder').mockImplementation(() => {
+      throw new Error(rootFolderErrorMessage);
+    });
+
+    DatabaseConfig._defaultRootFolderId = null;
+
+    let error;
+    try {
+      error = captureError(() => {
+        new DatabaseConfig({ rootFolderId: null });
+      });
+
+      expect(error).toBeInstanceOf(ErrorHandler.ErrorTypes.CONFIGURATION_ERROR);
+      expect(error.context.setting).toBe('rootFolderId');
+      expect(error.context.value).toBe(rootFolderErrorMessage);
+      expect(error.context.reason).toBe('Failed to get default root folder');
+    } finally {
+      spy.mockRestore();
+      DriveApp.getRootFolder = originalRootFolder;
+      DatabaseConfig._defaultRootFolderId = null;
+    }
+  });
+
   it('should create DatabaseConfig with custom values', () => {
     const customConfig = {
       rootFolderId: 'custom-folder-id',
@@ -272,6 +298,11 @@ describe('DatabaseConfig Validation', () => {
     expect(() => {
       new DatabaseConfig({ lockRetryBackoffBase: 0 });
     }).toThrow();
+
+    const fractionalError = captureError(() => {
+      new DatabaseConfig({ lockRetryBackoffBase: 0.5 });
+    });
+    expect(fractionalError).toBeInstanceOf(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
 
     const cfg = new DatabaseConfig({ lockRetryBackoffBase: 1 });
     expect(cfg.lockRetryBackoffBase).toBe(1);

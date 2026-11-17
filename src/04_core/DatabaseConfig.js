@@ -154,6 +154,7 @@ class DatabaseConfig {
    * Gets the default root folder ID
    *
    * @returns {string} Default root folder ID
+   * @throws {ErrorHandler.ErrorTypes.CONFIGURATION_ERROR} When the Drive root folder cannot be resolved.
    * @private
    */
   _getDefaultRootFolder() {
@@ -167,7 +168,11 @@ class DatabaseConfig {
       DatabaseConfig._defaultRootFolderId = rootFolderId;
       return rootFolderId;
     } catch (error) {
-      throw new Error('Failed to get default root folder: ' + error.message);
+      throw new ErrorHandler.ErrorTypes.CONFIGURATION_ERROR(
+        'rootFolderId',
+        error.message,
+        'Failed to get default root folder'
+      );
     }
   }
 
@@ -208,8 +213,8 @@ class DatabaseConfig {
     // retryDelayMs must be a non-negative number
     Validate.nonNegativeNumber(this.retryDelayMs, 'retryDelayMs');
 
-    // lockRetryBackoffBase must be a positive number
-    Validate.positiveNumber(this.lockRetryBackoffBase, 'lockRetryBackoffBase');
+    // lockRetryBackoffBase must be at least 1
+    Validate.range(this.lockRetryBackoffBase, 1, Number.MAX_SAFE_INTEGER, 'lockRetryBackoffBase');
 
     // Validate log level against allowed values
     Validate.enum(this.logLevel, LOG_LEVELS, 'logLevel');
