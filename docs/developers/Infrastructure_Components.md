@@ -32,6 +32,7 @@
       - [1.2.4.1. Core Methods](#1241-core-methods)
       - [1.2.4.2. Usage Examples](#1242-usage-examples)
       - [1.2.4.3. Best Practices](#1243-best-practices)
+    - [1.2.5. BackoffUtils](#125-backoffutils)
   - [1.3. Integration Patterns](#13-integration-patterns)
     - [1.3.1. Component Integration](#131-component-integration)
     - [1.3.2. Standardized Error Flow](#132-standardized-error-flow)
@@ -712,6 +713,29 @@ Validate.validateUpdateObject({ $inc: { score: 1 } }, 'updatePayload', { require
 5. **Specific Over Generic:** Prefer specific validators like `nonEmptyString` or `positiveNumber` over more generic ones like `string` or `number` when applicable, to provide more precise validation.
 6. **Understand Plain Objects:** When using `validateObject` or `isPlainObject`, be aware that it specifically checks for objects that are not arrays or instances of other complex types like `Date`.
 7. **Update Object Validation:** Use `validateUpdateObject` when dealing with MongoDB-style update operations to ensure structural correctness.
+
+---
+
+### 1.2.5. BackoffUtils
+
+**Location:** `src/01_utils/BackoffUtils.js`
+
+Provides the single clamped exponential-backoff calculation shared by lock acquisition and file-operation retries. `calculateBackoff` is a stateless static method, and the caller supplies every bound, so one implementation serves both bounded and unbounded retry paths.
+
+| Method                                                       | Description                                                                                                            |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `calculateBackoff(attempt, baseDelayMs, base, minMs, maxMs)` | Returns `Math.max(minMs, Math.min(baseDelayMs * Math.pow(base, attempt - 1), maxMs))` for a one-based `attempt` index. |
+
+`attempt` is one-based: attempt 1 returns `baseDelayMs`, subject to the bounds. Each later attempt multiplies it by `base`. A caller that must stay unclamped passes `-Infinity` and `Infinity` as the bounds, which is how `FileOperations` preserves its original unbounded retry delays.
+
+```javascript
+// Bounded: collection lock acquisition floors at 500 ms and caps at 5000 ms
+BackoffUtils.calculateBackoff(1, 1000, 2, 500, 5000); // 1000
+BackoffUtils.calculateBackoff(4, 1000, 2, 500, 5000); // 5000
+
+// Unclamped: FileOperations retries use infinite bounds
+BackoffUtils.calculateBackoff(3, 1000, 2, -Infinity, Infinity); // 4000
+```
 
 ---
 

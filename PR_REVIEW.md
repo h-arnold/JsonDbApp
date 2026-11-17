@@ -32,14 +32,12 @@
 
 The agreed fixes are being delivered in six batches. Each batch runs a full implement/review loop, records its outcome here, and is committed and pushed before the next batch starts. The verdict above records the original pre-implementation review state. Wontfix/keep decisions (D5, D9, D19, D22) require no code change.
 
-| Batch                                       | Decisions                 | Status              | Review outcome              | Checks                 | Docs sync                                                                                                                                  |
-| ------------------------------------------- | ------------------------- | ------------------- | --------------------------- | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| 1 — Critical (dead config + double logging) | D1, D2                    | Complete, committed | PASS — no in-scope findings | lint 0/0; tests 86/924 | Skipped — no documented behaviour changed (removed ERROR record was never in the logging contract table; `_config` keys were never public) |
-| 2 — Shared backoff utility                  | D3, D6                    | Pending             | —                           | —                      | —                                                                                                                                          |
-| 3 — Coordinator robustness                  | D4, D7, D8, D13, D14, D17 | Pending             | —                           | —                      | —                                                                                                                                          |
-| 4 — DatabaseConfig                          | D10, D12                  | Pending             | —                           | —                      | —                                                                                                                                          |
-| 5 — MasterIndex lock manager                | D11, D20, D21             | Pending             | —                           | —                      | —                                                                                                                                          |
-| 6 — Test consolidation                      | D15, D16, D18             | Pending             | —                           | —                      | —                                                                                                                                          |
+- **Batch 1 — Critical (dead config + double logging), D1/D2:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 86/924. Docs sync skipped — no documented behaviour changed (the removed ERROR record was never in the logging contract table; `_config` keys were never public).
+- **Batch 2 — Shared backoff utility, D3/D6:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/930. Docs sync ran — added §1.2.5 BackoffUtils to `Infrastructure_Components.md` and a cross-reference in `CollectionCoordinator.md`; no pages created.
+- **Batch 3 — Coordinator robustness, D4/D7/D8/D13/D14/D17:** Pending.
+- **Batch 4 — DatabaseConfig, D10/D12:** Pending.
+- **Batch 5 — MasterIndex lock manager, D11/D20/D21:** Pending.
+- **Batch 6 — Test consolidation, D15/D16/D18:** Pending.
 
 ## Focus areas
 

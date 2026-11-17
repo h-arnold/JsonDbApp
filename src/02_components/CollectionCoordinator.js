@@ -440,12 +440,12 @@ class CollectionCoordinator {
    */
   _computeAcquisitionBackoff(attempt) {
     const { retryDelayMs, lockRetryBackoffBase } = this._config;
-    return Math.max(
+    return BackoffUtils.calculateBackoff(
+      attempt,
+      retryDelayMs,
+      lockRetryBackoffBase,
       LOCK_ACQUISITION_MIN_BACKOFF_MS,
-      Math.min(
-        retryDelayMs * Math.pow(lockRetryBackoffBase, attempt - 1),
-        LOCK_ACQUISITION_MAX_BACKOFF_MS
-      )
+      LOCK_ACQUISITION_MAX_BACKOFF_MS
     );
   }
 
