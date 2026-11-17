@@ -11,7 +11,7 @@ import {
   createTestCollection,
   createTestCoordinator
 } from '../../helpers/collection-coordinator-test-helpers.js';
-import { createMockClock } from '../../helpers/mock-time-helpers.js';
+import { createMockClock, sleepDurations } from '../../helpers/mock-time-helpers.js';
 
 describe('CollectionCoordinator Acquisition Window', () => {
   let env;
@@ -30,13 +30,6 @@ describe('CollectionCoordinator Acquisition Window', () => {
    */
   const createCoordinator = (config = {}) =>
     createTestCoordinator(collection, env.masterIndex, config);
-
-  /**
-   * Extracts the sleep durations captured by a sleep spy.
-   * @param {Object} sleepSpy - Spy wrapping Utilities.sleep().
-   * @returns {number[]} Ordered sleep durations in milliseconds.
-   */
-  const sleepDurations = (sleepSpy) => sleepSpy.mock.calls.map(([milliseconds]) => milliseconds);
 
   it('should acquire a lock that is released just inside the acquisition window', () => {
     const clock = createMockClock(1000);

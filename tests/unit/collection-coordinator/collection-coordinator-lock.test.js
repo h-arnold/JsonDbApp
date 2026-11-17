@@ -10,7 +10,7 @@ import {
   createTestCollection,
   createTestCoordinator
 } from '../../helpers/collection-coordinator-test-helpers.js';
-import { createMockClock } from '../../helpers/mock-time-helpers.js';
+import { createMockClock, sleepDurations } from '../../helpers/mock-time-helpers.js';
 
 describe('CollectionCoordinator Acquire Operation Lock', () => {
   let env;
@@ -80,7 +80,7 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
           coordinator.acquireOperationLock('test-op-id-3');
         }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
 
-        expect(sleepSpy.mock.calls.map(([milliseconds]) => milliseconds)).toEqual([500, 100]);
+        expect(sleepDurations(sleepSpy)).toEqual([500, 100]);
         expect(Date.now()).toBeGreaterThanOrEqual(deadline);
       } finally {
         clock.restore();

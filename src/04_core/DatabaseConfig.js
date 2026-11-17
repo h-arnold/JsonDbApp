@@ -45,7 +45,7 @@ class DatabaseConfig {
    * @param {number} [config.lockTimeout=30000] - Legacy timeout applied to both lease and coordination settings
    * @param {number} [config.collectionLockLeaseMs=30000] - Collection lock lease duration in milliseconds
    * @param {number} [config.coordinationTimeoutMs=30000] - Maximum coordination duration in milliseconds
-   * @param {number} [config.retryAttempts=3] - Number of lock acquisition attempts
+   * @param {number} [config.retryAttempts=3] - Legacy for lock acquisition: still validated (positive integer) with default 3, but no longer bounds the acquisition wait
    * @param {number} [config.retryDelayMs=1000] - Delay between lock retries (ms)
    * @param {number} [config.lockRetryBackoffBase=2] - Backoff base for lock retries
    * @param {boolean} [config.cacheEnabled=true] - Enable caching

@@ -436,7 +436,57 @@ table`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
   decisions". No other doc changed; all change-set Markdown and `mkdocs.yml` pass prettier;
   planning-artefact grep across `docs/` and `src/` returned no matches. All previously
   reported out-of-scope findings were confirmed already dispositioned.
-- Final documentation commit: pending.
+- Final documentation commit: SHA `91756f1`, message `docs: final cross-section
+documentation reconciliation`, branch `plan/issue-67-lock-acquisition-window`.
+  `git push` succeeded (`aca4351..91756f1` to `origin/plan/issue-67-lock-acquisition-window`).
+
+---
+
+## 6. Section 6 — Approved deferred-finding fixes
+
+**Outcome (compacted).** Two user-approved minor fixes landed after plan
+completion: the stale `retryAttempts` JSDoc in `src/04_core/DatabaseConfig.js`
+and a shared `sleepDurations` extractor for the coordinator clock suites. Both
+are comment/test-only; no runtime behaviour changed.
+
+**Retained for later sections.**
+
+- **Files changed (exact) and why.**
+  - `src/04_core/DatabaseConfig.js` — line 48 `retryAttempts` JSDoc now reads
+    "Legacy for lock acquisition: still validated (positive integer) with default
+    3, but no longer bounds the acquisition wait". Comment-only; matches the
+    `retryAttempts` row in the `docs/developers/DatabaseConfig.md` config table
+    (line 80) and its validation note (line 210).
+  - `tests/helpers/mock-time-helpers.js` — now exports
+    `sleepDurations(sleepSpy)`, mapping sleep-spy calls to ordered durations.
+  - `tests/unit/collection-coordinator/collection-coordinator-lock.test.js` and
+    `tests/unit/collection-coordinator/collection-coordinator-acquisition-window.test.js`
+    — import and use the shared `sleepDurations`; the acquisition-window suite's
+    identical local copy was removed. No assertion changes: expected values are
+    unchanged and only the import and extraction call sites differ.
+- **Pinned WARN unchanged (user decision).** The coordinator WARN
+  `Could not acquire lock after retries` stays as-is; it is contractually fixed
+  and asserted.
+- **Agent config files excluded (user decision).** `.opencode/agents/*.md`
+  worktree edits remain out of scope and untouched.
+- **Review.** Code Reviewer **PASS**, no findings of any severity.
+
+**Section checks.** Focused coordinator suite 11 files / 49 tests passing;
+`npm run lint` 0 errors / 0 warnings; Prettier clean. Full section regression
+gate (`npm run test`) and commit pending.
+
+**Implementation notes.**
+
+- Docs sync skipped (recorded reason): the `DatabaseConfig.js` JSDoc edit makes the source
+  comment match the already-correct `docs/developers/DatabaseConfig.md` (no documented
+  statement changed), and the `sleepDurations` helper is an internal test-helper refactor
+  with no documented surface.
+- Status: delivered and reviewed (Code Reviewer PASS, no findings).
+- Full-section regression report: `npm run lint && npm run test` exit 0. Lint clean
+  (0 errors / 0 warnings); Vitest 86 files / 924 tests passed — unchanged from the
+  Section 5 tree (comment-only and test-helper-refactor section). Zero regressions,
+  zero unaccounted failures. Run once at section completion.
+- Commit record: pending.
 
 ---
 
@@ -450,9 +500,11 @@ table`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
 | 3     | Enriched contention warning          | 1 (independent of 2)     |
 | 4     | Regression hardening                 | 1, 2, 3                  |
 | 5     | Documentation follow-through         | 4 (post code review)     |
+| 6     | Approved deferred-finding fixes      | 5 (user follow-up)       |
 
 Sections 1 and 3 are logically independent; the numbered order keeps the tree
-single-threaded for the TDD gates.
+single-threaded for the TDD gates. Section 6 was added after plan completion from
+user-approved deferred findings.
 
 ---
 
