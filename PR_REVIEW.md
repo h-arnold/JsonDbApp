@@ -36,7 +36,7 @@ The agreed fixes are being delivered in six batches. Each batch runs a full impl
 - **Batch 2 — Shared backoff utility, D3/D6:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/930. Docs sync ran — added §1.2.5 BackoffUtils to `Infrastructure_Components.md` and a cross-reference in `CollectionCoordinator.md`; no pages created.
 - **Batch 3 — Coordinator robustness, D4/D7/D8/D13/D14/D17:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/936. Docs sync ran — added the re-acquisition-failure WARN row and updated the ownership prose in `CollectionCoordinator.md`; no pages created.
 - **Batch 4 — DatabaseConfig, D10/D12:** Complete, committed. Review PASS after one in-scope nitpick (missing `@throws` on `_getDefaultRootFolder`) was fixed and re-reviewed. Checks: lint 0/0, tests 87/937. Docs sync ran — reconciled four `DatabaseConfig.md` locations (backoff lower bound, typed root-folder error, validation rule, error-scenarios table); no pages created.
-- **Batch 5 — MasterIndex lock manager, D11/D20/D21:** Pending.
+- **Batch 5 — MasterIndex lock manager, D11/D20/D21:** Complete, committed. Review PASS after two in-scope items were fixed and re-reviewed: a redundant in-memory map reassignment (D11's clear still works via shared `CollectionMetadata` references) and the release-note WARN context key. Checks: lint 0/0, tests 87/938. Docs sync ran — `collection` key in the `CollectionCoordinator.md` logging table, `_setAndPersistLockStatus` usage and cleanup persistence in `MasterIndex.md`, plus the release-note correction; no pages created.
 - **Batch 6 — Test consolidation, D15/D16/D18:** Pending.
 
 ## Focus areas

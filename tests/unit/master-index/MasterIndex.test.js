@@ -1,6 +1,6 @@
 /* global MasterIndex, CollectionMetadata, ErrorHandler, PropertiesService */
 
-import { afterEach, describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   cleanupMasterIndexTests,
   createMasterIndexKey,
@@ -449,6 +449,38 @@ describe('MasterIndex cross-instance mutation safety', () => {
 
     const persisted = new MasterIndex({ masterIndexKey: key }).getCollection('sharedCollection');
     expect(persisted.getLockStatus()).toBeNull();
+  });
+
+  it('should save once when clearing multiple expired locks', () => {
+    // Arrange
+    const { key, masterIndex } = createTestMasterIndex({ lockTimeout: 1000 });
+    addTestCollection(masterIndex, 'expiredOne');
+    addTestCollection(masterIndex, 'expiredTwo');
+    const expiredLockStatus = {
+      isLocked: true,
+      lockedBy: 'expired-operation',
+      lockedAt: Date.now() - 5000,
+      lockTimeout: 1000
+    };
+    masterIndex.updateCollectionMetadata('expiredOne', { lockStatus: { ...expiredLockStatus } });
+    masterIndex.updateCollectionMetadata('expiredTwo', { lockStatus: { ...expiredLockStatus } });
+    const saveSpy = vi.spyOn(masterIndex, 'save');
+
+    // Act
+    try {
+      masterIndex.cleanupExpiredLocks();
+
+      // Assert
+      expect(saveSpy).toHaveBeenCalledTimes(1);
+      expect(masterIndex.getCollection('expiredOne').getLockStatus()).toBeNull();
+      expect(masterIndex.getCollection('expiredTwo').getLockStatus()).toBeNull();
+
+      const persisted = new MasterIndex({ masterIndexKey: key });
+      expect(persisted.getCollection('expiredOne').getLockStatus()).toBeNull();
+      expect(persisted.getCollection('expiredTwo').getLockStatus()).toBeNull();
+    } finally {
+      saveSpy.mockRestore();
+    }
   });
 
   it('should preserve an active lock during cleanup when the stale instance predates it', () => {

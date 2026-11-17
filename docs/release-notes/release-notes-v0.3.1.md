@@ -58,7 +58,7 @@ holder and expiry. No data-shape or migration change is required.
 - The MasterIndex per-attempt WARN `Failed to acquire lock; collection is already locked.`
   now carries `lockedBy`, `lockedAt`, `lockTimeout`, `expiry`
   (`lockedAt + lockTimeout`) and `remainingMs` (`expiry - now`) alongside
-  `collectionName` and `operationId`. It fires once per failed attempt, so a
+  `collection` and `operationId`. It fires once per failed attempt, so a
   held lock can produce several of these records in one acquisition window.
 - The coordinator's separate end-of-window WARN `Could not acquire lock after retries`
   (context `{ collection, operationId }`) is unchanged.

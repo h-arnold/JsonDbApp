@@ -48,19 +48,28 @@ describe('MasterIndex lock acquisition warning', () => {
         ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE
       );
 
-      // Assert — the warning fires once per attempt, so select by message rather than position.
-      const contentionWarning = masterWarnSpy.mock.calls.find(
+      // Assert — the warning fires once per attempt, so collect by message rather than position.
+      const contentionWarnings = masterWarnSpy.mock.calls.filter(
         ([message]) => typeof message === 'string' && message.includes(CONTENTION_WARNING)
       );
-      expect(contentionWarning).toBeDefined();
-      expect(contentionWarning[1]).toMatchObject({
-        collectionName: COLLECTION_NAME,
+      expect(contentionWarnings).toHaveLength(2);
+      expect(contentionWarnings[0]).toBeDefined();
+      expect(contentionWarnings[0][1]).toMatchObject({
+        collection: COLLECTION_NAME,
         operationId: 'new-op',
         lockedBy: 'holder-op',
         lockedAt: 1000,
         lockTimeout: 5000,
         expiry: 6000,
         remainingMs: 5000
+      });
+
+      // The final attempt runs at t=1500, leaving 4500 ms on the held lock.
+      expect(contentionWarnings[1]).toBeDefined();
+      expect(contentionWarnings[1][1]).toMatchObject({
+        collection: COLLECTION_NAME,
+        operationId: 'new-op',
+        remainingMs: 4500
       });
 
       // The coordinator's own end-of-window WARN is a separate record with a different shape.

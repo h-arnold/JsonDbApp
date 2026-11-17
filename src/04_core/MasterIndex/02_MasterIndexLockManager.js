@@ -47,7 +47,7 @@ class MasterIndexLockManager {
         const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
         if (now < expiry) {
           this._masterIndex._logger.warn('Failed to acquire lock; collection is already locked.', {
-            collectionName,
+            collection: collectionName,
             operationId,
             lockedBy: lockStatus.lockedBy,
             lockedAt: lockStatus.lockedAt,
@@ -69,7 +69,7 @@ class MasterIndexLockManager {
       this._setAndPersistLockStatus(collectionName, collection, newLockStatus);
 
       this._masterIndex._logger.info('Collection lock acquired.', {
-        collectionName,
+        collection: collectionName,
         operationId
       });
       return true;
@@ -100,7 +100,7 @@ class MasterIndexLockManager {
 
       if (lockStatus.lockedBy !== operationId) {
         this._masterIndex._logger.warn('Attempted to release lock with incorrect operationId.', {
-          collectionName,
+          collection: collectionName,
           operationId,
           owner: lockStatus.lockedBy
         });
@@ -116,7 +116,10 @@ class MasterIndexLockManager {
 
       this._setAndPersistLockStatus(collectionName, collection, clearedLockStatus);
 
-      this._masterIndex._logger.info('Collection lock released.', { collectionName, operationId });
+      this._masterIndex._logger.info('Collection lock released.', {
+        collection: collectionName,
+        operationId
+      });
       return true;
     });
   }
@@ -146,7 +149,7 @@ class MasterIndexLockManager {
 
       if (lockStatus.lockedBy !== operationId) {
         this._masterIndex._logger.warn('Attempted to renew lock with incorrect operationId.', {
-          collectionName,
+          collection: collectionName,
           operationId,
           owner: lockStatus.lockedBy
         });
@@ -157,7 +160,7 @@ class MasterIndexLockManager {
       const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
       if (now >= expiry) {
         this._masterIndex._logger.warn('Attempted to renew an expired lock.', {
-          collectionName,
+          collection: collectionName,
           operationId
         });
         return false;
@@ -173,7 +176,7 @@ class MasterIndexLockManager {
       this._setAndPersistLockStatus(collectionName, collection, renewedLockStatus);
 
       this._masterIndex._logger.info('Collection lock renewed.', {
-        collectionName,
+        collection: collectionName,
         operationId,
         timeout
       });
@@ -210,11 +213,14 @@ class MasterIndexLockManager {
   /**
    * Cleans up expired locks for all collections.
    * @returns {void}
+   * @remarks Clears each expired lock in memory and persists the index once after the scan;
+   *   when no lock was expired, no save is performed.
    */
   cleanupExpiredLocks() {
     return this._masterIndex._withScriptLock(() => {
       const collections = this._masterIndex.getCollections();
       const now = Date.now();
+      let lockCleared = false;
 
       const collectionNames = Object.keys(collections);
       for (const name of collectionNames) {
@@ -225,11 +231,16 @@ class MasterIndexLockManager {
           const expiry = lockStatus.lockedAt + lockStatus.lockTimeout;
           if (now >= expiry) {
             this._masterIndex._logger.info('Cleaning up expired lock.', {
-              collectionName: name
+              collection: name
             });
-            this._setAndPersistLockStatus(name, collection, null);
+            collection.setLockStatus(null);
+            lockCleared = true;
           }
         }
+      }
+
+      if (lockCleared) {
+        this._masterIndex.save();
       }
     });
   }
