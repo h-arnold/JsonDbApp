@@ -1,7 +1,7 @@
 # ACTION PLAN — Lock acquisition window and coordination-budget separation (Issue #67)
 
-> **Current status:** IN PROGRESS — Section 3, Red phase (Sections 1–2 complete and pushed).
-> Derived from `SPEC.md` (final, reviewer-confirmed).
+> **Current status:** IN PROGRESS — Section 4, regression hardening (Sections 1–3 complete
+> and pushed). Derived from `SPEC.md` (final, reviewer-confirmed).
 > Workflow: Red–Green–Refactor per section; enabling contracts (acquisition loop) land
 > before the clock-origin change that depends on them. Every section leaves the tree
 > green: `npm run lint` (0 errors, 0 warnings) and the full suite passing.
@@ -266,44 +266,78 @@ gate). Full section regression gate (`npm run test`) and commit pending.
   (0 errors / 0 warnings); Vitest 86 files / 924 tests passed (previous section 85 / 923;
   the +1 file / +1 test is the contention-warning suite). Zero regressions, zero
   unaccounted failures. Run once at section completion.
-- Commit record: pending.
+- Commit record: SHA `5fc5564`, message `feat(master-index): enrich lock contention
+warning context`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
+  (`92c8fb2..5fc5564` to `origin/plan/issue-67-lock-acquisition-window`). Only this
+  section's source, test and plan were staged; the four pre-existing `.opencode/agents/*.md`
+  edits remain unstaged and untouched.
 
 ---
 
 ## 4. Section 4 — Regression hardening
 
-**Objective.** Prove the three coordinated changes hold across the system and that the
-#61 violation contract is intact.
+**Outcome (compacted).** Regression hardening passed with no source, test or
+documentation changes; the three coordinated changes hold, the #61 violation contract is
+intact, and coverage, lint and LOC stay within gate. Full-section gate and commit pending.
 
-**Tasks.**
+**Retained for later sections.** Full figures and commands are in the Implementation notes
+below; only results later sections depend on are listed here.
 
-- Full suite: `npm run test` and `npm run test:coverage`. Coverage on
-  `CollectionCoordinator.js` and `02_MasterIndexLockManager.js` must not regress
-  materially; the v8 provider with `all: true` is configured.
-- Cross-suite sweep: `tests/unit/database/`, `tests/unit/collection/`,
-  `tests/unit/master-index/`, all `tests/unit/collection-coordinator/` suites, and any
-  suite exercising `coordinate()` indirectly. Investigate and fix root causes rather
-  than waiving tests.
-- Record the timing-suite assessment: `collection-coordinator-preflight.test.js`,
-  `collection-coordinator-violation-policy.test.js` and
-  `collection-coordinator-lock-release.test.js` acquire the lock on the first attempt
-  and drive time in conflict resolution or the callback, so the clock move does not
-  change their verdicts. No edits expected there.
-- Verify the integrated scenarios: (1) lock released inside the lease window succeeds;
-  (2) lock held for the whole window fails once at/after the deadline; (3) a stale lock
-  succeeds on the first attempt; (4) slow acquisition followed by a short callback
-  returns successfully; (5) sites 0–3 still throw with their exact reason strings.
-- Re-run `npm run lint` (0 errors, 0 warnings) and re-measure counted LOC against the
-  §0 projections.
+- **Coverage.** Both target files highly covered: `CollectionCoordinator.js` 97.82% lines,
+  `02_MasterIndexLockManager.js` 90.47% lines; no material regression.
+- **Cross-suite sweep.** database, collection, master-index and all coordinator suites
+  green (34 files / 237 tests).
+- **Timing suites.** `collection-coordinator-preflight.test.js`,
+  `collection-coordinator-violation-policy.test.js`,
+  `collection-coordinator-lock-release.test.js` byte-identical to HEAD and green; the
+  clock move does not change their verdicts. No edits needed.
+- **Integrated scenarios.** All five pass via 10 named tests: release-inside-window,
+  held-whole-window, stale lock, slow-acquisition + short-callback, sites 0–3 with exact
+  reason strings.
+- **Counted LOC vs §0.** `CollectionCoordinator.js` 318 (baseline 313; proj. ≈340–360),
+  `02_MasterIndexLockManager.js` 165 (baseline 160; proj. ≈170), `DatabaseConfig.js` 269
+  unchanged — all under 500.
+- **Docs sync.** Not applicable — no code, API or documentation change.
+- **Evidence.** `.opencode/scratchpad/sec4-coverage.txt`, `sec4-cross-suite.txt`,
+  `sec4-scenarios.txt`.
 
-**Acceptance criteria.** Full suite green; coverage non-regressed; lint clean; LOC
-under gate; all five integrated scenarios demonstrably pass via named tests.
+**Section checks.** `npm run test:coverage` passed (86 files / 924 tests); `npm run lint`
+0 errors / 0 warnings; `npm run test` pending at the gate.
 
-**Section checks.**
+**Implementation notes (verification evidence).**
 
-1. `npm run test:coverage`
-2. `npm run lint`
-3. `npm run test`
+- Coverage: `npm run test:coverage` exit 0, 86 files / 924 tests, v8 provider. Target files:
+  `CollectionCoordinator.js` 97.82% statements / 93.47% branches / 100% functions /
+  97.82% lines (uncovered 377, 488, 567); `02_MasterIndexLockManager.js` 90.47% statements /
+  78.57% branches / 100% functions / 90.47% lines. Summary: 88.94% statements, 82% branches,
+  94.33% functions, 88.97% lines. No material regression — all new branches have dedicated
+  tests and both target files remain highly covered; no coverage thresholds are configured.
+  Full output: `.opencode/scratchpad/sec4-coverage.txt`.
+- Cross-suite sweep: `npx vitest run --config tests/vitest.config.js tests/unit/database/
+tests/unit/collection/ tests/unit/master-index/ tests/unit/collection-coordinator/` exit 0,
+  34 files / 237 tests. Evidence: `.opencode/scratchpad/sec4-cross-suite.txt`.
+- Timing-suite assessment confirmed: `collection-coordinator-preflight.test.js`,
+  `collection-coordinator-violation-policy.test.js` and `collection-coordinator-lock-release.test.js`
+  are byte-identical to HEAD (`git diff HEAD` empty) and green — they acquire on the first
+  attempt or drive time in conflict resolution / the callback, so the clock-origin move does
+  not change their verdicts. No edits were needed.
+- Integrated scenarios verified via 10 named tests (4 files, all passing; evidence
+  `.opencode/scratchpad/sec4-scenarios.txt`): (1) lock released inside window succeeds;
+  (2) lock held whole window fails at the deadline; (3) stale lock succeeds on first attempt;
+  (4) slow acquisition + short callback returns successfully; (5) sites 0–3 still throw with
+  exact reason strings (`lock-acquisition-timeout`, `preflight-budget-exhausted`,
+  `post-operation-overrun`, `lease-not-recoverable`).
+- Re-measured counted LOC (non-blank, non-comment): `CollectionCoordinator.js` 577 raw / 318
+  counted (baseline 313; projection ≈340–360 — under projection and under the 500 gate);
+  `02_MasterIndexLockManager.js` 254 raw / 165 counted (baseline 160; projection ≈170);
+  `DatabaseConfig.js` 453 raw / 269 counted (unchanged; no code change).
+- `npm run lint` re-run: exit 0, 0 errors / 0 warnings.
+- Docs sync: not applicable — Section 4 made no code, API or documentation change.
+- Full-section regression gate: `npm run lint && npm run test` exit 0. Lint clean
+  (0 errors / 0 warnings); Vitest 86 files / 924 tests passed — identical to the
+  post-Section-3 tree (no source or test changes in this section). Zero regressions,
+  zero unaccounted failures. Run once at section completion after compaction.
+- Commit record: pending.
 
 ---
 
