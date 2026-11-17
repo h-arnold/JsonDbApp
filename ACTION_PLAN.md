@@ -1,7 +1,8 @@
 # ACTION PLAN — Lock acquisition window and coordination-budget separation (Issue #67)
 
-> **Current status:** IN PROGRESS — Section 5, documentation follow-through (Sections 1–4
-> complete and pushed). Derived from `SPEC.md` (final, reviewer-confirmed).
+> **Current status:** ALL SECTIONS COMPLETE AND PUSHED — post-implementation passes in
+> progress (De-Sloppification and final documentation sync). Derived from `SPEC.md` (final,
+> reviewer-confirmed).
 > Workflow: Red–Green–Refactor per section; enabling contracts (acquisition loop) land
 > before the clock-origin change that depends on them. Every section leaves the tree
 > green: `npm run lint` (0 errors, 0 warnings) and the full suite passing.
@@ -404,7 +405,26 @@ orchestrator.
   (0 errors / 0 warnings); Vitest 86 files / 924 tests passed — unchanged from the
   Section 4 tree (documentation-only section). Zero regressions, zero unaccounted failures.
   Run once at section completion after compaction.
-- Commit record: pending.
+- Commit record: SHA `98f63a0`, message `docs: document lock acquisition window for v0.3.1`,
+  branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded (`648ca21..98f63a0`
+  to `origin/plan/issue-67-lock-acquisition-window`). Only this section's docs, nav and plan
+  were staged; the four pre-existing `.opencode/agents/*.md` edits remain unstaged and untouched.
+- Post-implementation De-Sloppification pass: **Pass** — no confirmed slop in the delivered
+  change set; the two private helpers are justified, no dead code or defensive guards were
+  introduced, and docs match behaviour. Three nitpicks were triaged: the inline vs helper
+  sleep extraction (disregarded), the pinned `Could not acquire lock after retries` WARN
+  wording (noted — contractually fixed and asserted), and the half-updated `retryDelayMs` /
+  `lockRetryBackoffBase` rows in `docs/developers/DatabaseConfig.md`. The last was in scope
+  (introduced by this plan's docs diff) and was fixed as a documentation-only cleanup.
+  Cleanup validation and commit are recorded below.
+- Post-cleanup re-review: Code Reviewer **PASS**, no findings of any severity
+  (`.opencode/scratchpad/review-cleanup-dbconfig.md`).
+- Final post-cleanup full comparison: `npm run lint && npm run test` exit 0 — lint 0 errors /
+  0 warnings; Vitest 86 files / 924 tests passed. Against the untouched-tree baseline
+  (83 files / 908 tests) the change is +3 test files / +16 tests, all from the three new
+  suites; zero regressions, zero unaccounted new failures. Evidence:
+  `.opencode/scratchpad/final-post-cleanup-gate.txt`. The branch is ready for the final
+  documentation sync.
 
 ---
 
