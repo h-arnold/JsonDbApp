@@ -41,26 +41,33 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
 
   describe('Retry Failure', () => {
     it('should throw LOCK_ACQUISITION_FAILURE when lock already held', () => {
-      env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 30000);
+      const clock = createMockClock(1000);
+      clock.mockUtilitiesSleep();
+      try {
+        env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 30000);
 
-      const coordinator = createCoordinator({
-        collectionLockLeaseMs: 500,
-        coordinationTimeoutMs: 500,
-        retryAttempts: 2,
-        retryDelayMs: 50
-      });
+        const coordinator = createCoordinator({
+          collectionLockLeaseMs: 500,
+          coordinationTimeoutMs: 500,
+          retryAttempts: 2,
+          retryDelayMs: 50
+        });
 
-      expect(() => {
-        coordinator.acquireOperationLock('test-op-id-2');
-      }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
+        expect(() => {
+          coordinator.acquireOperationLock('test-op-id-2');
+        }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
+      } finally {
+        clock.restore();
+      }
     });
 
-    it('should stop retrying before the requested lease window is exhausted', () => {
-      env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 1500);
-
+    it('should truncate the final backoff and fail at the acquisition deadline when the lock stays held', () => {
+      const deadline = 1000 + 600;
       const clock = createMockClock(1000);
       const sleepSpy = clock.mockUtilitiesSleep();
       try {
+        env.masterIndex.acquireCollectionLock('coordinatorTest', 'existing-lock', 1500);
+
         const coordinator = createCoordinator({
           collectionLockLeaseMs: 600,
           coordinationTimeoutMs: 600,
@@ -73,8 +80,8 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
           coordinator.acquireOperationLock('test-op-id-3');
         }).toThrow(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
 
-        expect(sleepSpy).toHaveBeenCalledTimes(1);
-        expect(sleepSpy).toHaveBeenCalledWith(250);
+        expect(sleepSpy.mock.calls.map(([milliseconds]) => milliseconds)).toEqual([500, 100]);
+        expect(Date.now()).toBeGreaterThanOrEqual(deadline);
       } finally {
         clock.restore();
       }

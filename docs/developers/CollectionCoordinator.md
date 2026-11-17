@@ -23,7 +23,7 @@ The `CollectionCoordinator` orchestrates cross-instance operations for a single 
 
 **Responsibilities:**
 
-- Acquire and release the collection's virtual lock (with retry and exponential backoff)
+- Acquire and release the collection's virtual lock, retrying within a deadline-based acquisition window
 - Resolve modification-token conflicts before the operation runs
 - Enforce the coordination budget both before the callback (pre-flight) and after it (over-budget verdict)
 - Finalise master-index metadata after a successful callback — or skip that finalisation safely when the lease cannot be recovered
@@ -48,7 +48,7 @@ This page is the canonical contract for coordination behaviour: the `coordinate(
 `coordinate(operationName, callback)` runs the following ordered steps:
 
 1. **Validate and prepare.** Validate `operationName` and `callback`, generate a fresh `opId`, read the collection name, and capture `startTime` (single clock source). A DEBUG record notes the operation start.
-2. **Acquire lock.** `acquireOperationLock()` retries with exponential backoff. Exhausted retries raise `LockAcquisitionFailureError`. A `LOCK_TIMEOUT` during acquisition is mapped to `CoordinationTimeoutError` (**site 0**) — this throw is pre-side-effects. Any other acquisition error propagates unchanged.
+2. **Acquire lock.** `acquireOperationLock()` retries within a deadline of method entry + `collectionLockLeaseMs`, with a backoff floored at 500 ms and capped at 5000 ms. The final sleep is truncated to the remaining window, followed by exactly one final attempt; failure then raises `LockAcquisitionFailureError`. A thrown `LOCK_TIMEOUT` maps to `CoordinationTimeoutError` (**site 0**) — pre-side-effects. Any other acquisition error propagates unchanged.
 3. **Resolve conflicts.** If the local modification token differs from the master index token, a WARN is logged and the conflict is resolved by reloading the collection.
 4. **Pre-flight budget check** (**site 1**). If lock acquisition and conflict resolution have already consumed more than `coordinationTimeoutMs`, an ERROR is logged and `CoordinationTimeoutError` is thrown _before the callback runs_ — no operation side effects exist on this path. See [Pre-flight Budget Check](#pre-flight-budget-check).
 5. **Run the callback.** The callback is invoked directly and its result captured. If the callback itself throws, its error propagates unchanged; finalisation is skipped entirely (publishing metadata for a failed operation could misrepresent an incomplete operation) and the completion INFO never fires.

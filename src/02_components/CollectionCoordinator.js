@@ -8,6 +8,8 @@
  */
 /* exported CollectionCoordinator */
 const LEASE_RENEWAL_WINDOW_MS = 250;
+const LOCK_ACQUISITION_MIN_BACKOFF_MS = 500;
+const LOCK_ACQUISITION_MAX_BACKOFF_MS = 5000;
 const LOCK_ACQUISITION_TIMEOUT_REASON = 'lock-acquisition-timeout';
 const PREFLIGHT_BUDGET_EXHAUSTED_REASON = 'preflight-budget-exhausted';
 const POST_OPERATION_OVERRUN_REASON = 'post-operation-overrun';
@@ -416,58 +418,82 @@ class CollectionCoordinator {
   }
 
   /**
-   * Acquire operation lock with retry/backoff
-   * @param {string} operationId - Unique operation identifier
-   * @returns {number} Timestamp recorded after the lock was acquired.
-   * @throws {LockAcquisitionFailureError} When lock cannot be acquired
-   * @throws {*} For unexpected errors during lock acquisition, rethrown unchanged.
+   * Attempt one collection lock acquisition, logging and rethrowing unexpected errors.
+   * @param {string} name - Collection name.
+   * @param {string} operationId - Unique operation identifier.
+   * @param {number} leaseMs - Requested lock lease duration in milliseconds.
+   * @returns {boolean} True when the lock was acquired, false on contention.
+   * @throws {*} Unexpected acquisition errors, logged and rethrown unchanged.
+   * @private
+   */
+  _attemptLockAcquisition(name, operationId, leaseMs) {
+    try {
+      return this._masterIndex.acquireCollectionLock(name, operationId, leaseMs);
+    } catch (e) {
+      this._logger.error('Unexpected error during lock acquisition attempt', {
+        collection: name,
+        operationId,
+        error: ErrorHandler.safeErrorMessage(e)
+      });
+      throw e;
+    }
+  }
+
+  /**
+   * Compute the backoff for a failed lock acquisition attempt.
+   * @param {number} attempt - One-based index of the failed attempt.
+   * @returns {number} Backoff in milliseconds, floored and capped at the module bounds.
+   * @private
+   * @remarks Uses the pre-increment index so the first failure applies retryDelayMs unchanged;
+   *   each later failure multiplies it by lockRetryBackoffBase.
+   */
+  _computeAcquisitionBackoff(attempt) {
+    const { retryDelayMs, lockRetryBackoffBase } = this._config;
+    return Math.max(
+      LOCK_ACQUISITION_MIN_BACKOFF_MS,
+      Math.min(
+        retryDelayMs * Math.pow(lockRetryBackoffBase, attempt - 1),
+        LOCK_ACQUISITION_MAX_BACKOFF_MS
+      )
+    );
+  }
+
+  /**
+   * Acquire the operation lock within a bounded acquisition window.
+   * @param {string} operationId - Unique operation identifier.
+   * @returns {number} Timestamp recorded immediately after the lock was acquired.
+   * @throws {LockAcquisitionFailureError} When the lock cannot be acquired within the window.
+   * @throws {*} Unexpected acquisition errors, logged and rethrown unchanged.
+   * @remarks The window is collectionLockLeaseMs wide from method entry. Each failed attempt
+   *   backs off by retryDelayMs grown by lockRetryBackoffBase, floored at
+   *   LOCK_ACQUISITION_MIN_BACKOFF_MS and capped at LOCK_ACQUISITION_MAX_BACKOFF_MS. The final
+   *   sleep is truncated to the remaining window. After the window closes one last acquisition
+   *   attempt is made; a false result raises the contention WARN and the failure error.
    */
   acquireOperationLock(operationId) {
     const name = this._collection.getName();
-    const { retryAttempts, retryDelayMs, collectionLockLeaseMs, lockRetryBackoffBase } =
-      this._config;
+    const { collectionLockLeaseMs } = this._config;
+    const deadline = Date.now() + collectionLockLeaseMs;
+    let attempt = 1;
 
-    let acquired = false;
-    let lockAcquiredAt = null;
-    let elapsedBackoffMs = 0;
-    for (let attempt = 1; attempt <= retryAttempts; attempt++) {
-      try {
-        const got = this._masterIndex.acquireCollectionLock(
-          name,
-          operationId,
-          collectionLockLeaseMs
-        );
-        if (got) {
-          acquired = true;
-          lockAcquiredAt = Date.now();
-          break;
-        }
-        // retry after backoff
-        if (attempt < retryAttempts) {
-          const backoffDelayMs = retryDelayMs * Math.pow(lockRetryBackoffBase, attempt - 1);
-          if (elapsedBackoffMs + backoffDelayMs >= collectionLockLeaseMs) {
-            break;
-          }
-          Utilities.sleep(backoffDelayMs);
-          elapsedBackoffMs += backoffDelayMs;
-        }
-      } catch (e) {
-        this._logger.error('Unexpected error during lock acquisition attempt', {
-          collection: name,
-          operationId,
-          error: e.message
-        });
-        // Re-throw unexpected errors immediately, as they are not contention issues
-        // and should not be handled by the standard retry/fail mechanism.
-        throw e;
+    while (Date.now() < deadline) {
+      if (this._attemptLockAcquisition(name, operationId, collectionLockLeaseMs)) {
+        return Date.now();
       }
+      const backoffMs = this._computeAcquisitionBackoff(attempt);
+      const remainingMs = deadline - Date.now();
+      if (remainingMs <= 0) {
+        break;
+      }
+      Utilities.sleep(Math.min(backoffMs, remainingMs));
+      attempt++;
     }
-    if (!acquired) {
-      this._logger.warn('Could not acquire lock after retries', { collection: name, operationId });
-      // Throw specific error when lock acquisition fails
-      throw new ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE(name);
+
+    if (this._attemptLockAcquisition(name, operationId, collectionLockLeaseMs)) {
+      return Date.now();
     }
-    return lockAcquiredAt;
+    this._logger.warn('Could not acquire lock after retries', { collection: name, operationId });
+    throw new ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE(name);
   }
 
   /**

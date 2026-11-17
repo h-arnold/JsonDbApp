@@ -1,9 +1,16 @@
 # ACTION PLAN — Lock acquisition window and coordination-budget separation (Issue #67)
 
-> **Current status:** PENDING. Derived from `SPEC.md` (final, reviewer-confirmed).
+> **Current status:** IN PROGRESS — Section 1, Red phase. Derived from `SPEC.md` (final,
+> reviewer-confirmed).
 > Workflow: Red–Green–Refactor per section; enabling contracts (acquisition loop) land
 > before the clock-origin change that depends on them. Every section leaves the tree
 > green: `npm run lint` (0 errors, 0 warnings) and the full suite passing.
+>
+> **Baseline (recorded):** `npm run lint` exit 0 (0 errors, 0 warnings);
+> `npm run test` 83 files / 908 tests passed. Counted LOC re-measured:
+> `CollectionCoordinator.js` 549 raw / 313 counted,
+> `02_MasterIndexLockManager.js` 249 raw / 160 counted,
+> `DatabaseConfig.js` 453 raw / 269 counted.
 
 ## 0. Baseline and shared constraints
 
@@ -68,89 +75,80 @@ comments (prime directive).
 
 ## 1. Section 1 — CollectionCoordinator: deadline-based acquisition loop
 
-**Objective.** Replace the `retryAttempts`-bounded loop in `acquireOperationLock()`
-with a loop bounded by a single deadline of `now + collectionLockLeaseMs`, using a
-backoff floored at 500 ms and capped at 5000 ms, a truncated final sleep, and one final
-acquisition attempt before failure.
+**Outcome (compacted).** `acquireOperationLock()` in
+`src/02_components/CollectionCoordinator.js` now waits against a single
+`collectionLockLeaseMs` deadline instead of a fixed attempt count: backoff is floored and
+capped, the last sleep is truncated to the remaining window, and one final acquisition
+attempt runs before failure. Two retry-path tests were converted to the mock clock and a
+new acquisition-window suite was added.
 
-**Constraints.**
+**Retained for later sections.**
 
-- Declare `LOCK_ACQUISITION_MIN_BACKOFF_MS = 500` and
-  `LOCK_ACQUISITION_MAX_BACKOFF_MS = 5000` at module top level, alongside
-  `LEASE_RENEWAL_WINDOW_MS`.
-- Compute the backoff from the **pre-increment** index k (k = 1 for the first failure):
-  `max(MIN, min(retryDelayMs * lockRetryBackoffBase^(k-1), MAX))`.
-- Remove `retryAttempts` from the method's config destructure (otherwise
-  `no-unused-vars`), and remove `elapsedBackoffMs` and the `for` loop's attempt bound.
-  Keep `this._config.retryAttempts` for the constructor test.
-- Unexpected acquisition errors are still logged and rethrown unchanged.
-- The final attempt is a single extra `acquireCollectionLock` call after the loop
-  exits; failure is raised only if it also returns `false`.
-- Update the `acquireOperationLock` JSDoc in this section (deadline behaviour, not
-  "retry/backoff").
+- **Constants (exact).** `LOCK_ACQUISITION_MIN_BACKOFF_MS = 500` and
+  `LOCK_ACQUISITION_MAX_BACKOFF_MS = 5000`, declared at module top level alongside
+  `LEASE_RENEWAL_WINDOW_MS` in `src/02_components/CollectionCoordinator.js`.
+- **Deadline/backoff/final-attempt contract.** `deadline = Date.now() + collectionLockLeaseMs`
+  is captured once at entry. While `Date.now() < deadline`, attempt acquisition with lease
+  `collectionLockLeaseMs`; a success returns `Date.now()` immediately. For the k-th failure
+  (one-based, pre-increment index), backoff is
+  `max(500, min(retryDelayMs * lockRetryBackoffBase^(k-1), 5000))`. Sleep
+  `min(backoffMs, remainingMs)` where `remainingMs = deadline - Date.now()`; break when
+  `remainingMs <= 0`. After the loop make one final acquisition attempt; on `false`, log the
+  coordinator WARN `Could not acquire lock after retries` with context
+  `{ collection, operationId }` and throw `LockAcquisitionFailureError`. That WARN is
+  distinct from the MasterIndex per-attempt warning (`collectionName` key) that Section 3
+  enriches. An expired lock is overwritten on the first attempt with no wait. Unexpected
+  acquisition errors are logged via `ErrorHandler.safeErrorMessage` and rethrown unchanged.
+  A thrown `LOCK_TIMEOUT` still maps to site 0; deadline exhaustion raises
+  `LockAcquisitionFailureError` — Sections 2 and 4 rely on that distinction.
+- **`retryAttempts` compatibility.** Kept in `this._config` (constructor stores it;
+  `collection-coordinator-constructor.test.js` asserts this) but no longer read by
+  `acquireOperationLock()` — removed from the method destructure to satisfy `no-unused-vars`.
+  It remains a validated config value; Section 5 documents it as legacy for lock acquisition.
+- **Private helpers added.** `_computeAcquisitionBackoff(attempt)` computes the floored and
+  capped backoff; `_attemptLockAcquisition(name, operationId, leaseMs)` performs one
+  acquisition, logging and rethrowing unexpected errors. Later sections can reuse these
+  instead of duplicating the logic.
+- **JSDoc.** The `acquireOperationLock` JSDoc now describes the deadline window (not
+  "retry/backoff"); Section 5 should not rewrite it.
+- **Test files and reusable pattern.**
+  - `tests/unit/collection-coordinator/collection-coordinator-lock.test.js` — the
+    "lock already held" and "final backoff truncated at deadline" cases now use
+    `createMockClock()` / `clock.mockUtilitiesSleep()`.
+  - `tests/unit/collection-coordinator/collection-coordinator-acquisition-window.test.js` —
+    new suite covering release-inside-window, held-whole-window, stale lock, first backoff,
+    500 ms floor, 5000 ms cap, final attempt, `retryAttempts` ignored, and unexpected error.
+  - Pattern for later sections (general rule in §0): import `createMockClock` from
+    `tests/helpers/mock-time-helpers.js`, acquire the held-lock fixture inside the mock-clock
+    scope, and pin `collectionLockLeaseMs` equal to `coordinationTimeoutMs` (including when
+    the lease is below the 30000 default). Set the held-lock timeout above the lease for
+    "held whole window" cases and below it for "released inside window"/stale cases; use
+    `clock.advanceTime()` to expire a stale lock. Read sleeps from
+    `sleepSpy.mock.calls.map(([ms]) => ms)` and assert warning context against the first
+    matching warning call.
 
-**Red-first test cases** — extend
-`tests/unit/collection-coordinator/collection-coordinator-lock.test.js` and add
-`tests/unit/collection-coordinator/collection-coordinator-acquisition-window.test.js`:
+**Section checks.** Focused coordinator suite 43/43 passing; `npm run lint` 0 errors /
+0 warnings; counted LOC re-measured at 318 (under the 500 gate). Full section regression
+gate (`npm run test`) and commit pending.
 
-1. Convert the existing `lock already held` case (lines 43–56) to `createMockClock()`
-   with the held-lock fixture created inside the mock-clock scope. Its `500/500`
-   lease/coordination pairing is already valid.
-2. Update the `stop retrying` case (lines 58–81), which already uses
-   `createMockClock()`: move the held-lock acquisition inside the mock-clock scope,
-   and replace the title and the "one sleep of 250 ms" assertion with deadline
-   assertions. With lease/coordination `600/600` and `retryDelayMs: 250` (below the
-   new 500 ms floor), the sleeps become 500 then 100 (truncated); assert that
-   sequence. The change from 250 to 500 is expected, not a regression.
-3. Lock released just inside the window succeeds: lease/coordination `5000/5000`,
-   `retryDelayMs` 1000, base 2; acquire the held lock at mock clock 1000 with timeout
-   3000 (`lockedAt = 1000`, expiry 4000); expect acquisition at 4000 and no throw.
-4. Lock held for the whole window fails once: lease/coordination `5000/5000`,
-   `retryDelayMs` 1000, base 2, held lock timeout 10000; expect
-   `LOCK_ACQUISITION_FAILURE`, `Date.now()` at throw >= deadline, exactly one WARN
-   from the **coordinator's** logger with substring `Could not acquire lock after
-retries` with context `{ collection, operationId }` (not the MasterIndex per-attempt
-   warning, which uses `collectionName`), and sleep sequence 1000,
-   2000, 2000 (the last truncated from 4000 to the remaining window).
-5. Stale lock succeeds on the first attempt with no sleep: lease/coordination
-   `2000/2000`, held lock timeout 100, advance clock past its expiry before calling
-   `acquireOperationLock`.
-6. First backoff equals `retryDelayMs`: lease/coordination `5000/5000`, held lock
-   with timeout 10000, `retryDelayMs >= 500` (e.g. 1000) so the floor does not mask
-   the multiplier; assert the first `Utilities.sleep` call is 1000.
-7. Floor when `retryDelayMs` is 0: lease/coordination `2000/2000`, held lock timeout
-   5000; every sleep is 500 and there are only a few calls (about four), proving no
-   tight ScriptLock loop.
-8. Cap: lease/coordination `30000/30000`, `retryDelayMs` 4000 and base 2, held lock
-   timeout beyond the deadline; no sleep exceeds 5000 and at least one equals 5000.
-9. Final attempt closes the trailing gap: lease/coordination `1000/1000`,
-   `retryDelayMs` 700, held lock expiry inside the final truncated sleep; expect
-   success at the deadline where the loop-only version would throw.
-10. `retryAttempts` ignored: lease/coordination `1000/1000`, `retryAttempts: 1`,
-    `retryDelayMs: 250` (floored to 500), held lock timeout 5000; expect two sleeps of
-    500 (more than the configured attempt count) and `LOCK_ACQUISITION_FAILURE` at the
-    deadline. Without the explicit small delay the default 1000 ms would yield only
-    one sleep and the assertion would fail.
-11. Unexpected error: lease/coordination `2000/2000`; spy
-    `env.masterIndex.acquireCollectionLock` (the method `acquireOperationLock` calls)
-    to throw a plain `Error`; assert it is rethrown unchanged, no sleep occurs, and
-    `this._logger.error` fired exactly once (per SPEC §5.1 step 5).
+**Implementation notes.**
 
-**Green.** Implement the deadline loop, constants and final attempt; remove the dead
-destructure entry and accumulator.
-
-**Refactor.** If complexity exceeds 7, extract the backoff calculation into
-`_computeAcquisitionBackoff(attempt)`. Re-read the method end to end and reconcile
-JSDoc.
-
-**Acceptance criteria.** All red tests green; both converted tests green; no lint
-warnings; counted LOC recorded and under 500.
-
-**Section checks.**
-
-1. `npx vitest run --config tests/vitest.config.js tests/unit/collection-coordinator/`
-2. `npm run lint`
-3. `npm run test`
+- Docs sync (run before this section's gate): updated `docs/developers/CollectionCoordinator.md`
+  (+2 / −2 lines, net 0) — the responsibilities bullet and `coordinate()` step 2 now describe
+  the deadline-based acquisition window instead of attempt-count retry/backoff. No new page
+  created; JSDoc for `acquireOperationLock` was already updated in the green phase. No
+  planning-artefact references found in the touched doc.
+- Out-of-scope documentation observations reported by the docs pass and carried into
+  Sections 2 and 5: the `Single clock source` paragraph and step 1 (`startTime` capture), the
+  config table (`retryAttempts` legacy wording and lease-as-window note), the site-1 step 4 /
+  pre-flight paragraph, the `LockAcquisitionFailureError` row near line 109 ("retries exhausted"),
+  and `coordinate()`'s stale site-0 JSDoc. The line-109 wording note is also logged as a nitpick
+  in the deferred-findings log. None were actioned in Section 1.
+- Full-section regression report: `npm run lint && npm run test` exit 0. Lint clean
+  (0 errors / 0 warnings); Vitest 84 files / 917 tests passed (baseline 83 / 908; the
+  +1 file / +9 tests are the new acquisition-window suite). Zero regressions, zero
+  unaccounted failures. Run once at section completion.
+- Commit record: pending.
 
 ---
 
@@ -355,3 +353,17 @@ references anywhere in `docs/` or source; `npm run lint` and `npm run test` stil
 
 Sections 1 and 3 are logically independent; the numbered order keeps the tree
 single-threaded for the TDD gates.
+
+---
+
+## Deferred and Out-of-Scope Findings
+
+No Critical or Material out-of-scope findings are open. Minor out-of-scope
+observations and nitpicks are recorded in
+`.opencode/scratchpad/plan-issue-67-lock-acquisition-window-deferred-findings.md`
+(git-ignored). That log is the authoritative record for deferred rows; mirror any
+open rows from this section into it before deleting or superseding this plan.
+
+| Finding           | Severity | Scope rationale | Evidence | Disposition | User decision |
+| ----------------- | -------- | --------------- | -------- | ----------- | ------------- |
+| _(none recorded)_ |          |                 |          |             |               |
