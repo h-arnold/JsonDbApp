@@ -36,10 +36,8 @@ class CollectionCoordinator {
 
     const resolvedConfig = config instanceof DatabaseConfig ? config : new DatabaseConfig(config);
     this._config = {
-      lockTimeout: resolvedConfig.collectionLockLeaseMs,
       collectionLockLeaseMs: resolvedConfig.collectionLockLeaseMs,
       coordinationTimeoutMs: resolvedConfig.coordinationTimeoutMs,
-      retryAttempts: resolvedConfig.retryAttempts,
       retryDelayMs: resolvedConfig.retryDelayMs,
       lockRetryBackoffBase: resolvedConfig.lockRetryBackoffBase
     };
@@ -420,25 +418,16 @@ class CollectionCoordinator {
   }
 
   /**
-   * Attempt one collection lock acquisition, logging and rethrowing unexpected errors.
+   * Attempt one collection lock acquisition.
    * @param {string} name - Collection name.
    * @param {string} operationId - Unique operation identifier.
    * @param {number} leaseMs - Requested lock lease duration in milliseconds.
    * @returns {boolean} True when the lock was acquired, false on contention.
-   * @throws {*} Unexpected acquisition errors, logged and rethrown unchanged.
+   * @throws {*} Acquisition errors, propagated unchanged without logging.
    * @private
    */
   _attemptLockAcquisition(name, operationId, leaseMs) {
-    try {
-      return this._masterIndex.acquireCollectionLock(name, operationId, leaseMs);
-    } catch (e) {
-      this._logger.error('Unexpected error during lock acquisition attempt', {
-        collection: name,
-        operationId,
-        error: ErrorHandler.safeErrorMessage(e)
-      });
-      throw e;
-    }
+    return this._masterIndex.acquireCollectionLock(name, operationId, leaseMs);
   }
 
   /**
@@ -465,7 +454,7 @@ class CollectionCoordinator {
    * @param {string} operationId - Unique operation identifier.
    * @returns {number} Timestamp recorded immediately after the lock was acquired.
    * @throws {LockAcquisitionFailureError} When the lock cannot be acquired within the window.
-   * @throws {*} Unexpected acquisition errors, logged and rethrown unchanged.
+   * @throws {*} Acquisition errors, propagated unchanged without logging.
    * @remarks The window is collectionLockLeaseMs wide from method entry. Each failed attempt
    *   backs off by retryDelayMs grown by lockRetryBackoffBase, floored at
    *   LOCK_ACQUISITION_MIN_BACKOFF_MS and capped at LOCK_ACQUISITION_MAX_BACKOFF_MS. The final

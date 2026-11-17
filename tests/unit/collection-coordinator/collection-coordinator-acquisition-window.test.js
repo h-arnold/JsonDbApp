@@ -264,7 +264,7 @@ describe('CollectionCoordinator Acquisition Window', () => {
 
       expect(thrown).toBe(unexpectedError);
       expect(sleepSpy).not.toHaveBeenCalled();
-      expect(errorSpy).toHaveBeenCalledTimes(1);
+      expect(errorSpy).toHaveBeenCalledTimes(0);
     } finally {
       clock.restore();
     }

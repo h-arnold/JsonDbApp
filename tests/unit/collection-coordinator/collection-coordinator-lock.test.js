@@ -49,7 +49,6 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
         const coordinator = createCoordinator({
           collectionLockLeaseMs: 500,
           coordinationTimeoutMs: 500,
-          retryAttempts: 2,
           retryDelayMs: 50
         });
 
@@ -71,7 +70,6 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
         const coordinator = createCoordinator({
           collectionLockLeaseMs: 600,
           coordinationTimeoutMs: 600,
-          retryAttempts: 4,
           retryDelayMs: 250,
           lockRetryBackoffBase: 2
         });
