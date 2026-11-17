@@ -38,6 +38,20 @@ describe('CollectionCoordinator Lock Release and Timeout', () => {
   const createCoordinator = (config = {}) =>
     createTestCoordinator(collection, env.masterIndex, config);
 
+  describe('Operation ID Validation', () => {
+    it.each([
+      { label: 'an empty operationId', operationId: '' },
+      { label: 'a null operationId', operationId: null },
+      { label: 'an undefined operationId', operationId: undefined }
+    ])('should reject $label with InvalidArgumentError', ({ operationId }) => {
+      const coordinator = createCoordinator();
+
+      expect(() => {
+        coordinator.releaseOperationLock(operationId);
+      }).toThrow(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+    });
+  });
+
   it('should release lock when exception is thrown during coordination', () => {
     const coordinator = createCoordinator();
 

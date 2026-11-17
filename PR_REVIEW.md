@@ -34,7 +34,7 @@ The agreed fixes are being delivered in six batches. Each batch runs a full impl
 
 - **Batch 1 — Critical (dead config + double logging), D1/D2:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 86/924. Docs sync skipped — no documented behaviour changed (the removed ERROR record was never in the logging contract table; `_config` keys were never public).
 - **Batch 2 — Shared backoff utility, D3/D6:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/930. Docs sync ran — added §1.2.5 BackoffUtils to `Infrastructure_Components.md` and a cross-reference in `CollectionCoordinator.md`; no pages created.
-- **Batch 3 — Coordinator robustness, D4/D7/D8/D13/D14/D17:** Pending.
+- **Batch 3 — Coordinator robustness, D4/D7/D8/D13/D14/D17:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/936. Docs sync ran — added the re-acquisition-failure WARN row and updated the ownership prose in `CollectionCoordinator.md`; no pages created.
 - **Batch 4 — DatabaseConfig, D10/D12:** Pending.
 - **Batch 5 — MasterIndex lock manager, D11/D20/D21:** Pending.
 - **Batch 6 — Test consolidation, D15/D16/D18:** Pending.

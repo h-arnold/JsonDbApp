@@ -29,6 +29,20 @@ describe('CollectionCoordinator Acquire Operation Lock', () => {
   const createCoordinator = (config = {}) =>
     createTestCoordinator(collection, env.masterIndex, config);
 
+  describe('Operation ID Validation', () => {
+    it.each([
+      { label: 'an empty operationId', operationId: '' },
+      { label: 'a null operationId', operationId: null },
+      { label: 'an undefined operationId', operationId: undefined }
+    ])('should reject $label with InvalidArgumentError', ({ operationId }) => {
+      const coordinator = createCoordinator();
+
+      expect(() => {
+        coordinator.acquireOperationLock(operationId);
+      }).toThrow(ErrorHandler.ErrorTypes.INVALID_ARGUMENT);
+    });
+  });
+
   describe('Retry Success', () => {
     it('should successfully acquire lock with default configuration', () => {
       const coordinator = createCoordinator();

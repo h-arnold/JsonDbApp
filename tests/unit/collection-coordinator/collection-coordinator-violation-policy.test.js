@@ -188,11 +188,13 @@ describe('CollectionCoordinator unified violation policy', () => {
 
   it('treats a thrown re-acquisition as lost-unrecoverable, identically to a false return', () => {
     // Arrange — a thrown re-acquisition (collection removed concurrently) is handled uniformly.
+    const reacquisitionError = new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
     const coordinator = createCoordinator(violationConfig);
     const errorSpy = vi.spyOn(coordinator._logger, 'error');
+    const warnSpy = vi.spyOn(coordinator._logger, 'warn');
     const metadataSpy = vi.spyOn(env.masterIndex, 'updateCollectionMetadata');
     stubRenewalFailure(() => {
-      throw new ErrorHandler.ErrorTypes.COLLECTION_NOT_FOUND(name);
+      throw reacquisitionError;
     });
 
     // Act
@@ -205,6 +207,15 @@ describe('CollectionCoordinator unified violation policy', () => {
       opId: expect.any(String),
       operation: expect.any(String)
     });
+    expectRecord(
+      warnSpy,
+      'Collection lock re-acquisition failed for finalisation after renewal failure',
+      {
+        collection: name,
+        opId: expect.any(String),
+        error: reacquisitionError.message
+      }
+    );
     expectCoordinationTimeout(caught, LEASE_NOT_RECOVERABLE_REASON);
   });
 

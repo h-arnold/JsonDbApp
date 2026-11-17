@@ -162,7 +162,6 @@ class CollectionCoordinator {
         this._logger.error('Lock acquisition timed out', {
           collection: collectionName,
           operationId: opId,
-          opId,
           timeout: this._config.coordinationTimeoutMs,
           reason: LOCK_ACQUISITION_TIMEOUT_REASON
         });
@@ -214,9 +213,10 @@ class CollectionCoordinator {
    * @returns {boolean} True when the re-acquisition succeeded; false when it returned false or threw.
    * @private
    * @remarks No retry loop and no backoff: the unified policy permits a single re-acquisition
-   *   attempt. A thrown error (e.g. CollectionNotFoundError) is treated identically to a false
-   *   result so the caller routes to the lost-unrecoverable path. On success a loud WARN records
-   *   the recovery so operators can correlate with the preceding renewal-failure ERROR.
+   *   attempt. A thrown error (e.g. CollectionNotFoundError) is logged at WARN before being
+   *   treated identically to a false result so the caller routes to the lost-unrecoverable path.
+   *   On success a loud WARN records the recovery so operators can correlate with the preceding
+   *   renewal-failure ERROR.
    */
   _attemptSingleReacquisition(collectionName, opId) {
     try {
@@ -233,7 +233,15 @@ class CollectionCoordinator {
         });
       }
       return acquired;
-    } catch {
+    } catch (e) {
+      this._logger.warn(
+        'Collection lock re-acquisition failed for finalisation after renewal failure',
+        {
+          collection: collectionName,
+          opId,
+          error: ErrorHandler.safeErrorMessage(e)
+        }
+      );
       return false;
     }
   }
@@ -366,15 +374,11 @@ class CollectionCoordinator {
 
   /**
    * Determine whether the current operation is close enough to lease expiry to require renewal.
-   * @param {number|null} lockAcquiredAt - Timestamp recorded after lock acquisition.
+   * @param {number} lockAcquiredAt - Timestamp recorded after lock acquisition.
    * @returns {boolean} True when renewal should be attempted.
    * @private
    */
   _shouldRenewLease(lockAcquiredAt) {
-    if (typeof lockAcquiredAt !== 'number') {
-      return false;
-    }
-
     const elapsedSinceLockMs = Date.now() - lockAcquiredAt;
     return elapsedSinceLockMs >= this._config.collectionLockLeaseMs - LEASE_RENEWAL_WINDOW_MS;
   }
@@ -453,15 +457,19 @@ class CollectionCoordinator {
    * Acquire the operation lock within a bounded acquisition window.
    * @param {string} operationId - Unique operation identifier.
    * @returns {number} Timestamp recorded immediately after the lock was acquired.
+   * @throws {InvalidArgumentError} When operationId is invalid.
    * @throws {LockAcquisitionFailureError} When the lock cannot be acquired within the window.
    * @throws {*} Acquisition errors, propagated unchanged without logging.
    * @remarks The window is collectionLockLeaseMs wide from method entry. Each failed attempt
    *   backs off by retryDelayMs grown by lockRetryBackoffBase, floored at
    *   LOCK_ACQUISITION_MIN_BACKOFF_MS and capped at LOCK_ACQUISITION_MAX_BACKOFF_MS. The final
    *   sleep is truncated to the remaining window. After the window closes one last acquisition
-   *   attempt is made; a false result raises the contention WARN and the failure error.
+   *   attempt is made; a false result raises the contention WARN and the failure error. Because
+   *   the window is exactly collectionLockLeaseMs wide, a lock acquired near the deadline relies
+   *   on mid-operation lease renewal during finalisation.
    */
   acquireOperationLock(operationId) {
+    Validate.nonEmptyString(operationId, 'operationId');
     const name = this._collection.getName();
     const { collectionLockLeaseMs } = this._config;
     const deadline = Date.now() + collectionLockLeaseMs;
@@ -473,9 +481,6 @@ class CollectionCoordinator {
       }
       const backoffMs = this._computeAcquisitionBackoff(attempt);
       const remainingMs = deadline - Date.now();
-      if (remainingMs <= 0) {
-        break;
-      }
       Utilities.sleep(Math.min(backoffMs, remainingMs));
       attempt++;
     }
@@ -490,10 +495,12 @@ class CollectionCoordinator {
   /**
    * Release operation lock
    * @param {string} operationId - Unique operation identifier
+   * @throws {InvalidArgumentError} When operationId is invalid.
    * @remarks Release failures are deliberately swallowed so they cannot mask the coordinated
    *   operation's own outcome, but the diagnostic log records the underlying error message.
    */
   releaseOperationLock(operationId) {
+    Validate.nonEmptyString(operationId, 'operationId');
     const name = this._collection.getName();
     try {
       this._masterIndex.releaseCollectionLock(name, operationId);
