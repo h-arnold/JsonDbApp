@@ -486,7 +486,10 @@ gate (`npm run test`) and commit pending.
   (0 errors / 0 warnings); Vitest 86 files / 924 tests passed — unchanged from the
   Section 5 tree (comment-only and test-helper-refactor section). Zero regressions,
   zero unaccounted failures. Run once at section completion.
-- Commit record: pending.
+- Commit record: SHA `6203d5f`, message `refactor: share sleep-duration helper and correct
+retryAttempts JSDoc`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
+  (`91756f1..6203d5f` to `origin/plan/issue-67-lock-acquisition-window`). The four pre-existing
+  `.opencode/agents/*.md` edits remain unstaged and untouched.
 
 ---
 
