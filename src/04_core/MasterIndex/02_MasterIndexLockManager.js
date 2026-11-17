@@ -48,7 +48,12 @@ class MasterIndexLockManager {
         if (now < expiry) {
           this._masterIndex._logger.warn('Failed to acquire lock; collection is already locked.', {
             collectionName,
-            operationId
+            operationId,
+            lockedBy: lockStatus.lockedBy,
+            lockedAt: lockStatus.lockedAt,
+            lockTimeout: lockStatus.lockTimeout,
+            expiry,
+            remainingMs: expiry - now
           });
           return false;
         }

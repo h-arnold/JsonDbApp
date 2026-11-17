@@ -1,6 +1,6 @@
 # ACTION PLAN — Lock acquisition window and coordination-budget separation (Issue #67)
 
-> **Current status:** IN PROGRESS — Section 2, Red phase (Section 1 complete and pushed).
+> **Current status:** IN PROGRESS — Section 3, Red phase (Sections 1–2 complete and pushed).
 > Derived from `SPEC.md` (final, reviewer-confirmed).
 > Workflow: Red–Green–Refactor per section; enabling contracts (acquisition loop) land
 > before the clock-origin change that depends on them. Every section leaves the tree
@@ -218,47 +218,55 @@ and updated the `coordinate()` and `_enforcePreflightBudget` JSDoc.
   (0 errors / 0 warnings); Vitest 85 files / 923 tests passed (previous section 84 / 917;
   the +1 file / +6 tests are the new acquisition-budget suite). Zero regressions, zero
   unaccounted failures. Run once at section completion.
-- Commit record: pending.
+- Commit record: SHA `92c8fb2`, message `fix(coordinator): start coordination clock after
+lock acquisition`, branch `plan/issue-67-lock-acquisition-window`. `git push` succeeded
+  (`9f18f64..92c8fb2` to `origin/plan/issue-67-lock-acquisition-window`). Only this section's
+  source, test, plan and doc were staged; the four pre-existing `.opencode/agents/*.md`
+  edits remain unstaged and untouched.
 
 ---
 
 ## 3. Section 3 — MasterIndexLockManager: enrich the failed-acquisition warning
 
-**Objective.** Add lock-holder and expiry detail to the per-attempt contention warning
-so stale locks can be distinguished from active contention.
+**Outcome (compacted).** The per-attempt contention WARN in
+`src/04_core/MasterIndex/02_MasterIndexLockManager.js` now carries lock-holder and
+expiry detail, so stale locks can be distinguished from active contention in the logs.
+Added `tests/unit/master-index/MasterIndex.lock-acquisition-warning.test.js`.
 
-**Constraints.**
+**Retained for later sections.**
 
-- Keep the message substring `Failed to acquire lock; collection is already locked.`
-  and the existing `collectionName` / `operationId` context keys.
-- Add `lockedBy`, `lockedAt`, `lockTimeout`, `expiry = lockedAt + lockTimeout` and
-  `remainingMs = expiry - now`, using the `lockStatus` already read at line 43.
-- Change only the warning context; no locking decision or persisted `lockStatus` shape
-  changes.
+- **Warning contract (exact).** Keep the message substring
+  `Failed to acquire lock; collection is already locked.` and the `collectionName` /
+  `operationId` keys. Add `lockedBy`, `lockedAt`, `lockTimeout`,
+  `expiry = lockedAt + lockTimeout` and `remainingMs = expiry - now`, all derived from
+  the `lockStatus`/`now`/`expiry` already in scope in `acquireCollectionLock`. One WARN
+  statement; no locking decision or persisted `lockStatus` shape change.
+- **Distinction from the coordinator WARN.** This per-attempt MasterIndex WARN uses the
+  `collectionName` key; the coordinator's end-of-window
+  `Could not acquire lock after retries` WARN uses `{ collection, operationId }` and is
+  unchanged. Section 5 adds the enriched warning to the logging contract.
+- **Test and assertion rule.**
+  `tests/unit/master-index/MasterIndex.lock-acquisition-warning.test.js` spies on the
+  MasterIndex logger and selects the warning by message substring (`.find(...)`) —
+  assert the **first matching warning**, since it fires once per attempt. The held lock
+  (`lockedAt` 1000, `lockTimeout` 5000 under the mock clock) gives `expiry` 6000 and,
+  at first attempt clock 1000, `remainingMs` 5000.
 
-**Red-first test cases** (new
-`tests/unit/master-index/MasterIndex.lock-acquisition-warning.test.js`):
+**Section checks.** Focused master-index + coordinator suites 109/109 passing;
+`npm run lint` 0 errors / 0 warnings; counted LOC 165 (baseline 160, under the 500
+gate). Full section regression gate (`npm run test`) and commit pending.
 
-1. Spy `env.masterIndex._logger.warn`. Under the mock clock at 1000, hold the lock with
-   `acquireCollectionLock('coordinatorTest', 'holder-op', 5000)` and call
-   `acquireOperationLock('new-op')` with lease/coordination pinned to `500/500`. Assert the **first matching**
-   warning has the message substring and context `{ collectionName: 'coordinatorTest',
-operationId: 'new-op', lockedBy: 'holder-op', lockedAt: 1000, lockTimeout: 5000,
-expiry: 6000, remainingMs: 5000 }`.
+**Implementation notes.**
 
-**Green.** Extend the warning context in
-`src/04_core/MasterIndex/02_MasterIndexLockManager.js`.
-
-**Refactor.** None expected; keep the warning call a single statement.
-
-**Acceptance criteria.** Red test green; no existing warning-count assertion broken
-(no existing test pins this context); lint clean; counted LOC under 500.
-
-**Section checks.**
-
-1. `npx vitest run --config tests/vitest.config.js tests/unit/master-index/ tests/unit/collection-coordinator/`
-2. `npm run lint`
-3. `npm run test`
+- Docs sync skipped (recorded reason): the only changed surface is a diagnostic log
+  context that no existing document describes (confirmed by grep across `docs/`), so
+  there was no documented statement to reconcile. The plan's documentation section adds
+  the enriched warning to the logging contract.
+- Full-section regression report: `npm run lint && npm run test` exit 0. Lint clean
+  (0 errors / 0 warnings); Vitest 86 files / 924 tests passed (previous section 85 / 923;
+  the +1 file / +1 test is the contention-warning suite). Zero regressions, zero
+  unaccounted failures. Run once at section completion.
+- Commit record: pending.
 
 ---
 
