@@ -1,385 +1,309 @@
-# SPEC — Coordination/MasterIndex partial-write hazard elimination (Issue #61)
+# SPEC — Lock acquisition window and coordination-budget separation (Issue #67)
 
 ## 1. Purpose
 
-Eliminate three related partial-write hazards in which error/timeout signalling fires
-**after** side effects have already happened, leaving coordination state (master index
-metadata, or the in-memory master index snapshot) divergent:
+`CollectionCoordinator.acquireOperationLock()` currently stops retrying after a fixed
+attempt count (`retryAttempts`, default 3). `collectionLockLeaseMs` is used only as an
+upper cap on accumulated backoff, never as the acquisition wait window. With the
+default `retryDelayMs: 1000` and `lockRetryBackoffBase: 2`, a writer gives up after
+~3 seconds even when the lock metadata shows a 30-second lease that has not expired. The failed-acquisition warning also omits the lock holder and expiry, so a
+stale lock cannot be distinguished from active contention in the logs.
 
-1. **Post-hoc coordination timeout** — `CollectionCoordinator._executeOperationWithTimeout`
-   runs the operation callback first and only then enforces `coordinationTimeoutMs`,
-   throwing `CoordinationTimeoutError` after the operation's effects have been applied;
-   `coordinate()`'s catch path then skips metadata finalisation, so the collection and
-   the master index diverge. The divergence differs by operation class:
-   - **Save-style callbacks** (e.g. `Collection.save()`): the data file has already been
-     written to Drive when the timeout throws — persisted data exists while the master
-     index was never finalised.
-   - **CRUD callbacks** (insert/update/delete): the callback mutates in-memory state and
-     marks the collection dirty (`_markDirty()`); the Drive write is deferred. The throw
-     tells the caller the operation failed while the instance holds unflushed state.
-2. **Lease-renewal failure after a successful callback** — when
-   `_renewLeaseForFinalisationIfRequired` cannot renew the lease, finalisation throws
-   `CoordinationTimeoutError` although the operation itself succeeded, again skipping
-   metadata finalisation.
-3. **`MasterIndex.save` mutates memory before persist** — `save()` advances
-   `lastUpdated` (and its internal callers advance collection entries and
-   `_touchIndex`) _before_ the ScriptProperties write; on persistence failure the
-   in-memory state diverges from the stored snapshot.
+This change:
 
-Source: [Issue #61](https://github.com/h-arnold/JsonDbApp/issues/61) (consolidated
-ticket from the `feat/execution-time-logging` pre-PR review).
+1. Makes acquisition deadline-based, waiting up to the configured lease with a capped
+   backoff.
+2. Moves the coordination clock origin to after successful acquisition, so waiting
+   for a lock no longer consumes `coordinationTimeoutMs` and a successful write is
+   never reported as a timeout after its effects have been applied.
+3. Adds holder and expiry detail to the failed-acquisition warning.
 
-## 2. Decisions
+Source: [Issue #67](https://github.com/h-arnold/JsonDbApp/issues/67).
 
-The following were decided with the user and are binding for implementation:
+## 2. Relationship to completed work
 
-| #   | Decision                                                   | Choice                                                                                                                                                                                                                                                                                                                      |
-| --- | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| D1  | Post-completion coordination-budget overrun (Case 1)       | **1A** — keep throwing `CoordinationTimeoutError` (documented contract preserved), but complete metadata finalisation best-effort _before_ throwing. A pre-flight budget check is added before the callback runs.                                                                                                           |
-| D2  | Lease-renewal failure after a successful callback (Case 2) | **2A** — attempt exactly **one** re-acquisition of the lease for the same `opId`. If re-acquired, finalise metadata safely and then apply the D1 policy (throw `CoordinationTimeoutError`). If not re-acquired, skip finalisation, log a loud ERROR flagging the possible divergence, and throw `CoordinationTimeoutError`. |
-| D3  | `MasterIndex.save` memory/persist ordering (Case 3)        | **3B** — keep the current ordering; on save failure, resynchronise in-memory state with the stored snapshot before throwing; if resynchronisation cannot be completed, keep the staged state, log loudly, and throw the **original** `MasterIndexError`.                                                                    |
+Issue #61 delivered the coordination-violation contract: one clock measuring
+`coordinationTimeoutMs` from the top of `coordinate()`, a pre-flight check (site 1),
+a post-callback over-budget verdict (site 2), a lease-recovery step (site 3), the
+pre-existing lock-acquisition timeout mapping (site 0), reason-coded
+`CoordinationTimeoutError`s, the ownership step, the finalise-or-skip rules, the
+deliberate swallows and the logging records.
 
-## 3. Constraints
+That contract stays in force. The only change to it is the clock origin defined in
+§5.2. The four throw sites, their reason codes and all logging records are unchanged;
+the trigger condition for site 1 is narrowed, because acquisition wait no longer
+counts toward the budget (§5.4). Violation semantics after the callback are unchanged.
 
-- **GAS runtime**: synchronous, single-threaded V8. A running callback cannot be
-  interrupted; timeout enforcement before irreversible work is only possible before
-  the callback starts. All post-callback checks are inherently post-hoc.
-- **Fail loud (prime directive)**: no silent fallbacks or defaults. Every deviation
-  from the happy path must surface as a thrown error or a loud (ERROR-level) log with
-  full diagnostic context. Swallowing is only permitted where this spec explicitly
-  defines it (best-effort finalisation on violation paths, §4.2; lock-release swallow
-  already precedents this), and every swallow must log loudly.
-- **Contract preservation**: `CollectionCoordinator.coordinate()`'s documented throws
-  (`CoordinationTimeoutError` on coordination-window violations, `MasterIndexError`
-  on metadata finalisation failure on the normal path, propagated callback errors)
-  are preserved. The existing pinned test "should throw timeout error for operations
-  exceeding coordinationTimeoutMs" must keep passing unchanged in its assertion of
-  the throw.
-- **Lease-ownership gating**: metadata finalisation requires lease ownership to be
-  intact or re-established for the same `opId`. Residual risk: re-acquiring an
-  _expired_ lease does not prove no intervening writer finalised newer metadata in
-  the meantime; overwriting it would be last-write-wins on collection metadata. This
-  residual risk is accepted and documented (§7.5) rather than guarded by a staleness
-  check, which the current token semantics cannot support (see §7.6).
-- **No masking**: a secondary failure (finalisation failure on a violation path;
-  resynchronisation failure after a save failure) must never replace the primary
-  thrown error. The primary error propagates; the secondary failure is logged loudly.
-- **Error standards**: no new error types or codes. Existing
-  `CoordinationTimeoutError`, `MasterIndexError`, and logger levels only. All
-  `CoordinationTimeoutError` throw sites in `coordinate()` — four in total, defined
-  in §4.2, including the pre-existing lock-acquisition timeout mapping — each pass
-  a distinct machine-readable `reason` value in the error context so callers and
-  tests can distinguish them.
-- **No persisted data-shape changes**: master index schema, collection metadata
-  shape, and ScriptProperties keys are unchanged. This is ordering and error-path
-  work only. `docs/developers/data-shapes/` does not exist and requires no entries
-  for this work; the action plan deliberately omits data-shape blocks.
-- **Lint gate**: the project requires zero lint errors _and_ zero warnings. Relevant
-  active rules: `max-lines` warn at 500 counted lines (blanks/comments skipped),
-  `complexity` warn at 7, `max-len` 160, sonarjs recommended set, and
-  `no-magic-numbers` as an **error** in source. The new branches must therefore use
-  named constants (following the `LEASE_RENEWAL_WINDOW_MS` precedent) and keep
-  methods decomposed below the complexity threshold.
-- **Module sizing**: current counted (non-blank, non-comment) lines:
-  `99_MasterIndex.js` ≈324, `CollectionCoordinator.js` 225 (re-measure at
-  implementation time). Projected additions keep both under 500; no file separation
-  is planned (evidence recorded in the action plan).
+## 3. Decisions
 
-## 4. Behavioural contracts
+| #   | Decision                       | Choice                                                                                                                                                                                                                                                                    |
+| --- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| D1  | Acquisition bound              | Deadline based on `collectionLockLeaseMs`, not a fixed attempt count.                                                                                                                                                                                                     |
+| D2  | Coordination clock             | Captured after successful lock acquisition. Acquisition wait does not consume `coordinationTimeoutMs`.                                                                                                                                                                    |
+| D3  | Backoff                        | `max(LOCK_ACQUISITION_MIN_BACKOFF_MS, min(retryDelayMs * lockRetryBackoffBase^(n-1), LOCK_ACQUISITION_MAX_BACKOFF_MS))`. Both are top-of-file constants in `CollectionCoordinator.js`: `LOCK_ACQUISITION_MIN_BACKOFF_MS = 500`, `LOCK_ACQUISITION_MAX_BACKOFF_MS = 5000`. |
+| D4  | Wait-window source             | Reuse `collectionLockLeaseMs`. No new config field, default or validation rule.                                                                                                                                                                                           |
+| D5  | Failed-acquisition diagnostics | Keep the existing warning message substring; add holder and expiry fields to its context.                                                                                                                                                                                 |
+| D6  | Exhausted-acquisition error    | `LockAcquisitionFailureError`, raised at or after the deadline. The site-0 `LOCK_TIMEOUT` → `CoordinationTimeoutError` mapping is unchanged.                                                                                                                              |
+| D7  | `retryAttempts` compatibility  | Kept in `DatabaseConfig` and its validation; no longer read by `acquireOperationLock()`. Documented as legacy for lock acquisition.                                                                                                                                       |
+| D8  | Backoff floor                  | A 500 ms floor on every backoff prevents a tight loop when `retryDelayMs` is configured as 0. Implemented as the module constant `LOCK_ACQUISITION_MIN_BACKOFF_MS = 500`, not a config field.                                                                             |     |
 
-### 4.1 `CollectionCoordinator.coordinate()` — revised flow
+## 4. Constraints
 
-1. Acquire lock (unchanged; `LOCK_TIMEOUT` → `CoordinationTimeoutError` mapping
-   unchanged — this throw is pre-side-effects and safe).
-2. Resolve conflicts (unchanged).
-3. **Pre-flight budget check** (new): immediately after conflict resolution and
-   before the callback runs, if `Date.now() - startTime > coordinationTimeoutMs`
-   (budget already consumed by lock acquisition and conflict resolution), log an
-   ERROR and throw `CoordinationTimeoutError` (throw site 1, §4.2). The callback is
-   never invoked on this path, so no operation side effects exist.
-   _Reachability note for tests_: the branch requires the pre-callback work to
-   consume more than `coordinationTimeoutMs` (minimum 500 ms per config validation);
-   the reachable route in vitest is a spied conflict-resolution/lock step that
-   advances the mocked clock past the budget, since the retry loop aborts before
-   sleeping once accumulated backoff reaches the lease.
-4. Run the callback; capture the result.
-5. **Budget verdict, computed exactly once**: immediately after the callback returns,
-   set `overBudget = Date.now() - startTime > coordinationTimeoutMs`. The verdict is
-   computed before any finalisation work, it selects finalisation's error semantics
-   (§4.2), and there is **no post-finalisation re-check**.
-6. **Ownership step** (replaces the current throwing
-   `_renewLeaseForFinalisationIfRequired`; see §4.2 for the internal contract
-   change): if renewal is due (`_shouldRenewLease`), attempt
-   `renewCollectionLock` (non-throwing, boolean). On failure, attempt exactly one
-   re-acquisition for the same `opId`. Outcomes: **intact** (no renewal due or
-   renewal succeeded), **restored** (re-acquisition succeeded), or
-   **lost-unrecoverable** (re-acquisition returned `false` or threw).
-7. **Finalise or skip**:
-   - `lost-unrecoverable` → skip finalisation entirely; log a loud ERROR stating
-     that metadata finalisation was skipped and the collection and master index may
-     be divergent (context: collection name, operation name, `opId`).
-   - otherwise → update master index metadata. On the within-budget path its
-     failures propagate as `MasterIndexError` (unchanged behaviour); on the
-     over-budget path its failures are swallowed with a loud ERROR (§4.2).
-8. **Throw or return**:
-   - `lost-unrecoverable` → throw `CoordinationTimeoutError` (throw site 3) — this
-     applies regardless of the budget verdict, preserving today's "renewal failure
-     throws" behaviour.
-   - `overBudget` → log a point-of-occurrence ERROR (effects applied; finalisation
-     outcome; context) and throw `CoordinationTimeoutError` (throw site 2).
-   - otherwise → return the result (normal path).
-9. `finally`: lock release unchanged (including the deliberate swallow with loud
-   logging). The completion INFO log fires only on the success path; violation
-   paths throw and therefore never emit it.
+- The `collectionLockLeaseMs >= coordinationTimeoutMs` validation stays unchanged.
+- No new config fields, error types, error codes or logger levels.
+- No change to persisted documents, collection metadata, the master-index schema or
+  `DatabaseConfig` serialisation shape.
+- GAS V8: `Utilities.sleep(ms)` is the only wait mechanism. No timers or promises.
+- `coordinate()` keeps a single clock source for the site-1 and site-2 verdicts; that
+  clock now starts after acquisition (§5.2).
+- Site 0–3 reason strings and the pinned logging invariants from #61 stay unchanged.
+- ESLint `max-lines` is a warning at 500 counted (non-blank, non-comment) lines.
+  `CollectionCoordinator.js` has 549 raw lines but only 313 counted lines and is
+  currently warning-free under ESLint; the change projects to roughly 340–360 counted
+  lines. The only other modified code file is `02_MasterIndexLockManager.js` (249 raw
+  lines); `DatabaseConfig.js` is unchanged except for its documentation. The
+  `ACTION_PLAN` re-measures counted LOC at baseline before committing to this decision.
+  **Decision: no numbered multi-file split.** This is a firm implementation decision,
+  not a deferral. If the
+  rewritten `acquireOperationLock` pushes the `complexity` warning (threshold 7),
+  extract the backoff computation into a private helper rather than splitting the file.
 
-### 4.2 Coordination violation policy (unified)
+## 5. Behavioural contracts
 
-The former "Path A / Path B" presentation is replaced by one ordered post-callback
-algorithm; the paths co-occur by construction because `collectionLockLeaseMs ≥
-coordinationTimeoutMs` is enforced by config validation, so an expired lease implies
-an over-budget operation in all but the exact-equality boundary case.
+### 5.1 `acquireOperationLock(operationId)` — deadline-based acquisition
 
-**Internal contract changes**: two helpers must stop throwing and report to the
-`coordinate()` flow instead:
+Capture `deadline = Date.now() + collectionLockLeaseMs` once at method entry. Then:
 
-- `_renewLeaseForFinalisationIfRequired` reports the renewal outcome (renewed /
-  not renewed); the ownership decision and all throw decisions are centralised in
-  the flow above.
-- `_executeOperationWithTimeout` **stops enforcing the post-callback timeout** —
-  its current elapsed check and `CoordinationTimeoutError` throw are removed and
-  replaced by the step-5 verdict computed in `coordinate()`. If this method kept
-  throwing, the post-hoc timeout would again skip finalisation and reintroduce the
-  Case-1 hazard.
-- **Single clock source**: the step-3 pre-flight check and the step-5
-  `overBudget` verdict are two reads of the _same_ elapsed measurement
-  (`Date.now() - startTime`, with `startTime` captured once at the top of
-  `coordinate()`); implementations must not introduce a fresh start time for
-  either check.
+1. While `Date.now() < deadline`, attempt
+   `acquireCollectionLock(name, operationId, collectionLockLeaseMs)`.
+2. A `true` result sets `lockAcquiredAt = Date.now()` and returns that timestamp
+   immediately. No further sleep occurs.
+3. For the k-th failed attempt (k = 1, 2, …) compute
+   `backoffMs = max(LOCK_ACQUISITION_MIN_BACKOFF_MS, min(retryDelayMs * lockRetryBackoffBase^(k - 1), LOCK_ACQUISITION_MAX_BACKOFF_MS))`.
+   The exponent uses the **pre-increment** index: k is 1 for the first failure, so the
+   first backoff equals `retryDelayMs` (floored at 500 ms and capped at 5000 ms), and
+   each subsequent failure grows it by `lockRetryBackoffBase`. Increment the index
+   only for the next iteration. Let `remainingMs = deadline - Date.now()`. If
+   `remainingMs <= 0`, stop looping. Otherwise sleep
+   `min(backoffMs, remainingMs)` and try again. A required test pins the first backoff
+   value (§6).
+4. Truncating the final sleep to `remainingMs` keeps the retries inside the window.
+   When the loop exits, make **one final `acquireCollectionLock` attempt** before
+   throwing. This closes the trailing gap where a lock released during the final
+   truncated sleep would otherwise be missed, and ensures failure is raised only
+   once the whole window has elapsed.
+5. An unexpected error from `acquireCollectionLock` is logged as an ERROR and
+   rethrown unchanged, as today.
+6. If the final attempt also fails, log the coordinator's `Could not acquire lock
+after retries` WARN (context `{ collection, operationId }`, unchanged) and throw
+   `LockAcquisitionFailureError` for the collection. The holder-and-expiry detail
+   lives on the separate per-attempt warning in §5.3.
 
-**Throw sites and reason values** (each passes a distinct `reason` in the error
-context; exact strings chosen at implementation). Four sites exist in
-`coordinate()`: the three below plus the pre-existing lock-acquisition timeout
-mapping in `_acquireLockWithTimeoutMapping`, which gains a `reason` value (e.g.
-lock-acquisition-timeout) for consistency — it is pre-callback, so no side effects
-exist there either:
+An expired lock is simply overwritten by the new acquisition in
+`acquireCollectionLock` (it falls through the `now < expiry` guard), so a stale lock
+succeeds on the first attempt without waiting.
 
-| Site                                        | Trigger                                                             | Finalisation state at throw                        |
-| ------------------------------------------- | ------------------------------------------------------------------- | -------------------------------------------------- |
-| 0 — lock-acquisition timeout (pre-existing) | `LOCK_TIMEOUT` during lock acquisition                              | None possible; no side effects                     |
-| 1 — pre-flight                              | Budget exhausted before the callback                                | None possible; no side effects                     |
-| 2 — post-operation overrun                  | Callback completed, `overBudget` true, ownership intact or restored | Applied; finalised (or finalisation failed loudly) |
-| 3 — lease not recoverable                   | Renewal failed and single re-acquisition failed                     | Applied; **skipped** — divergence logged           |
+Every test of the deadline loop must use `createMockClock()` together with
+`clock.mockUtilitiesSleep()` from `tests/helpers/mock-time-helpers.js`. The real
+`Utilities.sleep()` busy-waits against real `Date.now()`, so an unmocked deadline
+test is non-deterministic and can spin for the full lease. The held-lock fixture must
+be acquired (or its `lockStatus` set) **inside the mock-clock scope**, with a lock
+timeout longer than `collectionLockLeaseMs`, so `lockedAt`, `lockTimeout` and `expiry`
+are controlled and the lock stays held for the whole window.
 
-**Renewal-failure causes**: renewal can fail for two reasons — lease expiry
-(which, given `collectionLockLeaseMs ≥ coordinationTimeoutMs`, implies `overBudget`
-outside the exact-equality boundary) and concurrent collection removal or
-lock-record loss (which may occur within budget). The ownership step treats both
-uniformly: one re-acquisition attempt, then recover or route to throw site 3.
+Implementation detail: the rewrite removes `retryAttempts` from the
+`acquireOperationLock` config destructure, the `elapsedBackoffMs` accumulator and the
+`for` loop's attempt bound. Leaving `retryAttempts` in the destructure unused would
+fail `no-unused-vars`. The constructor must still store it in `_config` for the
+constructor test. Both backoff constants are declared at module top level, outside the
+class, alongside `LEASE_RENEWAL_WINDOW_MS`.
 
-**Rules**:
+### 5.2 `coordinate()` — coordination clock starts after acquisition
 
-1. **Single re-acquisition**: exactly one `acquireCollectionLock` call for the same
-   `opId` with the configured `collectionLockLeaseMs`. A `false` return **or** a
-   thrown error (e.g. `CollectionNotFoundError`) is treated uniformly as
-   `lost-unrecoverable`. No retry loop, no backoff.
-2. **Best-effort finalisation on violation paths**: when `overBudget` is true and
-   ownership is intact/restored, a finalisation failure is logged loudly (ERROR,
-   with the underlying error and operation context) and **swallowed** so it cannot
-   mask the primary `CoordinationTimeoutError`. This mirrors the existing
-   `releaseOperationLock` swallow-with-loud-logging precedent and is the explicit,
-   documented sense in which finalisation is "best-effort". Within-budget
-   finalisation failures continue to propagate as today.
-3. **Logging contract** (point-of-occurrence records; the boundary catch in
-   `coordinate()` remains the single operation-level failure record and continues to
-   log once per failed operation):
+`coordinate()` currently captures `startTime` before calling
+`_acquireLockWithTimeoutMapping`. Move that single capture to immediately after the
+wrapper returns successfully:
 
-   | Situation                                                | Level | Content                                                      |
-   | -------------------------------------------------------- | ----- | ------------------------------------------------------------ |
-   | Pre-flight budget exhausted                              | ERROR | collection, opId, timeoutMs                                  |
-   | Renewal failure (before re-acquisition)                  | ERROR | collection, opId, leaseMs                                    |
-   | Re-acquisition attempt outcome (recovered)               | WARN  | collection, opId, outcome                                    |
-   | Finalisation failure on a violation path (swallowed)     | ERROR | collection, opId, underlying error                           |
-   | Finalisation skipped (divergence warning)                | ERROR | collection, opId, explicit divergence statement              |
-   | Post-operation overrun (immediately before site-2 throw) | ERROR | collection, opId, timeoutMs, elapsedMs, finalisation outcome |
+1. Emit the DEBUG `Starting operation` record (unchanged position, before
+   acquisition).
+2. Acquire the lock (with the §5.1 deadline). A `LOCK_TIMEOUT` still maps to site 0.
+3. Capture `startTime = Date.now()` immediately after the wrapper returns.
+4. Resolve conflicts.
+5. Run `_enforcePreflightBudget` (site 1) against this `startTime`.
+6. Run the callback, compute `overBudget = Date.now() - startTime > coordinationTimeoutMs`,
+   and continue through the existing ownership, finalisation and throw-or-return steps.
 
-   Existing pinned invariants that must keep holding: exactly one ERROR from the
-   coordinate boundary per failed metadata update (within-budget path), and exactly
-   one INFO completion record per successful operation.
+The pre-flight check and the over-budget verdict remain two reads of the same
+measurement; only its origin moves. **The sole exclusion is the acquisition wait.**
+Conflict resolution and the callback count against `coordinationTimeoutMs`. The
+`overBudget` verdict is still taken after the callback and before
+`_finaliseAfterOperation`; finalisation time is not part of the verdict, and the
+ownership step continues to measure lease renewal from `lockAcquiredAt`, not
+`startTime`. The DEBUG operation-start record stays before acquisition and is not
+coupled to the moved `startTime` capture.
 
-   Two clarifications: (a) on violation paths the point-of-occurrence ERROR is
-   **deliberately additional** to the boundary catch's operation-failure record —
-   they answer different questions (why the violation happened / what the operation
-   outcome was), so two records per failed violation-path operation are intended;
-   (b) on the within-budget restored path an ERROR-level renewal-failure record may
-   co-occur with a **successful** result — log-based alerting and tests must not
-   assume ERROR implies operation failure.
+`lockAcquiredAt` is set inside `acquireOperationLock` at the moment of acquisition
+and the new `startTime` is captured immediately after the wrapper returns, with no
+intervening work, so the two originate together. Combined with
+`collectionLockLeaseMs >= coordinationTimeoutMs`, the #61 residual-risk statements
+remain valid.
 
-4. **Test reachability**: the lease-loss branches are exercised by spying on the
-   master index (`renewCollectionLock → false`, then `acquireCollectionLock →
-true/false/throws`), consistent with the existing coordinator and lock-manager
-   suites; no multi-actor simulation is required.
+`coordinationTimeoutMs` no longer bounds total operation wall-clock: acquisition wait
+can consume most of the lease before the callback starts. The remaining lease window
+for renewal and finalisation is bounded by the lease itself and handled by the
+existing ownership step (§2), not by the coordination budget.
 
-### 4.3 `MasterIndex.save()` — resynchronisation on failure
+### 5.3 Failed-acquisition warning
 
-- Ordering is unchanged: state is advanced in memory, then persisted.
-- On a persistence failure (`setProperty` or serialisation throws), inside the
-  existing catch, **before throwing the original `MasterIndexError('save', …)`**,
-  attempt resynchronisation via a new private raw reader (suggested name
-  `_readStoredSnapshot()`), which becomes the **single** read-and-deserialise
-  implementation for ScriptProperties snapshots:
-  - **Composition, not duplication**: `_loadFromScriptProperties()` is refactored
-    to compose the raw reader — it calls it, assigns `this._data`, runs
-    `_ensureStateShape()`, and retains its single `MASTER_INDEX_ERROR('load', …)`
-    wrap point and failure log. The documented single-wrap-point consolidation
-    contract is preserved, not eroded; the resync path calls the raw reader
-    directly and logs its own outcome.
-  - The raw reader never assigns `this._data`, never runs `_ensureStateShape()`,
-    and never calls `save()`. This is the mechanism that makes save↔reload
-    recursion impossible even when the stored snapshot is a legacy payload and
-    `setProperty` is broken.
-  - Outcomes:
-    1. **Snapshot found** → assign it to `this._data`. In-memory state (including
-       caller-side pre-advances of collection entries and `lastUpdated`) is
-       resynchronised with storage; the staged, un-persisted advances are discarded.
-    2. **No snapshot** (stored key absent, e.g. failure during initial creation) →
-       keep the staged in-memory state; log loudly (ERROR) that no stored snapshot
-       was available to resynchronise from.
-    3. **Reader failure** (read or deserialise throws) → keep the staged in-memory
-       state; log loudly (ERROR) that memory may be diverged from the stored
-       snapshot.
-  - In all three outcomes the **original** `MasterIndexError('save', …)` is thrown;
-    a reader failure must not mask it. The log context records which of the three
-    outcomes occurred.
-  - **Shape normalisation is intentionally skipped on the resync path**: the
-    shape-normalisation save inside `_ensureStateShape()` is precisely the
-    recursion source this design removes. A stored snapshot that still needs
-    normalisation is re-normalised on the next lock-protected reload
-    (`_withScriptLock` → `_reloadLatestStateUnderLock`). Reviewers and implementers
-    must not "fix" this by adding `_ensureStateShape()` to the resync path.
-- Resynchronisation targets `this._data` on every save failure regardless of
-  `dataOverride` (internal callers never pass an override). Note the override
-  object itself may be mutated by the pre-persist `lastUpdated` assignment — the
-  guarantee is only that the override is **not adopted as master state**
-  (`this._data !== dataOverride` after resync).
-- **Consistency consequence (corrected)**: after a failed save with a successful
-  resynchronisation, the master index holds the stored snapshot. This divergence
-  class self-heals on the **next successful coordinated finalisation**, which
-  rewrites document count and modification token from the acting instance's live
-  state. `CollectionCoordinator.hasConflict()` does **not** detect this divergence
-  class: local modification tokens are not regenerated in the write path, so the
-  token comparison cannot be relied on here.
-- **De-aliasing consequence**: after resynchronisation the index's metadata objects
-  are freshly deserialised (de-aliased from any live `Collection._metadata`
-  instances). This is acceptable; the documented healing path above covers it.
-- Existing pinned behaviour that must keep holding: `load()` returning the
-  deserialised snapshot shared with internal state, and the single
-  `MASTER_INDEX_ERROR` wrap point in the shared loader, remain unchanged — the raw
-  reader becomes the underlying read-and-deserialise implementation that
-  `_loadFromScriptProperties()` composes, not a parallel second reader.
+In `MasterIndex/02_MasterIndexLockManager.js`, keep the warning message substring
+`Failed to acquire lock; collection is already locked.` and extend its context with
+the holder and expiry data already present in `lockStatus`:
 
-## 5. Scope
+- `lockedBy` — `lockStatus.lockedBy` (the holder's operation id)
+- `lockedAt` — `lockStatus.lockedAt`
+- `lockTimeout` — `lockStatus.lockTimeout`
+- `expiry` — `lockedAt + lockTimeout`
+- `remainingMs` — `expiry - now`
+
+The existing `collectionName` and `operationId` keys stay. A second, separate WARN
+(`Could not acquire lock after retries`) is emitted by the coordinator when the
+acquisition deadline is exhausted; its context stays `{ collection, operationId }`.
+
+A new unit test must spy on the **MasterIndex logger** (`this._masterIndex._logger`),
+locate the warning by its message substring, and assert that its context still carries
+`collectionName`/`operationId` (not `collection`) and now also `lockedBy`, `lockedAt`,
+`lockTimeout`, `expiry` and `remainingMs`, with values derived from the held-lock
+fixture created under the mock clock (§5.1). This is distinct from the coordinator's
+`Could not acquire lock after retries` WARN, which uses `{ collection, operationId }`.
+No existing test pins this warning's context, so the enrichment is additive.
+
+### 5.4 Error outcomes
+
+| Situation                                                   | Outcome                                                                                                                                               |
+| ----------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Lock released before `collectionLockLeaseMs` elapses        | Acquisition succeeds on the next attempt (including the final one at the deadline); operation proceeds with a fresh coordination budget.              |
+| Lock held for the whole `collectionLockLeaseMs`             | One failed-acquisition WARN per attempt, then the coordinator WARN and `LockAcquisitionFailureError` at or just after the deadline.                   |
+| Lock already expired (stale)                                | Overwritten by the new acquisition on the first attempt; no wait.                                                                                     |
+| `acquireCollectionLock` throws `LOCK_TIMEOUT`               | Site 0 `CoordinationTimeoutError` with reason `lock-acquisition-timeout` (unchanged).                                                                 |
+| Callback (not acquisition) overruns `coordinationTimeoutMs` | Site 2 `CoordinationTimeoutError` with reason `post-operation-overrun` (unchanged).                                                                   |
+| Conflict resolution pushes elapsed past the budget          | Site 1 `CoordinationTimeoutError` with reason `preflight-budget-exhausted` (unchanged).                                                               |
+| Slow acquisition (repeated `false` returns)                 | `LockAcquisitionFailureError` at the lease deadline. Slow acquisition no longer reaches site 1, because acquisition wait is excluded from the budget. |
+
+The per-attempt `Failed to acquire lock; collection is already locked.` WARN now fires
+once per retry — eight or nine times over a 30-second lease with the default backoff,
+depending on the final-attempt boundary, and far more when `retryDelayMs` is small —
+rather than at most three times. This is the intended consequence of waiting until the
+deadline.
+
+Site 0 has no production trigger today: `acquireCollectionLock` returns `false` on
+contention and does not throw `LOCK_TIMEOUT`. The mapping is retained for a thrown
+`LOCK_TIMEOUT` (reachable via a spy, as in the existing preflight test) and for future
+call paths; no production behaviour changes on that site.
+
+## 6. Scope
 
 ### In scope
 
-- `src/02_components/CollectionCoordinator.js`: pre-flight budget check; unified
-  post-callback violation algorithm; non-throwing renewal helper;
-  `_executeOperationWithTimeout` stripped of its post-callback throw (enforcement
-  moves to the `coordinate()` verdict); site-0 `reason` added to
-  `_acquireLockWithTimeoutMapping`; JSDoc updates for the changed contract
-  semantics (including the deliberate best-effort swallow).
-- `src/04_core/MasterIndex/99_MasterIndex.js`: raw-read resynchronisation inside
-  `save()`'s catch; JSDoc updates.
-- Tests: new red-first coverage for every behaviour in §4 (see action plan);
-  amendments to existing coordinator/master-index suites where pinned expectations
-  gain new observable side effects (finalisation before throw).
-- Documentation follow-through:
-  - **New canonical home**: `docs/developers/CollectionCoordinator.md` — the
-    coordination contract (flow, violation policy, throw sites/reasons, deliberate
-    swallows) currently has no owning document; this work creates it.
-  - `docs/developers/Infrastructure_Components.md`: `CoordinationTimeoutError`
-    catalogue entry updated with the four throw sites/reason semantics; note the
-    deliberate best-effort swallow alongside the existing release-swallow note;
-    reconcile the "failure logging owned by coordinate's boundary catch" claims
-    (and the equivalent JSDoc remarks) with the deliberate additional
-    point-of-occurrence records on violation paths.
-  - `docs/developers/MasterIndex.md`: `save()` failure/resynchronisation semantics;
-    virtual-locking section aligned with the non-throwing renewal helper.
-  - `docs/developers/DatabaseConfig.md`: sizing note updated — an over-budget
-    operation now finalises metadata before throwing.
-  - User-facing: relevant guide under `docs/` and a release-notes entry
-    (`docs/release-notes/`) — user-visible change: `CoordinationTimeoutError` can
-    now be thrown _after_ an operation's effects were applied (and, at sites 1–2,
-    after metadata finalisation); the `reason` context distinguishes the sites.
+- Rewrite `acquireOperationLock()` as a deadline loop with the named, floored and
+  capped backoff, declaring `LOCK_ACQUISITION_MAX_BACKOFF_MS = 5000` and
+  `LOCK_ACQUISITION_MIN_BACKOFF_MS = 500` at module top level in
+  `CollectionCoordinator.js`, alongside `LEASE_RENEWAL_WINDOW_MS`. Remove
+  `retryAttempts` from the method's destructure, plus the `elapsedBackoffMs`
+  accumulator and the `for` loop's attempt bound.
+- Move the coordination clock origin in `coordinate()`.
+- Enrich the failed-acquisition warning context and add a positive test for its keys.
+- Convert both retry-path tests in
+  `tests/unit/collection-coordinator/collection-coordinator-lock.test.js` to
+  `createMockClock()`/`clock.mockUtilitiesSleep()`: the `lock already held` case
+  (lines 43–56) and the `stop retrying` case (lines 58–81). Replace the latter's title
+  and its "one sleep of 250 ms" assertion, which pin the old attempt-count behaviour
+  and contradict retrying until the deadline.
+- Add one positive test for each new behaviour: (a) lock released just inside the
+  window succeeds; (b) lock held for the whole window fails once, at or after the
+  deadline; (c) stale lock succeeds on the first attempt with no sleep;
+  (d) with `retryDelayMs >= 500` (e.g. the default 1000, so the floor does not mask
+  the multiplier), the first backoff equals `retryDelayMs` (pins the pre-increment
+  exponent);
+  (e) the 500 ms floor applies when `retryDelayMs` is 0 (no tight loop);
+  (f) the 5000 ms cap applies to long backoffs; (g) the final sleep is truncated to
+  `remainingMs`; (h) a lock released during the final truncated sleep succeeds via
+  the final attempt; (i) with `retryAttempts` set low (e.g. 1) and the lock held, the loop performs **more** attempts/sleeps than that count and waits the full lease before throwing `LockAcquisitionFailureError`;
+  (j) an unexpected acquisition error is rethrown without retry.
+- The warning-context test asserts against the **first matching warning call** (the
+  warning fires once per attempt) and uses the MasterIndex logger target and keys
+  listed in §5.3.
+- Update `DatabaseConfig.md` and `CollectionCoordinator.md` to describe `retryAttempts`
+  as legacy for lock acquisition; keep the constructor storing it in `_config`, since
+  `collection-coordinator-constructor.test.js` asserts this.
+- Update the specific JSDoc and docs affected by the clock move:
+  - `acquireOperationLock` JSDoc — deadline behaviour, not "retry/backoff".
+  - `coordinate()` JSDoc site-0 wording — currently says the lock "cannot be acquired
+    within the coordination window"; that window is now the lease. Keep the
+    distinction explicit: a thrown `LOCK_TIMEOUT` maps to site 0, whereas deadline
+    exhaustion raises `LockAcquisitionFailureError`.
+  - `_enforcePreflightBudget` `@remarks` — currently says `startTime` is "captured at
+    the top of `coordinate()`"; reword to "captured after lock acquisition (see
+    `coordinate()`)".
+  - `docs/developers/CollectionCoordinator.md` — the `Single clock source` paragraph
+    and `coordinate()` flow **step 1 ("Validate and prepare")**, which are where
+    `startTime` is currently described as captured. Step 2 is "Acquire lock" and does
+    not mention `startTime`.
+- Confirm and record the timing-suite assessment: `collection-coordinator-preflight.test.js`,
+  `collection-coordinator-violation-policy.test.js` and
+  `collection-coordinator-lock-release.test.js` mock acquisition to succeed instantly
+  or drive time in the callback/conflict-resolution step, so the post-acquisition
+  clock origin does not change their verdicts. No edits expected there beyond those
+  already listed.
+- Update the remaining affected developer docs and add a release note.
 
 ### Out of scope
 
-- Lock acquisition, retry/backoff, lease defaults, and `DatabaseConfig` validation
-  rules (unchanged).
-- Data-file partial-write concerns in `DocumentOperations`/`FileOperations` (the
-  issue is specifically coordination/metadata divergence).
-- Interruptible or asynchronous callbacks (impossible under GAS).
-- Any general retry framework for metadata persistence (the single bounded
-  re-acquisition in D2 is the only retry-like behaviour, by explicit decision).
-- Persisted data-shape changes (none required).
-- **Callback-failure path**: a throwing callback continues to skip finalisation
-  entirely, unchanged. Rationale: the operation failed, so publishing its metadata
-  could misrepresent an incomplete operation; the callback error propagates
-  unchanged. Best-effort finalisation is deliberately _not_ generalised to this
-  path.
+- Any change to sites 0–3, the ownership step, finalisation rules, deliberate
+  swallows or logging records from #61 beyond the clock origin.
+- New configuration fields, defaults or validation rules.
+- Changes to `DatabaseConfig` values or serialisation shape.
+- Changes to `MasterIndexLockManager` locking decisions (only the warning context).
+- Multi-actor or end-to-end integration simulation; coverage is spy/clock based.
 
-## 6. Non-goals
+## 7. Non-goals
 
-- No new error types, error codes, or logger levels.
-- No change to the master index persisted schema or ScriptProperties keys.
-- No change to `MasterIndex.save()`'s signature. It has no production call sites
-  outside `MasterIndex` itself (tests exercise it directly, and it is reachable via
-  `Database.getMasterIndex()`); internal call sites are unchanged.
-- No staleness/token-based guard before post-re-acquisition finalisation (residual
-  risk accepted, §7.5).
-- No speculative hardening beyond the three cases in Issue #61.
+- No new error types, error codes or logger levels.
+- No persisted data, master-index, collection-metadata or config-shape change.
+- No change to how lease renewal or single re-acquisition works.
+- No token-generation or staleness-guard changes.
+- No speculative retry hardening beyond the acquisition loop.
 
-## 7. Assumptions (stated, veto-able)
+## 8. Assumptions (stated, veto-able)
 
-1. **Error precedence on violation paths**: a finalisation failure on an over-budget
-   path is swallowed with a loud log so the primary `CoordinationTimeoutError`
-   propagates. Within-budget finalisation failures still propagate as
-   `MasterIndexError`.
-2. **Re-acquisition failure uniformity**: a thrown error during the single
-   re-acquisition attempt (e.g. `CollectionNotFoundError`) is treated the same as a
-   `false` return — skip finalisation, loud divergence log, throw site 3.
-3. **Logging shape**: the point-of-occurrence records in §4.2.3 are in addition to
-   the single boundary failure record; the existing exact-once invariants referenced
-   there stay pinned.
-4. **Within-budget lease recovery**: if the lease is lost and re-acquired while the
-   operation is still within budget, the operation completes successfully (no
-   throw). Practically rare for the expiry cause: config enforces
-   `collectionLockLeaseMs ≥ coordinationTimeoutMs`, so an expired lease almost
-   always implies an over-budget operation outside the exact-equality boundary.
-   The other renewal-failure cause — concurrent collection removal or lock-record
-   loss — can occur within budget; the algorithm handles both uniformly (§4.2).
-5. **Residual clobber risk accepted**: after re-acquiring an expired lease, a
-   concurrent writer that finalised newer metadata in the expiry window could be
-   overwritten (last-write-wins on collection metadata). The window is small, the
-   divergence is loudly logged, and the current token semantics (tokens are not
-   regenerated in the write path) cannot support a cheap staleness check. Documented
-   in the new coordinator doc rather than guarded.
-6. **Local state after skipped finalisation**: the acting instance keeps its
-   in-memory (dirty or saved) state; it is not invalidated. The divergence
-   self-heals on the next successful coordinated finalisation on any instance. This
-   is documented rather than made fatal, because failing the already-completed
-   operation again would not improve consistency.
-7. **Token semantics unchanged**: the observation that write-path tokens are not
-   regenerated (so `hasConflict()` rarely fires for this divergence class) is
-   recorded as-is; changing token generation is out of scope.
+1. `retryAttempts` stays as a validated config value that the constructor keeps in
+   `_config`, but it no longer bounds lock acquisition. Keeping it avoids a breaking
+   config/serialisation change. Both `DatabaseConfig.md` and
+   `CollectionCoordinator.md` will be updated in this work to describe it as legacy
+   for lock acquisition; neither currently does.
+2. The backoff bounds are named module constants, not config fields: a 500 ms floor
+   (`LOCK_ACQUISITION_MIN_BACKOFF_MS`) and a 5000 ms cap
+   (`LOCK_ACQUISITION_MAX_BACKOFF_MS`). The floor prevents a tight loop when
+   `retryDelayMs` is 0 and does not affect the default 1000 ms base delay.
+3. The enhanced warning keeps its existing message substring, so log matching and
+   existing record-count assertions are unaffected.
+4. The site-0 mapping is retained for a thrown `LOCK_TIMEOUT`; deadline exhaustion
+   remains a `LockAcquisitionFailureError`, matching today's error type. Narrowing
+   site 1 so that it can no longer be triggered by acquisition wait is an accepted
+   consequence of moving the clock origin.
+5. Truncating the last sleep to the remaining window, followed by one final
+   acquisition attempt, guarantees a lock released anywhere inside the window is
+   observed and that failure is raised only once the window has elapsed. No separate
+   timer or wake-up call is needed.
 
-## 8. Open questions
+## 9. Data-shape assessment
 
-None blocking. Reviewer findings from both passes are resolved: the first-pass
-items (C1–C4, I1–I11, N1–N4) by the previous revision; the second-pass items by
-this one — A1 via the composed single raw reader (§4.3), A2 by adding the
-pre-existing lock-acquisition site to the reason scheme (§4.2), A3 by stating both
-renewal-failure causes (§4.2, §7.4), A4 by explicitly requiring the resync path to
-skip shape normalisation (§4.3), and A5–A6 via the two-records and ERROR⟹failure
-clarifications (§4.2). B1 is resolved by the §4.2 internal-contract-changes block
-(both helpers stop throwing; single clock source) and the §5 in-scope naming.
-Any residual judgement calls are captured as veto-able assumptions in §7.
+The scope changes no persisted document shape, collection metadata, master-index
+schema or config serialisation shape. The changes are behavioural and logging-only
+at API boundaries. No planned-only entries are required in
+`docs/developers/data-shapes/`.
+
+## 10. Open questions
+
+None. All decisions were settled with the user: separate acquisition budget using
+`collectionLockLeaseMs` as its deadline, a 500 ms minimum and 5-second maximum backoff,
+and no new config fields.
