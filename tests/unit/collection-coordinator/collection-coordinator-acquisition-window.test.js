@@ -5,31 +5,27 @@
  * CollectionCoordinator.acquireOperationLock.
  */
 
+/* global ErrorHandler */
+
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import {
   setupCoordinatorTestEnvironment,
   createTestCollection,
-  createTestCoordinator
+  createBoundCoordinatorFactory
 } from '../../helpers/collection-coordinator-test-helpers.js';
 import { createMockClock, sleepDurations } from '../../helpers/mock-time-helpers.js';
 
 describe('CollectionCoordinator Acquisition Window', () => {
   let env;
   let collection;
+  let createCoordinator;
   const collectionName = 'coordinatorTest';
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
     ({ collection } = createTestCollection(env, collectionName));
+    createCoordinator = createBoundCoordinatorFactory(collection, env.masterIndex);
   });
-
-  /**
-   * Creates a CollectionCoordinator for the shared collection.
-   * @param {Object} config - Optional coordinator configuration overrides.
-   * @returns {CollectionCoordinator} Configured coordinator instance.
-   */
-  const createCoordinator = (config = {}) =>
-    createTestCoordinator(collection, env.masterIndex, config);
 
   it('should acquire a lock that is released just inside the acquisition window', () => {
     const clock = createMockClock(1000);

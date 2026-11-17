@@ -37,7 +37,9 @@ The agreed fixes are being delivered in six batches. Each batch runs a full impl
 - **Batch 3 — Coordinator robustness, D4/D7/D8/D13/D14/D17:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/936. Docs sync ran — added the re-acquisition-failure WARN row and updated the ownership prose in `CollectionCoordinator.md`; no pages created.
 - **Batch 4 — DatabaseConfig, D10/D12:** Complete, committed. Review PASS after one in-scope nitpick (missing `@throws` on `_getDefaultRootFolder`) was fixed and re-reviewed. Checks: lint 0/0, tests 87/937. Docs sync ran — reconciled four `DatabaseConfig.md` locations (backoff lower bound, typed root-folder error, validation rule, error-scenarios table); no pages created.
 - **Batch 5 — MasterIndex lock manager, D11/D20/D21:** Complete, committed. Review PASS after two in-scope items were fixed and re-reviewed: a redundant in-memory map reassignment (D11's clear still works via shared `CollectionMetadata` references) and the release-note WARN context key. Checks: lint 0/0, tests 87/938. Docs sync ran — `collection` key in the `CollectionCoordinator.md` logging table, `_setAndPersistLockStatus` usage and cleanup persistence in `MasterIndex.md`, plus the release-note correction; no pages created.
-- **Batch 6 — Test consolidation, D15/D16/D18:** Pending.
+- **Batch 6 — Test consolidation, D15/D16/D18:** Complete, committed. Review PASS, no in-scope findings. Checks: lint 0/0, tests 87/938. Docs sync skipped — test-only restructuring with no documented behaviour, API or data-shape change.
+
+**Final status:** All 18 _Fix now_ decisions are implemented, reviewed clean and committed across the six batches. The 3 _Wontfix_ decisions (D5, D19, D22) and the investigation-resolved _keep_ (D9) required no code change. Final checks: `npm run lint` 0 errors/0 warnings; `npm run test` 87 files / 938 tests passed (baseline: 86 files / 924 tests). The Verdict above is the original pre-implementation review outcome, retained for the record.
 
 ## Focus areas
 

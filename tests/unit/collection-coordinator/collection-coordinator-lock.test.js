@@ -4,30 +4,26 @@
  * Tests for CollectionCoordinator.acquireOperationLock.
  */
 
+/* global ErrorHandler */
+
 import { describe, it, expect, beforeEach } from 'vitest';
 import {
   setupCoordinatorTestEnvironment,
   createTestCollection,
-  createTestCoordinator
+  createBoundCoordinatorFactory
 } from '../../helpers/collection-coordinator-test-helpers.js';
 import { createMockClock, sleepDurations } from '../../helpers/mock-time-helpers.js';
 
 describe('CollectionCoordinator Acquire Operation Lock', () => {
   let env;
   let collection;
+  let createCoordinator;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
     ({ collection } = createTestCollection(env, 'coordinatorTest'));
+    createCoordinator = createBoundCoordinatorFactory(collection, env.masterIndex);
   });
-
-  /**
-   * Creates a CollectionCoordinator for the shared collection.
-   * @param {Object} config - Optional coordinator configuration overrides.
-   * @returns {CollectionCoordinator} Configured coordinator instance.
-   */
-  const createCoordinator = (config = {}) =>
-    createTestCoordinator(collection, env.masterIndex, config);
 
   describe('Operation ID Validation', () => {
     it.each([

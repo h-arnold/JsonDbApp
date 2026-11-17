@@ -190,6 +190,17 @@ export const createTestCoordinator = (collection, masterIndex, config = {}) => {
 };
 
 /**
+ * Creates a factory for coordinators bound to a test fixture's collection and master index.
+ * @param {object} collection - Collection instance
+ * @param {object} masterIndex - MasterIndex instance
+ * @returns {Function} Factory taking config overrides and returning a coordinator
+ */
+export const createBoundCoordinatorFactory =
+  (collection, masterIndex) =>
+  (config = {}) =>
+    createTestCoordinator(collection, masterIndex, config);
+
+/**
  * Cleanup function - removes all test resources
  */
 export const cleanupCoordinatorTests = () => {

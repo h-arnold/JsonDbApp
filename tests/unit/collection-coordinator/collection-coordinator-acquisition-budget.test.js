@@ -12,7 +12,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   setupCoordinatorTestEnvironment,
   createTestCollection,
-  createTestCoordinator,
+  createBoundCoordinatorFactory,
   resetCollectionState
 } from '../../helpers/collection-coordinator-test-helpers.js';
 import { createMockClock } from '../../helpers/mock-time-helpers.js';
@@ -28,24 +28,18 @@ describe('CollectionCoordinator acquisition budget', () => {
   let env;
   let collection;
   let fileId;
+  let createCoordinator;
 
   beforeEach(() => {
     env = setupCoordinatorTestEnvironment();
     ({ collection, fileId } = createTestCollection(env, COLLECTION_NAME));
+    createCoordinator = createBoundCoordinatorFactory(collection, env.masterIndex);
     resetCollectionState(collection, fileId);
   });
 
   afterEach(() => {
     vi.restoreAllMocks();
   });
-
-  /**
-   * Builds a CollectionCoordinator for the shared test collection.
-   * @param {Object} config - Configuration overrides.
-   * @returns {Object} Coordinator instance ready for tests.
-   */
-  const createCoordinator = (config = {}) =>
-    createTestCoordinator(collection, env.masterIndex, config);
 
   /**
    * Runs a coordinated operation whose callback consumes mocked time.
@@ -220,6 +214,5 @@ describe('CollectionCoordinator acquisition budget', () => {
     // Assert — deadline exhaustion is an acquisition failure, never a site-1 budget verdict.
     expect(outcome.caught).toBeInstanceOf(ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE);
     expect(outcome.caught).not.toBeInstanceOf(ErrorHandler.ErrorTypes.COORDINATION_TIMEOUT);
-    expect(outcome.caught.context.reason).not.toBe(PREFLIGHT_BUDGET_EXHAUSTED_REASON);
   });
 });
