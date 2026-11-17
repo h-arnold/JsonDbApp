@@ -39,7 +39,7 @@ The `CollectionCoordinator` orchestrates cross-instance operations for a single 
 | `retryDelayMs`          | Base delay between lock retries                                             |
 | `lockRetryBackoffBase`  | Exponential backoff base for lock retries                                   |
 
-**Single clock source.** `coordinate()` captures `startTime = Date.now()` once at the top. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (`Date.now() - startTime`); no fresh start time is introduced anywhere in the flow.
+**Single clock source.** `coordinate()` captures `startTime = Date.now()` once, immediately after successful lock acquisition. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (`Date.now() - startTime`); no fresh start time is introduced anywhere in the flow. Acquisition wait is excluded from this measurement; conflict resolution and the callback still count. The verdict is taken after the callback and before finalisation, and the ownership step still measures lease renewal from `lockAcquiredAt`. As a result, `coordinationTimeoutMs` no longer bounds total operation wall-clock: acquisition wait can consume most of the lease before the callback starts.
 
 This page is the canonical contract for coordination behaviour: the `coordinate()` flow, the unified violation algorithm, the throw sites and their `reason` values, the deliberate swallows, and the logging contract.
 
@@ -47,10 +47,10 @@ This page is the canonical contract for coordination behaviour: the `coordinate(
 
 `coordinate(operationName, callback)` runs the following ordered steps:
 
-1. **Validate and prepare.** Validate `operationName` and `callback`, generate a fresh `opId`, read the collection name, and capture `startTime` (single clock source). A DEBUG record notes the operation start.
+1. **Validate and prepare.** Validate `operationName` and `callback`, generate a fresh `opId`, and read the collection name. A DEBUG record notes the operation start.
 2. **Acquire lock.** `acquireOperationLock()` retries within a deadline of method entry + `collectionLockLeaseMs`, with a backoff floored at 500 ms and capped at 5000 ms. The final sleep is truncated to the remaining window, followed by exactly one final attempt; failure then raises `LockAcquisitionFailureError`. A thrown `LOCK_TIMEOUT` maps to `CoordinationTimeoutError` (**site 0**) — pre-side-effects. Any other acquisition error propagates unchanged.
 3. **Resolve conflicts.** If the local modification token differs from the master index token, a WARN is logged and the conflict is resolved by reloading the collection.
-4. **Pre-flight budget check** (**site 1**). If lock acquisition and conflict resolution have already consumed more than `coordinationTimeoutMs`, an ERROR is logged and `CoordinationTimeoutError` is thrown _before the callback runs_ — no operation side effects exist on this path. See [Pre-flight Budget Check](#pre-flight-budget-check).
+4. **Pre-flight budget check** (**site 1**). If conflict resolution has already consumed more than `coordinationTimeoutMs`, an ERROR is logged and `CoordinationTimeoutError` is thrown _before the callback runs_ — no operation side effects exist on this path. See [Pre-flight Budget Check](#pre-flight-budget-check).
 5. **Run the callback.** The callback is invoked directly and its result captured. If the callback itself throws, its error propagates unchanged; finalisation is skipped entirely (publishing metadata for a failed operation could misrepresent an incomplete operation) and the completion INFO never fires.
 6. **Compute the budget verdict once.** Immediately after the callback returns: `overBudget = Date.now() - startTime > coordinationTimeoutMs`. The verdict is computed before any finalisation work, selects finalisation's error semantics, and there is no post-finalisation re-check.
 7. **Ownership step and finalise-or-skip** (`_finaliseAfterOperation`). Resolve lease ownership, then either finalise the master-index metadata or skip that finalisation loudly. See [Unified Violation Algorithm](#unified-violation-algorithm).
@@ -66,7 +66,7 @@ The whole body is timed by a DEBUG-gated `coordinator.coordinate` event; `update
 - It measures `Date.now() - startTime` — the same elapsed measurement later used for the over-budget verdict.
 - If the elapsed time exceeds `coordinationTimeoutMs`, an ERROR record is emitted (`Coordination budget exhausted before the operation callback`, context `{ collection, opId, timeoutMs }`) and `CoordinationTimeoutError` (**site 1**, reason `'preflight-budget-exhausted'`) is thrown.
 - The callback is never invoked on this path, so no operation side effects can exist; the lock is still released in `finally`.
-- Reachability: the branch requires the pre-callback work (lock retries plus conflict resolution) to exceed the budget. Configuration validation enforces a minimum of 500 ms for both timing values.
+- Reachability: the branch requires conflict resolution alone to exceed the budget, since acquisition wait falls outside the measured window. Configuration validation enforces a minimum of 500 ms for both timing values.
 
 ## Unified Violation Algorithm
 

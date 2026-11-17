@@ -1,7 +1,7 @@
 # ACTION PLAN — Lock acquisition window and coordination-budget separation (Issue #67)
 
-> **Current status:** IN PROGRESS — Section 1, Red phase. Derived from `SPEC.md` (final,
-> reviewer-confirmed).
+> **Current status:** IN PROGRESS — Section 2, Red phase (Section 1 complete and pushed).
+> Derived from `SPEC.md` (final, reviewer-confirmed).
 > Workflow: Red–Green–Refactor per section; enabling contracts (acquisition loop) land
 > before the clock-origin change that depends on them. Every section leaves the tree
 > green: `npm run lint` (0 errors, 0 warnings) and the full suite passing.
@@ -148,73 +148,77 @@ gate (`npm run test`) and commit pending.
   (0 errors / 0 warnings); Vitest 84 files / 917 tests passed (baseline 83 / 908; the
   +1 file / +9 tests are the new acquisition-window suite). Zero regressions, zero
   unaccounted failures. Run once at section completion.
-- Commit record: pending.
+- Commit record: SHA `9f18f64`, message `feat(coordinator): deadline-based lock
+acquisition window`, branch `plan/issue-67-lock-acquisition-window`.
+  `git push` succeeded (`e6667f0..9f18f64` to `origin/plan/issue-67-lock-acquisition-window`).
+  Staged files were limited to this section's source, tests, plan and doc; the four
+  pre-existing `.opencode/agents/*.md` worktree edits remain unstaged and untouched.
 
 ---
 
 ## 2. Section 2 — CollectionCoordinator: move the coordination clock origin
 
-**Objective.** Capture `startTime` immediately after successful lock acquisition
-rather than at the top of `coordinate()`, so acquisition wait no longer consumes
-`coordinationTimeoutMs`.
+**Outcome (compacted).** `coordinate()` in
+`src/02_components/CollectionCoordinator.js` now captures `startTime = Date.now()`
+immediately after successful lock acquisition instead of at the top of the method, so
+acquisition wait no longer consumes `coordinationTimeoutMs`. The pre-flight and
+post-callback verdicts still share one clock. Added
+`tests/unit/collection-coordinator/collection-coordinator-acquisition-budget.test.js`
+and updated the `coordinate()` and `_enforcePreflightBudget` JSDoc.
 
-**Constraints.**
+**Retained for later sections.**
 
-- Keep the single clock source: the pre-flight check and the over-budget verdict read
-  the same `startTime`.
-- Move only the capture. The DEBUG `Starting operation` record stays before
-  acquisition. Conflict resolution stays after acquisition and before the pre-flight
-  check.
-- The `overBudget` verdict remains post-callback and pre-finalisation; the ownership
-  step continues to use `lockAcquiredAt` for lease renewal.
-- Site 0–3 reason strings, logging records and swallows are unchanged.
-- Update the JSDoc for `coordinate()` (site-0 wording: a thrown `LOCK_TIMEOUT` maps to
-  site 0, while deadline exhaustion raises `LockAcquisitionFailureError`) and
-  `_enforcePreflightBudget` (`@remarks` must no longer say "captured at the top of
-  `coordinate()`"; use "captured after lock acquisition (see `coordinate()`)").
+- **Clock contract (exact).** The single `startTime` is captured immediately after
+  `_acquireLockWithTimeoutMapping(...)` returns successfully, inside the `try` block
+  (previously at the top of `coordinate()`). The DEBUG `Starting operation` record stays
+  before acquisition; conflict resolution stays after acquisition and before the
+  pre-flight check. `_enforcePreflightBudget` (site 1) and the post-callback
+  `overBudget = Date.now() - startTime > coordinationTimeoutMs` are two reads of the
+  same measurement; the sole exclusion is acquisition wait. Conflict resolution and the
+  callback still count toward `coordinationTimeoutMs`. The `overBudget` verdict is taken
+  after the callback and before `_finaliseAfterOperation`; finalisation time is not part
+  of it. The ownership step still measures lease renewal from `lockAcquiredAt`, not
+  `startTime`. Site 0–3 reason strings, logging records and swallows are unchanged.
+  `coordinationTimeoutMs` no longer bounds total wall-clock; the remaining lease window
+  for renewal and finalisation is bounded by the lease itself.
+- **JSDoc distinction.** `coordinate()` now states that a thrown `LOCK_TIMEOUT` maps to
+  site 0 (`lock-acquisition-timeout`) while deadline exhaustion raises
+  `LockAcquisitionFailureError`. `_enforcePreflightBudget` `@remarks` now says
+  `startTime` is "captured after lock acquisition (see `coordinate()`)" (no longer
+  "captured at the top of `coordinate()`").
+- **Test file and budget constraint.** New
+  `tests/unit/collection-coordinator/collection-coordinator-acquisition-budget.test.js`
+  (six cases: slow acquisition outside the budget, pre-flight still fires, post-callback
+  overrun still fires, site-0 mapping, overrun `elapsedMs` excludes acquisition wait,
+  fully held acquisition routes to `LockAcquisitionFailureError` rather than site 1).
+  `DatabaseConfig` enforces `MIN_LOCK_TIMEOUT_MS = 500` for both the lease and
+  `coordinationTimeoutMs`, so the illustrative 300 ms budget in the original cases was
+  rescaled to 500 ms; each fixture pins `coordinationTimeoutMs` to 500 (≤ lease).
+- **Timing-suite assessment.** `collection-coordinator-preflight.test.js`,
+  `collection-coordinator-violation-policy.test.js` and
+  `collection-coordinator-lock-release.test.js` acquire on the first attempt and drive
+  time in conflict resolution or the callback, so the clock move does not change their
+  verdicts. No edits expected there.
 
-**Red-first test cases** (new
-`tests/unit/collection-coordinator/collection-coordinator-acquisition-budget.test.js`):
+**Section checks.** Focused coordinator suite 49/49 passing; `npm run lint` 0 errors /
+0 warnings; counted LOC 318 (under the 500 gate). Full section regression gate
+(`npm run test`) and commit pending.
 
-1. Slow acquisition does not consume the coordination budget: under the mock clock,
-   hold a lock with `collectionLockLeaseMs: 1200`, `coordinationTimeoutMs: 300`,
-   `retryDelayMs: 100` (floored to 500) and held-lock timeout 600 (expiry 1600 at
-   clock 1000). The lease is at least the coordination timeout and at least the hold
-   time, and the held lock expires inside the window. Acquisition succeeds at ~2000
-   after ~1000 ms of waiting; then advance
-   100 ms in the callback. Expect the result returned and no `CoordinationTimeoutError`.
-   Under the old clock origin total elapsed would be ~1100 ms and site 2 would throw.
-2. Pre-flight still fires: with acquisition mocked to succeed instantly, spy conflict
-   resolution to advance past the budget; expect `preflight-budget-exhausted` and the
-   callback not invoked (existing preflight suite must stay green).
-3. Post-operation overrun still fires: callback alone advances past the budget; expect
-   `post-operation-overrun` with metadata finalised (existing lock-release suite must
-   stay green).
-4. Site 0 still maps: `acquireCollectionLock` throwing `LOCK_TIMEOUT` yields
-   `lock-acquisition-timeout` (existing preflight suite case must stay green).
-5. Overrun log `elapsedMs` excludes acquisition wait: with a slow acquisition followed
-   by an over-budget callback, assert the logged `elapsedMs` approximates the
-   post-acquisition elapsed time, not total wall-clock since operation start.
-6. Fully-held acquisition routes as an acquisition failure, not site 1: through
-   `coordinate()`, use `collectionLockLeaseMs: 2000` with `coordinationTimeoutMs: 500`
-   and a held-lock timeout of at least 10000 so the lock outlives the lease; assert the
-   thrown error is
-   `ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE` and is **not** a
-   `CoordinationTimeoutError` (no `preflight-budget-exhausted` reason), proving the
-   narrowed site-1 trigger.
+**Implementation notes.**
 
-**Green.** Move the `startTime` capture and update the two JSDoc blocks.
-
-**Refactor.** Confirm no second clock source or dead timestamp parameter remains.
-
-**Acceptance criteria.** All red tests green; the preflight, violation-policy and
-lock-release suites green unmodified; lint clean; LOC recorded and under 500.
-
-**Section checks.**
-
-1. `npx vitest run --config tests/vitest.config.js tests/unit/collection-coordinator/`
-2. `npm run lint`
-3. `npm run test`
+- Docs sync (run before this section's gate): updated `docs/developers/CollectionCoordinator.md`
+  (+4 / −4 lines, net 0) — the `Single clock source` paragraph, flow step 1, step 4 and the
+  pre-flight reachability bullet now describe the post-acquisition clock origin and state that
+  `coordinationTimeoutMs` no longer bounds total wall-clock. No new page; no planning-artefact
+  references. Section 5 must not duplicate the wall-clock note already at line 42.
+- Out-of-scope documentation observations reported and carried into Section 5: the config table
+  (legacy `retryAttempts` wording and lease-as-window note) and the line-109 error-table wording
+  (already logged as a nitpick). None actioned in Section 2.
+- Full-section regression report: `npm run lint && npm run test` exit 0. Lint clean
+  (0 errors / 0 warnings); Vitest 85 files / 923 tests passed (previous section 84 / 917;
+  the +1 file / +6 tests are the new acquisition-budget suite). Zero regressions, zero
+  unaccounted failures. Run once at section completion.
+- Commit record: pending.
 
 ---
 

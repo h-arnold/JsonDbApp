@@ -51,15 +51,17 @@ class CollectionCoordinator {
    * @param {Function} callback - Core operation callback
    * @returns {*} Result of the core operation
    * @throws {InvalidArgumentError} When arguments are invalid
-   * @throws {CoordinationTimeoutError} When the collection lock cannot be acquired within the
-   *   coordination window (reason: 'lock-acquisition-timeout', site 0, pre-callback).
+   * @throws {CoordinationTimeoutError} When acquisition throws a LOCK_TIMEOUT, mapped to site 0
+   *   (reason: 'lock-acquisition-timeout', pre-callback); exhaustion of the acquisition deadline
+   *   instead raises LockAcquisitionFailureError.
    * @throws {CoordinationTimeoutError} When the coordination budget is exhausted before the
    *   callback runs (reason: 'preflight-budget-exhausted', site 1, pre-callback).
    * @throws {CoordinationTimeoutError} When the callback overran the coordination budget and its
    *   effects were already applied (reason: 'post-operation-overrun', site 2, post-callback).
    * @throws {CoordinationTimeoutError} When lease renewal failed and a single re-acquisition
    *   could not recover ownership (reason: 'lease-not-recoverable', site 3, post-callback).
-   * @throws {LockAcquisitionFailureError} When the collection lock cannot be acquired after retries
+   * @throws {LockAcquisitionFailureError} When the acquisition deadline is exhausted without
+   *   acquiring the lock.
    * @throws {ModificationConflictError} When modification tokens mismatch
    * @throws {MasterIndexError} When master index metadata finalisation fails on the within-budget path
    * @throws {*} Whatever the core operation callback throws, propagated unchanged
@@ -83,13 +85,13 @@ class CollectionCoordinator {
       let lockAcquired = false;
       let lockAcquiredAt = null;
       let succeeded = false;
-      const startTime = Date.now();
 
       this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
 
       try {
         lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
         lockAcquired = true;
+        const startTime = Date.now();
         this._resolveConflictsIfPresent(name);
         this._enforcePreflightBudget(operationName, opId, name, startTime);
         const result = callback();
@@ -400,10 +402,10 @@ class CollectionCoordinator {
    * @returns {void}
    * @throws {CoordinationTimeoutError} When the budget is already exhausted before the callback.
    * @private
-   * @remarks Single clock source: elapsed time is measured from the startTime captured at the top
-   *   of coordinate() so the pre-flight verdict and the later over-budget verdict share one
-   *   measurement. On violation the callback never runs because this check throws before the
-   *   callback is invoked, so no operation side effects can occur.
+   * @remarks Single clock source: elapsed time is measured from the startTime captured after
+   *   lock acquisition (see coordinate()) so the pre-flight verdict and the later over-budget
+   *   verdict share one measurement. On violation the callback never runs because this check
+   *   throws before the callback is invoked, so no operation side effects can occur.
    */
   _enforcePreflightBudget(operationName, opId, collectionName, startTime) {
     const elapsedMs = Date.now() - startTime;
