@@ -71,7 +71,6 @@ Consult these resources before and during review. Local docs contain project-spe
 - [MasterIndex.md](../../docs/developers/MasterIndex.md) — Consistency layer
 - [Infrastructure_Components.md](../../docs/developers/Infrastructure_Components.md) — Locking, file services
 - [DatabaseConfig.md](../../docs/developers/DatabaseConfig.md) — Configuration component
-- [Class_Diagrams.md](../../docs/developers/Class_Diagrams.md) — Component relationships
 
 **Test reviews**:
 

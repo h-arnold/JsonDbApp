@@ -12,7 +12,6 @@ Make sure you've enabled the DriveAPI in your Google Cloud project. This is cruc
 
 ## Core Documentation
 
-- [**Class Diagrams**](./Class_Diagrams.md) - Updated UML class and sequence diagrams for the JsonDbApp MVP
 - [**Quick Start Guide**](../Quick_Start.md) - Practical setup steps and basic CRUD walkthrough
 - [**Detailed Examples**](../Examples.md) - Extended usage patterns for setup, CRUD, and querying
 
