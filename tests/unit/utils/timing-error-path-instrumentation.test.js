@@ -2,9 +2,8 @@
  * Instrumented Call-Site Error-Path Timing Tests
  *
  * Pins the error-fidelity invariant (each failing site still emits a boundary event
- * carrying the thrown error) at every instrumented
- * call site listed in PR_REVIEW.md (Testing gap C1): when a wrapped operation
- * throws, the site's boundary timing event IS still emitted with `error`
+ * carrying the thrown error) at every instrumented call site: when a wrapped
+ * operation throws, the site's boundary timing event IS still emitted with `error`
  * populated from the thrown value, and the ORIGINAL error alone reaches the
  * caller with its identity preserved — the event never displaces it. Captures
  * start after the arrange phase so seeding and setup emissions cannot pollute
