@@ -5,43 +5,29 @@
  */
 
 import { afterEach, expect } from 'vitest';
+import {
+  cleanupTestResources as cleanupTrackedResources,
+  createMasterIndexKey as makeMasterIndexKey,
+  createTestEnvironment,
+  createTestFolder as makeTestFolder,
+  createTestResourceTracker,
+  createTrackedFile,
+  generateTimestamp
+} from './shared-test-helpers.js';
 
-/**
- * Tracks created Drive resources for cleanup
- */
-const testResources = {
-  fileIds: new Set(),
-  folderIds: new Set(),
-  masterIndexKeys: new Set()
-};
-
-/**
- * Generates a unique timestamp-based identifier
- * @returns {string} Timestamp identifier
- */
-const generateTimestamp = () => `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+const testResources = createTestResourceTracker();
 
 /**
  * Creates a unique master index key for testing
  * @returns {string} Master index key
  */
-export const createMasterIndexKey = () => {
-  const key = `VIITEST_COLLECTION_${generateTimestamp()}`;
-  testResources.masterIndexKeys.add(key);
-  return key;
-};
+export const createMasterIndexKey = () => makeMasterIndexKey(testResources, 'VIITEST_COLLECTION_');
 
 /**
  * Creates a test folder in the mock Drive
  * @returns {string} Folder ID
  */
-export const createTestFolder = () => {
-  const folderName = `GASDB_Test_Collection_${generateTimestamp()}`;
-  const folder = DriveApp.createFolder(folderName);
-  const folderId = folder.getId();
-  testResources.folderIds.add(folderId);
-  return folderId;
-};
+export const createTestFolder = () => makeTestFolder(testResources, 'GASDB_Test_Collection_');
 
 /**
  * Creates a test collection file in the specified folder
@@ -50,9 +36,6 @@ export const createTestFolder = () => {
  * @returns {string} File ID
  */
 export const createTestCollectionFile = (folderId, collectionName) => {
-  const folder = DriveApp.getFolderById(folderId);
-  const fileName = `${collectionName}.json`;
-
   const testData = {
     documents: {},
     metadata: {
@@ -62,11 +45,12 @@ export const createTestCollectionFile = (folderId, collectionName) => {
     }
   };
 
-  const file = folder.createFile(fileName, JSON.stringify(testData, null, 2));
-  const fileId = file.getId();
-  testResources.fileIds.add(fileId);
-
-  return fileId;
+  return createTrackedFile(
+    testResources,
+    folderId,
+    `${collectionName}.json`,
+    JSON.stringify(testData, null, 2)
+  );
 };
 
 /**
@@ -76,13 +60,8 @@ export const createTestCollectionFile = (folderId, collectionName) => {
  * @param {string} content - File content (raw string)
  * @returns {string} File ID
  */
-export const createTestFileWithContent = (folderId, fileName, content) => {
-  const folder = DriveApp.getFolderById(folderId);
-  const file = folder.createFile(fileName, content);
-  const fileId = file.getId();
-  testResources.fileIds.add(fileId);
-  return fileId;
-};
+export const createTestFileWithContent = (folderId, fileName, content) =>
+  createTrackedFile(testResources, folderId, fileName, content);
 
 /**
  * Sets up a complete test environment for Collection tests
@@ -91,52 +70,16 @@ export const createTestFileWithContent = (folderId, fileName, content) => {
 export const setupCollectionTestEnvironment = () => {
   const masterIndexKey = createMasterIndexKey();
   const folderId = createTestFolder();
-
-  // Create logger
-  const logger = JDbLogger.createComponentLogger('Collection-Test');
-
-  // Create FileService dependencies
-  const fileOps = new FileOperations(logger);
-  const fileService = new FileService(fileOps, logger);
-
-  // Create MasterIndex
-  const masterIndex = new MasterIndex({ masterIndexKey, version: 1 });
-
-  // Create DatabaseConfig
-  const dbConfig = new DatabaseConfig({
-    name: 'testDB',
-    rootFolderId: folderId
-  });
-
-  // Create mock database object
-  const database = {
-    name: 'testDB',
-    config: dbConfig,
-    _masterIndex: masterIndex,
-    _fileOps: fileOps,
-    _fileService: fileService,
-    /**
-     * Gets the master index
-     * @returns {Object} The master index
-     */
-    getMasterIndex: () => masterIndex,
+  const environment = createTestEnvironment('Collection-Test', masterIndexKey, folderId, {
     /**
      * Marks the database as dirty (mock implementation)
      */
     _markDirty: () => {
       /* mock implementation */
     }
-  };
+  });
 
-  return {
-    masterIndexKey,
-    folderId,
-    logger,
-    fileService,
-    masterIndex,
-    dbConfig,
-    database
-  };
+  return { masterIndexKey, folderId, ...environment };
 };
 
 /**
@@ -269,37 +212,7 @@ export const assertAcknowledgedWrite = (result, expectedCounts = {}) => {
  * Cleanup function - automatically registered with afterEach
  */
 export const cleanupCollectionTests = () => {
-  const scriptProperties = PropertiesService.getScriptProperties();
-
-  // Clean up master index keys
-  for (const key of testResources.masterIndexKeys) {
-    scriptProperties.deleteProperty(key);
-  }
-
-  // Clean up files
-  for (const fileId of testResources.fileIds) {
-    try {
-      const file = DriveApp.getFileById(fileId);
-      file.setTrashed(true);
-    } catch {
-      // File may already be deleted, ignore
-    }
-  }
-
-  // Clean up folders
-  for (const folderId of testResources.folderIds) {
-    try {
-      const folder = DriveApp.getFolderById(folderId);
-      folder.setTrashed(true);
-    } catch {
-      // Folder may already be deleted, ignore
-    }
-  }
-
-  // Clear tracking sets
-  testResources.masterIndexKeys.clear();
-  testResources.fileIds.clear();
-  testResources.folderIds.clear();
+  cleanupTrackedResources(testResources);
 };
 
 /**

@@ -16,6 +16,7 @@ module.exports = {
     'src/01_utils/JDbLogger.js',
     'src/01_utils/IdGenerator.js',
     'src/01_utils/ComparisonUtils.js',
+    'src/01_utils/BackoffUtils.js',
     'src/04_core/DatabaseConfig.js',
     'src/04_core/Database.js',
     'src/04_core/Database/01_DatabaseLifecycle.js',

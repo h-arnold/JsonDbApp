@@ -5,29 +5,21 @@
  */
 
 import { afterEach, expect } from 'vitest';
+import {
+  cleanupTestResources as cleanupTrackedResources,
+  createTestFolder as makeTestFolder,
+  createTestResourceTracker,
+  createTrackedFile,
+  generateTimestamp
+} from './shared-test-helpers.js';
 
-const testResources = {
-  fileIds: new Set(),
-  folderIds: new Set()
-};
-
-/**
- * Generates unique timestamp-based identifier
- * @returns {string} Unique identifier
- */
-const generateTimestamp = () => `${Date.now()}_${Math.random().toString(36).slice(2)}`;
+const testResources = createTestResourceTracker();
 
 /**
  * Creates a test folder in mock Drive
  * @returns {string} Folder ID
  */
-export const createTestFolder = () => {
-  const folderName = `GASDB_Test_DocOps_${generateTimestamp()}`;
-  const folder = DriveApp.createFolder(folderName);
-  const folderId = folder.getId();
-  testResources.folderIds.add(folderId);
-  return folderId;
-};
+export const createTestFolder = () => makeTestFolder(testResources, 'GASDB_Test_DocOps_');
 
 /**
  * Creates a test collection file in the specified folder
@@ -36,9 +28,6 @@ export const createTestFolder = () => {
  * @returns {string} File ID
  */
 export const createTestCollectionFile = (folderId, collectionName) => {
-  const folder = DriveApp.getFolderById(folderId);
-  const fileName = `${collectionName}.json`;
-
   const testData = {
     collection: collectionName,
     metadata: {
@@ -50,10 +39,13 @@ export const createTestCollectionFile = (folderId, collectionName) => {
     documents: {}
   };
 
-  const file = folder.createFile(fileName, JSON.stringify(testData, null, 2), 'application/json');
-  const fileId = file.getId();
-  testResources.fileIds.add(fileId);
-  return fileId;
+  return createTrackedFile(
+    testResources,
+    folderId,
+    `${collectionName}.json`,
+    JSON.stringify(testData, null, 2),
+    'application/json'
+  );
 };
 
 /**
@@ -149,24 +141,7 @@ export const setupTestEnvironment = () => {
  * Cleanup function - automatically registered with afterEach
  */
 export const cleanupTestResources = () => {
-  testResources.fileIds.forEach((fileId) => {
-    try {
-      DriveApp.getFileById(fileId).setTrashed(true);
-    } catch {
-      // Ignore cleanup errors
-    }
-  });
-
-  testResources.folderIds.forEach((folderId) => {
-    try {
-      DriveApp.getFolderById(folderId).setTrashed(true);
-    } catch {
-      // Ignore cleanup errors
-    }
-  });
-
-  testResources.fileIds.clear();
-  testResources.folderIds.clear();
+  cleanupTrackedResources(testResources);
 };
 
 /**

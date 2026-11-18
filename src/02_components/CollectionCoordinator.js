@@ -8,6 +8,8 @@
  */
 /* exported CollectionCoordinator */
 const LEASE_RENEWAL_WINDOW_MS = 250;
+const LOCK_ACQUISITION_MIN_BACKOFF_MS = 500;
+const LOCK_ACQUISITION_MAX_BACKOFF_MS = 5000;
 const LOCK_ACQUISITION_TIMEOUT_REASON = 'lock-acquisition-timeout';
 const PREFLIGHT_BUDGET_EXHAUSTED_REASON = 'preflight-budget-exhausted';
 const POST_OPERATION_OVERRUN_REASON = 'post-operation-overrun';
@@ -34,10 +36,8 @@ class CollectionCoordinator {
 
     const resolvedConfig = config instanceof DatabaseConfig ? config : new DatabaseConfig(config);
     this._config = {
-      lockTimeout: resolvedConfig.collectionLockLeaseMs,
       collectionLockLeaseMs: resolvedConfig.collectionLockLeaseMs,
       coordinationTimeoutMs: resolvedConfig.coordinationTimeoutMs,
-      retryAttempts: resolvedConfig.retryAttempts,
       retryDelayMs: resolvedConfig.retryDelayMs,
       lockRetryBackoffBase: resolvedConfig.lockRetryBackoffBase
     };
@@ -49,15 +49,17 @@ class CollectionCoordinator {
    * @param {Function} callback - Core operation callback
    * @returns {*} Result of the core operation
    * @throws {InvalidArgumentError} When arguments are invalid
-   * @throws {CoordinationTimeoutError} When the collection lock cannot be acquired within the
-   *   coordination window (reason: 'lock-acquisition-timeout', site 0, pre-callback).
+   * @throws {CoordinationTimeoutError} When acquisition throws a LOCK_TIMEOUT, mapped to site 0
+   *   (reason: 'lock-acquisition-timeout', pre-callback); exhaustion of the acquisition deadline
+   *   instead raises LockAcquisitionFailureError.
    * @throws {CoordinationTimeoutError} When the coordination budget is exhausted before the
    *   callback runs (reason: 'preflight-budget-exhausted', site 1, pre-callback).
    * @throws {CoordinationTimeoutError} When the callback overran the coordination budget and its
    *   effects were already applied (reason: 'post-operation-overrun', site 2, post-callback).
    * @throws {CoordinationTimeoutError} When lease renewal failed and a single re-acquisition
    *   could not recover ownership (reason: 'lease-not-recoverable', site 3, post-callback).
-   * @throws {LockAcquisitionFailureError} When the collection lock cannot be acquired after retries
+   * @throws {LockAcquisitionFailureError} When the acquisition deadline is exhausted without
+   *   acquiring the lock.
    * @throws {ModificationConflictError} When modification tokens mismatch
    * @throws {MasterIndexError} When master index metadata finalisation fails on the within-budget path
    * @throws {*} Whatever the core operation callback throws, propagated unchanged
@@ -81,13 +83,13 @@ class CollectionCoordinator {
       let lockAcquired = false;
       let lockAcquiredAt = null;
       let succeeded = false;
-      const startTime = Date.now();
 
       this._logger.debug(`Starting operation: ${operationName}`, { collection: name, opId });
 
       try {
         lockAcquiredAt = this._acquireLockWithTimeoutMapping(opId, operationName, name);
         lockAcquired = true;
+        const startTime = Date.now();
         this._resolveConflictsIfPresent(name);
         this._enforcePreflightBudget(operationName, opId, name, startTime);
         const result = callback();
@@ -160,7 +162,6 @@ class CollectionCoordinator {
         this._logger.error('Lock acquisition timed out', {
           collection: collectionName,
           operationId: opId,
-          opId,
           timeout: this._config.coordinationTimeoutMs,
           reason: LOCK_ACQUISITION_TIMEOUT_REASON
         });
@@ -212,9 +213,10 @@ class CollectionCoordinator {
    * @returns {boolean} True when the re-acquisition succeeded; false when it returned false or threw.
    * @private
    * @remarks No retry loop and no backoff: the unified policy permits a single re-acquisition
-   *   attempt. A thrown error (e.g. CollectionNotFoundError) is treated identically to a false
-   *   result so the caller routes to the lost-unrecoverable path. On success a loud WARN records
-   *   the recovery so operators can correlate with the preceding renewal-failure ERROR.
+   *   attempt. A thrown error (e.g. CollectionNotFoundError) is logged at WARN before being
+   *   treated identically to a false result so the caller routes to the lost-unrecoverable path.
+   *   On success a loud WARN records the recovery so operators can correlate with the preceding
+   *   renewal-failure ERROR.
    */
   _attemptSingleReacquisition(collectionName, opId) {
     try {
@@ -231,7 +233,15 @@ class CollectionCoordinator {
         });
       }
       return acquired;
-    } catch {
+    } catch (e) {
+      this._logger.warn(
+        'Collection lock re-acquisition failed for finalisation after renewal failure',
+        {
+          collection: collectionName,
+          opId,
+          error: ErrorHandler.safeErrorMessage(e)
+        }
+      );
       return false;
     }
   }
@@ -364,15 +374,11 @@ class CollectionCoordinator {
 
   /**
    * Determine whether the current operation is close enough to lease expiry to require renewal.
-   * @param {number|null} lockAcquiredAt - Timestamp recorded after lock acquisition.
+   * @param {number} lockAcquiredAt - Timestamp recorded after lock acquisition.
    * @returns {boolean} True when renewal should be attempted.
    * @private
    */
   _shouldRenewLease(lockAcquiredAt) {
-    if (typeof lockAcquiredAt !== 'number') {
-      return false;
-    }
-
     const elapsedSinceLockMs = Date.now() - lockAcquiredAt;
     return elapsedSinceLockMs >= this._config.collectionLockLeaseMs - LEASE_RENEWAL_WINDOW_MS;
   }
@@ -398,10 +404,10 @@ class CollectionCoordinator {
    * @returns {void}
    * @throws {CoordinationTimeoutError} When the budget is already exhausted before the callback.
    * @private
-   * @remarks Single clock source: elapsed time is measured from the startTime captured at the top
-   *   of coordinate() so the pre-flight verdict and the later over-budget verdict share one
-   *   measurement. On violation the callback never runs because this check throws before the
-   *   callback is invoked, so no operation side effects can occur.
+   * @remarks Single clock source: elapsed time is measured from the startTime captured after
+   *   lock acquisition (see coordinate()) so the pre-flight verdict and the later over-budget
+   *   verdict share one measurement. On violation the callback never runs because this check
+   *   throws before the callback is invoked, so no operation side effects can occur.
    */
   _enforcePreflightBudget(operationName, opId, collectionName, startTime) {
     const elapsedMs = Date.now() - startTime;
@@ -416,67 +422,85 @@ class CollectionCoordinator {
   }
 
   /**
-   * Acquire operation lock with retry/backoff
-   * @param {string} operationId - Unique operation identifier
-   * @returns {number} Timestamp recorded after the lock was acquired.
-   * @throws {LockAcquisitionFailureError} When lock cannot be acquired
-   * @throws {*} For unexpected errors during lock acquisition, rethrown unchanged.
+   * Attempt one collection lock acquisition.
+   * @param {string} name - Collection name.
+   * @param {string} operationId - Unique operation identifier.
+   * @param {number} leaseMs - Requested lock lease duration in milliseconds.
+   * @returns {boolean} True when the lock was acquired, false on contention.
+   * @throws {*} Acquisition errors, propagated unchanged without logging.
+   * @private
+   */
+  _attemptLockAcquisition(name, operationId, leaseMs) {
+    return this._masterIndex.acquireCollectionLock(name, operationId, leaseMs);
+  }
+
+  /**
+   * Compute the backoff for a failed lock acquisition attempt.
+   * @param {number} attempt - One-based index of the failed attempt.
+   * @returns {number} Backoff in milliseconds, floored and capped at the module bounds.
+   * @private
+   * @remarks Uses the pre-increment index so the first failure applies retryDelayMs unchanged;
+   *   each later failure multiplies it by lockRetryBackoffBase.
+   */
+  _computeAcquisitionBackoff(attempt) {
+    const { retryDelayMs, lockRetryBackoffBase } = this._config;
+    return BackoffUtils.calculateBackoff(
+      attempt,
+      retryDelayMs,
+      lockRetryBackoffBase,
+      LOCK_ACQUISITION_MIN_BACKOFF_MS,
+      LOCK_ACQUISITION_MAX_BACKOFF_MS
+    );
+  }
+
+  /**
+   * Acquire the operation lock within a bounded acquisition window.
+   * @param {string} operationId - Unique operation identifier.
+   * @returns {number} Timestamp recorded immediately after the lock was acquired.
+   * @throws {InvalidArgumentError} When operationId is invalid.
+   * @throws {LockAcquisitionFailureError} When the lock cannot be acquired within the window.
+   * @throws {*} Acquisition errors, propagated unchanged without logging.
+   * @remarks The window is collectionLockLeaseMs wide from method entry. Each failed attempt
+   *   backs off by retryDelayMs grown by lockRetryBackoffBase, floored at
+   *   LOCK_ACQUISITION_MIN_BACKOFF_MS and capped at LOCK_ACQUISITION_MAX_BACKOFF_MS. The final
+   *   sleep is truncated to the remaining window. After the window closes one last acquisition
+   *   attempt is made; a false result raises the contention WARN and the failure error. Because
+   *   the window is exactly collectionLockLeaseMs wide, a lock acquired near the deadline relies
+   *   on mid-operation lease renewal during finalisation.
    */
   acquireOperationLock(operationId) {
+    Validate.nonEmptyString(operationId, 'operationId');
     const name = this._collection.getName();
-    const { retryAttempts, retryDelayMs, collectionLockLeaseMs, lockRetryBackoffBase } =
-      this._config;
+    const { collectionLockLeaseMs } = this._config;
+    const deadline = Date.now() + collectionLockLeaseMs;
+    let attempt = 1;
 
-    let acquired = false;
-    let lockAcquiredAt = null;
-    let elapsedBackoffMs = 0;
-    for (let attempt = 1; attempt <= retryAttempts; attempt++) {
-      try {
-        const got = this._masterIndex.acquireCollectionLock(
-          name,
-          operationId,
-          collectionLockLeaseMs
-        );
-        if (got) {
-          acquired = true;
-          lockAcquiredAt = Date.now();
-          break;
-        }
-        // retry after backoff
-        if (attempt < retryAttempts) {
-          const backoffDelayMs = retryDelayMs * Math.pow(lockRetryBackoffBase, attempt - 1);
-          if (elapsedBackoffMs + backoffDelayMs >= collectionLockLeaseMs) {
-            break;
-          }
-          Utilities.sleep(backoffDelayMs);
-          elapsedBackoffMs += backoffDelayMs;
-        }
-      } catch (e) {
-        this._logger.error('Unexpected error during lock acquisition attempt', {
-          collection: name,
-          operationId,
-          error: e.message
-        });
-        // Re-throw unexpected errors immediately, as they are not contention issues
-        // and should not be handled by the standard retry/fail mechanism.
-        throw e;
+    while (Date.now() < deadline) {
+      if (this._attemptLockAcquisition(name, operationId, collectionLockLeaseMs)) {
+        return Date.now();
       }
+      const backoffMs = this._computeAcquisitionBackoff(attempt);
+      const remainingMs = deadline - Date.now();
+      Utilities.sleep(Math.min(backoffMs, remainingMs));
+      attempt++;
     }
-    if (!acquired) {
-      this._logger.warn('Could not acquire lock after retries', { collection: name, operationId });
-      // Throw specific error when lock acquisition fails
-      throw new ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE(name);
+
+    if (this._attemptLockAcquisition(name, operationId, collectionLockLeaseMs)) {
+      return Date.now();
     }
-    return lockAcquiredAt;
+    this._logger.warn('Could not acquire lock after retries', { collection: name, operationId });
+    throw new ErrorHandler.ErrorTypes.LOCK_ACQUISITION_FAILURE(name);
   }
 
   /**
    * Release operation lock
    * @param {string} operationId - Unique operation identifier
+   * @throws {InvalidArgumentError} When operationId is invalid.
    * @remarks Release failures are deliberately swallowed so they cannot mask the coordinated
    *   operation's own outcome, but the diagnostic log records the underlying error message.
    */
   releaseOperationLock(operationId) {
+    Validate.nonEmptyString(operationId, 'operationId');
     const name = this._collection.getName();
     try {
       this._masterIndex.releaseCollectionLock(name, operationId);

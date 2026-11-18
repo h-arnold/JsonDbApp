@@ -411,9 +411,16 @@ class FileOperations {
    * @param {number} attempt - Attempt index
    * @returns {number} Delay in milliseconds
    * @private
+   * @remarks Passes infinite bounds so the result stays unclamped, matching the original formula.
    */
   _calculateRetryDelay(attempt) {
-    return this._retryDelayMs * Math.pow(this._retryBackoffBase, attempt - 1);
+    return BackoffUtils.calculateBackoff(
+      attempt,
+      this._retryDelayMs,
+      this._retryBackoffBase,
+      -Infinity,
+      Infinity
+    );
   }
 
   /**

@@ -64,8 +64,7 @@ docs/
 │   ├── UpdateEngine.md
 │   ├── Collection_Components.md
 │   ├── Infrastructure_Components.md
-│   ├── Testing_Framework.md
-│   └── Class_Diagrams.md
+│   └── Testing_Framework.md
 └── release-notes/              # Release notes
     ├── release-notes-v0.0.4.md
     └── release-notes-v0.0.3.md

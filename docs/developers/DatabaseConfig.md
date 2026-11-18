@@ -75,11 +75,11 @@ The `DatabaseConfig` class manages database configuration settings with validati
 | ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
 | `lockTimeout`                             | Number   | `30000`                            | Legacy input alias for `collectionLockLeaseMs` accepted by the constructor only; the instance property has been removed — use `collectionLockLeaseMs`                                                                                              |
-| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds; must be at least as long as `coordinationTimeoutMs`                                                                                                                                                |
+| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds and the lock acquisition wait window; must be at least as long as `coordinationTimeoutMs`                                                                                                           |
 | `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                                                                    |
-| `retryAttempts`                           | Number   | `3`                                | Lock acquisition retry attempts                                                                                                                                                                                                                    |
-| `retryDelayMs`                            | Number   | `1000`                             | Delay between lock retries                                                                                                                                                                                                                         |
-| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for lock retries                                                                                                                                                                                                          |
+| `retryAttempts`                           | Number   | `3`                                | Legacy for lock acquisition: still validated (positive integer) with default `3`, but no longer bounds the acquisition wait                                                                                                                        |
+| `retryDelayMs`                            | Number   | `1000`                             | Base delay for acquisition backoff, floored at 500 ms and capped at 5000 ms                                                                                                                                                                        |
+| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential growth base for the acquisition backoff; must be at least 1                                                                                                                                                                            |
 | `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
 | `logLevel`                                | String   | `DEFAULT_LOG_LEVEL` ('INFO')       | Log level constrained to the values declared in `LOG_LEVELS`                                                                                                                                                                                       |
 | `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                                                                      |
@@ -169,7 +169,8 @@ Initialises boolean feature toggles such as `autoCreateCollections` and `backupO
 Determines the default root folder ID.
 
 - **Returns:** `String` - Drive root folder ID
-- **Throws:** `Error` if unable to access Drive
+- **Throws:** `ConfigurationError` (`CONFIGURATION_ERROR`) if unable to access Drive
+- **Error details:** message `Invalid configuration for rootFolderId: <original Drive error message>`; context `{ setting: 'rootFolderId', value: <original Drive error message>, reason: 'Failed to get default root folder' }`
 - **Behaviour:** Uses `DriveApp.getRootFolder().getId()`
 
 #### `_validateConfig()`
@@ -207,9 +208,9 @@ Validates optional operator arrays against type constraints and preserves the or
 
 **retryAttempts / retryDelayMs / lockRetryBackoffBase:**
 
-- `retryAttempts` must be a positive integer
-- `retryDelayMs` must be a non-negative number
-- `lockRetryBackoffBase` must be a positive number
+- `retryAttempts` must be a positive integer (default `3`); now legacy for lock acquisition — the wait window is `collectionLockLeaseMs`
+- `retryDelayMs` must be a non-negative number; it feeds the floored and capped acquisition backoff
+- `lockRetryBackoffBase` must be at least 1; it feeds the same acquisition backoff
 
 **logLevel:**
 
@@ -254,13 +255,13 @@ Validates optional operator arrays against type constraints and preserves the or
 
 Common validation errors and their meanings:
 
-| Error Message                                        | Cause                                                           | Solution                             |
-| ---------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
-| "Lock timeout must be a number"                      | Invalid timeout value                                           | Use a number of at least 500ms       |
-| "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level                                               | Use exact string match               |
-| "Auto create collections must be a boolean"          | Non-boolean value                                               | Use true or false explicitly         |
-| "Failed to get default root folder"                  | Drive access issue                                              | Check permissions and authentication |
-| "Collection sanitisation flag must be a boolean"     | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
+| Error Message                                                                   | Cause                                                           | Solution                             |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| "Invalid argument: collectionLockLeaseMs - must be a number"                    | Invalid timeout value                                           | Use a number of at least 500ms       |
+| "Invalid argument: logLevel - must be one of: DEBUG, INFO, WARN, ERROR"         | Invalid log level                                               | Use exact string match               |
+| "Invalid argument: autoCreateCollections - must be a boolean"                   | Non-boolean value                                               | Use true or false explicitly         |
+| "Invalid configuration for rootFolderId: <message>"                             | Drive access issue; reason `Failed to get default root folder`  | Check permissions and authentication |
+| "Invalid argument: stripDisallowedCollectionNameCharacters - must be a boolean" | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
 
 ## Usage Examples
 
@@ -428,7 +429,7 @@ Independent of this flag, explicit calls to `database.backupIndexToDrive()` will
 ## Best Practices
 
 1. **Validate early:** Create DatabaseConfig instances explicitly to catch errors
-2. **Use appropriate timeouts:** Size `collectionLockLeaseMs` to cover the whole write, and keep `coordinationTimeoutMs` within that lease; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases
+2. **Use appropriate timeouts:** `collectionLockLeaseMs` is both the acquisition wait window and the lease, so size it to cover the whole write and keep `coordinationTimeoutMs` within it; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases
 3. **Environment-specific configs:** Create different configurations for dev/test/prod
 4. **Immutable configurations:** Don't modify config properties after creation
 5. **Proper folder permissions:** Ensure root folder is accessible to the script

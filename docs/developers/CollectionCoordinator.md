@@ -23,7 +23,7 @@ The `CollectionCoordinator` orchestrates cross-instance operations for a single 
 
 **Responsibilities:**
 
-- Acquire and release the collection's virtual lock (with retry and exponential backoff)
+- Acquire and release the collection's virtual lock, retrying within a deadline-based acquisition window
 - Resolve modification-token conflicts before the operation runs
 - Enforce the coordination budget both before the callback (pre-flight) and after it (over-budget verdict)
 - Finalise master-index metadata after a successful callback — or skip that finalisation safely when the lease cannot be recovered
@@ -31,15 +31,15 @@ The `CollectionCoordinator` orchestrates cross-instance operations for a single 
 
 **Configuration** (resolved through `DatabaseConfig` when a config object is supplied):
 
-| Key                     | Use                                                                         |
-| ----------------------- | --------------------------------------------------------------------------- |
-| `collectionLockLeaseMs` | Lock lease duration; also the re-acquisition lease and renewal window basis |
-| `coordinationTimeoutMs` | The coordination budget enforced before and after the callback              |
-| `retryAttempts`         | Lock acquisition retry attempts                                             |
-| `retryDelayMs`          | Base delay between lock retries                                             |
-| `lockRetryBackoffBase`  | Exponential backoff base for lock retries                                   |
+| Key                     | Use                                                                                                      |
+| ----------------------- | -------------------------------------------------------------------------------------------------------- |
+| `collectionLockLeaseMs` | Lock lease, re-acquisition lease and renewal basis; also the lock acquisition wait window                |
+| `coordinationTimeoutMs` | The coordination budget enforced before and after the callback                                           |
+| `retryAttempts`         | Legacy for lock acquisition: still validated with default `3`, but no longer bounds the acquisition wait |
+| `retryDelayMs`          | Base delay feeding the floored and capped acquisition backoff                                            |
+| `lockRetryBackoffBase`  | Exponential base feeding the floored and capped acquisition backoff                                      |
 
-**Single clock source.** `coordinate()` captures `startTime = Date.now()` once at the top. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (`Date.now() - startTime`); no fresh start time is introduced anywhere in the flow.
+**Single clock source.** `coordinate()` captures `startTime = Date.now()` once, immediately after successful lock acquisition. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (`Date.now() - startTime`); no fresh start time is introduced anywhere in the flow. Acquisition wait is excluded from this measurement; conflict resolution and the callback still count. The verdict is taken after the callback and before finalisation, and the ownership step still measures lease renewal from `lockAcquiredAt`. As a result, `coordinationTimeoutMs` no longer bounds total operation wall-clock: acquisition wait can consume most of the lease before the callback starts.
 
 This page is the canonical contract for coordination behaviour: the `coordinate()` flow, the unified violation algorithm, the throw sites and their `reason` values, the deliberate swallows, and the logging contract.
 
@@ -47,10 +47,10 @@ This page is the canonical contract for coordination behaviour: the `coordinate(
 
 `coordinate(operationName, callback)` runs the following ordered steps:
 
-1. **Validate and prepare.** Validate `operationName` and `callback`, generate a fresh `opId`, read the collection name, and capture `startTime` (single clock source). A DEBUG record notes the operation start.
-2. **Acquire lock.** `acquireOperationLock()` retries with exponential backoff. Exhausted retries raise `LockAcquisitionFailureError`. A `LOCK_TIMEOUT` during acquisition is mapped to `CoordinationTimeoutError` (**site 0**) — this throw is pre-side-effects. Any other acquisition error propagates unchanged.
+1. **Validate and prepare.** Validate `operationName` and `callback`, generate a fresh `opId`, and read the collection name. A DEBUG record notes the operation start.
+2. **Acquire lock.** `acquireOperationLock()` retries within a deadline of method entry + `collectionLockLeaseMs`, with a backoff floored at 500 ms and capped at 5000 ms, calculated by the shared `BackoffUtils.calculateBackoff()` utility (see [Infrastructure Components](Infrastructure_Components.md#125-backoffutils)). The final sleep is truncated to the remaining window, followed by exactly one final attempt; failure then raises `LockAcquisitionFailureError`. A thrown `LOCK_TIMEOUT` maps to `CoordinationTimeoutError` (**site 0**) — pre-side-effects. Any other acquisition error propagates unchanged.
 3. **Resolve conflicts.** If the local modification token differs from the master index token, a WARN is logged and the conflict is resolved by reloading the collection.
-4. **Pre-flight budget check** (**site 1**). If lock acquisition and conflict resolution have already consumed more than `coordinationTimeoutMs`, an ERROR is logged and `CoordinationTimeoutError` is thrown _before the callback runs_ — no operation side effects exist on this path. See [Pre-flight Budget Check](#pre-flight-budget-check).
+4. **Pre-flight budget check** (**site 1**). If conflict resolution has already consumed more than `coordinationTimeoutMs`, an ERROR is logged and `CoordinationTimeoutError` is thrown _before the callback runs_ — no operation side effects exist on this path. See [Pre-flight Budget Check](#pre-flight-budget-check).
 5. **Run the callback.** The callback is invoked directly and its result captured. If the callback itself throws, its error propagates unchanged; finalisation is skipped entirely (publishing metadata for a failed operation could misrepresent an incomplete operation) and the completion INFO never fires.
 6. **Compute the budget verdict once.** Immediately after the callback returns: `overBudget = Date.now() - startTime > coordinationTimeoutMs`. The verdict is computed before any finalisation work, selects finalisation's error semantics, and there is no post-finalisation re-check.
 7. **Ownership step and finalise-or-skip** (`_finaliseAfterOperation`). Resolve lease ownership, then either finalise the master-index metadata or skip that finalisation loudly. See [Unified Violation Algorithm](#unified-violation-algorithm).
@@ -66,7 +66,7 @@ The whole body is timed by a DEBUG-gated `coordinator.coordinate` event; `update
 - It measures `Date.now() - startTime` — the same elapsed measurement later used for the over-budget verdict.
 - If the elapsed time exceeds `coordinationTimeoutMs`, an ERROR record is emitted (`Coordination budget exhausted before the operation callback`, context `{ collection, opId, timeoutMs }`) and `CoordinationTimeoutError` (**site 1**, reason `'preflight-budget-exhausted'`) is thrown.
 - The callback is never invoked on this path, so no operation side effects can exist; the lock is still released in `finally`.
-- Reachability: the branch requires the pre-callback work (lock retries plus conflict resolution) to exceed the budget. Configuration validation enforces a minimum of 500 ms for both timing values.
+- Reachability: the branch requires conflict resolution alone to exceed the budget, since acquisition wait falls outside the measured window. Configuration validation enforces a minimum of 500 ms for both timing values.
 
 ## Unified Violation Algorithm
 
@@ -78,7 +78,7 @@ The whole body is timed by a DEBUG-gated `coordinator.coordinate` event; `update
 
 - **Renewal due?** `_shouldRenewLease()` returns true when the time elapsed since lock acquisition is at least `collectionLockLeaseMs - LEASE_RENEWAL_WINDOW_MS` (250 ms).
 - **Renewal attempt.** `_renewLeaseForFinalisationIfRequired()` calls `renewCollectionLock()` — a non-throwing boolean call at the `MasterIndex` boundary. The helper itself no longer throws: it returns `true` when renewal was not required or succeeded, and `false` after a due-but-failed renewal (which also emits a loud ERROR, `Collection lock lease expired before finalisation could complete`, context `{ collection, opId, leaseMs }`). All throw decisions are centralised in the `coordinate()` flow.
-- **Single re-acquisition.** On renewal failure, `_attemptSingleReacquisition()` calls `acquireCollectionLock()` for the **same `opId` exactly once**. There is no retry loop and no backoff. A `false` return **or** a thrown error (for example `CollectionNotFoundError` after concurrent collection removal) is treated uniformly as unrecoverable. A successful re-acquisition emits a WARN (`Collection lock re-acquired for finalisation after renewal failure`, context `{ collection, opId, outcome: 'recovered' }`).
+- **Single re-acquisition.** On renewal failure, `_attemptSingleReacquisition()` calls `acquireCollectionLock()` for the **same `opId` exactly once**. There is no retry loop and no backoff. A `false` return **or** a thrown error (for example `CollectionNotFoundError` after concurrent collection removal) is treated uniformly as unrecoverable; a thrown error first emits a WARN (`Collection lock re-acquisition failed for finalisation after renewal failure`, context `{ collection, opId, error }`) recording the underlying message. A successful re-acquisition emits a WARN (`Collection lock re-acquired for finalisation after renewal failure`, context `{ collection, opId, outcome: 'recovered' }`).
 - **Outcomes:** `intact` (no renewal due, or renewal succeeded), `restored` (re-acquisition succeeded), or `lost-unrecoverable` (re-acquisition returned `false` or threw).
 
 **Renewal-failure causes.** Renewal can fail for two reasons: lease expiry (which, given `collectionLockLeaseMs ≥ coordinationTimeoutMs`, almost always implies an over-budget operation outside the exact-equality boundary) and concurrent collection removal or lock-record loss (which may occur within budget). The ownership step treats both identically: one re-acquisition attempt, then recover or route to throw site 3.
@@ -106,16 +106,17 @@ Every `CoordinationTimeoutError` raised by `coordinate()` carries a distinct mac
 | 2    | `'post-operation-overrun'`      | Callback completed over budget; ownership intact or restored           | Effects applied; finalised (or finalisation failed loudly)    |
 | 3    | `'lease-not-recoverable'`       | Renewal failed and the single re-acquisition returned `false` or threw | Effects applied; finalisation **skipped** — divergence logged |
 
-Other errors thrown by `coordinate()`: `InvalidArgumentError` (invalid arguments), `LockAcquisitionFailureError` (retries exhausted without a timeout), `ModificationConflictError` (token mismatch surfaced during conflict resolution), `MasterIndexError` (finalisation failure on the within-budget path), and whatever the callback throws (propagated unchanged).
+Other errors thrown by `coordinate()`: `InvalidArgumentError` (invalid arguments), `LockAcquisitionFailureError` (acquisition deadline exhausted and the final attempt failed without a `LOCK_TIMEOUT`), `ModificationConflictError` (token mismatch surfaced during conflict resolution), `MasterIndexError` (finalisation failure on the within-budget path), and whatever the callback throws (propagated unchanged).
 
 ## Deliberate Swallows
 
-Two deliberate swallows exist in the coordinator, and each logs loudly:
+Three deliberate swallows exist in the coordinator, and each emits a log record:
 
 1. **Lock-release swallow** (`releaseOperationLock`, pre-existing). Release failures are logged (`Lock release failed`, context `{ collection, operationId, error }`) and swallowed so they cannot mask the coordinated operation's own outcome.
 2. **Best-effort finalisation swallow** (violation paths, new). On an over-budget path, a `MasterIndexError` from `updateMasterIndexMetadata()` is logged loudly and swallowed so the primary `CoordinationTimeoutError` propagates. Within-budget finalisation failures continue to propagate.
+3. **Single re-acquisition swallow** (`_attemptSingleReacquisition`). A thrown error from `acquireCollectionLock()` is logged at WARN (`Collection lock re-acquisition failed for finalisation after renewal failure`, context `{ collection, opId, error }`) and returned as `false`, routing ownership resolution to the `lost-unrecoverable` path and throw site 3.
 
-Nothing else is swallowed: callback errors propagate unchanged, and a throwing callback still skips finalisation entirely.
+Beyond these three, no other errors are swallowed: callback errors propagate unchanged, and a throwing callback still skips finalisation entirely.
 
 ## Logging Contract
 
@@ -123,15 +124,19 @@ Nothing else is swallowed: callback errors propagate unchanged, and a throwing c
 
 **Point-of-occurrence records.** On violation paths the unified algorithm emits additional records at the point each event occurs:
 
-| Situation                                            | Level | Message substring                                                                       | Context keys                                                          |
-| ---------------------------------------------------- | ----- | --------------------------------------------------------------------------------------- | --------------------------------------------------------------------- |
-| Lock acquisition timed out (site 0)                  | ERROR | `Lock acquisition timed out`                                                            | `collection`, `operationId`, `timeout`, `reason`                      |
-| Pre-flight budget exhausted (site 1)                 | ERROR | `Coordination budget exhausted before the operation callback`                           | `collection`, `opId`, `timeoutMs`                                     |
-| Renewal failure, before re-acquisition               | ERROR | `Collection lock lease expired before finalisation could complete`                      | `collection`, `opId`, `leaseMs`                                       |
-| Re-acquisition recovered                             | WARN  | `Collection lock re-acquired for finalisation after renewal failure`                    | `collection`, `opId`, `outcome: 'recovered'`                          |
-| Finalisation failure on a violation path (swallowed) | ERROR | `Metadata finalisation failed on a violation path; the coordination timeout propagates` | `collection`, `opId`, `error`                                         |
-| Finalisation skipped (divergence)                    | ERROR | `Metadata finalisation skipped; collection and master index may be divergent`           | `collection`, `opId`, `operation`                                     |
-| Post-operation overrun, immediately before site 2    | ERROR | `Operation exceeded the coordination budget after effects were applied`                 | `collection`, `opId`, `timeoutMs`, `elapsedMs`, `finalisationOutcome` |
+| Situation                                            | Level | Message substring                                                                       | Context keys                                                                                |
+| ---------------------------------------------------- | ----- | --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| Lock held on an acquisition attempt (MasterIndex)    | WARN  | `Failed to acquire lock; collection is already locked.`                                 | `collection`, `operationId`, `lockedBy`, `lockedAt`, `lockTimeout`, `expiry`, `remainingMs` |
+| Lock acquisition timed out (site 0)                  | ERROR | `Lock acquisition timed out`                                                            | `collection`, `operationId`, `timeout`, `reason`                                            |
+| Pre-flight budget exhausted (site 1)                 | ERROR | `Coordination budget exhausted before the operation callback`                           | `collection`, `opId`, `timeoutMs`                                                           |
+| Renewal failure, before re-acquisition               | ERROR | `Collection lock lease expired before finalisation could complete`                      | `collection`, `opId`, `leaseMs`                                                             |
+| Re-acquisition recovered                             | WARN  | `Collection lock re-acquired for finalisation after renewal failure`                    | `collection`, `opId`, `outcome: 'recovered'`                                                |
+| Re-acquisition failed (thrown)                       | WARN  | `Collection lock re-acquisition failed for finalisation after renewal failure`          | `collection`, `opId`, `error`                                                               |
+| Finalisation failure on a violation path (swallowed) | ERROR | `Metadata finalisation failed on a violation path; the coordination timeout propagates` | `collection`, `opId`, `error`                                                               |
+| Finalisation skipped (divergence)                    | ERROR | `Metadata finalisation skipped; collection and master index may be divergent`           | `collection`, `opId`, `operation`                                                           |
+| Post-operation overrun, immediately before site 2    | ERROR | `Operation exceeded the coordination budget after effects were applied`                 | `collection`, `opId`, `timeoutMs`, `elapsedMs`, `finalisationOutcome`                       |
+
+The MasterIndex contention WARN above fires once per failed acquisition attempt; its `expiry` is `lockedAt + lockTimeout` and `remainingMs` is `expiry - now`. It is distinct from the coordinator's single end-of-window `Could not acquire lock after retries` WARN (context `{ collection, operationId }`), which precedes `LockAcquisitionFailureError`.
 
 **Intended co-occurrence.** On violation paths the boundary record and the point-of-occurrence records fire together — two (or more) records per failed violation-path operation are deliberate. They answer different questions: the point-of-occurrence records explain _why_ the violation happened, the boundary record records _what_ the operation outcome was.
 

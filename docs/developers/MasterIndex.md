@@ -88,7 +88,7 @@ Centralized helper for setting and persisting lock status with guaranteed orderi
 - **Behaviour:**
   1. Sets lock status on collection metadata
   2. Persists to MasterIndex via `_updateCollectionMetadataInternal()`
-- **Usage:** Used by `acquireCollectionLock()`, `renewCollectionLock()`, `releaseCollectionLock()`, `cleanupExpiredLocks()`
+- **Usage:** Used by `acquireCollectionLock()`, `renewCollectionLock()`, `releaseCollectionLock()`
 - **Benefits:** Single source of truth for lock persistence, guaranteed update ordering
 
 ### MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5
@@ -338,6 +338,7 @@ Checks if collection is currently locked.
 
 Removes expired locks.
 
+- **Persistence:** Clears each expired lock in memory and saves the index once after the scan; when no lock has expired, no save is performed
 - **Concurrency behaviour:** Reloads current collection metadata under ScriptLock before scanning, so cleanup removes genuinely expired locks without clearing newer active locks written by another instance
 
 ### Conflict Management

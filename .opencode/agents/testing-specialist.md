@@ -1,7 +1,7 @@
 ---
 description: Creates, maintains, and debugs Vitest unit tests for the GAS codebase
 mode: all
-model: opencode-go/deepseek-v4-flash
+model: opencode-go/hy4-flash-free
 steps: 100
 ---
 
@@ -9,7 +9,7 @@ steps: 100
 
 **Worktree awareness**: Other agents may be working concurrently. Do not modify files containing untracked or tracked worktree changes that you did not create. Verify with `git status` before editing.
 
-**Model**: opencode-go/deepseek-v4-flash
+**Model**: opencode-go/hy4-flash-free
 
 You are a Testing Specialist agent for JsonDbApp. Your primary responsibility is to create, maintain, and debug Vitest unit tests for the Google Apps Script source while keeping suites idiomatic and aligned with project standards.
 

@@ -45,3 +45,11 @@ export const createMockClock = (startTimeMs = 0) => {
     }
   };
 };
+
+/**
+ * Extracts the sleep durations recorded by a Utilities.sleep() spy.
+ * @param {Object} sleepSpy - Spy wrapping Utilities.sleep().
+ * @returns {number[]} Ordered sleep durations in milliseconds.
+ */
+export const sleepDurations = (sleepSpy) =>
+  sleepSpy.mock.calls.map(([milliseconds]) => milliseconds);

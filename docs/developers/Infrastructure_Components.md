@@ -32,6 +32,7 @@
       - [1.2.4.1. Core Methods](#1241-core-methods)
       - [1.2.4.2. Usage Examples](#1242-usage-examples)
       - [1.2.4.3. Best Practices](#1243-best-practices)
+    - [1.2.5. BackoffUtils](#125-backoffutils)
   - [1.3. Integration Patterns](#13-integration-patterns)
     - [1.3.1. Component Integration](#131-component-integration)
     - [1.3.2. Standardized Error Flow](#132-standardized-error-flow)
@@ -101,7 +102,7 @@ dbLogger.info('Collection created', { name: 'users' });
 
    ```javascript
    this.logger.info('Collection created', {
-     collectionName: name,
+     collection: name,
      fileId: fileId,
      documentCount: 0,
      timestamp: new Date()
@@ -270,7 +271,7 @@ ONLY for `timeSync`; the injected logger keeps its existing debug/warn/error dut
 **Deliberate non-instrumentations.** `Collection.aggregate`, per-document helpers
 (`deleteDocument`, `findAllDocuments`), the raw `Date.now()` reads inside
 `CollectionCoordinator` control flow (they feed timeout enforcement, lease renewal, and
-retry/backoff decisions and must stay outside the logging facility), `DbLockService`, and
+lock-acquisition deadline and backoff decisions and must stay outside the logging facility), `DbLockService`, and
 `Database` lifecycle methods emit no timing events.
 
 ---
@@ -291,26 +292,26 @@ All errors extend the base `GASDBError` class and include:
 
 The shared `ERROR_CODES` catalogue mirrors the registered error types so consumers who prefer constants over string literals can import and compare against those values without relying on free-form strings.
 
-| Error Class                   | Code                       | Usage                                                                                  |
-| ----------------------------- | -------------------------- | -------------------------------------------------------------------------------------- |
-| `DocumentNotFoundError`       | `DOCUMENT_NOT_FOUND`       | Document queries that return no results                                                |
-| `DuplicateKeyError`           | `DUPLICATE_KEY`            | Unique constraint violations                                                           |
-| `InvalidQueryError`           | `INVALID_QUERY`            | Malformed query syntax                                                                 |
-| `LockTimeoutError`            | `LOCK_TIMEOUT`             | Lock acquisition failures                                                              |
-| `FileIOError`                 | `FILE_IO_ERROR`            | Drive API operation failures                                                           |
-| `ConflictError`               | `CONFLICT_ERROR`           | Modification token mismatches                                                          |
-| `MasterIndexError`            | `MASTER_INDEX_ERROR`       | ScriptProperties access failures                                                       |
-| `CollectionNotFoundError`     | `COLLECTION_NOT_FOUND`     | Missing collection references                                                          |
-| `ConfigurationError`          | `CONFIGURATION_ERROR`      | Invalid configuration values                                                           |
-| `FileNotFoundError`           | `FILE_NOT_FOUND`           | Specific file not found on Drive                                                       |
-| `PermissionDeniedError`       | `PERMISSION_DENIED`        | Lack of permission for a file operation                                                |
-| `QuotaExceededError`          | `QUOTA_EXCEEDED`           | Google Drive API quota limits reached                                                  |
-| `InvalidFileFormatError`      | `INVALID_FILE_FORMAT`      | File content does not match expected format (e.g., not valid JSON)                     |
-| `InvalidArgumentError`        | `INVALID_ARGUMENT`         | Incorrect or missing function arguments (also used by Validate class)                  |
-| `OperationError`              | `OPERATION_ERROR`          | General failure during an operation not covered by other error types                   |
-| `LockAcquisitionFailureError` | `LOCK_ACQUISITION_FAILURE` | Lock attempts that fail immediately without waiting (e.g., contention without timeout) |
-| `ModificationConflictError`   | `MODIFICATION_CONFLICT`    | Fine-grained token mismatches where a more specific conflict signal is required        |
-| `CoordinationTimeoutError`    | `COORDINATION_TIMEOUT`     | Cross-component orchestration exceeded the allotted coordination window                |
+| Error Class                   | Code                       | Usage                                                                                                                                      |
+| ----------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `DocumentNotFoundError`       | `DOCUMENT_NOT_FOUND`       | Document queries that return no results                                                                                                    |
+| `DuplicateKeyError`           | `DUPLICATE_KEY`            | Unique constraint violations                                                                                                               |
+| `InvalidQueryError`           | `INVALID_QUERY`            | Malformed query syntax                                                                                                                     |
+| `LockTimeoutError`            | `LOCK_TIMEOUT`             | Lock acquisition failures                                                                                                                  |
+| `FileIOError`                 | `FILE_IO_ERROR`            | Drive API operation failures                                                                                                               |
+| `ConflictError`               | `CONFLICT_ERROR`           | Modification token mismatches                                                                                                              |
+| `MasterIndexError`            | `MASTER_INDEX_ERROR`       | ScriptProperties access failures                                                                                                           |
+| `CollectionNotFoundError`     | `COLLECTION_NOT_FOUND`     | Missing collection references                                                                                                              |
+| `ConfigurationError`          | `CONFIGURATION_ERROR`      | Invalid configuration values                                                                                                               |
+| `FileNotFoundError`           | `FILE_NOT_FOUND`           | Specific file not found on Drive                                                                                                           |
+| `PermissionDeniedError`       | `PERMISSION_DENIED`        | Lack of permission for a file operation                                                                                                    |
+| `QuotaExceededError`          | `QUOTA_EXCEEDED`           | Google Drive API quota limits reached                                                                                                      |
+| `InvalidFileFormatError`      | `INVALID_FILE_FORMAT`      | File content does not match expected format (e.g., not valid JSON)                                                                         |
+| `InvalidArgumentError`        | `INVALID_ARGUMENT`         | Incorrect or missing function arguments (also used by Validate class)                                                                      |
+| `OperationError`              | `OPERATION_ERROR`          | General failure during an operation not covered by other error types                                                                       |
+| `LockAcquisitionFailureError` | `LOCK_ACQUISITION_FAILURE` | Lock acquisition that could not succeed within the `collectionLockLeaseMs` wait window (the final attempt failed without a `LOCK_TIMEOUT`) |
+| `ModificationConflictError`   | `MODIFICATION_CONFLICT`    | Fine-grained token mismatches where a more specific conflict signal is required                                                            |
+| `CoordinationTimeoutError`    | `COORDINATION_TIMEOUT`     | Cross-component orchestration exceeded the allotted coordination window                                                                    |
 
 When creating new subclasses, use the `createErrorConstructorArgs` helper to assemble the standard `(message, code, context)` tuple. This keeps constructors minimal and ensures new errors align with the catalogued codes and logging expectations.
 
@@ -367,12 +368,13 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
 | 2    | `'post-operation-overrun'`      | Callback completed over budget; lease ownership intact or restored     | Effects applied; metadata finalised before the throw (or finalisation failed loudly) |
 | 3    | `'lease-not-recoverable'`       | Renewal failed and the single re-acquisition returned `false` or threw | Effects applied; metadata finalisation **skipped** — divergence logged               |
 
-Note the observable ordering: at sites 2 and 3 the error arrives **after** the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort _before_ the throw.
+Note the observable ordering: at sites 2 and 3 the error arrives **after** the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort _before_ the throw. Site 0 applies only to a thrown `LOCK_TIMEOUT`; exhausting the `collectionLockLeaseMs` acquisition window instead raises `LockAcquisitionFailureError`.
 
-**Deliberate swallows in the coordinator.** Two swallows exist, each paired with a loud ERROR log:
+**Deliberate swallows in the coordinator.** Three swallows exist:
 
 - **Lock release** (`releaseOperationLock`): release failures are logged and swallowed so they cannot mask the operation's own outcome (long-standing behaviour).
 - **Best-effort finalisation on violation paths**: on an over-budget path a `MasterIndexError` from the metadata finalisation is logged loudly and swallowed so it cannot mask the primary `CoordinationTimeoutError`. Within-budget finalisation failures continue to propagate as `MasterIndexError`.
+- **Single re-acquisition** (`_attemptSingleReacquisition`): a thrown `acquireCollectionLock()` error is logged at WARN and returned as `false`, routing to the lease-not-recoverable site 3.
 
 **Failure logging.** The `coordinate()` boundary catch remains the single operation-level failure record per failed operation, but on violation paths it is deliberately supplemented by point-of-occurrence records (renewal failure, re-acquisition outcome, finalisation failure swallowed, finalisation skipped, post-operation overrun) emitted by the unified post-callback algorithm — two or more records per failed violation-path operation are intended. The completion INFO record fires only on the success path. One caveat for alerting: a within-budget lease recovery can emit a renewal-failure ERROR yet the operation still returns successfully, so an ERROR record does not imply operation failure.
 
@@ -694,7 +696,7 @@ Validate.all(
 try {
   Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload'); // Fails by default (mixed)
 } catch (e) {
-  // console.error(e.message); // "updatePayload cannot mix update operators with document fields"
+  // console.error(e.message); // "Invalid argument: updatePayload - cannot mix update operators with document fields"
 }
 Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload', {
   allowMixed: true
@@ -712,6 +714,29 @@ Validate.validateUpdateObject({ $inc: { score: 1 } }, 'updatePayload', { require
 5. **Specific Over Generic:** Prefer specific validators like `nonEmptyString` or `positiveNumber` over more generic ones like `string` or `number` when applicable, to provide more precise validation.
 6. **Understand Plain Objects:** When using `validateObject` or `isPlainObject`, be aware that it specifically checks for objects that are not arrays or instances of other complex types like `Date`.
 7. **Update Object Validation:** Use `validateUpdateObject` when dealing with MongoDB-style update operations to ensure structural correctness.
+
+---
+
+### 1.2.5. BackoffUtils
+
+**Location:** `src/01_utils/BackoffUtils.js`
+
+Provides the single clamped exponential-backoff calculation shared by lock acquisition and file-operation retries. `calculateBackoff` is a stateless static method, and the caller supplies every bound, so one implementation serves both bounded and unbounded retry paths.
+
+| Method                                                       | Description                                                                                                            |
+| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
+| `calculateBackoff(attempt, baseDelayMs, base, minMs, maxMs)` | Returns `Math.max(minMs, Math.min(baseDelayMs * Math.pow(base, attempt - 1), maxMs))` for a one-based `attempt` index. |
+
+`attempt` is one-based: attempt 1 returns `baseDelayMs`, subject to the bounds. Each later attempt multiplies it by `base`. A caller that must stay unclamped passes `-Infinity` and `Infinity` as the bounds, which is how `FileOperations` preserves its original unbounded retry delays.
+
+```javascript
+// Bounded: collection lock acquisition floors at 500 ms and caps at 5000 ms
+BackoffUtils.calculateBackoff(1, 1000, 2, 500, 5000); // 1000
+BackoffUtils.calculateBackoff(4, 1000, 2, 500, 5000); // 5000
+
+// Unclamped: FileOperations retries use infinite bounds
+BackoffUtils.calculateBackoff(3, 1000, 2, -Infinity, Infinity); // 4000
+```
 
 ---
 
