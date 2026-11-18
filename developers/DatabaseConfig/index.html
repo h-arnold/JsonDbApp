@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.1/" class="md-tabs__link">
           
   
   
@@ -1604,97 +1604,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagrams
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Diagrams
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Class_Diagrams/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Class Diagrams
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1753,6 +1662,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2502,7 +2439,7 @@
 <td><code>collectionLockLeaseMs</code></td>
 <td>Number</td>
 <td><code>30000</code></td>
-<td>Collection lock lease duration in milliseconds; must be at least as long as <code>coordinationTimeoutMs</code></td>
+<td>Collection lock lease duration in milliseconds and the lock acquisition wait window; must be at least as long as <code>coordinationTimeoutMs</code></td>
 </tr>
 <tr>
 <td><code>coordinationTimeoutMs</code></td>
@@ -2514,19 +2451,19 @@
 <td><code>retryAttempts</code></td>
 <td>Number</td>
 <td><code>3</code></td>
-<td>Lock acquisition retry attempts</td>
+<td>Legacy for lock acquisition: still validated (positive integer) with default <code>3</code>, but no longer bounds the acquisition wait</td>
 </tr>
 <tr>
 <td><code>retryDelayMs</code></td>
 <td>Number</td>
 <td><code>1000</code></td>
-<td>Delay between lock retries</td>
+<td>Base delay for acquisition backoff, floored at 500 ms and capped at 5000 ms</td>
 </tr>
 <tr>
 <td><code>lockRetryBackoffBase</code></td>
 <td>Number</td>
 <td><code>2</code></td>
-<td>Exponential backoff base for lock retries</td>
+<td>Exponential growth base for the acquisition backoff; must be at least 1</td>
 </tr>
 <tr>
 <td><code>cacheEnabled</code></td>
@@ -2648,7 +2585,8 @@
 <p>Determines the default root folder ID.</p>
 <ul>
 <li><strong>Returns:</strong> <code>String</code> - Drive root folder ID</li>
-<li><strong>Throws:</strong> <code>Error</code> if unable to access Drive</li>
+<li><strong>Throws:</strong> <code>ConfigurationError</code> (<code>CONFIGURATION_ERROR</code>) if unable to access Drive</li>
+<li><strong>Error details:</strong> message <code>Invalid configuration for rootFolderId: &lt;original Drive error message&gt;</code>; context <code>{ setting: 'rootFolderId', value: &lt;original Drive error message&gt;, reason: 'Failed to get default root folder' }</code></li>
 <li><strong>Behaviour:</strong> Uses <code>DriveApp.getRootFolder().getId()</code></li>
 </ul>
 <h4 id="_validateconfig"><code>_validateConfig()</code><a class="headerlink" href="#_validateconfig" title="Permanent link">&para;</a></h4>
@@ -2679,9 +2617,9 @@
 </ul>
 <p><strong>retryAttempts / retryDelayMs / lockRetryBackoffBase:</strong></p>
 <ul>
-<li><code>retryAttempts</code> must be a positive integer</li>
-<li><code>retryDelayMs</code> must be a non-negative number</li>
-<li><code>lockRetryBackoffBase</code> must be a positive number</li>
+<li><code>retryAttempts</code> must be a positive integer (default <code>3</code>); now legacy for lock acquisition — the wait window is <code>collectionLockLeaseMs</code></li>
+<li><code>retryDelayMs</code> must be a non-negative number; it feeds the floored and capped acquisition backoff</li>
+<li><code>lockRetryBackoffBase</code> must be at least 1; it feeds the same acquisition backoff</li>
 </ul>
 <p><strong>logLevel:</strong></p>
 <ul>
@@ -2734,27 +2672,27 @@
 </thead>
 <tbody>
 <tr>
-<td>"Lock timeout must be a number"</td>
+<td>"Invalid argument: collectionLockLeaseMs - must be a number"</td>
 <td>Invalid timeout value</td>
 <td>Use a number of at least 500ms</td>
 </tr>
 <tr>
-<td>"Log level must be one of: DEBUG, INFO, WARN, ERROR"</td>
+<td>"Invalid argument: logLevel - must be one of: DEBUG, INFO, WARN, ERROR"</td>
 <td>Invalid log level</td>
 <td>Use exact string match</td>
 </tr>
 <tr>
-<td>"Auto create collections must be a boolean"</td>
+<td>"Invalid argument: autoCreateCollections - must be a boolean"</td>
 <td>Non-boolean value</td>
 <td>Use true or false explicitly</td>
 </tr>
 <tr>
-<td>"Failed to get default root folder"</td>
-<td>Drive access issue</td>
+<td>"Invalid configuration for rootFolderId: <message>"</td>
+<td>Drive access issue; reason <code>Failed to get default root folder</code></td>
 <td>Check permissions and authentication</td>
 </tr>
 <tr>
-<td>"Collection sanitisation flag must be a boolean"</td>
+<td>"Invalid argument: stripDisallowedCollectionNameCharacters - must be a boolean"</td>
 <td>Non-boolean value for <code>stripDisallowedCollectionNameCharacters</code></td>
 <td>Use true or false explicitly</td>
 </tr>
@@ -2899,7 +2837,7 @@
 <h2 id="best-practices">Best Practices<a class="headerlink" href="#best-practices" title="Permanent link">&para;</a></h2>
 <ol>
 <li><strong>Validate early:</strong> Create DatabaseConfig instances explicitly to catch errors</li>
-<li><strong>Use appropriate timeouts:</strong> Size <code>collectionLockLeaseMs</code> to cover the whole write, and keep <code>coordinationTimeoutMs</code> within that lease; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases</li>
+<li><strong>Use appropriate timeouts:</strong> <code>collectionLockLeaseMs</code> is both the acquisition wait window and the lease, so size it to cover the whole write and keep <code>coordinationTimeoutMs</code> within it; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases</li>
 <li><strong>Environment-specific configs:</strong> Create different configurations for dev/test/prod</li>
 <li><strong>Immutable configurations:</strong> Don't modify config properties after creation</li>
 <li><strong>Proper folder permissions:</strong> Ensure root folder is accessible to the script</li>

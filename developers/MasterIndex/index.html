@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.1/" class="md-tabs__link">
           
   
   
@@ -1755,97 +1755,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagrams
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Diagrams
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Class_Diagrams/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Class Diagrams
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1904,6 +1813,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2772,7 +2709,7 @@ The <code>Database</code> class delegates collection operations to <code>MasterI
 <li><strong>Behaviour:</strong></li>
 <li>Sets lock status on collection metadata</li>
 <li>Persists to MasterIndex via <code>_updateCollectionMetadataInternal()</code></li>
-<li><strong>Usage:</strong> Used by <code>acquireCollectionLock()</code>, <code>renewCollectionLock()</code>, <code>releaseCollectionLock()</code>, <code>cleanupExpiredLocks()</code></li>
+<li><strong>Usage:</strong> Used by <code>acquireCollectionLock()</code>, <code>renewCollectionLock()</code>, <code>releaseCollectionLock()</code></li>
 <li><strong>Benefits:</strong> Single source of truth for lock persistence, guaranteed update ordering</li>
 </ul>
 <h3 id="masterindexconflictresolver-helper-methods-new-in-v005">MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5<a class="headerlink" href="#masterindexconflictresolver-helper-methods-new-in-v005" title="Permanent link">&para;</a></h3>
@@ -2982,6 +2919,7 @@ convention.</p>
 <h4 id="cleanupexpiredlocks"><code>cleanupExpiredLocks()</code><a class="headerlink" href="#cleanupexpiredlocks" title="Permanent link">&para;</a></h4>
 <p>Removes expired locks.</p>
 <ul>
+<li><strong>Persistence:</strong> Clears each expired lock in memory and saves the index once after the scan; when no lock has expired, no save is performed</li>
 <li><strong>Concurrency behaviour:</strong> Reloads current collection metadata under ScriptLock before scanning, so cleanup removes genuinely expired locks without clearing newer active locks written by another instance</li>
 </ul>
 <h3 id="conflict-management">Conflict Management<a class="headerlink" href="#conflict-management" title="Permanent link">&para;</a></h3>

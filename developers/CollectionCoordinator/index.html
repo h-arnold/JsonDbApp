@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.1/" class="md-tabs__link">
           
   
   
@@ -1348,97 +1348,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagrams
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Diagrams
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Class_Diagrams/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Class Diagrams
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1497,6 +1406,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -1892,7 +1829,7 @@
 <p><strong>Location:</strong> <a href="../../src/02_components/CollectionCoordinator.js">src/02_components/CollectionCoordinator.js</a></p>
 <p><strong>Responsibilities:</strong></p>
 <ul>
-<li>Acquire and release the collection's virtual lock (with retry and exponential backoff)</li>
+<li>Acquire and release the collection's virtual lock, retrying within a deadline-based acquisition window</li>
 <li>Resolve modification-token conflicts before the operation runs</li>
 <li>Enforce the coordination budget both before the callback (pre-flight) and after it (over-budget verdict)</li>
 <li>Finalise master-index metadata after a successful callback — or skip that finalisation safely when the lease cannot be recovered</li>
@@ -1909,7 +1846,7 @@
 <tbody>
 <tr>
 <td><code>collectionLockLeaseMs</code></td>
-<td>Lock lease duration; also the re-acquisition lease and renewal window basis</td>
+<td>Lock lease, re-acquisition lease and renewal basis; also the lock acquisition wait window</td>
 </tr>
 <tr>
 <td><code>coordinationTimeoutMs</code></td>
@@ -1917,27 +1854,27 @@
 </tr>
 <tr>
 <td><code>retryAttempts</code></td>
-<td>Lock acquisition retry attempts</td>
+<td>Legacy for lock acquisition: still validated with default <code>3</code>, but no longer bounds the acquisition wait</td>
 </tr>
 <tr>
 <td><code>retryDelayMs</code></td>
-<td>Base delay between lock retries</td>
+<td>Base delay feeding the floored and capped acquisition backoff</td>
 </tr>
 <tr>
 <td><code>lockRetryBackoffBase</code></td>
-<td>Exponential backoff base for lock retries</td>
+<td>Exponential base feeding the floored and capped acquisition backoff</td>
 </tr>
 </tbody>
 </table>
-<p><strong>Single clock source.</strong> <code>coordinate()</code> captures <code>startTime = Date.now()</code> once at the top. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (<code>Date.now() - startTime</code>); no fresh start time is introduced anywhere in the flow.</p>
+<p><strong>Single clock source.</strong> <code>coordinate()</code> captures <code>startTime = Date.now()</code> once, immediately after successful lock acquisition. The pre-flight check and the post-callback over-budget verdict are two reads of the same elapsed measurement (<code>Date.now() - startTime</code>); no fresh start time is introduced anywhere in the flow. Acquisition wait is excluded from this measurement; conflict resolution and the callback still count. The verdict is taken after the callback and before finalisation, and the ownership step still measures lease renewal from <code>lockAcquiredAt</code>. As a result, <code>coordinationTimeoutMs</code> no longer bounds total operation wall-clock: acquisition wait can consume most of the lease before the callback starts.</p>
 <p>This page is the canonical contract for coordination behaviour: the <code>coordinate()</code> flow, the unified violation algorithm, the throw sites and their <code>reason</code> values, the deliberate swallows, and the logging contract.</p>
 <h2 id="coordinate-flow">coordinate() Flow<a class="headerlink" href="#coordinate-flow" title="Permanent link">&para;</a></h2>
 <p><code>coordinate(operationName, callback)</code> runs the following ordered steps:</p>
 <ol>
-<li><strong>Validate and prepare.</strong> Validate <code>operationName</code> and <code>callback</code>, generate a fresh <code>opId</code>, read the collection name, and capture <code>startTime</code> (single clock source). A DEBUG record notes the operation start.</li>
-<li><strong>Acquire lock.</strong> <code>acquireOperationLock()</code> retries with exponential backoff. Exhausted retries raise <code>LockAcquisitionFailureError</code>. A <code>LOCK_TIMEOUT</code> during acquisition is mapped to <code>CoordinationTimeoutError</code> (<strong>site 0</strong>) — this throw is pre-side-effects. Any other acquisition error propagates unchanged.</li>
+<li><strong>Validate and prepare.</strong> Validate <code>operationName</code> and <code>callback</code>, generate a fresh <code>opId</code>, and read the collection name. A DEBUG record notes the operation start.</li>
+<li><strong>Acquire lock.</strong> <code>acquireOperationLock()</code> retries within a deadline of method entry + <code>collectionLockLeaseMs</code>, with a backoff floored at 500 ms and capped at 5000 ms, calculated by the shared <code>BackoffUtils.calculateBackoff()</code> utility (see <a href="../Infrastructure_Components/#125-backoffutils">Infrastructure Components</a>). The final sleep is truncated to the remaining window, followed by exactly one final attempt; failure then raises <code>LockAcquisitionFailureError</code>. A thrown <code>LOCK_TIMEOUT</code> maps to <code>CoordinationTimeoutError</code> (<strong>site 0</strong>) — pre-side-effects. Any other acquisition error propagates unchanged.</li>
 <li><strong>Resolve conflicts.</strong> If the local modification token differs from the master index token, a WARN is logged and the conflict is resolved by reloading the collection.</li>
-<li><strong>Pre-flight budget check</strong> (<strong>site 1</strong>). If lock acquisition and conflict resolution have already consumed more than <code>coordinationTimeoutMs</code>, an ERROR is logged and <code>CoordinationTimeoutError</code> is thrown <em>before the callback runs</em> — no operation side effects exist on this path. See <a href="#pre-flight-budget-check">Pre-flight Budget Check</a>.</li>
+<li><strong>Pre-flight budget check</strong> (<strong>site 1</strong>). If conflict resolution has already consumed more than <code>coordinationTimeoutMs</code>, an ERROR is logged and <code>CoordinationTimeoutError</code> is thrown <em>before the callback runs</em> — no operation side effects exist on this path. See <a href="#pre-flight-budget-check">Pre-flight Budget Check</a>.</li>
 <li><strong>Run the callback.</strong> The callback is invoked directly and its result captured. If the callback itself throws, its error propagates unchanged; finalisation is skipped entirely (publishing metadata for a failed operation could misrepresent an incomplete operation) and the completion INFO never fires.</li>
 <li><strong>Compute the budget verdict once.</strong> Immediately after the callback returns: <code>overBudget = Date.now() - startTime &gt; coordinationTimeoutMs</code>. The verdict is computed before any finalisation work, selects finalisation's error semantics, and there is no post-finalisation re-check.</li>
 <li><strong>Ownership step and finalise-or-skip</strong> (<code>_finaliseAfterOperation</code>). Resolve lease ownership, then either finalise the master-index metadata or skip that finalisation loudly. See <a href="#unified-violation-algorithm">Unified Violation Algorithm</a>.</li>
@@ -1951,7 +1888,7 @@
 <li>It measures <code>Date.now() - startTime</code> — the same elapsed measurement later used for the over-budget verdict.</li>
 <li>If the elapsed time exceeds <code>coordinationTimeoutMs</code>, an ERROR record is emitted (<code>Coordination budget exhausted before the operation callback</code>, context <code>{ collection, opId, timeoutMs }</code>) and <code>CoordinationTimeoutError</code> (<strong>site 1</strong>, reason <code>'preflight-budget-exhausted'</code>) is thrown.</li>
 <li>The callback is never invoked on this path, so no operation side effects can exist; the lock is still released in <code>finally</code>.</li>
-<li>Reachability: the branch requires the pre-callback work (lock retries plus conflict resolution) to exceed the budget. Configuration validation enforces a minimum of 500 ms for both timing values.</li>
+<li>Reachability: the branch requires conflict resolution alone to exceed the budget, since acquisition wait falls outside the measured window. Configuration validation enforces a minimum of 500 ms for both timing values.</li>
 </ul>
 <h2 id="unified-violation-algorithm">Unified Violation Algorithm<a class="headerlink" href="#unified-violation-algorithm" title="Permanent link">&para;</a></h2>
 <p><code>_finaliseAfterOperation()</code> implements the post-callback half of the coordination policy. It replaces the earlier arrangement in which the post-callback timeout throw fired before finalisation could run.</p>
@@ -1960,7 +1897,7 @@
 <ul>
 <li><strong>Renewal due?</strong> <code>_shouldRenewLease()</code> returns true when the time elapsed since lock acquisition is at least <code>collectionLockLeaseMs - LEASE_RENEWAL_WINDOW_MS</code> (250 ms).</li>
 <li><strong>Renewal attempt.</strong> <code>_renewLeaseForFinalisationIfRequired()</code> calls <code>renewCollectionLock()</code> — a non-throwing boolean call at the <code>MasterIndex</code> boundary. The helper itself no longer throws: it returns <code>true</code> when renewal was not required or succeeded, and <code>false</code> after a due-but-failed renewal (which also emits a loud ERROR, <code>Collection lock lease expired before finalisation could complete</code>, context <code>{ collection, opId, leaseMs }</code>). All throw decisions are centralised in the <code>coordinate()</code> flow.</li>
-<li><strong>Single re-acquisition.</strong> On renewal failure, <code>_attemptSingleReacquisition()</code> calls <code>acquireCollectionLock()</code> for the <strong>same <code>opId</code> exactly once</strong>. There is no retry loop and no backoff. A <code>false</code> return <strong>or</strong> a thrown error (for example <code>CollectionNotFoundError</code> after concurrent collection removal) is treated uniformly as unrecoverable. A successful re-acquisition emits a WARN (<code>Collection lock re-acquired for finalisation after renewal failure</code>, context <code>{ collection, opId, outcome: 'recovered' }</code>).</li>
+<li><strong>Single re-acquisition.</strong> On renewal failure, <code>_attemptSingleReacquisition()</code> calls <code>acquireCollectionLock()</code> for the <strong>same <code>opId</code> exactly once</strong>. There is no retry loop and no backoff. A <code>false</code> return <strong>or</strong> a thrown error (for example <code>CollectionNotFoundError</code> after concurrent collection removal) is treated uniformly as unrecoverable; a thrown error first emits a WARN (<code>Collection lock re-acquisition failed for finalisation after renewal failure</code>, context <code>{ collection, opId, error }</code>) recording the underlying message. A successful re-acquisition emits a WARN (<code>Collection lock re-acquired for finalisation after renewal failure</code>, context <code>{ collection, opId, outcome: 'recovered' }</code>).</li>
 <li><strong>Outcomes:</strong> <code>intact</code> (no renewal due, or renewal succeeded), <code>restored</code> (re-acquisition succeeded), or <code>lost-unrecoverable</code> (re-acquisition returned <code>false</code> or threw).</li>
 </ul>
 <p><strong>Renewal-failure causes.</strong> Renewal can fail for two reasons: lease expiry (which, given <code>collectionLockLeaseMs ≥ coordinationTimeoutMs</code>, almost always implies an over-budget operation outside the exact-equality boundary) and concurrent collection removal or lock-record loss (which may occur within budget). The ownership step treats both identically: one re-acquisition attempt, then recover or route to throw site 3.</p>
@@ -2014,14 +1951,15 @@
 </tr>
 </tbody>
 </table>
-<p>Other errors thrown by <code>coordinate()</code>: <code>InvalidArgumentError</code> (invalid arguments), <code>LockAcquisitionFailureError</code> (retries exhausted without a timeout), <code>ModificationConflictError</code> (token mismatch surfaced during conflict resolution), <code>MasterIndexError</code> (finalisation failure on the within-budget path), and whatever the callback throws (propagated unchanged).</p>
+<p>Other errors thrown by <code>coordinate()</code>: <code>InvalidArgumentError</code> (invalid arguments), <code>LockAcquisitionFailureError</code> (acquisition deadline exhausted and the final attempt failed without a <code>LOCK_TIMEOUT</code>), <code>ModificationConflictError</code> (token mismatch surfaced during conflict resolution), <code>MasterIndexError</code> (finalisation failure on the within-budget path), and whatever the callback throws (propagated unchanged).</p>
 <h2 id="deliberate-swallows">Deliberate Swallows<a class="headerlink" href="#deliberate-swallows" title="Permanent link">&para;</a></h2>
-<p>Two deliberate swallows exist in the coordinator, and each logs loudly:</p>
+<p>Three deliberate swallows exist in the coordinator, and each emits a log record:</p>
 <ol>
 <li><strong>Lock-release swallow</strong> (<code>releaseOperationLock</code>, pre-existing). Release failures are logged (<code>Lock release failed</code>, context <code>{ collection, operationId, error }</code>) and swallowed so they cannot mask the coordinated operation's own outcome.</li>
 <li><strong>Best-effort finalisation swallow</strong> (violation paths, new). On an over-budget path, a <code>MasterIndexError</code> from <code>updateMasterIndexMetadata()</code> is logged loudly and swallowed so the primary <code>CoordinationTimeoutError</code> propagates. Within-budget finalisation failures continue to propagate.</li>
+<li><strong>Single re-acquisition swallow</strong> (<code>_attemptSingleReacquisition</code>). A thrown error from <code>acquireCollectionLock()</code> is logged at WARN (<code>Collection lock re-acquisition failed for finalisation after renewal failure</code>, context <code>{ collection, opId, error }</code>) and returned as <code>false</code>, routing ownership resolution to the <code>lost-unrecoverable</code> path and throw site 3.</li>
 </ol>
-<p>Nothing else is swallowed: callback errors propagate unchanged, and a throwing callback still skips finalisation entirely.</p>
+<p>Beyond these three, no other errors are swallowed: callback errors propagate unchanged, and a throwing callback still skips finalisation entirely.</p>
 <h2 id="logging-contract">Logging Contract<a class="headerlink" href="#logging-contract" title="Permanent link">&para;</a></h2>
 <p><strong>Boundary record.</strong> The <code>coordinate()</code> catch emits exactly one operation-level failure record per failed operation (<code>Operation &lt;operationName&gt; failed</code>, context <code>{ collection, opId, error }</code>) and re-throws. This boundary record also fires on violation paths.</p>
 <p><strong>Point-of-occurrence records.</strong> On violation paths the unified algorithm emits additional records at the point each event occurs:</p>
@@ -2035,6 +1973,12 @@
 </tr>
 </thead>
 <tbody>
+<tr>
+<td>Lock held on an acquisition attempt (MasterIndex)</td>
+<td>WARN</td>
+<td><code>Failed to acquire lock; collection is already locked.</code></td>
+<td><code>collection</code>, <code>operationId</code>, <code>lockedBy</code>, <code>lockedAt</code>, <code>lockTimeout</code>, <code>expiry</code>, <code>remainingMs</code></td>
+</tr>
 <tr>
 <td>Lock acquisition timed out (site 0)</td>
 <td>ERROR</td>
@@ -2060,6 +2004,12 @@
 <td><code>collection</code>, <code>opId</code>, <code>outcome: 'recovered'</code></td>
 </tr>
 <tr>
+<td>Re-acquisition failed (thrown)</td>
+<td>WARN</td>
+<td><code>Collection lock re-acquisition failed for finalisation after renewal failure</code></td>
+<td><code>collection</code>, <code>opId</code>, <code>error</code></td>
+</tr>
+<tr>
 <td>Finalisation failure on a violation path (swallowed)</td>
 <td>ERROR</td>
 <td><code>Metadata finalisation failed on a violation path; the coordination timeout propagates</code></td>
@@ -2079,6 +2029,7 @@
 </tr>
 </tbody>
 </table>
+<p>The MasterIndex contention WARN above fires once per failed acquisition attempt; its <code>expiry</code> is <code>lockedAt + lockTimeout</code> and <code>remainingMs</code> is <code>expiry - now</code>. It is distinct from the coordinator's single end-of-window <code>Could not acquire lock after retries</code> WARN (context <code>{ collection, operationId }</code>), which precedes <code>LockAcquisitionFailureError</code>.</p>
 <p><strong>Intended co-occurrence.</strong> On violation paths the boundary record and the point-of-occurrence records fire together — two (or more) records per failed violation-path operation are deliberate. They answer different questions: the point-of-occurrence records explain <em>why</em> the violation happened, the boundary record records <em>what</em> the operation outcome was.</p>
 <p><strong>Completion record.</strong> The INFO record (<code>Operation &lt;operationName&gt; complete</code>, context <code>{ collection, opId }</code>) fires only on the success path; violation paths throw and never emit it.</p>
 <p><strong>Pinned invariants.</strong> Exactly one boundary ERROR per within-budget metadata-update failure, and exactly one INFO completion record per successful operation.</p>

@@ -25,10 +25,6 @@
          <lastmod>2026-11-18</lastmod>
     </url>
     <url>
-         <loc>https://h-arnold.github.io/JsonDbApp/developers/Class_Diagrams/</loc>
-         <lastmod>2026-11-18</lastmod>
-    </url>
-    <url>
          <loc>https://h-arnold.github.io/JsonDbApp/developers/CollectionCoordinator/</loc>
          <lastmod>2026-11-18</lastmod>
     </url>
@@ -86,6 +82,10 @@
     </url>
     <url>
          <loc>https://h-arnold.github.io/JsonDbApp/release-notes/release-notes-v0.3.0/</loc>
+         <lastmod>2026-11-18</lastmod>
+    </url>
+    <url>
+         <loc>https://h-arnold.github.io/JsonDbApp/release-notes/release-notes-v0.3.1/</loc>
          <lastmod>2026-11-18</lastmod>
     </url>
 </urlset>

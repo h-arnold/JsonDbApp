@@ -310,7 +310,7 @@
     
     
       <li class="md-tabs__item">
-        <a href="../../release-notes/release-notes-v0.3.0/" class="md-tabs__link">
+        <a href="../../release-notes/release-notes-v0.3.1/" class="md-tabs__link">
           
   
   
@@ -1529,6 +1529,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#125-backoffutils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.5. BackoffUtils
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -1792,97 +1803,6 @@
 
               
             
-              
-                
-  
-  
-  
-  
-    
-    
-    
-    
-      
-      
-        
-          
-          
-        
-      
-    
-    
-    <li class="md-nav__item md-nav__item--section md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4_5" >
-        
-          
-          <label class="md-nav__link" for="__nav_4_5" id="__nav_4_5_label" tabindex="">
-            
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Diagrams
-  
-
-    
-  </span>
-  
-  
-
-            <span class="md-nav__icon md-icon"></span>
-          </label>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_4_5_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_4_5">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Diagrams
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../Class_Diagrams/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Class Diagrams
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-          </ul>
-        </nav>
-      
-    </li>
-  
-
-              
-            
           </ul>
         </nav>
       
@@ -1941,6 +1861,34 @@
 
           </label>
           <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../release-notes/release-notes-v0.3.1/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Version 0.3.1
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
             
               
                 
@@ -2581,6 +2529,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#125-backoffutils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        1.2.5. BackoffUtils
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2789,6 +2748,7 @@
 <li><a href="#1241-core-methods">1.2.4.1. Core Methods</a></li>
 <li><a href="#1242-usage-examples">1.2.4.2. Usage Examples</a></li>
 <li><a href="#1243-best-practices">1.2.4.3. Best Practices</a></li>
+<li><a href="#125-backoffutils">1.2.5. BackoffUtils</a></li>
 </ul>
 </li>
 <li><a href="#13-integration-patterns">1.3. Integration Patterns</a><ul>
@@ -2884,7 +2844,7 @@
 </li>
 </ol>
 <div class="highlight"><pre><span></span><code><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">'Collection created'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">collectionName</span><span class="o">:</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span>
+<a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nx">collection</span><span class="o">:</span><span class="w"> </span><span class="nx">name</span><span class="p">,</span>
 <a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nx">fileId</span><span class="o">:</span><span class="w"> </span><span class="nx">fileId</span><span class="p">,</span>
 <a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nx">documentCount</span><span class="o">:</span><span class="w"> </span><span class="mf">0</span><span class="p">,</span>
 <a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">  </span><span class="nx">timestamp</span><span class="o">:</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nb">Date</span><span class="p">()</span>
@@ -3055,7 +3015,7 @@ ONLY for <code>timeSync</code>; the injected logger keeps its existing debug/war
 <p><strong>Deliberate non-instrumentations.</strong> <code>Collection.aggregate</code>, per-document helpers
 (<code>deleteDocument</code>, <code>findAllDocuments</code>), the raw <code>Date.now()</code> reads inside
 <code>CollectionCoordinator</code> control flow (they feed timeout enforcement, lease renewal, and
-retry/backoff decisions and must stay outside the logging facility), <code>DbLockService</code>, and
+lock-acquisition deadline and backoff decisions and must stay outside the logging facility), <code>DbLockService</code>, and
 <code>Database</code> lifecycle methods emit no timing events.</p>
 <hr />
 <h3 id="121-errorhandler">1.2.1. ErrorHandler<a class="headerlink" href="#121-errorhandler" title="Permanent link">&para;</a></h3>
@@ -3156,7 +3116,7 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
 <tr>
 <td><code>LockAcquisitionFailureError</code></td>
 <td><code>LOCK_ACQUISITION_FAILURE</code></td>
-<td>Lock attempts that fail immediately without waiting (e.g., contention without timeout)</td>
+<td>Lock acquisition that could not succeed within the <code>collectionLockLeaseMs</code> wait window (the final attempt failed without a <code>LOCK_TIMEOUT</code>)</td>
 </tr>
 <tr>
 <td><code>ModificationConflictError</code></td>
@@ -3269,11 +3229,12 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
 </tr>
 </tbody>
 </table>
-<p>Note the observable ordering: at sites 2 and 3 the error arrives <strong>after</strong> the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort <em>before</em> the throw.</p>
-<p><strong>Deliberate swallows in the coordinator.</strong> Two swallows exist, each paired with a loud ERROR log:</p>
+<p>Note the observable ordering: at sites 2 and 3 the error arrives <strong>after</strong> the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort <em>before</em> the throw. Site 0 applies only to a thrown <code>LOCK_TIMEOUT</code>; exhausting the <code>collectionLockLeaseMs</code> acquisition window instead raises <code>LockAcquisitionFailureError</code>.</p>
+<p><strong>Deliberate swallows in the coordinator.</strong> Three swallows exist:</p>
 <ul>
 <li><strong>Lock release</strong> (<code>releaseOperationLock</code>): release failures are logged and swallowed so they cannot mask the operation's own outcome (long-standing behaviour).</li>
 <li><strong>Best-effort finalisation on violation paths</strong>: on an over-budget path a <code>MasterIndexError</code> from the metadata finalisation is logged loudly and swallowed so it cannot mask the primary <code>CoordinationTimeoutError</code>. Within-budget finalisation failures continue to propagate as <code>MasterIndexError</code>.</li>
+<li><strong>Single re-acquisition</strong> (<code>_attemptSingleReacquisition</code>): a thrown <code>acquireCollectionLock()</code> error is logged at WARN and returned as <code>false</code>, routing to the lease-not-recoverable site 3.</li>
 </ul>
 <p><strong>Failure logging.</strong> The <code>coordinate()</code> boundary catch remains the single operation-level failure record per failed operation, but on violation paths it is deliberately supplemented by point-of-occurrence records (renewal failure, re-acquisition outcome, finalisation failure swallowed, finalisation skipped, post-operation overrun) emitted by the unified post-callback algorithm — two or more records per failed violation-path operation are intended. The completion INFO record fires only on the success path. One caveat for alerting: a within-budget lease recovery can emit a renewal-failure ERROR yet the operation still returns successfully, so an ERROR record does not imply operation failure.</p>
 <p>The full coordination contract — flow, violation algorithm, logging table, and residual risks — is documented in <a href="../CollectionCoordinator/">CollectionCoordinator</a>.</p>
@@ -3701,7 +3662,7 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
 <a id="__codelineno-17-46" name="__codelineno-17-46" href="#__codelineno-17-46"></a><span class="k">try</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-17-47" name="__codelineno-17-47" href="#__codelineno-17-47"></a><span class="w">  </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">validateUpdateObject</span><span class="p">({</span><span class="w"> </span><span class="nx">$set</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">'New Name'</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">'active'</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">'updatePayload'</span><span class="p">);</span><span class="w"> </span><span class="c1">// Fails by default (mixed)</span>
 <a id="__codelineno-17-48" name="__codelineno-17-48" href="#__codelineno-17-48"></a><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">e</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a><span class="w">  </span><span class="c1">// console.error(e.message); // "updatePayload cannot mix update operators with document fields"</span>
+<a id="__codelineno-17-49" name="__codelineno-17-49" href="#__codelineno-17-49"></a><span class="w">  </span><span class="c1">// console.error(e.message); // "Invalid argument: updatePayload - cannot mix update operators with document fields"</span>
 <a id="__codelineno-17-50" name="__codelineno-17-50" href="#__codelineno-17-50"></a><span class="p">}</span>
 <a id="__codelineno-17-51" name="__codelineno-17-51" href="#__codelineno-17-51"></a><span class="nx">Validate</span><span class="p">.</span><span class="nx">validateUpdateObject</span><span class="p">({</span><span class="w"> </span><span class="nx">$set</span><span class="o">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">name</span><span class="o">:</span><span class="w"> </span><span class="s1">'New Name'</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="nx">status</span><span class="o">:</span><span class="w"> </span><span class="s1">'active'</span><span class="w"> </span><span class="p">},</span><span class="w"> </span><span class="s1">'updatePayload'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span>
 <a id="__codelineno-17-52" name="__codelineno-17-52" href="#__codelineno-17-52"></a><span class="w">  </span><span class="nx">allowMixed</span><span class="o">:</span><span class="w"> </span><span class="kc">true</span>
@@ -3720,122 +3681,148 @@ retry/backoff decisions and must stay outside the logging facility), <code>DbLoc
 <li><strong>Update Object Validation:</strong> Use <code>validateUpdateObject</code> when dealing with MongoDB-style update operations to ensure structural correctness.</li>
 </ol>
 <hr />
+<h3 id="125-backoffutils">1.2.5. BackoffUtils<a class="headerlink" href="#125-backoffutils" title="Permanent link">&para;</a></h3>
+<p><strong>Location:</strong> <code>src/01_utils/BackoffUtils.js</code></p>
+<p>Provides the single clamped exponential-backoff calculation shared by lock acquisition and file-operation retries. <code>calculateBackoff</code> is a stateless static method, and the caller supplies every bound, so one implementation serves both bounded and unbounded retry paths.</p>
+<table>
+<thead>
+<tr>
+<th>Method</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>calculateBackoff(attempt, baseDelayMs, base, minMs, maxMs)</code></td>
+<td>Returns <code>Math.max(minMs, Math.min(baseDelayMs * Math.pow(base, attempt - 1), maxMs))</code> for a one-based <code>attempt</code> index.</td>
+</tr>
+</tbody>
+</table>
+<p><code>attempt</code> is one-based: attempt 1 returns <code>baseDelayMs</code>, subject to the bounds. Each later attempt multiplies it by <code>base</code>. A caller that must stay unclamped passes <code>-Infinity</code> and <code>Infinity</code> as the bounds, which is how <code>FileOperations</code> preserves its original unbounded retry delays.</p>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// Bounded: collection lock acquisition floors at 500 ms and caps at 5000 ms</span>
+<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="nx">BackoffUtils</span><span class="p">.</span><span class="nx">calculateBackoff</span><span class="p">(</span><span class="mf">1</span><span class="p">,</span><span class="w"> </span><span class="mf">1000</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">500</span><span class="p">,</span><span class="w"> </span><span class="mf">5000</span><span class="p">);</span><span class="w"> </span><span class="c1">// 1000</span>
+<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="nx">BackoffUtils</span><span class="p">.</span><span class="nx">calculateBackoff</span><span class="p">(</span><span class="mf">4</span><span class="p">,</span><span class="w"> </span><span class="mf">1000</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="mf">500</span><span class="p">,</span><span class="w"> </span><span class="mf">5000</span><span class="p">);</span><span class="w"> </span><span class="c1">// 5000</span>
+<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a>
+<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="c1">// Unclamped: FileOperations retries use infinite bounds</span>
+<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="nx">BackoffUtils</span><span class="p">.</span><span class="nx">calculateBackoff</span><span class="p">(</span><span class="mf">3</span><span class="p">,</span><span class="w"> </span><span class="mf">1000</span><span class="p">,</span><span class="w"> </span><span class="mf">2</span><span class="p">,</span><span class="w"> </span><span class="o">-</span><span class="kc">Infinity</span><span class="p">,</span><span class="w"> </span><span class="kc">Infinity</span><span class="p">);</span><span class="w"> </span><span class="c1">// 4000</span>
+</code></pre></div>
+<hr />
 <h2 id="13-integration-patterns">1.3. Integration Patterns<a class="headerlink" href="#13-integration-patterns" title="Permanent link">&para;</a></h2>
 <h3 id="131-component-integration">1.3.1. Component Integration<a class="headerlink" href="#131-component-integration" title="Permanent link">&para;</a></h3>
 <p>All infrastructure components are designed to work together seamlessly:</p>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-18-1" name="__codelineno-18-1" href="#__codelineno-18-1"></a><span class="c1">// Example: Database component using all utilities</span>
-<a id="__codelineno-18-2" name="__codelineno-18-2" href="#__codelineno-18-2"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Database</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-3" name="__codelineno-18-3" href="#__codelineno-18-3"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-4" name="__codelineno-18-4" href="#__codelineno-18-4"></a><span class="w">    </span><span class="c1">// Validate configuration</span>
-<a id="__codelineno-18-5" name="__codelineno-18-5" href="#__codelineno-18-5"></a><span class="w">    </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">required</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span><span class="w"> </span><span class="s1">'config'</span><span class="p">);</span>
-<a id="__codelineno-18-6" name="__codelineno-18-6" href="#__codelineno-18-6"></a><span class="w">    </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">rootFolderId</span><span class="p">,</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="s1">'rootFolderId'</span><span class="p">);</span>
-<a id="__codelineno-18-7" name="__codelineno-18-7" href="#__codelineno-18-7"></a>
-<a id="__codelineno-18-8" name="__codelineno-18-8" href="#__codelineno-18-8"></a><span class="w">    </span><span class="c1">// Set up logging</span>
-<a id="__codelineno-18-9" name="__codelineno-18-9" href="#__codelineno-18-9"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">'Database'</span><span class="p">);</span>
-<a id="__codelineno-18-10" name="__codelineno-18-10" href="#__codelineno-18-10"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">'Initializing database'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="p">});</span>
-<a id="__codelineno-18-11" name="__codelineno-18-11" href="#__codelineno-18-11"></a>
-<a id="__codelineno-18-12" name="__codelineno-18-12" href="#__codelineno-18-12"></a><span class="w">    </span><span class="c1">// Generate instance ID</span>
-<a id="__codelineno-18-13" name="__codelineno-18-13" href="#__codelineno-18-13"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">instanceId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">generateUUID</span><span class="p">();</span>
-<a id="__codelineno-18-14" name="__codelineno-18-14" href="#__codelineno-18-14"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-18-15" name="__codelineno-18-15" href="#__codelineno-18-15"></a>
-<a id="__codelineno-18-16" name="__codelineno-18-16" href="#__codelineno-18-16"></a><span class="w">  </span><span class="nx">performOperation</span><span class="p">(</span><span class="nx">operationName</span><span class="p">,</span><span class="w"> </span><span class="nx">operationFn</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-17" name="__codelineno-18-17" href="#__codelineno-18-17"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-18" name="__codelineno-18-18" href="#__codelineno-18-18"></a><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">operationFn</span><span class="p">();</span>
-<a id="__codelineno-18-19" name="__codelineno-18-19" href="#__codelineno-18-19"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-20" name="__codelineno-18-20" href="#__codelineno-18-20"></a><span class="w">      </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="sb">`Database.</span><span class="si">${</span><span class="nx">operationName</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
-<a id="__codelineno-18-21" name="__codelineno-18-21" href="#__codelineno-18-21"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-18-22" name="__codelineno-18-22" href="#__codelineno-18-22"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-18-23" name="__codelineno-18-23" href="#__codelineno-18-23"></a>
-<a id="__codelineno-18-24" name="__codelineno-18-24" href="#__codelineno-18-24"></a><span class="w">  </span><span class="nx">cloneDocumentSafely</span><span class="p">(</span><span class="nb">document</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-25" name="__codelineno-18-25" href="#__codelineno-18-25"></a><span class="w">    </span><span class="c1">// Use ObjectUtils for safe document cloning with Date preservation</span>
-<a id="__codelineno-18-26" name="__codelineno-18-26" href="#__codelineno-18-26"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nb">document</span><span class="p">);</span>
-<a id="__codelineno-18-27" name="__codelineno-18-27" href="#__codelineno-18-27"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-18-28" name="__codelineno-18-28" href="#__codelineno-18-28"></a>
-<a id="__codelineno-18-29" name="__codelineno-18-29" href="#__codelineno-18-29"></a><span class="w">  </span><span class="nx">processFileData</span><span class="p">(</span><span class="nx">fileData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-18-30" name="__codelineno-18-30" href="#__codelineno-18-30"></a><span class="w">    </span><span class="c1">// Convert ISO date strings from JSON to Date objects</span>
-<a id="__codelineno-18-31" name="__codelineno-18-31" href="#__codelineno-18-31"></a><span class="w">    </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">fileData</span><span class="p">);</span>
-<a id="__codelineno-18-32" name="__codelineno-18-32" href="#__codelineno-18-32"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fileData</span><span class="p">;</span>
-<a id="__codelineno-18-33" name="__codelineno-18-33" href="#__codelineno-18-33"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-18-34" name="__codelineno-18-34" href="#__codelineno-18-34"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// Example: Database component using all utilities</span>
+<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Database</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="kr">constructor</span><span class="p">(</span><span class="nx">config</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span><span class="c1">// Validate configuration</span>
+<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">    </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">required</span><span class="p">(</span><span class="nx">config</span><span class="p">,</span><span class="w"> </span><span class="s1">'config'</span><span class="p">);</span>
+<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">    </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="nx">config</span><span class="p">.</span><span class="nx">rootFolderId</span><span class="p">,</span><span class="w"> </span><span class="s1">'string'</span><span class="p">,</span><span class="w"> </span><span class="s1">'rootFolderId'</span><span class="p">);</span>
+<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
+<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">    </span><span class="c1">// Set up logging</span>
+<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">'Database'</span><span class="p">);</span>
+<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">logger</span><span class="p">.</span><span class="nx">info</span><span class="p">(</span><span class="s1">'Initializing database'</span><span class="p">,</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nx">config</span><span class="w"> </span><span class="p">});</span>
+<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a>
+<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">    </span><span class="c1">// Generate instance ID</span>
+<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a><span class="w">    </span><span class="k">this</span><span class="p">.</span><span class="nx">instanceId</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">generateUUID</span><span class="p">();</span>
+<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a>
+<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="w">  </span><span class="nx">performOperation</span><span class="p">(</span><span class="nx">operationName</span><span class="p">,</span><span class="w"> </span><span class="nx">operationFn</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">operationFn</span><span class="p">();</span>
+<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-20" name="__codelineno-19-20" href="#__codelineno-19-20"></a><span class="w">      </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="sb">`Database.</span><span class="si">${</span><span class="nx">operationName</span><span class="si">}</span><span class="sb">`</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+<a id="__codelineno-19-21" name="__codelineno-19-21" href="#__codelineno-19-21"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-19-22" name="__codelineno-19-22" href="#__codelineno-19-22"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-19-23" name="__codelineno-19-23" href="#__codelineno-19-23"></a>
+<a id="__codelineno-19-24" name="__codelineno-19-24" href="#__codelineno-19-24"></a><span class="w">  </span><span class="nx">cloneDocumentSafely</span><span class="p">(</span><span class="nb">document</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-25" name="__codelineno-19-25" href="#__codelineno-19-25"></a><span class="w">    </span><span class="c1">// Use ObjectUtils for safe document cloning with Date preservation</span>
+<a id="__codelineno-19-26" name="__codelineno-19-26" href="#__codelineno-19-26"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nb">document</span><span class="p">);</span>
+<a id="__codelineno-19-27" name="__codelineno-19-27" href="#__codelineno-19-27"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-19-28" name="__codelineno-19-28" href="#__codelineno-19-28"></a>
+<a id="__codelineno-19-29" name="__codelineno-19-29" href="#__codelineno-19-29"></a><span class="w">  </span><span class="nx">processFileData</span><span class="p">(</span><span class="nx">fileData</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-19-30" name="__codelineno-19-30" href="#__codelineno-19-30"></a><span class="w">    </span><span class="c1">// Convert ISO date strings from JSON to Date objects</span>
+<a id="__codelineno-19-31" name="__codelineno-19-31" href="#__codelineno-19-31"></a><span class="w">    </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">fileData</span><span class="p">);</span>
+<a id="__codelineno-19-32" name="__codelineno-19-32" href="#__codelineno-19-32"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">fileData</span><span class="p">;</span>
+<a id="__codelineno-19-33" name="__codelineno-19-33" href="#__codelineno-19-33"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-19-34" name="__codelineno-19-34" href="#__codelineno-19-34"></a><span class="p">}</span>
 </code></pre></div>
 <h3 id="132-standardized-error-flow">1.3.2. Standardized Error Flow<a class="headerlink" href="#132-standardized-error-flow" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-19-1" name="__codelineno-19-1" href="#__codelineno-19-1"></a><span class="c1">// Standard error handling pattern across all components</span>
-<a id="__codelineno-19-2" name="__codelineno-19-2" href="#__codelineno-19-2"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Collection</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-19-3" name="__codelineno-19-3" href="#__codelineno-19-3"></a><span class="w">  </span><span class="nx">findOne</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-19-4" name="__codelineno-19-4" href="#__codelineno-19-4"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-19-5" name="__codelineno-19-5" href="#__codelineno-19-5"></a><span class="w">      </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">required</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="s1">'query'</span><span class="p">);</span>
-<a id="__codelineno-19-6" name="__codelineno-19-6" href="#__codelineno-19-6"></a><span class="w">      </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="s1">'object'</span><span class="p">,</span><span class="w"> </span><span class="s1">'query'</span><span class="p">);</span>
-<a id="__codelineno-19-7" name="__codelineno-19-7" href="#__codelineno-19-7"></a>
-<a id="__codelineno-19-8" name="__codelineno-19-8" href="#__codelineno-19-8"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_performFind</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span>
-<a id="__codelineno-19-9" name="__codelineno-19-9" href="#__codelineno-19-9"></a>
-<a id="__codelineno-19-10" name="__codelineno-19-10" href="#__codelineno-19-10"></a><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-19-11" name="__codelineno-19-11" href="#__codelineno-19-11"></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DocumentNotFoundError</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
-<a id="__codelineno-19-12" name="__codelineno-19-12" href="#__codelineno-19-12"></a><span class="w">      </span><span class="p">}</span>
-<a id="__codelineno-19-13" name="__codelineno-19-13" href="#__codelineno-19-13"></a>
-<a id="__codelineno-19-14" name="__codelineno-19-14" href="#__codelineno-19-14"></a><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">result</span><span class="p">;</span>
-<a id="__codelineno-19-15" name="__codelineno-19-15" href="#__codelineno-19-15"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-19-16" name="__codelineno-19-16" href="#__codelineno-19-16"></a><span class="w">      </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="s1">'Collection.findOne'</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
-<a id="__codelineno-19-17" name="__codelineno-19-17" href="#__codelineno-19-17"></a><span class="w">    </span><span class="p">}</span>
-<a id="__codelineno-19-18" name="__codelineno-19-18" href="#__codelineno-19-18"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-19-19" name="__codelineno-19-19" href="#__codelineno-19-19"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1">// Standard error handling pattern across all components</span>
+<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kd">class</span><span class="w"> </span><span class="nx">Collection</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a><span class="w">  </span><span class="nx">findOne</span><span class="p">(</span><span class="nx">query</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="w">    </span><span class="k">try</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="w">      </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">required</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="s1">'query'</span><span class="p">);</span>
+<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="w">      </span><span class="nx">Validate</span><span class="p">.</span><span class="nx">type</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="s1">'object'</span><span class="p">,</span><span class="w"> </span><span class="s1">'query'</span><span class="p">);</span>
+<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
+<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="w">      </span><span class="kd">const</span><span class="w"> </span><span class="nx">result</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_performFind</span><span class="p">(</span><span class="nx">query</span><span class="p">);</span>
+<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a>
+<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="w">      </span><span class="k">if</span><span class="w"> </span><span class="p">(</span><span class="o">!</span><span class="nx">result</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-11" name="__codelineno-20-11" href="#__codelineno-20-11"></a><span class="w">        </span><span class="k">throw</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">DocumentNotFoundError</span><span class="p">(</span><span class="nx">query</span><span class="p">,</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">name</span><span class="p">);</span>
+<a id="__codelineno-20-12" name="__codelineno-20-12" href="#__codelineno-20-12"></a><span class="w">      </span><span class="p">}</span>
+<a id="__codelineno-20-13" name="__codelineno-20-13" href="#__codelineno-20-13"></a>
+<a id="__codelineno-20-14" name="__codelineno-20-14" href="#__codelineno-20-14"></a><span class="w">      </span><span class="k">return</span><span class="w"> </span><span class="nx">result</span><span class="p">;</span>
+<a id="__codelineno-20-15" name="__codelineno-20-15" href="#__codelineno-20-15"></a><span class="w">    </span><span class="p">}</span><span class="w"> </span><span class="k">catch</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-20-16" name="__codelineno-20-16" href="#__codelineno-20-16"></a><span class="w">      </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="s1">'Collection.findOne'</span><span class="p">,</span><span class="w"> </span><span class="kc">true</span><span class="p">);</span>
+<a id="__codelineno-20-17" name="__codelineno-20-17" href="#__codelineno-20-17"></a><span class="w">    </span><span class="p">}</span>
+<a id="__codelineno-20-18" name="__codelineno-20-18" href="#__codelineno-20-18"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-20-19" name="__codelineno-20-19" href="#__codelineno-20-19"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="14-configuration">1.4. Configuration<a class="headerlink" href="#14-configuration" title="Permanent link">&para;</a></h2>
 <h3 id="141-logger-configuration">1.4.1. Logger Configuration<a class="headerlink" href="#141-logger-configuration" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-20-1" name="__codelineno-20-1" href="#__codelineno-20-1"></a><span class="c1">// When using Database, the constructor propagates logLevel automatically:</span>
-<a id="__codelineno-20-2" name="__codelineno-20-2" href="#__codelineno-20-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">({</span><span class="w"> </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">'DEBUG'</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// JDbLogger.setLevelByName('DEBUG') called internally</span>
-<a id="__codelineno-20-3" name="__codelineno-20-3" href="#__codelineno-20-3"></a>
-<a id="__codelineno-20-4" name="__codelineno-20-4" href="#__codelineno-20-4"></a><span class="c1">// Manual override (e.g., for standalone scripts or testing):</span>
-<a id="__codelineno-20-5" name="__codelineno-20-5" href="#__codelineno-20-5"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">'DEBUG'</span><span class="p">);</span><span class="w"> </span><span class="c1">// Development</span>
-<a id="__codelineno-20-6" name="__codelineno-20-6" href="#__codelineno-20-6"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">'INFO'</span><span class="p">);</span><span class="w"> </span><span class="c1">// Production</span>
-<a id="__codelineno-20-7" name="__codelineno-20-7" href="#__codelineno-20-7"></a>
-<a id="__codelineno-20-8" name="__codelineno-20-8" href="#__codelineno-20-8"></a><span class="c1">// Component-specific configuration</span>
-<a id="__codelineno-20-9" name="__codelineno-20-9" href="#__codelineno-20-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">'Database'</span><span class="p">);</span>
-<a id="__codelineno-20-10" name="__codelineno-20-10" href="#__codelineno-20-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">collectionLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">'Collection'</span><span class="p">);</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1">// When using Database, the constructor propagates logLevel automatically:</span>
+<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">db</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="ow">new</span><span class="w"> </span><span class="nx">Database</span><span class="p">({</span><span class="w"> </span><span class="nx">logLevel</span><span class="o">:</span><span class="w"> </span><span class="s1">'DEBUG'</span><span class="w"> </span><span class="p">});</span><span class="w"> </span><span class="c1">// JDbLogger.setLevelByName('DEBUG') called internally</span>
+<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
+<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1">// Manual override (e.g., for standalone scripts or testing):</span>
+<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">'DEBUG'</span><span class="p">);</span><span class="w"> </span><span class="c1">// Development</span>
+<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">setLevelByName</span><span class="p">(</span><span class="s1">'INFO'</span><span class="p">);</span><span class="w"> </span><span class="c1">// Production</span>
+<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a>
+<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="c1">// Component-specific configuration</span>
+<a id="__codelineno-21-9" name="__codelineno-21-9" href="#__codelineno-21-9"></a><span class="kd">const</span><span class="w"> </span><span class="nx">dbLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">'Database'</span><span class="p">);</span>
+<a id="__codelineno-21-10" name="__codelineno-21-10" href="#__codelineno-21-10"></a><span class="kd">const</span><span class="w"> </span><span class="nx">collectionLogger</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">JDbLogger</span><span class="p">.</span><span class="nx">createComponentLogger</span><span class="p">(</span><span class="s1">'Collection'</span><span class="p">);</span>
 </code></pre></div>
 <p><code>DatabaseConfig</code> enforces these names via its <code>LOG_LEVELS</code> constant and defaults to <code>DEFAULT_LOG_LEVEL</code> (<code>'INFO'</code>), ensuring runtime configuration always maps cleanly onto <code>JDbLogger</code> expectations.</p>
 <h3 id="142-error-handler-configuration">1.4.2. Error Handler Configuration<a class="headerlink" href="#142-error-handler-configuration" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-21-1" name="__codelineno-21-1" href="#__codelineno-21-1"></a><span class="c1">// Error types are pre-configured in ErrorHandler.ErrorTypes</span>
-<a id="__codelineno-21-2" name="__codelineno-21-2" href="#__codelineno-21-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">errorType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">ErrorTypes</span><span class="p">.</span><span class="nx">DOCUMENT_NOT_FOUND</span><span class="p">;</span>
-<a id="__codelineno-21-3" name="__codelineno-21-3" href="#__codelineno-21-3"></a>
-<a id="__codelineno-21-4" name="__codelineno-21-4" href="#__codelineno-21-4"></a><span class="c1">// Custom error handling</span>
-<a id="__codelineno-21-5" name="__codelineno-21-5" href="#__codelineno-21-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customErrorHandler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-21-6" name="__codelineno-21-6" href="#__codelineno-21-6"></a><span class="w">  </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">context</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span><span class="w"> </span><span class="c1">// Don't re-throw</span>
-<a id="__codelineno-21-7" name="__codelineno-21-7" href="#__codelineno-21-7"></a><span class="w">  </span><span class="c1">// Custom recovery logic here</span>
-<a id="__codelineno-21-8" name="__codelineno-21-8" href="#__codelineno-21-8"></a><span class="p">};</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1">// Error types are pre-configured in ErrorHandler.ErrorTypes</span>
+<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">errorType</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">ErrorTypes</span><span class="p">.</span><span class="nx">DOCUMENT_NOT_FOUND</span><span class="p">;</span>
+<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a>
+<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="c1">// Custom error handling</span>
+<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="kd">const</span><span class="w"> </span><span class="nx">customErrorHandler</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">context</span><span class="p">)</span><span class="w"> </span><span class="p">=&gt;</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="w">  </span><span class="nx">ErrorHandler</span><span class="p">.</span><span class="nx">handleError</span><span class="p">(</span><span class="nx">error</span><span class="p">,</span><span class="w"> </span><span class="nx">context</span><span class="p">,</span><span class="w"> </span><span class="kc">false</span><span class="p">);</span><span class="w"> </span><span class="c1">// Don't re-throw</span>
+<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="w">  </span><span class="c1">// Custom recovery logic here</span>
+<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="p">};</span>
 </code></pre></div>
 <h3 id="143-id-generator-configuration">1.4.3. ID Generator Configuration<a class="headerlink" href="#143-id-generator-configuration" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-22-1" name="__codelineno-22-1" href="#__codelineno-22-1"></a><span class="c1">// Set up generators for different use cases</span>
-<a id="__codelineno-22-2" name="__codelineno-22-2" href="#__codelineno-22-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">documentIdGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">getDefaultGenerator</span><span class="p">();</span><span class="w"> </span><span class="c1">// UUID</span>
-<a id="__codelineno-22-3" name="__codelineno-22-3" href="#__codelineno-22-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">tokenGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
-<a id="__codelineno-22-4" name="__codelineno-22-4" href="#__codelineno-22-4"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'timestamp'</span><span class="p">,</span>
-<a id="__codelineno-22-5" name="__codelineno-22-5" href="#__codelineno-22-5"></a><span class="w">  </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="s1">'token'</span>
-<a id="__codelineno-22-6" name="__codelineno-22-6" href="#__codelineno-22-6"></a><span class="p">});</span>
-<a id="__codelineno-22-7" name="__codelineno-22-7" href="#__codelineno-22-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">debugIdGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
-<a id="__codelineno-22-8" name="__codelineno-22-8" href="#__codelineno-22-8"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'readable'</span>
-<a id="__codelineno-22-9" name="__codelineno-22-9" href="#__codelineno-22-9"></a><span class="p">});</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1">// Set up generators for different use cases</span>
+<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="kd">const</span><span class="w"> </span><span class="nx">documentIdGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">getDefaultGenerator</span><span class="p">();</span><span class="w"> </span><span class="c1">// UUID</span>
+<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a><span class="kd">const</span><span class="w"> </span><span class="nx">tokenGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'timestamp'</span><span class="p">,</span>
+<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="w">  </span><span class="nx">prefix</span><span class="o">:</span><span class="w"> </span><span class="s1">'token'</span>
+<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="p">});</span>
+<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="kd">const</span><span class="w"> </span><span class="nx">debugIdGenerator</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">IdGenerator</span><span class="p">.</span><span class="nx">createCustomGenerator</span><span class="p">({</span>
+<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="w">  </span><span class="nx">type</span><span class="o">:</span><span class="w"> </span><span class="s1">'readable'</span>
+<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a><span class="p">});</span>
 </code></pre></div>
 <h3 id="144-objectutils-configuration">1.4.4. ObjectUtils Configuration<a class="headerlink" href="#144-objectutils-configuration" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><a id="__codelineno-23-1" name="__codelineno-23-1" href="#__codelineno-23-1"></a><span class="c1">// ObjectUtils is stateless and requires no configuration</span>
-<a id="__codelineno-23-2" name="__codelineno-23-2" href="#__codelineno-23-2"></a><span class="c1">// Methods are called directly on the class</span>
-<a id="__codelineno-23-3" name="__codelineno-23-3" href="#__codelineno-23-3"></a>
-<a id="__codelineno-23-4" name="__codelineno-23-4" href="#__codelineno-23-4"></a><span class="c1">// Example integration with FileOperations</span>
-<a id="__codelineno-23-5" name="__codelineno-23-5" href="#__codelineno-23-5"></a><span class="kd">class</span><span class="w"> </span><span class="nx">FileOperations</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-23-6" name="__codelineno-23-6" href="#__codelineno-23-6"></a><span class="w">  </span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-23-7" name="__codelineno-23-7" href="#__codelineno-23-7"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">rawData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_readFromDrive</span><span class="p">(</span><span class="nx">fileId</span><span class="p">);</span>
-<a id="__codelineno-23-8" name="__codelineno-23-8" href="#__codelineno-23-8"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">parsedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">rawData</span><span class="p">);</span>
-<a id="__codelineno-23-9" name="__codelineno-23-9" href="#__codelineno-23-9"></a>
-<a id="__codelineno-23-10" name="__codelineno-23-10" href="#__codelineno-23-10"></a><span class="w">    </span><span class="c1">// Automatically convert ISO date strings to Date objects</span>
-<a id="__codelineno-23-11" name="__codelineno-23-11" href="#__codelineno-23-11"></a><span class="w">    </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">parsedData</span><span class="p">);</span>
-<a id="__codelineno-23-12" name="__codelineno-23-12" href="#__codelineno-23-12"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">parsedData</span><span class="p">;</span>
-<a id="__codelineno-23-13" name="__codelineno-23-13" href="#__codelineno-23-13"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-23-14" name="__codelineno-23-14" href="#__codelineno-23-14"></a>
-<a id="__codelineno-23-15" name="__codelineno-23-15" href="#__codelineno-23-15"></a><span class="w">  </span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
-<a id="__codelineno-23-16" name="__codelineno-23-16" href="#__codelineno-23-16"></a><span class="w">    </span><span class="c1">// Create independent copy to avoid modifying original</span>
-<a id="__codelineno-23-17" name="__codelineno-23-17" href="#__codelineno-23-17"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">dataToWrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
-<a id="__codelineno-23-18" name="__codelineno-23-18" href="#__codelineno-23-18"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">jsonString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">dataToWrite</span><span class="p">);</span>
-<a id="__codelineno-23-19" name="__codelineno-23-19" href="#__codelineno-23-19"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_writeToDrive</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">jsonString</span><span class="p">);</span>
-<a id="__codelineno-23-20" name="__codelineno-23-20" href="#__codelineno-23-20"></a><span class="w">  </span><span class="p">}</span>
-<a id="__codelineno-23-21" name="__codelineno-23-21" href="#__codelineno-23-21"></a><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><a id="__codelineno-24-1" name="__codelineno-24-1" href="#__codelineno-24-1"></a><span class="c1">// ObjectUtils is stateless and requires no configuration</span>
+<a id="__codelineno-24-2" name="__codelineno-24-2" href="#__codelineno-24-2"></a><span class="c1">// Methods are called directly on the class</span>
+<a id="__codelineno-24-3" name="__codelineno-24-3" href="#__codelineno-24-3"></a>
+<a id="__codelineno-24-4" name="__codelineno-24-4" href="#__codelineno-24-4"></a><span class="c1">// Example integration with FileOperations</span>
+<a id="__codelineno-24-5" name="__codelineno-24-5" href="#__codelineno-24-5"></a><span class="kd">class</span><span class="w"> </span><span class="nx">FileOperations</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-24-6" name="__codelineno-24-6" href="#__codelineno-24-6"></a><span class="w">  </span><span class="nx">readFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-24-7" name="__codelineno-24-7" href="#__codelineno-24-7"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">rawData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_readFromDrive</span><span class="p">(</span><span class="nx">fileId</span><span class="p">);</span>
+<a id="__codelineno-24-8" name="__codelineno-24-8" href="#__codelineno-24-8"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">parsedData</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">parse</span><span class="p">(</span><span class="nx">rawData</span><span class="p">);</span>
+<a id="__codelineno-24-9" name="__codelineno-24-9" href="#__codelineno-24-9"></a>
+<a id="__codelineno-24-10" name="__codelineno-24-10" href="#__codelineno-24-10"></a><span class="w">    </span><span class="c1">// Automatically convert ISO date strings to Date objects</span>
+<a id="__codelineno-24-11" name="__codelineno-24-11" href="#__codelineno-24-11"></a><span class="w">    </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">convertDateStringsToObjects</span><span class="p">(</span><span class="nx">parsedData</span><span class="p">);</span>
+<a id="__codelineno-24-12" name="__codelineno-24-12" href="#__codelineno-24-12"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="nx">parsedData</span><span class="p">;</span>
+<a id="__codelineno-24-13" name="__codelineno-24-13" href="#__codelineno-24-13"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-24-14" name="__codelineno-24-14" href="#__codelineno-24-14"></a>
+<a id="__codelineno-24-15" name="__codelineno-24-15" href="#__codelineno-24-15"></a><span class="w">  </span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">data</span><span class="p">)</span><span class="w"> </span><span class="p">{</span>
+<a id="__codelineno-24-16" name="__codelineno-24-16" href="#__codelineno-24-16"></a><span class="w">    </span><span class="c1">// Create independent copy to avoid modifying original</span>
+<a id="__codelineno-24-17" name="__codelineno-24-17" href="#__codelineno-24-17"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">dataToWrite</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nx">ObjectUtils</span><span class="p">.</span><span class="nx">deepClone</span><span class="p">(</span><span class="nx">data</span><span class="p">);</span>
+<a id="__codelineno-24-18" name="__codelineno-24-18" href="#__codelineno-24-18"></a><span class="w">    </span><span class="kd">const</span><span class="w"> </span><span class="nx">jsonString</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="nb">JSON</span><span class="p">.</span><span class="nx">stringify</span><span class="p">(</span><span class="nx">dataToWrite</span><span class="p">);</span>
+<a id="__codelineno-24-19" name="__codelineno-24-19" href="#__codelineno-24-19"></a><span class="w">    </span><span class="k">return</span><span class="w"> </span><span class="k">this</span><span class="p">.</span><span class="nx">_writeToDrive</span><span class="p">(</span><span class="nx">fileId</span><span class="p">,</span><span class="w"> </span><span class="nx">jsonString</span><span class="p">);</span>
+<a id="__codelineno-24-20" name="__codelineno-24-20" href="#__codelineno-24-20"></a><span class="w">  </span><span class="p">}</span>
+<a id="__codelineno-24-21" name="__codelineno-24-21" href="#__codelineno-24-21"></a><span class="p">}</span>
 </code></pre></div>
 <h2 id="15-performance-considerations">1.5. Performance Considerations<a class="headerlink" href="#15-performance-considerations" title="Permanent link">&para;</a></h2>
 <ol>
