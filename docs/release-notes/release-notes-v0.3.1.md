@@ -1,6 +1,6 @@
 ## JsonDbApp v0.3.1 — Lock acquisition window and coordination-budget separation
 
-Release date: 2026-11-17
+Release date: 2026-11-18
 
 ### Summary
 
