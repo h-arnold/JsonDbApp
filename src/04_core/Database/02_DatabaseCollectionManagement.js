@@ -41,7 +41,7 @@ class DatabaseCollectionManagement {
     const db = this._database;
     db._logger.debug('Creating new collection', {
       requestedName: originalName,
-      collectionName: resolvedName
+      collection: resolvedName
     });
 
     try {
@@ -142,7 +142,7 @@ class DatabaseCollectionManagement {
     const db = this._database;
     db._logger.debug('Dropping collection', {
       requestedName: originalName,
-      collectionName: resolvedName
+      collection: resolvedName
     });
 
     try {

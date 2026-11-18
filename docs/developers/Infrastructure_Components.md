@@ -102,7 +102,7 @@ dbLogger.info('Collection created', { name: 'users' });
 
    ```javascript
    this.logger.info('Collection created', {
-     collectionName: name,
+     collection: name,
      fileId: fileId,
      documentCount: 0,
      timestamp: new Date()
@@ -370,10 +370,11 @@ const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation')
 
 Note the observable ordering: at sites 2 and 3 the error arrives **after** the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort _before_ the throw. Site 0 applies only to a thrown `LOCK_TIMEOUT`; exhausting the `collectionLockLeaseMs` acquisition window instead raises `LockAcquisitionFailureError`.
 
-**Deliberate swallows in the coordinator.** Two swallows exist, each paired with a loud ERROR log:
+**Deliberate swallows in the coordinator.** Three swallows exist:
 
 - **Lock release** (`releaseOperationLock`): release failures are logged and swallowed so they cannot mask the operation's own outcome (long-standing behaviour).
 - **Best-effort finalisation on violation paths**: on an over-budget path a `MasterIndexError` from the metadata finalisation is logged loudly and swallowed so it cannot mask the primary `CoordinationTimeoutError`. Within-budget finalisation failures continue to propagate as `MasterIndexError`.
+- **Single re-acquisition** (`_attemptSingleReacquisition`): a thrown `acquireCollectionLock()` error is logged at WARN and returned as `false`, routing to the lease-not-recoverable site 3.
 
 **Failure logging.** The `coordinate()` boundary catch remains the single operation-level failure record per failed operation, but on violation paths it is deliberately supplemented by point-of-occurrence records (renewal failure, re-acquisition outcome, finalisation failure swallowed, finalisation skipped, post-operation overrun) emitted by the unified post-callback algorithm — two or more records per failed violation-path operation are intended. The completion INFO record fires only on the success path. One caveat for alerting: a within-budget lease recovery can emit a renewal-failure ERROR yet the operation still returns successfully, so an ERROR record does not imply operation failure.
 
@@ -695,7 +696,7 @@ Validate.all(
 try {
   Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload'); // Fails by default (mixed)
 } catch (e) {
-  // console.error(e.message); // "updatePayload cannot mix update operators with document fields"
+  // console.error(e.message); // "Invalid argument: updatePayload - cannot mix update operators with document fields"
 }
 Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload', {
   allowMixed: true

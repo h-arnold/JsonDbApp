@@ -255,13 +255,13 @@ Validates optional operator arrays against type constraints and preserves the or
 
 Common validation errors and their meanings:
 
-| Error Message                                        | Cause                                                           | Solution                             |
-| ---------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
-| "Lock timeout must be a number"                      | Invalid timeout value                                           | Use a number of at least 500ms       |
-| "Log level must be one of: DEBUG, INFO, WARN, ERROR" | Invalid log level                                               | Use exact string match               |
-| "Auto create collections must be a boolean"          | Non-boolean value                                               | Use true or false explicitly         |
-| "Invalid configuration for rootFolderId: <message>"  | Drive access issue; reason `Failed to get default root folder`  | Check permissions and authentication |
-| "Collection sanitisation flag must be a boolean"     | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
+| Error Message                                                                   | Cause                                                           | Solution                             |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------ |
+| "Invalid argument: collectionLockLeaseMs - must be a number"                    | Invalid timeout value                                           | Use a number of at least 500ms       |
+| "Invalid argument: logLevel - must be one of: DEBUG, INFO, WARN, ERROR"         | Invalid log level                                               | Use exact string match               |
+| "Invalid argument: autoCreateCollections - must be a boolean"                   | Non-boolean value                                               | Use true or false explicitly         |
+| "Invalid configuration for rootFolderId: <message>"                             | Drive access issue; reason `Failed to get default root folder`  | Check permissions and authentication |
+| "Invalid argument: stripDisallowedCollectionNameCharacters - must be a boolean" | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
 
 ## Usage Examples
 

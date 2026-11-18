@@ -110,12 +110,13 @@ Other errors thrown by `coordinate()`: `InvalidArgumentError` (invalid arguments
 
 ## Deliberate Swallows
 
-Two deliberate swallows exist in the coordinator, and each logs loudly:
+Three deliberate swallows exist in the coordinator, and each emits a log record:
 
 1. **Lock-release swallow** (`releaseOperationLock`, pre-existing). Release failures are logged (`Lock release failed`, context `{ collection, operationId, error }`) and swallowed so they cannot mask the coordinated operation's own outcome.
 2. **Best-effort finalisation swallow** (violation paths, new). On an over-budget path, a `MasterIndexError` from `updateMasterIndexMetadata()` is logged loudly and swallowed so the primary `CoordinationTimeoutError` propagates. Within-budget finalisation failures continue to propagate.
+3. **Single re-acquisition swallow** (`_attemptSingleReacquisition`). A thrown error from `acquireCollectionLock()` is logged at WARN (`Collection lock re-acquisition failed for finalisation after renewal failure`, context `{ collection, opId, error }`) and returned as `false`, routing ownership resolution to the `lost-unrecoverable` path and throw site 3.
 
-Nothing else is swallowed: callback errors propagate unchanged, and a throwing callback still skips finalisation entirely.
+Beyond these three, no other errors are swallowed: callback errors propagate unchanged, and a throwing callback still skips finalisation entirely.
 
 ## Logging Contract
 

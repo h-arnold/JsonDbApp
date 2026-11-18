@@ -439,7 +439,7 @@ classDiagram
     JsonDbError <|-- SerializationError
     JsonDbError <|-- DeserializationError
 
-    class ConfigurationError { +constructor(message) }
+    class ConfigurationError { +constructor(setting, value, reason = null) }
     class InvalidArgumentError { +constructor(argName, value, message) }
     class DatabaseStateError { +constructor(message) }
     class FileIOError { +constructor(operation, fileId, message) }
