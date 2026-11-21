@@ -36,6 +36,7 @@ For developers working on JsonDbApp internals or requiring detailed technical sp
   - Class diagrams
   - Testing framework
   - Implementation details
+- **[Documentation Style Guide](developers/documentation-style-guide.md)** - Writing rules, ownership and audit exclusions for contributors and agents
 
 ## Key Concepts
 

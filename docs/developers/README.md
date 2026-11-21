@@ -28,6 +28,7 @@ Within this repo (`old_tests/`), you can still use `new Database(config)` then c
 - [**Collection Coordinator**](./CollectionCoordinator.md) - Cross-instance coordination contract: locking, budget enforcement, violation policy, throw sites and logging
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex
 - [**DatabaseConfig**](./DatabaseConfig.md) - Database configuration management with validation and defaults
+- [**Documentation Style Guide**](./documentation-style-guide.md) - Writing rules, ownership, naming and review exclusions for contributors and agents
 - [**Infrastructure Components**](./Infrastructure_Components.md) - Complete reference for logging, error handling, and ID generation utilities
 - [**MasterIndex**](./MasterIndex.md) - Cross-instance coordination system using ScriptProperties for virtual locking and conflict detection
 - [**QueryEngine**](./QueryEngine.md) - Engine for parsing and executing MongoDB-style queries

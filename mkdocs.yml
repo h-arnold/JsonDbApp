@@ -61,6 +61,7 @@ nav:
       - Updates: Updates.md
   - Developer Documentation:
       - Overview: developers/README.md
+      - Documentation Style Guide: developers/documentation-style-guide.md
       - Architecture:
           - Database: developers/Database.md
           - DatabaseConfig: developers/DatabaseConfig.md

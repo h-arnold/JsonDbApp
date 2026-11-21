@@ -25,7 +25,7 @@ Before writing documentation updates, you must:
 
 1. **Acquire Context**: Read the changed source files directly. Do not rely only on change summaries.
 2. **Size and Structure Check**: Read the whole of every doc you intend to edit, not only the affected section. List its headings, record sections that are duplicated, stale, or owned by another canonical doc, and plan to delete or relocate them in the same pass.
-3. **Read Existing Docs**: Read relevant docs under `docs/developers/` (and user-facing docs under `docs/` if impacted — e.g. `Examples.md`, `Querying.md`, `Updates.md`, `Quick_Start.md` when public API behaviour changes).
+3. **Read Existing Docs**: `docs/developers/documentation-style-guide.md` is compulsory reading on every task and the source of truth for writing style. Then read relevant docs under `docs/developers/` (and user-facing docs under `docs/` if impacted — e.g. `Examples.md`, `Querying.md`, `Updates.md`, `Quick_Start.md` when public API behaviour changes).
 4. **Read Agent Contracts**: Read `AGENTS.md` so your updates remain aligned with current agent guidance and project standards.
 5. **Inspect JSDoc**: Check JSDoc in touched files for accuracy against actual function/class behaviour.
 6. **Policy Drift Check Setup**: Identify the canonical developer doc for the changed behaviour and plan to verify that docs remain aligned before completion.
@@ -57,64 +57,12 @@ You will fail the task unless you read _the entirety_ of the relevant context be
    - Ensure changed public methods/classes have accurate JSDoc descriptions, params, return values, throws clauses, and `@remarks` where additional explanation is required (per the method template in `AGENTS.md`).
    - Correct stale or misleading JSDoc where behaviour has changed.
 
-## 2. Project-document writing style and information design
+## 2. Project-document Writing Style
 
-**Scope:** These style and information-design instructions apply to project documentation, not agent instruction files. Write agent instructions concisely, unambiguously, clearly, and imperatively.
-
-### Proportionality and growth control
-
-- A canonical doc states the rules and reasoning a reader needs to act correctly. It is not a record of work completed.
-- Default to a net-neutral or net-negative diff. Any update that adds a section must also remove, merge, or relocate stale content from the same document.
-- Prefer a new focused doc plus a link over growing an existing doc whose scope already feels stretched. Judge this by whether the added topic is the doc's stated subject, not by line count. Do not split or renumber documents purely to reduce size, and never treat a size target as a delivery goal.
-- Do not pad a doc to match the perceived depth of its neighbours. Length is a consequence of the material, never a requirement.
-
-### What never belongs in a canonical doc
-
-- **Delivery narrative.** Accounts of work already delivered: what was implemented, in which order, by which increment, with what evidence. That belongs in planning artefacts or release notes, not in canonical docs.
-- **Proof catalogues.** Which suite, fixture or increment proves which claim.
-- **Volatile facts.** Versions, test counts, coverage percentages, file and line counts. Cite the config file or the command that reports the number.
-- **Restated APIs.** Parameter lists, option tables and usage examples that JSDoc already documents in the owning class or module. Link to the symbol.
-- **Generic tutorials** for GAS, JavaScript, Vitest or editors.
-- **Inventories** that the filesystem, scripts or test names already express.
-
-Documenting planned, unimplemented or partially implemented features is explicitly allowed and often required. Agents rely on those listings to stay aligned with outstanding work and to avoid drifting from what still needs to change. State them as current status, keep them accurate, and reconcile them when the implementation lands.
-
-Before keeping a sentence, ask: would an experienced engineer who has read the code, config, JSDoc and test names still act wrongly without it? If not, delete it.
-
-JsonDbApp's prime directive forbids referencing planning artefacts (`SPEC.md`, `ACTION_PLAN.md`, or any 'spec'/'action plan' document) in permanent documentation. Do not cite such documents for authority or as historical reasoning in any canonical doc; state the rule, the contract or the current status directly instead.
-
-### Clarity, hierarchy, and brevity
-
-- Write as concisely and clearly as possible. Prefer short sentences, direct instructions, and plain language. Remove filler, repetition, generic explanation, and claims that do not change the reader’s action or understanding.
-- Always choose the simplest word or phrasing that communicates the intended concept accurately. Avoid inflated language, unnecessary jargon, and decorative synonyms.
-- Decide the information hierarchy before writing or revising. Put the most important decision, requirement, warning, or action first; do not bury essential caveats or conditions in later prose.
-- Consider the whole document whenever making an update, not only the changed paragraph. Prune duplicated content and consolidate similar sections or guidance so the document remains brief without losing necessary detail, technical accuracy, or legal and operational nuance.
-- When a document is already being touched for a substantive update, opportunistically correct nearby style violations and restructure dense or poorly ordered content. Keep this cleanup local to the touched document and do not expand it into unrelated style-only rewrites.
-
-### Tone and reader experience
-
-- Write for a person trying to accomplish a task. Introduce the purpose or benefit before detailed instructions when that improves understanding.
-- Use warm, respectful language. Prefer “You can…”, “To keep…”, and “Before you…” over impersonal or unnecessarily authoritarian wording.
-- Pair firm warnings with a brief reason and a clear next step. Be reassuring without weakening genuine requirements or risks.
-- Use natural transitions and occasional concrete examples when they improve understanding. Avoid marketing language, forced enthusiasm, emojis, and conversational padding.
-- Read revised passages as the intended reader would. Remove wording that sounds robotic, scolding, or bureaucratic while preserving technical, legal, and operational precision.
-- Let warmth come from clarity, empathy, and useful context—not from extra adjectives or length.
-
-### Formatting and structure
-
-- Start with the purpose, intended reader, and most important outcome.
-- Use one clear H1, then logically nested H2/H3 headings. Make headings descriptive and action-oriented where appropriate; do not skip heading levels.
-- Keep paragraphs focused on one idea. Prefer two or three short sentences over dense blocks of prose.
-- Use numbered lists for sequences and procedures; use bullets for unordered guidance.
-- Use tables for compact comparisons, configuration references, and repeated field/value patterns—not for long prose.
-- Put commands and configuration in fenced code blocks with a language identifier. Briefly explain what the reader should change or expect.
-- Use callouts sparingly for requirements, warnings, and important context. State the consequence and next action clearly.
-- Use bold for key terms or actions, not whole paragraphs. Do not use formatting as decoration.
-- Put descriptive links close to the claim or instruction they support.
-- Include a short checklist or verification step when the reader must confirm successful completion.
-- Use a table of contents only when a document is long enough to benefit from navigation.
-- Leave enough whitespace for scanning and ensure the document remains readable in plain Markdown and accessible to screen readers.
-- Make every page easy to scan, easy to act on, and pleasant to read.
+`docs/developers/documentation-style-guide.md` is compulsory reading on every task and the
+single source of truth for audience, writing style, what never belongs in a canonical doc,
+ownership, naming and review exclusions. Read it before editing or creating any doc. Apply
+its "Audience and writing style" rules when writing agent instructions.
 
 ## 3. Documentation Decision Rules
 
@@ -124,11 +72,7 @@ When deciding what to update:
 - **Create new doc** when:
   - no existing doc covers the changed domain adequately, or
   - adding content to an existing doc would make it incoherent.
-- **Do not duplicate** the same guidance across multiple docs without a clear index/reference model.
-- Before adding a section, name the doc that owns the topic. If another canonical doc owns it, add a link and at most one sentence of local context.
-- When two docs need the same rule, keep the full statement in one and link from the other.
-- Prefer linking related docs over repeating long sections.
-- Remember the docs are served via mkdocs (`mkdocs.yml`, see `MKDOCS_SETUP.md`): keep filenames, headings, and cross-references compatible with the nav structure.
+- Follow the "Ownership and navigation" and "Verify references" rules in `docs/developers/documentation-style-guide.md`. Keep filenames, headings and cross-references compatible with the mkdocs nav (`mkdocs.yml`, see `MKDOCS_SETUP.md`).
 
 ## 4. AGENTS Update Rules
 
@@ -192,19 +136,12 @@ Provide a concise handoff summary including:
 - Do not rewrite unrelated docs for style-only changes.
 - Keep documentation changes scoped to the implemented change set.
 - Keep all developer docs tightly focused on this codebase, its architecture, and its workflows.
-- Assume developer-doc readers are experienced engineers; avoid hand-holding explanations of GAS, JavaScript, IDE setup, or generic programming basics.
-- For user-facing docs under `docs/`, assume a technically competent developer new to this library: comfortable with JavaScript and databases, but unfamiliar with this project's API and its GAS constraints.
+- Apply the audience assumptions and styles in `docs/developers/documentation-style-guide.md`; do not restate them here.
 
-## 9. Documentation Naming Anti-Patterns
+## 9. Documentation Naming
 
-**Avoid ephemeral naming in documentation**: Do not use temporary planning artefacts like "Option B", "Choice 2", "Section 3", or "Path A" in documentation filenames, titles, or headings. These names are typically tied to SPEC.md or ACTION_PLAN.md planning documents that are transient and will be superseded or deleted. When such ephemeral references appear in documentation, the meaning becomes diluted over time as the original context disappears.
-
-**Instead, use clear, persistent names** that are specific to the codebase:
-
-- Good: `master-index-conflict-resolution.md`, `modification-token-lifecycle.md`
-- Avoid: `option-b-implementation.md`, `section-3-approach.md`, `choice-2-explanation.md`
-
-**Rationale**: Documentation should remain meaningful and discoverable long after the planning documents that spawned it have been archived or removed. Codebase-specific names ensure longevity and clarity.
+Follow the naming rules in `docs/developers/documentation-style-guide.md`. Do not use
+planning-artefact names in filenames, titles, headings or body content.
 
 ---
 
@@ -228,6 +165,7 @@ Provide a concise handoff summary including:
 │   ├── Quick_Start.md                                   # Getting-started guide
 │   │
 │   ├── developers/
+│   │   ├── documentation-style-guide.md                 # Source of truth: writing rules, ownership, naming, exclusions
 │   │   ├── README.md                                    # Developer documentation index
 │   │   ├── Collection_Components.md                     # Collection multi-file components
 │   │   ├── CollectionCoordinator.md                     # Coordination contract: locking, violation policy, throw sites, logging
@@ -267,6 +205,8 @@ Provide a concise handoff summary including:
 ```
 opencode.jsonc                                           # Shared OpenCode settings: plugin registration and safety permissions
 .opencode/
+├── commands/
+│   └── docs-reconcile.md                                # Slice-based documentation audit and remediation
 ├── agents/
 │   ├── action-plan-implementer.md                       # Implement action plans with TDD-first workflow
 │   ├── agent-orchestrator.md                            # Orchestrate implement/review loops
