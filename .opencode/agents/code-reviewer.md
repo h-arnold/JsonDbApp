@@ -81,6 +81,7 @@ Consult these resources before and during review. Local docs contain project-spe
 
 - [AGENTS.md](../../AGENTS.md) — Standards, error codes, workflow contract
 - [README.md](../../README.md)
+- [Documentation Style Guide](../../docs/developers/documentation-style-guide.md) — Writing rules, ownership and review exclusions
 
 **Data shapes (persistence and API boundaries)**:
 

@@ -1,8 +1,8 @@
 # JsonDbApp Documentation
 
-Welcome to the JsonDbApp documentation. JsonDbApp is a MongoDB-style document database for Google Apps Script that provides synchronous CRUD operations on named collections stored as JSON files in Google Drive.
+Use this index to find guides for JsonDbApp, a MongoDB-style document database for Google Apps Script with synchronous CRUD operations on named collections stored as JSON files in Google Drive.
 
-🔗 [Get a copy of the script](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link)
+[Get a copy of the script](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link)
 
 ## Getting Started
 
@@ -12,30 +12,21 @@ Welcome to the JsonDbApp documentation. JsonDbApp is a MongoDB-style document da
 
 ## Core Features
 
-- **[Querying Collections](Querying.md)** - Comprehensive guide to querying documents using MongoDB-compatible operators:
-  - Comparison operators: `$eq`, `$gt`, `$gte`, `$lt`, `$lte`, `$ne`, `$in`, `$nin`
-  - Logical operators: `$and`, `$or`, `$nor`, `$not`
-  - Nested field queries with dot notation
-  - Array queries and edge cases
-  - Complete practical examples
+- **[Querying Collections](Querying.md)** - Guide to the supported operators, dot notation and array queries.
 
-- **[Update Operations](Updates.md)** - Complete guide to modifying documents using update operators:
-  - Field operators: `$set`, `$unset`, `$inc`, `$mul`, `$min`, `$max`, `$rename`
-  - Array operators: `$push`, `$pull`, `$addToSet`, `$pop`
-  - Creating nested structures
-  - Type changes and validation
-  - Complex update patterns
+- **[Update Operations](Updates.md)** - Guide to the supported field, numeric and array update operators, including nested updates and validation.
 
 ## Technical Documentation
 
 For developers working on JsonDbApp internals or requiring detailed technical specifications:
 
-- **[Developer Documentation](developers/README.md)** - Comprehensive technical documentation including:
+- **[Developer Documentation](developers/README.md)** - Technical documentation including:
   - Architecture overview
   - Component specifications
   - Class diagrams
   - Testing framework
   - Implementation details
+- **[Documentation Style Guide](developers/documentation-style-guide.md)** - Writing rules, ownership and audit exclusions for contributors and agents
 
 ## Key Concepts
 
@@ -45,7 +36,7 @@ JsonDbApp organises data into **collections** (similar to MongoDB collections or
 
 ```javascript
 // Create or load database
-const config = new DatabaseConfig({ rootFolderId: 'YOUR_FOLDER_ID' });
+const config = { rootFolderId: 'YOUR_FOLDER_ID' };
 const db = JsonDbApp.createAndInitialiseDatabase(config);
 
 // Work with collections
@@ -79,9 +70,9 @@ users.save();
 Build complex queries using MongoDB-compatible operators:
 
 ```javascript
-// Find active users aged 25-40 with high scores
+// Find active users aged over 25 and under 40 with high scores
 const results = users.find({
-  $and: [{ isActive: true }, { age: { $gte: 25, $lte: 40 } }, { score: { $gt: 85 } }]
+  $and: [{ isActive: true }, { age: { $gt: 25 } }, { age: { $lt: 40 } }, { score: { $gt: 85 } }]
 });
 ```
 
@@ -110,8 +101,6 @@ See [Updates.md](Updates.md) for complete details.
 JsonDbApp aims for MongoDB query and update operator compatibility, making it familiar to developers with MongoDB experience. Key similarities:
 
 - Document-oriented data model
-- Query operators (`$eq`, `$gt`, `$and`, `$or`, etc.)
-- Update operators (`$set`, `$inc`, `$push`, etc.)
 - Dot notation for nested fields
 - Array operators
 
@@ -120,22 +109,22 @@ JsonDbApp aims for MongoDB query and update operator compatibility, making it fa
 - Synchronous operations (no callbacks or promises)
 - Data stored in Google Drive (not MongoDB server)
 - Manual `save()` required for persistence
-- Subset of MongoDB operators (most common ones supported)
+- Subset of MongoDB operators; see [Querying.md](Querying.md) for query operators and [Updates.md](Updates.md) for update operators
 - No indexing or aggregation pipeline (basic `$match` only)
 
 ## Configuration
 
-Customise database behaviour with `DatabaseConfig`:
+Customise database behaviour with a configuration object:
 
 ```javascript
-const config = new DatabaseConfig({
+const config = {
   rootFolderId: 'YOUR_DRIVE_FOLDER_ID',
   autoCreateCollections: true,
   collectionLockLeaseMs: 15000,
   retryAttempts: 5,
   logLevel: 'INFO',
   backupOnInitialise: true
-});
+};
 
 const db = JsonDbApp.createAndInitialiseDatabase(config);
 ```
@@ -198,18 +187,11 @@ Common error codes:
 - `FILE_IO_ERROR`
 - `COLLECTION_NOT_FOUND`
 
-**Coordination timeouts and applied effects.** A `CoordinationTimeoutError` (code `COORDINATION_TIMEOUT`) is thrown when a coordinated write exceeds its coordination window or loses its lock lease. Depending on where the violation occurred, the error MAY arrive **after** the operation's effects were applied: an over-budget operation finalises the collection metadata in the master index best-effort before the error is thrown, while an unrecoverable lease skips that finalisation (the possible divergence is logged loudly). The `reason` field in `error.context` distinguishes the throw sites: `'lock-acquisition-timeout'` and `'preflight-budget-exhausted'` (no effects applied), `'post-operation-overrun'` (effects applied and finalised), and `'lease-not-recoverable'` (effects applied, finalisation skipped). See the [Collection Coordinator developer documentation](developers/CollectionCoordinator.md) for the full contract.
+A coordination timeout can arrive after a write has been applied, so do not assume that failure means no change. See the [Collection Coordinator developer documentation](developers/CollectionCoordinator.md) for the throw sites and reason codes.
 
 ## Testing
 
-JsonDbApp includes a comprehensive test suite built with Vitest. Tests cover:
-
-- Unit tests for all components
-- Validation tests for query and update operators
-- Integration tests for end-to-end workflows
-- Mock framework for Google Apps Script APIs
-
-See [developers/Testing_Framework.md](developers/Testing_Framework.md) for testing details.
+Tests run with Vitest against GAS mocks; see the [Testing Framework](developers/Testing_Framework.md) doc for layout and commands.
 
 ## Contributing
 
@@ -218,23 +200,21 @@ JsonDbApp follows strict code quality standards:
 - **TDD**: Test-Driven Development (Red-Green-Refactor)
 - **SOLID**: Single Responsibility, Open/Closed, Liskov Substitution, Interface Segregation, Dependency Inversion
 - **DRY**: Don't Repeat Yourself
-- **Comprehensive JSDoc**: All public methods documented
+- **JSDoc**: All public methods documented
 - **Lint Compliance**: Zero errors, zero warnings
 
 See [AGENTS.md](../AGENTS.md) for development guidelines.
 
 ## Support and Resources
 
-- **GitHub Repository**: [Link to repository]
-- **Issue Tracker**: [Link to issues]
-- **Release Notes**: [release-notes/](release-notes/)
+- **GitHub Repository**: [h-arnold/JsonDbApp](https://github.com/h-arnold/JsonDbApp)
+- **Issue Tracker**: [Issues](https://github.com/h-arnold/JsonDbApp/issues)
+- **Release Notes**: [Releases](https://github.com/h-arnold/JsonDbApp/releases)
 - **License**: See [LICENSE](../LICENSE)
 
 ## Version Information
 
-Current version: 0.3.0 (Beta)
-
-JsonDbApp is under active development. APIs may change between versions. See [release notes](release-notes/) for version-specific changes.
+JsonDbApp is under active development. APIs may change between versions. Check [package.json](../package.json) for the current version and see [releases](https://github.com/h-arnold/JsonDbApp/releases) for version-specific changes.
 
 ---
 

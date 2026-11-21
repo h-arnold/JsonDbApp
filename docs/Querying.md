@@ -6,17 +6,10 @@
   - [Comparison Operators](#comparison-operators)
     - [$eq - Equality](#eq---equality)
     - [$gt - Greater Than](#gt---greater-than)
-    - [$gte - Greater Than or Equal](#gte---greater-than-or-equal)
     - [$lt - Less Than](#lt---less-than)
-    - [$lte - Less Than or Equal](#lte---less-than-or-equal)
-    - [$ne - Not Equal](#ne---not-equal)
-    - [$in - Match Any Value in Array](#in---match-any-value-in-array)
-    - [$nin - Match No Values in Array](#nin---match-no-values-in-array)
   - [Logical Operators](#logical-operators)
     - [$and - Logical AND](#and---logical-and)
     - [$or - Logical OR](#or---logical-or)
-    - [$nor - Logical NOR](#nor---logical-nor)
-    - [$not - Logical NOT](#not---logical-not)
     - [Combining Logical Operators](#combining-logical-operators)
   - [Querying Nested Fields](#querying-nested-fields)
     - [Dot Notation](#dot-notation)
@@ -36,7 +29,7 @@
 
 ## Overview
 
-JsonDbApp provides MongoDB-compatible query operators for finding documents in collections. Queries are expressed as JavaScript objects where field names map to matching criteria. This guide covers all supported query operators with practical examples.
+JsonDbApp supports five query operators: `$eq`, `$gt`, `$lt`, `$and` and `$or`. Queries are expressed as JavaScript objects where field names map to matching criteria. Any other operator is rejected. This guide shows how to use the supported operators.
 
 ## Basic Query Syntax
 
@@ -130,19 +123,6 @@ const namesAfterM = persons.find({ 'name.last': { $gt: 'M' } });
 // Returns: 'Miller', 'Prince', 'Smith'
 ```
 
-### $gte - Greater Than or Equal
-
-Matches documents where a field value is greater than or equal to the specified value.
-
-```javascript
-// Include boundary value
-const adults = persons.find({ age: { $gte: 18 } });
-
-// Date ranges - inclusive start
-const startDate = new Date('2025-06-15T00:00:00Z');
-const fromDate = persons.find({ lastLogin: { $gte: startDate } });
-```
-
 ### $lt - Less Than
 
 Matches documents where a field value is less than the specified value.
@@ -160,79 +140,6 @@ const debtBalance = persons.find({ balance: { $lt: 0 } });
 // Date comparisons
 const beforeDate = new Date('2025-06-20T00:00:00Z');
 const olderLogins = persons.find({ lastLogin: { $lt: beforeDate } });
-```
-
-### $lte - Less Than or Equal
-
-Matches documents where a field value is less than or equal to the specified value.
-
-```javascript
-// Include boundary value
-const maxAge = persons.find({ age: { $lte: 65 } });
-
-// Date ranges - inclusive end
-const endDate = new Date('2025-06-25T23:59:59Z');
-const untilDate = persons.find({ lastLogin: { $lte: endDate } });
-
-// Combining with $gte for ranges
-const ageRange = persons.find({
-  $and: [{ age: { $gte: 30 } }, { age: { $lte: 50 } }]
-});
-```
-
-### $ne - Not Equal
-
-Matches documents where a field does not equal the specified value, including documents where the field does not exist.
-
-```javascript
-// Not equal to value
-const notAnna = persons.find({ 'name.first': { $ne: 'Anna' } });
-
-// Exclude null
-const hasLogin = persons.find({ lastLogin: { $ne: null } });
-
-// Exclude false
-const notInactive = persons.find({ isActive: { $ne: false } });
-
-// Exclude zero
-const nonZeroAge = persons.find({ age: { $ne: 0 } });
-```
-
-### $in - Match Any Value in Array
-
-Matches documents where a field value equals any value in the specified array.
-
-```javascript
-// String values
-const specificNames = persons.find({
-  'name.first': { $in: ['Anna', 'Clara', 'Frank'] }
-});
-
-// Numeric values
-const specificAges = persons.find({ age: { $in: [29, 38, 45] } });
-
-// Mixed types (use with caution)
-const mixedValues = persons.find({ age: { $in: [0, null, false] } });
-
-// Empty array matches nothing
-const noMatch = persons.find({ age: { $in: [] } });
-```
-
-### $nin - Match No Values in Array
-
-Matches documents where a field value does not equal any value in the specified array, including documents where the field does not exist.
-
-```javascript
-// Exclude multiple names
-const excludeNames = persons.find({
-  'name.first': { $nin: ['Ben', 'Ethan'] }
-});
-
-// Exclude multiple numeric values
-const excludeAges = persons.find({ age: { $nin: [0, 29, 65] } });
-
-// Empty array matches all documents
-const allMatch = persons.find({ age: { $nin: [] } });
 ```
 
 ## Logical Operators
@@ -317,32 +224,6 @@ const nested = persons.find({
 });
 ```
 
-### $nor - Logical NOR
-
-Matches documents that fail all specified conditions.
-
-```javascript
-// Neither condition is true
-const result = persons.find({
-  $nor: [{ isActive: { $eq: false } }, { age: { $lt: 30 } }]
-});
-// Returns documents where isActive is true AND age >= 30
-```
-
-### $not - Logical NOT
-
-Inverts the effect of a query expression.
-
-```javascript
-// Not greater than (effectively less than or equal)
-const notHigh = persons.find({ age: { $not: { $gt: 50 } } });
-
-// Not in range
-const outsideRange = persons.find({
-  score: { $not: { $gte: 70, $lte: 90 } }
-});
-```
-
 ### Combining Logical Operators
 
 Complex queries often require combining multiple logical operators.
@@ -408,9 +289,6 @@ const specificScore = persons.find({ 'metadata.version': { $eq: 1 } });
 
 // Query nested boolean
 const newsletter = persons.find({ 'preferences.newsletter': true });
-
-// Query nested array
-const withPhone = persons.find({ 'contact.phones': { $ne: [] } });
 ```
 
 ### Nested Object Equality
@@ -442,7 +320,7 @@ const weeklyEmail = persons.find({
 // Multiple deep nested conditions
 const complexNested = persons.find({
   'preferences.settings.notifications.email.enabled': true,
-  'preferences.settings.notifications.email.frequency': { $ne: 'immediate' }
+  'preferences.settings.notifications.email.frequency': 'weekly'
 });
 ```
 
@@ -456,14 +334,13 @@ Query documents based on array field contents.
 // Array contains value
 const withTag = persons.find({ 'preferences.tags': 'sports' });
 
-// Array contains any of multiple values
+// Match any of several values with $or
 const withTags = persons.find({
-  'preferences.tags': { $in: ['music', 'travel'] }
+  $or: [{ 'preferences.tags': 'music' }, { 'preferences.tags': 'travel' }]
 });
-
-// All values must be present (use $all if supported)
-// Note: $all may not be implemented - check documentation
 ```
+
+`$in` and `$all` are not supported. Use `$or` for scalar alternatives, or check the array in application code.
 
 ### Empty Arrays
 
@@ -471,21 +348,18 @@ const withTags = persons.find({
 // Match empty array
 const emptyPhones = persons.find({ 'contact.phones': [] });
 
-// Match non-empty array using $ne
-const hasPhones = persons.find({ 'contact.phones': { $ne: [] } });
-
 // Match empty array explicitly with $eq
 const noPhones = persons.find({ 'contact.phones': { $eq: [] } });
 ```
 
+`$ne` is not supported. To find documents with a non-empty array, fetch candidates with a supported filter and check the array in application code.
+
 ### Array Length
 
-Array length queries may require combining with custom logic:
+JsonDbApp has no array-length operator. Fetch candidate documents with a supported filter, then apply the length check in application code:
 
 ```javascript
-// Find documents where array has specific length
-// This requires application logic as $size may not be implemented
-const docs = persons.find({ 'contact.phones': { $exists: true } });
+const docs = persons.find({ isActive: true });
 const multiplePhones = docs.filter((doc) => doc.contact.phones.length > 1);
 ```
 
@@ -493,18 +367,17 @@ const multiplePhones = docs.filter((doc) => doc.contact.phones.length > 1);
 
 ### Null Values
 
+`$eq: null` matches only fields explicitly set to `null`. A missing field does not match.
+
 ```javascript
-// Match null explicitly
+// Match a field explicitly set to null
 const nullEmail = persons.find({ 'contact.email': { $eq: null } });
 
-// Exclude null
-const hasEmail = persons.find({ 'contact.email': { $ne: null } });
-
-// Null vs undefined
-// Missing fields are treated as undefined, not null
+// A missing field yields no matches
 const missingField = persons.find({ nonExistent: { $eq: null } });
-// This may or may not match depending on implementation
 ```
+
+To exclude null values, fetch candidates with a supported filter and filter out null in application code.
 
 ### Zero and False
 
@@ -516,9 +389,6 @@ const ageFalse = persons.find({ age: false }); // Won't match age: 0
 // Explicit distinction
 const zeroAge = persons.find({ age: { $eq: 0 } });
 const falseActive = persons.find({ isActive: { $eq: false } });
-
-// Both zero and false are falsy, but not equal
-const notZero = persons.find({ age: { $ne: 0 } }); // Includes false, null, etc.
 ```
 
 ### Empty Strings
@@ -527,72 +397,30 @@ const notZero = persons.find({ age: { $ne: 0 } }); // Includes false, null, etc.
 // Empty string is distinct from null
 const emptyEmail = persons.find({ 'contact.email': '' });
 const nullEmail = persons.find({ 'contact.email': null });
-
-// Exclude both empty and null
-const validEmail = persons.find({
-  $and: [{ 'contact.email': { $ne: '' } }, { 'contact.email': { $ne: null } }]
-});
 ```
+
+To exclude empty and null values, check them in application code after fetching candidates.
 
 ### Missing Fields
 
-```javascript
-// Query for non-existent fields
-// Behaviour depends on operator
-
-// $eq: null may match missing fields
-const result1 = persons.find({ nonExistent: { $eq: null } });
-
-// $ne: value matches missing fields
-const result2 = persons.find({ nonExistent: { $ne: 'value' } });
-
-// Use $exists if implemented
-// const hasField = persons.find({ field: { $exists: true } });
-```
+`$exists` is not supported. Filter on a supported operator first, then check field presence in application code. See [Null Values](#null-values) for how `$eq: null` treats a missing field.
 
 ## Query Performance Tips
 
-1. **Use Specific Queries**: More specific queries reduce the number of documents scanned:
+- Query on `_id` or another specific filter where possible. JsonDbApp scans collection data in memory, so narrower filters reduce the work done per query.
 
-   ```javascript
-   // Better
-   const result = persons.find({ _id: 'person1' });
-
-   // Less efficient
-   const result = persons.find({ 'name.first': 'Anna' });
-   ```
-
-1. **Combine Filters Efficiently**: Place most restrictive conditions first in implicit AND queries:
-
-   ```javascript
-   // More efficient (fewer documents pass first filter)
-   const result = persons.find({
-     isActive: true,
-     age: { $gt: 30 },
-     score: { $gt: 80 }
-   });
-   ```
-
-1. **Avoid Redundant Operators**: Use implicit equality when possible:
-
-   ```javascript
-   // Simpler
-   const result = persons.find({ isActive: true });
-
-   // Unnecessary explicit $eq
-   const result = persons.find({ isActive: { $eq: true } });
-   ```
-
-1. **Limit Result Sets**: Use query specificity to reduce result set size before application-level filtering.
+  ```javascript
+  const user = persons.find({ _id: 'person1' });
+  ```
 
 ## Complete Examples
 
-**Find Active Adults with High Scores:**
+**Find Active Users with High Scores:**
 
 ```javascript
 const eliteUsers = persons.find({
   isActive: true,
-  age: { $gte: 18 },
+  age: { $gt: 18 },
   score: { $gt: 85 }
 });
 ```
@@ -602,7 +430,7 @@ const eliteUsers = persons.find({
 ```javascript
 const cutoffDate = new Date('2025-06-20T00:00:00Z');
 const recentUsers = persons.find({
-  lastLogin: { $gte: cutoffDate },
+  lastLogin: { $gt: cutoffDate },
   isActive: true
 });
 ```

@@ -1,14 +1,5 @@
 # Quick Start Guide
 
-- [Quick Start Guide](#quick-start-guide)
-  - [Overview](#overview)
-  - [Prerequisites](#prerequisites)
-  - [Get the Script](#get-the-script)
-  - [Create or Load a Database](#create-or-load-a-database)
-  - [Create a Collection and Insert Data](#create-a-collection-and-insert-data)
-  - [Read, Update, and Delete](#read-update-and-delete)
-  - [Persist Changes](#persist-changes)
-
 ## Overview
 
 This guide walks through creating a database, adding data, and running basic queries using the public JsonDbApp API. It targets Apps Script library consumers and mirrors the MongoDB-style collection interface.
@@ -20,7 +11,7 @@ This guide walks through creating a database, adding data, and running basic que
 
 ## Get the Script
 
-🔗 [Get a copy of the script](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link)
+[Get a copy of the script](https://drive.google.com/drive/folders/1tp3U6tJtB3SsKG-iNq-_xfoSRJx31ooI?usp=drive_link)
 
 Link it as a library to your chosen GAS project.
 
@@ -29,10 +20,10 @@ Link it as a library to your chosen GAS project.
 Use the public wrappers exposed by the library identifier (typically `JsonDbApp`). For first-time setup, create and initialise the MasterIndex. For subsequent use, load the existing database.
 
 ```javascript
-const config = new DatabaseConfig({
+const config = {
   rootFolderId: 'YOUR_DRIVE_FOLDER_ID',
   autoCreateCollections: true
-});
+};
 
 // First-time setup
 const db = JsonDbApp.createAndInitialiseDatabase(config);

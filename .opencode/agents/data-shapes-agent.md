@@ -67,7 +67,7 @@ docs/developers/data-shapes/
 ### 1.2 Naming rules
 
 - Use `kebab-case` for all filenames.
-- Use persistent codebase-specific names derived from the actual class names, not ephemeral planning identifiers. See `docs.md` §8 for anti-patterns.
+- Use persistent codebase-specific names derived from the actual class names, not ephemeral planning identifiers. Follow the Naming rules in `docs/developers/documentation-style-guide.md`.
 - Examples of good names: `document.md`, `collection-metadata.md`, `master-index.md`.
 - Examples to avoid: `option-b.md`, `section-3-approach.md`, `choice-2.md`.
 

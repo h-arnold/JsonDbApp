@@ -1,8 +1,6 @@
-\
+# 1. JsonDbApp Infrastructure Components
 
-# 1. GAS DB Infrastructure Components
-
-- [1. GAS DB Infrastructure Components](#1-gas-db-infrastructure-components)
+- [1. JsonDbApp Infrastructure Components](#1-jsondbapp-infrastructure-components)
   - [1.1. Overview](#11-overview)
   - [1.2. Logger (JDbLogger)](#12-logger-jdblogger)
     - [1.2.0.1. Key Features](#1201-key-features)
@@ -10,6 +8,14 @@
     - [1.2.0.3. Usage Examples](#1203-usage-examples)
     - [1.2.0.4. Best Practices](#1204-best-practices)
     - [1.2.0.5. Execution-Time Tracking](#1205-execution-time-tracking)
+      - [API surface](#api-surface)
+      - [Internal seams](#internal-seams)
+      - [Timing events](#timing-events)
+      - [Console output contract](#console-output-contract)
+      - [DEBUG gating and exception rules](#debug-gating-and-exception-rules)
+      - [Stacked timers](#stacked-timers)
+      - [Lazy context suppliers](#lazy-context-suppliers)
+      - [Instrumentation coverage](#instrumentation-coverage)
     - [1.2.1. ErrorHandler](#121-errorhandler)
       - [1.2.1.1. Error Type Hierarchy](#1211-error-type-hierarchy)
       - [1.2.1.2. Error Management Methods](#1212-error-management-methods)
@@ -35,14 +41,14 @@
     - [1.2.5. BackoffUtils](#125-backoffutils)
   - [1.3. Integration Patterns](#13-integration-patterns)
     - [1.3.1. Component Integration](#131-component-integration)
-    - [1.3.2. Standardized Error Flow](#132-standardized-error-flow)
+    - [1.3.2. Standardised Error Flow](#132-standardised-error-flow)
   - [1.4. Configuration](#14-configuration)
     - [1.4.1. Logger Configuration](#141-logger-configuration)
     - [1.4.2. Error Handler Configuration](#142-error-handler-configuration)
     - [1.4.3. ID Generator Configuration](#143-id-generator-configuration)
     - [1.4.4. ObjectUtils Configuration](#144-objectutils-configuration)
   - [1.5. Performance Considerations](#15-performance-considerations)
-  - [1.6. Migration and Versioning](#16-migration-and-versioning)
+  - [1.6. Component Relationships](#16-component-relationships)
     - [1.6.1. Component Dependencies](#161-component-dependencies)
     - [1.6.2. Extension Points](#162-extension-points)
 
@@ -52,68 +58,23 @@ The JsonDbApp infrastructure provides essential utilities for logging, error man
 
 ## 1.2. Logger (JDbLogger)
 
-The `JDbLogger` provides sophisticated logging capabilities with multiple levels, component-specific loggers, and performance tracking.
-
-A comprehensive logging utility providing structured logging with multiple levels and context support for Google Apps Script environments.
+`JDbLogger` provides level-filtered logging with context objects and component loggers for Google Apps Script.
 
 ### 1.2.0.1. Key Features
 
-- **Four Log Levels:** ERROR (0), WARN (1), INFO (2), DEBUG (3)
-- **Context Support:** Rich logging with JSON serializable context objects
-- **Component Loggers:** Create specialized loggers for different components
-- **GAS Compatibility:** Works with console.log, console.warn, console.error
+See [JDbLogger](../../src/01_utils/JDbLogger.js) for the supported log levels, context handling and component-logger API.
 
 ### 1.2.0.2. Core Methods
 
-| Method                             | Description                                                                                                                   |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| `setLevelByName(name)`             | Set log level by name (ERROR/WARN/INFO/DEBUG). Called automatically by `Database` constructor to propagate `logLevel` config. |
-| `error(message, context)`          | Log error message with optional context                                                                                       |
-| `warn(message, context)`           | Log warning message with optional context                                                                                     |
-| `info(message, context)`           | Log info message with optional context                                                                                        |
-| `debug(message, context)`          | Log debug message with optional context                                                                                       |
-| `createComponentLogger(component)` | Create component-specific logger                                                                                              |
+Method contracts live in [JDbLogger](../../src/01_utils/JDbLogger.js). `Database` calls `setLevelByName` from its constructor to propagate the configured `logLevel`; see [Logger Configuration](#141-logger-configuration).
 
 ### 1.2.0.3. Usage Examples
 
-```javascript
-// Basic logging
-JDbLogger.info('Database initialised successfully');
-JDbLogger.error('Failed to read file', { fileId: 'abc123', error: 'Permission denied' });
-
-// Set log level
-JDbLogger.setLevelByName('DEBUG'); // Show all messages
-JDbLogger.setLevelByName('ERROR'); // Show only errors
-
-// Component-specific logging
-const dbLogger = JDbLogger.createComponentLogger('Database');
-dbLogger.info('Collection created', { name: 'users' });
-```
+Examples are covered by the JSDoc on [JDbLogger](../../src/01_utils/JDbLogger.js).
 
 ### 1.2.0.4. Best Practices
 
-1. **Use appropriate log levels:**
-   - ERROR: System failures, exceptions
-   - WARN: Recoverable issues, deprecated usage
-   - INFO: Important state changes, operation completion
-   - DEBUG: Detailed execution flow, variable values
-
-2. **Include context objects:**
-
-   ```javascript
-   this.logger.info('Collection created', {
-     collection: name,
-     fileId: fileId,
-     documentCount: 0,
-     timestamp: new Date()
-   });
-   ```
-
-3. **Use component loggers:**
-
-   ```javascript
-   const logger = JDbLogger.createComponentLogger('Collection');
-   ```
+Log-level selection and context conventions are described in [JDbLogger](../../src/01_utils/JDbLogger.js).
 
 ### 1.2.0.5. Execution-Time Tracking
 
@@ -268,11 +229,11 @@ Labels are lowercase dotted tags independent of the PascalCase `component` field
 `Database`. It therefore constructs a dedicated `createComponentLogger('FileService')` used
 ONLY for `timeSync`; the injected logger keeps its existing debug/warn/error duties.
 
-**Deliberate non-instrumentations.** `Collection.aggregate`, per-document helpers
-(`deleteDocument`, `findAllDocuments`), the raw `Date.now()` reads inside
-`CollectionCoordinator` control flow (they feed timeout enforcement, lease renewal, and
-lock-acquisition deadline and backoff decisions and must stay outside the logging facility), `DbLockService`, and
-`Database` lifecycle methods emit no timing events.
+**Instrumentation scope.** Timing covers the boundary methods listed above; `DbLockService`,
+`Database` lifecycle, `Collection.aggregate` and per-document helpers (`deleteDocument`,
+`findAllDocuments`) are outside the facility. `CollectionCoordinator` reads the clock directly
+for timeout enforcement, lease renewal and lock-acquisition decisions rather than emitting
+timing events.
 
 ---
 
@@ -280,105 +241,27 @@ lock-acquisition deadline and backoff decisions and must stay outside the loggin
 
 **Location:** `src/01_utils/ErrorHandler.js`
 
-Provides standardized error handling with custom error types and error context management. For input validation, refer to the Validate utility.
+Provides standardised error handling with custom error types and error context management. For input validation, refer to the Validate utility.
 
 #### 1.2.1.1. Error Type Hierarchy
 
-All errors extend the base `GASDBError` class and include:
-
-- Error code for programmatic handling
-- Context object for debugging information
-- Timestamp for error tracking
-
-The shared `ERROR_CODES` catalogue mirrors the registered error types so consumers who prefer constants over string literals can import and compare against those values without relying on free-form strings.
-
-| Error Class                   | Code                       | Usage                                                                                                                                      |
-| ----------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `DocumentNotFoundError`       | `DOCUMENT_NOT_FOUND`       | Document queries that return no results                                                                                                    |
-| `DuplicateKeyError`           | `DUPLICATE_KEY`            | Unique constraint violations                                                                                                               |
-| `InvalidQueryError`           | `INVALID_QUERY`            | Malformed query syntax                                                                                                                     |
-| `LockTimeoutError`            | `LOCK_TIMEOUT`             | Lock acquisition failures                                                                                                                  |
-| `FileIOError`                 | `FILE_IO_ERROR`            | Drive API operation failures                                                                                                               |
-| `ConflictError`               | `CONFLICT_ERROR`           | Modification token mismatches                                                                                                              |
-| `MasterIndexError`            | `MASTER_INDEX_ERROR`       | ScriptProperties access failures                                                                                                           |
-| `CollectionNotFoundError`     | `COLLECTION_NOT_FOUND`     | Missing collection references                                                                                                              |
-| `ConfigurationError`          | `CONFIGURATION_ERROR`      | Invalid configuration values                                                                                                               |
-| `FileNotFoundError`           | `FILE_NOT_FOUND`           | Specific file not found on Drive                                                                                                           |
-| `PermissionDeniedError`       | `PERMISSION_DENIED`        | Lack of permission for a file operation                                                                                                    |
-| `QuotaExceededError`          | `QUOTA_EXCEEDED`           | Google Drive API quota limits reached                                                                                                      |
-| `InvalidFileFormatError`      | `INVALID_FILE_FORMAT`      | File content does not match expected format (e.g., not valid JSON)                                                                         |
-| `InvalidArgumentError`        | `INVALID_ARGUMENT`         | Incorrect or missing function arguments (also used by Validate class)                                                                      |
-| `OperationError`              | `OPERATION_ERROR`          | General failure during an operation not covered by other error types                                                                       |
-| `LockAcquisitionFailureError` | `LOCK_ACQUISITION_FAILURE` | Lock acquisition that could not succeed within the `collectionLockLeaseMs` wait window (the final attempt failed without a `LOCK_TIMEOUT`) |
-| `ModificationConflictError`   | `MODIFICATION_CONFLICT`    | Fine-grained token mismatches where a more specific conflict signal is required                                                            |
-| `CoordinationTimeoutError`    | `COORDINATION_TIMEOUT`     | Cross-component orchestration exceeded the allotted coordination window                                                                    |
-
-When creating new subclasses, use the `createErrorConstructorArgs` helper to assemble the standard `(message, code, context)` tuple. This keeps constructors minimal and ensures new errors align with the catalogued codes and logging expectations.
+All errors extend `GASDBError` and carry a code, context and timestamp. The registered classes and their codes are defined in [ErrorHandler](../../src/01_utils/ErrorHandler.js); `ERROR_CODES` mirrors them for consumers that prefer constants. New subclasses should use `createErrorConstructorArgs` to build the standard `(message, code, context)` tuple.
 
 #### 1.2.1.2. Error Management Methods
 
-| Method                                           | Description                                                             |
-| ------------------------------------------------ | ----------------------------------------------------------------------- |
-| `createError(errorType, ...args)`                | Create new error of specified type                                      |
-| `handleError(error, context, rethrow)`           | Handle error with logging and optional re-throw                         |
-| `wrapFunction(fn, context)`                      | Wrap function with error handling                                       |
-| `isErrorType(error, errorType)`                  | Check if error is of specific type                                      |
-| `extractErrorInfo(error)`                        | Extract error information for logging                                   |
-| `detectDoubleParsing(data, parseError, context)` | Detects and throws a specific error if data is already a parsed object. |
+Method contracts live in [ErrorHandler](../../src/01_utils/ErrorHandler.js).
 
 #### 1.2.1.3. Usage Examples
 
-```javascript
-// Create and throw specific errors
-throw ErrorHandler.createError('DOCUMENT_NOT_FOUND', { _id: 'doc123' }, 'users');
-
-// Handle errors with logging
-try {
-  performDatabaseOperation();
-} catch (error) {
-  ErrorHandler.handleError(error, 'Database.performOperation', true);
-}
-
-// Wrap functions with error handling
-const safeFunction = ErrorHandler.wrapFunction(riskyOperation, 'RiskyOperation');
-```
+Examples are covered by the JSDoc in [ErrorHandler](../../src/01_utils/ErrorHandler.js).
 
 #### 1.2.1.4. Best Practices
 
-1. **Use specific error types:**
-
-   ```javascript
-   throw new DocumentNotFoundError(query, collectionName);
-   ```
-
-2. **Preserve error context:**
-
-   ```javascript
-   ErrorHandler.handleError(error, 'Collection.findOne', true);
-   ```
+Error construction and handling conventions are covered in [ErrorHandler](../../src/01_utils/ErrorHandler.js).
 
 #### 1.2.1.5. Coordination Timeout Errors
 
-`CoordinationTimeoutError` (code `COORDINATION_TIMEOUT`) is thrown by `CollectionCoordinator.coordinate()` when a coordinated operation violates its coordination window or loses its lock lease. Every such throw carries a distinct machine-readable `reason` string in the error context (`error.context.reason`, alongside `operation` and `timeout`) so callers and tests can distinguish the sites:
-
-| Site | Reason (`error.context.reason`) | Trigger                                                                | Effects / finalisation state at throw                                                |
-| ---- | ------------------------------- | ---------------------------------------------------------------------- | ------------------------------------------------------------------------------------ |
-| 0    | `'lock-acquisition-timeout'`    | `LOCK_TIMEOUT` during lock acquisition                                 | None possible; pre-callback                                                          |
-| 1    | `'preflight-budget-exhausted'`  | Coordination budget exhausted before the operation callback runs       | None possible; callback never invoked                                                |
-| 2    | `'post-operation-overrun'`      | Callback completed over budget; lease ownership intact or restored     | Effects applied; metadata finalised before the throw (or finalisation failed loudly) |
-| 3    | `'lease-not-recoverable'`       | Renewal failed and the single re-acquisition returned `false` or threw | Effects applied; metadata finalisation **skipped** — divergence logged               |
-
-Note the observable ordering: at sites 2 and 3 the error arrives **after** the operation's effects were applied, and at site 2 the master-index metadata is finalised best-effort _before_ the throw. Site 0 applies only to a thrown `LOCK_TIMEOUT`; exhausting the `collectionLockLeaseMs` acquisition window instead raises `LockAcquisitionFailureError`.
-
-**Deliberate swallows in the coordinator.** Three swallows exist:
-
-- **Lock release** (`releaseOperationLock`): release failures are logged and swallowed so they cannot mask the operation's own outcome (long-standing behaviour).
-- **Best-effort finalisation on violation paths**: on an over-budget path a `MasterIndexError` from the metadata finalisation is logged loudly and swallowed so it cannot mask the primary `CoordinationTimeoutError`. Within-budget finalisation failures continue to propagate as `MasterIndexError`.
-- **Single re-acquisition** (`_attemptSingleReacquisition`): a thrown `acquireCollectionLock()` error is logged at WARN and returned as `false`, routing to the lease-not-recoverable site 3.
-
-**Failure logging.** The `coordinate()` boundary catch remains the single operation-level failure record per failed operation, but on violation paths it is deliberately supplemented by point-of-occurrence records (renewal failure, re-acquisition outcome, finalisation failure swallowed, finalisation skipped, post-operation overrun) emitted by the unified post-callback algorithm — two or more records per failed violation-path operation are intended. The completion INFO record fires only on the success path. One caveat for alerting: a within-budget lease recovery can emit a renewal-failure ERROR yet the operation still returns successfully, so an ERROR record does not imply operation failure.
-
-The full coordination contract — flow, violation algorithm, logging table, and residual risks — is documented in [CollectionCoordinator](CollectionCoordinator.md).
+`CollectionCoordinator.coordinate()` throws `CoordinationTimeoutError` (code `COORDINATION_TIMEOUT`) for coordination-window and lease violations; exhausting the lock-acquisition window instead raises `LockAcquisitionFailureError`. Every coordination throw carries a distinct machine-readable `reason` in `error.context.reason`, alongside `operation` and `timeout`. The full contract — throw sites, reason values, swallows and logging — lives in [CollectionCoordinator](CollectionCoordinator.md).
 
 ---
 
@@ -390,80 +273,23 @@ Provides multiple strategies for generating unique identifiers suitable for diff
 
 #### 1.2.2.1. ID Generation Strategies
 
-| Method                           | Output Example                         | Use Case                              |
-| -------------------------------- | -------------------------------------- | ------------------------------------- |
-| `generateUUID()`                 | `f47ac10b-58cc-4372-a567-0e02b2c3d479` | Default document IDs                  |
-| `generateTimestampId(prefix)`    | `token_1640995200000_123`              | Time-ordered IDs, modification tokens |
-| `generateShortId(length)`        | `a1b2c3d4`                             | Compact identifiers                   |
-| `generateAlphanumericId(length)` | `A1b2C3d4E5f6`                         | General purpose IDs                   |
-| `generateNumericId(length)`      | `1234567890`                           | Numeric-only IDs                      |
-| `generateObjectId()`             | `507f1f77bcf86cd799439011`             | MongoDB compatibility                 |
-| `generateSequentialId(prefix)`   | `seq_1640995200000_000001`             | Ordered sequences                     |
-| `generateReadableId()`           | `quick-cat-123`                        | Human-friendly IDs                    |
+The generator catalogue and output formats live in [IdGenerator](../../src/01_utils/IdGenerator.js). `generateUUID()` is the default for document IDs.
 
 #### 1.2.2.2. Validation Methods
 
-| Method                | Description                              |
-| --------------------- | ---------------------------------------- |
-| `isValidUUID(id)`     | Check if string is valid UUID format     |
-| `isValidObjectId(id)` | Check if string is valid ObjectId format |
+`isValidUUID` and `isValidObjectId` are documented in [IdGenerator](../../src/01_utils/IdGenerator.js).
 
 #### 1.2.2.3. Custom Generator Creation
 
-```javascript
-// Create custom generators for specific needs
-const tokenGenerator = IdGenerator.createCustomGenerator({
-  type: 'timestamp',
-  prefix: 'token'
-});
-
-const shortCodeGenerator = IdGenerator.createCustomGenerator({
-  type: 'alphanumeric',
-  length: 8
-});
-
-const readableGenerator = IdGenerator.createCustomGenerator({
-  type: 'readable'
-});
-```
+See `createCustomGenerator` in [IdGenerator](../../src/01_utils/IdGenerator.js) for the supported options.
 
 #### 1.2.2.4. Usage Examples
 
-```javascript
-// Generate document IDs
-const documentId = IdGenerator.generateUUID();
-
-// Generate modification tokens
-const token = IdGenerator.generateTimestampId('token');
-
-// Create custom generators
-const customGenerator = IdGenerator.createCustomGenerator({
-  type: 'alphanumeric',
-  length: 16
-});
-const customId = customGenerator();
-
-// Validate ID formats
-if (IdGenerator.isValidUUID(documentId)) {
-  processDocument(documentId);
-}
-```
+Examples are covered by the JSDoc in [IdGenerator](../../src/01_utils/IdGenerator.js).
 
 #### 1.2.2.5. Best Practices
 
-1. **Use appropriate ID types:**
-   - UUIDs for document IDs (default)
-   - Timestamp IDs for modification tokens
-   - ObjectIDs for MongoDB compatibility
-   - Readable IDs for debugging and testing
-
-2. **Validate ID formats:**
-
-   ```javascript
-   if (!IdGenerator.isValidUUID(documentId)) {
-     throw new InvalidArgumentError('Invalid document ID format');
-   }
-   ```
+ID-type selection guidance is covered in [IdGenerator](../../src/01_utils/IdGenerator.js).
 
 ---
 
@@ -475,139 +301,23 @@ Provides utilities for object manipulation with Date preservation, essential for
 
 #### 1.2.3.1. Core Methods
 
-| Method                             | Description                                                     |
-| ---------------------------------- | --------------------------------------------------------------- |
-| `deepClone(obj)`                   | Create deep copy preserving Date instances and object structure |
-| `convertDateStringsToObjects(obj)` | Convert ISO date strings to Date objects recursively            |
+`deepClone` and `convertDateStringsToObjects` are documented in [ObjectUtils](../../src/01_utils/ObjectUtils.js).
 
 #### 1.2.3.2. Deep Cloning
 
-The `deepClone` method creates independent copies of complex objects while preserving:
-
-- **Date Objects:** Maintains Date instances with accurate time values
-- **Nested Structures:** Handles deeply nested objects and arrays
-- **Independence:** Ensures modifications to cloned objects don't affect originals
-- **Type Preservation:** Maintains primitive types and object references
-
-**Supported Data Types:**
-
-- Primitives: `null`, `undefined`, `string`, `number`, `boolean`
-- Complex Types: `Date`, `Array`, `Object`
-- Nested Structures: Unlimited depth for objects and arrays
+`deepClone` produces an independent copy that preserves `Date` instances and nested structures; see [ObjectUtils](../../src/01_utils/ObjectUtils.js).
 
 #### 1.2.3.3. Date String Conversion
 
-The `convertDateStringsToObjects` method provides intelligent conversion of ISO date strings:
-
-- **ISO Detection:** Identifies valid ISO 8601 format strings (`YYYY-MM-DDTHH:mm:ss.sssZ`)
-- **Selective Conversion:** Only converts valid ISO strings, leaves others unchanged
-- **In-Place Modification:** Modifies original object structure
-- **Recursive Processing:** Handles nested objects and arrays
-
-**ISO Date Format Requirements:**
-
-- Complete date-time format: `2023-06-15T10:30:00.000Z`
-- Timezone indicator: Must end with `Z`
-- Optional milliseconds: Supports both `.sssZ` and `Z` endings
-- Valid date values: Validates month, day, hour, minute, second ranges
+`convertDateStringsToObjects` converts valid ISO date strings in place, recursively; see [ObjectUtils](../../src/01_utils/ObjectUtils.js).
 
 #### 1.2.3.4. Usage Examples
 
-```javascript
-// Deep cloning with Date preservation
-const originalDoc = {
-  _id: 'doc123',
-  created: new Date('2023-06-15T10:30:00.000Z'),
-  user: {
-    name: 'John Doe',
-    profile: {
-      lastLogin: new Date('2024-06-11T10:00:00.000Z'),
-      preferences: ['theme-dark', 'lang-en']
-    }
-  },
-  tags: ['important', 'archived']
-};
-
-const clonedDoc = ObjectUtils.deepClone(originalDoc);
-// clonedDoc is completely independent with Date objects preserved
-
-// Converting date strings from JSON parsing
-const jsonData = {
-  event: {
-    startTime: '2023-06-15T10:30:00.000Z', // Will be converted to Date
-    endTime: '2023-06-15 12:30:00', // Will remain string (invalid ISO)
-    participants: [
-      {
-        joined: '2023-06-15T10:35:00.000Z', // Will be converted to Date
-        name: 'Alice' // Will remain string
-      }
-    ]
-  }
-};
-
-ObjectUtils.convertDateStringsToObjects(jsonData);
-// jsonData.event.startTime is now a Date object
-// jsonData.event.participants[0].joined is now a Date object
-
-// Working with FileOperations integration
-const documentData = {
-  metadata: { created: new Date(), version: 1 },
-  content: { title: 'Document', lastModified: new Date() }
-};
-
-// Before saving to Drive (preserves Dates through JSON)
-fileOps.writeFile(fileId, documentData);
-
-// After reading from Drive (converts ISO strings back to Dates)
-const loadedData = fileOps.readFile(fileId);
-// loadedData now has proper Date objects restored
-```
+Examples are covered by the JSDoc in [ObjectUtils](../../src/01_utils/ObjectUtils.js).
 
 #### 1.2.3.5. Best Practices
 
-1. **Use deepClone for object independence:**
-
-   ```javascript
-   // Create independent copy before modifications
-   const workingCopy = ObjectUtils.deepClone(originalDocument);
-   workingCopy.user.name = 'Updated Name'; // Original remains unchanged
-   ```
-
-2. **Apply date conversion after JSON operations:**
-
-   ```javascript
-   // After parsing JSON or reading from Drive
-   const parsedData = JSON.parse(jsonString);
-   ObjectUtils.convertDateStringsToObjects(parsedData);
-   ```
-
-3. **Handle FileOperations integration:**
-
-   ```javascript
-   // Reading data with automatic date conversion
-   const rawData = fileOps.readFile(fileId);
-   // Date strings automatically converted by FileOperations using ObjectUtils
-   ```
-
-4. **Validate data integrity:**
-
-   ```javascript
-   // Verify Date objects after conversion
-   if (document.created instanceof Date) {
-     // Safe to use Date methods
-     const age = Date.now() - document.created.getTime();
-   }
-   ```
-
-5. **Performance considerations:**
-
-   ```javascript
-   // Clone only when necessary for independence
-   const backup = ObjectUtils.deepClone(criticalData);
-
-   // Use direct references for read-only operations
-   const readOnlyView = criticalData; // No cloning needed
-   ```
+Usage guidance is covered in [ObjectUtils](../../src/01_utils/ObjectUtils.js). `FileOperations` delegates JSON serialisation to `ObjectUtils.serialise` and `ObjectUtils.deserialise`; see [ObjectUtils Configuration](#144-objectutils-configuration).
 
 ---
 
@@ -615,105 +325,19 @@ const loadedData = fileOps.readFile(fileId);
 
 **Location:** `src/01_utils/Validation.js`
 
-Provides a collection of static methods for common data validation tasks, ensuring consistency and reducing boilerplate code. All validation methods throw `ErrorHandler.ErrorTypes.INVALID_ARGUMENT` upon failure, providing the parameter name and a descriptive reason.
+Provides static validation helpers used at API entry points. Validation methods throw `ErrorHandler.ErrorTypes.INVALID_ARGUMENT` on failure, reporting the parameter name and a reason; `isPlainObject` is a predicate that returns a boolean instead.
 
 #### 1.2.4.1. Core Methods
 
-| Method                                                  | Description                                                                                                                                                                                                            |
-| ------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `required(value, paramName)`                            | Ensures `value` is not `null` or `undefined`.                                                                                                                                                                          |
-| `type(value, expectedType, paramName)`                  | Validates that `value` is of the `expectedType` (e.g., 'string', 'number', 'object').                                                                                                                                  |
-| `nonEmptyString(value, paramName)`                      | Checks if `value` is a string and is not empty or composed only of whitespace.                                                                                                                                         |
-| `string(value, paramName)`                              | Checks if `value` is a string. Allows empty strings.                                                                                                                                                                   |
-| `object(value, paramName, allowEmpty = true)`           | Validates if `value` is an object (and not an array or `null`). If `allowEmpty` is `false`, an empty object will also fail validation.                                                                                 |
-| `boolean(value, paramName)`                             | Ensures `value` is a boolean (`true` or `false`).                                                                                                                                                                      |
-| `array(value, paramName)`                               | Validates if `value` is an array.                                                                                                                                                                                      |
-| `nonEmptyArray(value, paramName)`                       | Ensures `value` is an array containing at least one element.                                                                                                                                                           |
-| `number(value, paramName)`                              | Checks if `value` is a number (and not `NaN`).                                                                                                                                                                         |
-| `integer(value, paramName)`                             | Validates if `value` is an integer.                                                                                                                                                                                    |
-| `positiveNumber(value, paramName)`                      | Ensures `value` is a number strictly greater than zero.                                                                                                                                                                |
-| `nonNegativeNumber(value, paramName)`                   | Ensures `value` is a number greater than or equal to zero.                                                                                                                                                             |
-| `range(value, min, max, paramName)`                     | Checks if a numeric `value` falls within the inclusive range defined by `min` and `max`.                                                                                                                               |
-| `func(value, paramName)`                                | Validates if `value` is a function.                                                                                                                                                                                    |
-| `enum(value, allowedValues, paramName)`                 | Ensures `value` is present in the `allowedValues` array.                                                                                                                                                               |
-| `objectProperties(obj, requiredProps, paramName)`       | Checks if the object `obj` possesses all property names listed in the `requiredProps` array.                                                                                                                           |
-| `pattern(value, pattern, paramName, description)`       | Validates if a string `value` matches the provided `RegExp` `pattern`. The `description` is used in the error message.                                                                                                 |
-| `optional(value, validationFn, paramName)`              | If `value` is not `null` or `undefined`, applies the `validationFn` to it. Otherwise, passes.                                                                                                                          |
-| `all(validators, value, paramName)`                     | Ensures `value` successfully passes all validation functions provided in the `validators` array. Each function in `validators` should accept `(value, paramName)`.                                                     |
-| `any(validators, value, paramName)`                     | Ensures `value` successfully passes at least one validation function from the `validators` array. Each function in `validators` should accept `(value, paramName)`.                                                    |
-| `validateObject(value, paramName)`                      | Validates if `value` is a "plain" object (i.e., created by `{}` or `new Object()`, not an array, `null`, or an instance of `Date`).                                                                                    |
-| `isPlainObject(value)`                                  | A helper method that returns `true` if `value` is a plain object, `false` otherwise. Not typically used for direct validation throwing errors but can be used for conditional logic.                                   |
-| `validateUpdateObject(update, paramName, options = {})` | Validates the structure of a MongoDB-style update object. `options` can include: `allowMixed` (boolean, default `false`), `requireOperators` (boolean, default `false`), `forbidOperators` (boolean, default `false`). |
+The full method catalogue and signatures live in [Validation](../../src/01_utils/Validation.js).
 
 #### 1.2.4.2. Usage Examples
 
-```javascript
-// Ensuring a parameter is provided
-Validate.required(userId, 'userId');
-
-// Type checking
-Validate.type(config, 'object', 'config');
-Validate.nonEmptyString(collectionName, 'collectionName');
-Validate.number(count, 'count');
-
-// Number constraints
-Validate.positiveNumber(limit, 'limit');
-Validate.range(age, 0, 120, 'age');
-
-// Object and array validation
-Validate.object(settings, 'settings');
-Validate.nonEmptyArray(tags, 'tags');
-Validate.objectProperties(userProfile, ['username', 'email'], 'userProfile');
-
-// Enum validation
-Validate.enum(status, ['active', 'inactive', 'pending'], 'status');
-
-// Pattern matching for a string
-Validate.pattern(email, /\\S+@\\S+\\.\\S+/, 'email', 'a valid email address format');
-
-// Optional field validation
-// 'description' can be null/undefined, but if it exists, it must be a string.
-Validate.optional(description, Validate.string, 'description');
-
-// Combining multiple validations for a single field
-Validate.all(
-  [
-    (val, name) => Validate.string(val, name), // Must be a string
-    (val, name) => Validate.nonEmptyString(val, name), // Must not be empty
-    (val, name) =>
-      Validate.pattern(
-        val,
-        /^[a-zA-Z0-9_]{3,16}$/,
-        name,
-        '3-16 alphanumeric characters or underscores'
-      ) // Must match pattern
-  ],
-  username,
-  'username'
-);
-
-// Validating update objects (e.g., for database operations)
-try {
-  Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload'); // Fails by default (mixed)
-} catch (e) {
-  // console.error(e.message); // "Invalid argument: updatePayload - cannot mix update operators with document fields"
-}
-Validate.validateUpdateObject({ $set: { name: 'New Name' }, status: 'active' }, 'updatePayload', {
-  allowMixed: true
-}); // Passes
-Validate.validateUpdateObject({ name: 'New Name' }, 'updatePayload', { forbidOperators: true }); // Passes
-Validate.validateUpdateObject({ $inc: { score: 1 } }, 'updatePayload', { requireOperators: true }); // Passes
-```
+Examples are covered by the JSDoc in [Validation](../../src/01_utils/Validation.js).
 
 #### 1.2.4.3. Best Practices
 
-1. **Early and Often:** Apply validation at the entry points of your functions and methods to catch errors early and prevent invalid data from propagating.
-2. **Clear Parameter Names:** Use descriptive `paramName` arguments, as they are included in error messages, aiding debugging.
-3. **Leverage `Validate.optional`:** For fields that are not mandatory but must conform to a type or rule if present.
-4. **Compose with `Validate.all` and `Validate.any`:** For complex validation scenarios involving multiple conditions on a single piece of data.
-5. **Specific Over Generic:** Prefer specific validators like `nonEmptyString` or `positiveNumber` over more generic ones like `string` or `number` when applicable, to provide more precise validation.
-6. **Understand Plain Objects:** When using `validateObject` or `isPlainObject`, be aware that it specifically checks for objects that are not arrays or instances of other complex types like `Date`.
-7. **Update Object Validation:** Use `validateUpdateObject` when dealing with MongoDB-style update operations to ensure structural correctness.
+Validation conventions are covered in [Validation](../../src/01_utils/Validation.js).
 
 ---
 
@@ -723,28 +347,15 @@ Validate.validateUpdateObject({ $inc: { score: 1 } }, 'updatePayload', { require
 
 Provides the single clamped exponential-backoff calculation shared by lock acquisition and file-operation retries. `calculateBackoff` is a stateless static method, and the caller supplies every bound, so one implementation serves both bounded and unbounded retry paths.
 
-| Method                                                       | Description                                                                                                            |
-| ------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------- |
-| `calculateBackoff(attempt, baseDelayMs, base, minMs, maxMs)` | Returns `Math.max(minMs, Math.min(baseDelayMs * Math.pow(base, attempt - 1), maxMs))` for a one-based `attempt` index. |
+See [BackoffUtils](../../src/01_utils/BackoffUtils.js) for the formula and arguments.
 
-`attempt` is one-based: attempt 1 returns `baseDelayMs`, subject to the bounds. Each later attempt multiplies it by `base`. A caller that must stay unclamped passes `-Infinity` and `Infinity` as the bounds, which is how `FileOperations` preserves its original unbounded retry delays.
-
-```javascript
-// Bounded: collection lock acquisition floors at 500 ms and caps at 5000 ms
-BackoffUtils.calculateBackoff(1, 1000, 2, 500, 5000); // 1000
-BackoffUtils.calculateBackoff(4, 1000, 2, 500, 5000); // 5000
-
-// Unclamped: FileOperations retries use infinite bounds
-BackoffUtils.calculateBackoff(3, 1000, 2, -Infinity, Infinity); // 4000
-```
+`attempt` is one-based: attempt 1 returns `baseDelayMs`, subject to the bounds. A caller that must stay unclamped passes `-Infinity` and `Infinity` as the bounds, which is how `FileOperations` preserves its original unbounded retry delays.
 
 ---
 
 ## 1.3. Integration Patterns
 
 ### 1.3.1. Component Integration
-
-All infrastructure components are designed to work together seamlessly:
 
 ```javascript
 // Example: Database component using all utilities
@@ -756,7 +367,7 @@ class Database {
 
     // Set up logging
     this.logger = JDbLogger.createComponentLogger('Database');
-    this.logger.info('Initializing database', { config });
+    this.logger.info('Initialising database', { config });
 
     // Generate instance ID
     this.instanceId = IdGenerator.generateUUID();
@@ -783,7 +394,7 @@ class Database {
 }
 ```
 
-### 1.3.2. Standardized Error Flow
+### 1.3.2. Standardised Error Flow
 
 ```javascript
 // Standard error handling pattern across all components
@@ -844,40 +455,16 @@ const customErrorHandler = (error, context) => {
 ```javascript
 // Set up generators for different use cases
 const documentIdGenerator = IdGenerator.getDefaultGenerator(); // UUID
-const tokenGenerator = IdGenerator.createCustomGenerator({
-  type: 'timestamp',
-  prefix: 'token'
-});
 const debugIdGenerator = IdGenerator.createCustomGenerator({
   type: 'readable'
 });
 ```
 
+Modification tokens come from `MasterIndexConflictResolver.generateModificationToken()`.
+
 ### 1.4.4. ObjectUtils Configuration
 
-```javascript
-// ObjectUtils is stateless and requires no configuration
-// Methods are called directly on the class
-
-// Example integration with FileOperations
-class FileOperations {
-  readFile(fileId) {
-    const rawData = this._readFromDrive(fileId);
-    const parsedData = JSON.parse(rawData);
-
-    // Automatically convert ISO date strings to Date objects
-    ObjectUtils.convertDateStringsToObjects(parsedData);
-    return parsedData;
-  }
-
-  writeFile(fileId, data) {
-    // Create independent copy to avoid modifying original
-    const dataToWrite = ObjectUtils.deepClone(data);
-    const jsonString = JSON.stringify(dataToWrite);
-    return this._writeToDrive(fileId, jsonString);
-  }
-}
-```
+`ObjectUtils` is stateless and needs no configuration. `FileOperations` delegates JSON serialisation to [ObjectUtils.serialise and ObjectUtils.deserialise](../../src/01_utils/ObjectUtils.js), so `Date` instances survive writes to Drive without callers handling the conversion.
 
 ## 1.5. Performance Considerations
 
@@ -890,9 +477,7 @@ class FileOperations {
    - `convertDateStringsToObjects` modifies objects in-place for efficiency
    - Consider object size and nesting depth when using these utilities
 
-## 1.6. Migration and Versioning
-
-All infrastructure components are designed to be stable and backwards compatible. Future versions will maintain API compatibility while potentially adding new features.
+## 1.6. Component Relationships
 
 ### 1.6.1. Component Dependencies
 
@@ -903,13 +488,7 @@ All infrastructure components are designed to be stable and backwards compatible
 
 ### 1.6.2. Extension Points
 
-These components can be extended for future functionality:
-
 1. **Custom Log Destinations:** Extend JDbLogger to support additional output targets
 2. **Additional Error Types:** Add new error classes that extend GASDBError
 3. **New ID Strategies:** Add additional generation methods to IdGenerator
-4. **Object Manipulation:** Add additional utility methods to ObjectUtils for specialized data handling
-
----
-
-_This infrastructure forms the foundation for all other GAS DB components and follows established patterns for reliability, maintainability, and performance in Google Apps Script environments. The combination of logging (JDbLogger), error management (ErrorHandler), ID generation (IdGenerator), and object manipulation (ObjectUtils) provides a comprehensive utility layer that supports sophisticated database operations while maintaining data integrity and system stability._
+4. **Object Manipulation:** Add additional utility methods to ObjectUtils for specialised data handling

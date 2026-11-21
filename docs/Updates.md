@@ -10,12 +10,10 @@
     - [$mul - Multiply Numeric Value](#mul---multiply-numeric-value)
     - [$min - Set Minimum Value](#min---set-minimum-value)
     - [$max - Set Maximum Value](#max---set-maximum-value)
-    - [$rename - Rename Field](#rename---rename-field)
   - [Array Update Operators](#array-update-operators)
     - [$push - Append to Array](#push---append-to-array)
     - [$pull - Remove from Array](#pull---remove-from-array)
     - [$addToSet - Add Unique to Array](#addtoset---add-unique-to-array)
-    - [$pop - Remove First or Last Element](#pop---remove-first-or-last-element)
   - [Update Patterns](#update-patterns)
     - [Creating Nested Structures](#creating-nested-structures)
     - [Type Changes](#type-changes)
@@ -34,7 +32,7 @@
 
 ## Overview
 
-JsonDbApp provides MongoDB-compatible update operators for modifying documents in collections. Updates are expressed using operator syntax where operator names (prefixed with `$`) map to update actions. This guide covers all supported update operators with practical examples.
+JsonDbApp supports nine update operators: `$set`, `$unset`, `$inc`, `$mul`, `$min`, `$max`, `$push`, `$pull` and `$addToSet`. Updates are expressed using operator syntax where operator names (prefixed with `$`) map to update actions. Any other operator is rejected. This guide shows how to use the supported operators.
 
 ## Basic Update Syntax
 
@@ -171,9 +169,6 @@ persons.updateOne({ _id: 'person1' }, { $unset: { 'preferences.settings.theme': 
 // Removing non-existent field is a no-op
 const result = persons.updateOne({ _id: 'person1' }, { $unset: { nonExistent: '' } });
 console.log(result.modifiedCount); // 0
-
-// Cannot remove _id field
-// Attempting to unset _id may throw error or be ignored
 ```
 
 ### $inc - Increment Numeric Value
@@ -321,24 +316,6 @@ const maxDate = new Date('2025-12-31T23:59:59Z');
 persons.updateOne({ _id: 'person1' }, { $max: { lastLogin: maxDate } });
 ```
 
-### $rename - Rename Field
-
-Renames a field. If the new field name already exists, it is overwritten. If the old field does not exist, no operation is performed.
-
-**Basic Usage:**
-
-```javascript
-// Rename top-level field
-persons.updateOne({ _id: 'person1' }, { $rename: { oldName: 'newName' } });
-
-// Rename nested field
-persons.updateOne({ _id: 'person1' }, { $rename: { 'name.first': 'name.firstName' } });
-
-// Rename with overwrite
-persons.updateOne({ _id: 'person1' }, { $rename: { tempValue: 'age' } });
-// If 'age' exists, it is overwritten with 'tempValue'
-```
-
 ## Array Update Operators
 
 Array operators modify array fields within documents.
@@ -436,7 +413,7 @@ orders.updateOne({ _id: 'order3' }, { $pull: { items: { sku: 'prod1' } } });
 **Edge Cases:**
 
 ```javascript
-// Pulling from non-array field is gracefully ignored
+// Pulling from a non-array field is a no-op
 const result = persons.updateOne({ _id: 'person1' }, { $pull: { 'name.first': 'Anna' } });
 console.log(result.modifiedCount); // 0
 
@@ -468,7 +445,7 @@ inventory.updateOne(
     _id: 'inv1'
   },
   {
-    $pull: { alerts: { type: 'low-stock', level: { $ne: 'critical' } } }
+    $pull: { alerts: { type: 'low-stock', level: 'warning' } }
   }
 );
 ```
@@ -542,24 +519,6 @@ persons.updateOne(
 // Create array if field does not exist
 persons.updateOne({ _id: 'person2' }, { $addToSet: { newSetField: 'first-unique' } });
 // document.newSetField now equals ['first-unique']
-```
-
-### $pop - Remove First or Last Element
-
-Removes the first or last element from an array. Use value `1` to remove the last element, `-1` to remove the first.
-
-**Basic Usage:**
-
-```javascript
-// Remove last element
-persons.updateOne({ _id: 'person3' }, { $pop: { 'preferences.tags': 1 } });
-
-// Remove first element
-persons.updateOne({ _id: 'person4' }, { $pop: { 'contact.phones': -1 } });
-
-// Empty array results in no-op
-const result = persons.updateOne({ _id: 'person2' }, { $pop: { 'contact.phones': 1 } });
-console.log(result.modifiedCount); // 0
 ```
 
 ## Update Patterns
@@ -676,27 +635,9 @@ persons.updateOne(
 
 ### The \_id Field
 
-The `_id` field is immutable and cannot be updated:
-
-```javascript
-// Attempting to update _id may throw error or be ignored
-try {
-  persons.updateOne({ _id: 'person1' }, { $set: { _id: 'newId' } });
-} catch (error) {
-  console.log('Cannot modify _id field');
-}
-
-// $unset on _id may also fail
-try {
-  persons.updateOne({ _id: 'person1' }, { $unset: { _id: '' } });
-} catch (error) {
-  console.log('Cannot remove _id field');
-}
-```
+Updates to `_id` are ignored; the original value is preserved.
 
 ### Non-Existent Fields
-
-Most operators handle non-existent fields gracefully:
 
 ```javascript
 // $set creates field
@@ -736,7 +677,7 @@ try {
   console.log('Cannot push to non-array field');
 }
 
-// $pull on non-array field may be gracefully ignored
+// $pull on a non-array field is a no-op
 const result = persons.updateOne({ _id: 'person1' }, { $pull: { age: 30 } });
 console.log(result.modifiedCount); // 0 (no error, no change)
 ```
@@ -750,10 +691,6 @@ Handling of empty values varies by operator:
 persons.updateOne({ _id: 'person1' }, { $set: { lastLogin: null } });
 // Field set to null
 
-// $set with undefined may behave like $unset
-persons.updateOne({ _id: 'person1' }, { $set: { field: undefined } });
-// Check implementation details
-
 // $set with empty string
 persons.updateOne({ _id: 'person1' }, { $set: { 'contact.email': '' } });
 // Field set to empty string (distinct from null)
@@ -766,6 +703,8 @@ persons.updateOne({ _id: 'person1' }, { $set: { 'contact.phones': [] } });
 persons.updateOne({ _id: 'person1' }, { $set: { metadata: {} } });
 // Field set to empty object
 ```
+
+`$set` with `undefined` stores `undefined`.
 
 ## Update Methods
 
