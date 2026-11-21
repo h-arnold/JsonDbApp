@@ -2,49 +2,29 @@
 
 - [DatabaseConfig Developer Documentation](#databaseconfig-developer-documentation)
   - [Overview](#overview)
-  - [Constants](#constants)
   - [Configuration Properties](#configuration-properties)
     - [Core Properties](#core-properties)
     - [Optional Properties](#optional-properties)
   - [Constructor](#constructor)
-  - [API Reference](#api-reference)
-    - [Public Methods](#public-methods)
-      - [`toJSON()`](#tojson)
-      - [`fromJSON(obj)`](#fromjsonobj)
-    - [Private Methods](#private-methods)
-      - [`_initialiseGeneralDefaults(config)`](#_initialisegeneraldefaultsconfig)
-      - [`_initialiseRetryConfig(config)`](#_initialiseretryconfigconfig)
-      - [`_initialiseQueryEngineConfig(config)`](#_initialisequeryengineconfigconfig)
-      - [`_initialiseBooleanFlags(config)`](#_initialisebooleanflagsconfig)
-      - [`_getDefaultRootFolder()`](#_getdefaultrootfolder)
-      - [`_validateConfig()`](#_validateconfig)
-      - [`_validateQueryOperators()`](#_validatequeryoperators)
-      - [`_validateOperatorArray(configKey, operators, rawValue, wasProvided)`](#_validateoperatorarrayconfigkey-operators-rawvalue-wasprovided)
   - [Validation Rules](#validation-rules)
     - [Property Validation](#property-validation)
     - [Error Scenarios](#error-scenarios)
-  - [Usage Examples](#usage-examples)
-    - [Basic Configuration](#basic-configuration)
-    - [Development vs Production](#development-vs-production)
-    - [Configuration Cloning](#configuration-cloning)
-    - [Configuration Serialization](#configuration-serialization)
   - [Integration with Database](#integration-with-database)
   - [Component-Level Configuration](#component-level-configuration)
     - [QueryEngine Configuration](#queryengine-configuration)
     - [FileOperations Configuration](#fileoperations-configuration)
     - [Index Backup Strategy](#index-backup-strategy)
-  - [Best Practices](#best-practices)
 
 ## Overview
 
-The `DatabaseConfig` class manages database configuration settings with validation and defaults. It provides a standardized configuration object for Database instances, ensuring all settings are validated and properly formatted before use.
+The `DatabaseConfig` class manages database configuration settings with validation and defaults. It provides a standardised configuration object for Database instances, ensuring all settings are validated and properly formatted before use.
 
 **Key Responsibilities:**
 
-- Configuration validation and normalization
+- Configuration validation and normalisation
 - Default value management
 - Type checking and constraint enforcement
-- Configuration serialization
+- Configuration serialisation
 
 **Design Principles:**
 
@@ -52,13 +32,6 @@ The `DatabaseConfig` class manages database configuration settings with validati
 - Configuration intended to be treated as immutable after creation
 - Clear error messages for invalid settings
 - Sensible defaults for all properties
-
-## Constants
-
-`DatabaseConfig` internally defines shared constants for log handling so the configuration stays in sync with `JDbLogger` behaviour. These are implementation details used for validation and are **not** exposed as public static properties or part of the public API:
-
-- `LOG_LEVELS`: ordered array of accepted level names (`['DEBUG','INFO','WARN','ERROR']`) used during validation.
-- `DEFAULT_LOG_LEVEL`: default value (`'INFO'`) applied when no explicit level is supplied.
 
 ## Configuration Properties
 
@@ -71,126 +44,29 @@ The `DatabaseConfig` class manages database configuration settings with validati
 
 ### Optional Properties
 
-| Property                                  | Type     | Default                            | Description                                                                                                                                                                                                                                        |
-| ----------------------------------------- | -------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                                                              |
-| `lockTimeout`                             | Number   | `30000`                            | Legacy input alias for `collectionLockLeaseMs` accepted by the constructor only; the instance property has been removed — use `collectionLockLeaseMs`                                                                                              |
-| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds and the lock acquisition wait window; must be at least as long as `coordinationTimeoutMs`                                                                                                           |
-| `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                                                                    |
-| `retryAttempts`                           | Number   | `3`                                | Legacy for lock acquisition: still validated (positive integer) with default `3`, but no longer bounds the acquisition wait                                                                                                                        |
-| `retryDelayMs`                            | Number   | `1000`                             | Base delay for acquisition backoff, floored at 500 ms and capped at 5000 ms                                                                                                                                                                        |
-| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential growth base for the acquisition backoff; must be at least 1                                                                                                                                                                            |
-| `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                                                                |
-| `logLevel`                                | String   | `DEFAULT_LOG_LEVEL` ('INFO')       | Log level constrained to the values declared in `LOG_LEVELS`                                                                                                                                                                                       |
-| `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                                                                      |
-| `fileRetryDelayMs`                        | Number   | `1000`                             | Delay between file retries                                                                                                                                                                                                                         |
-| `fileRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for file retries                                                                                                                                                                                                          |
-| `queryEngineMaxNestedDepth`               | Number   | `10`                               | Maximum allowed query nesting depth                                                                                                                                                                                                                |
-| `queryEngineSupportedOperators`           | String[] | `['$eq','$gt','$lt','$and','$or']` | Operators permitted by the QueryEngine                                                                                                                                                                                                             |
-| `queryEngineLogicalOperators`             | String[] | `['$and','$or']`                   | Logical operators recognised by the QueryEngine                                                                                                                                                                                                    |
-| `backupOnInitialise`                      | Boolean  | `false`                            | If true, `Database.initialise()` will create/find the Drive index file and back up the MasterIndex immediately. If false, the backup index is created lazily on first write (e.g. creating/dropping a collection) or when `loadIndex()` is called. |
-| `stripDisallowedCollectionNameCharacters` | Boolean  | `false`                            | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks.                                             |
+| Property                                  | Type     | Default                            | Description                                                                                                                                                                                            |
+| ----------------------------------------- | -------- | ---------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `autoCreateCollections`                   | Boolean  | `true`                             | Auto-create collections when accessed                                                                                                                                                                  |
+| `lockTimeout`                             | Number   | `30000`                            | Constructor input alias for the timing defaults; the instance properties are `collectionLockLeaseMs` and `coordinationTimeoutMs`                                                                       |
+| `collectionLockLeaseMs`                   | Number   | `30000`                            | Collection lock lease duration in milliseconds and the lock acquisition wait window; must be at least as long as `coordinationTimeoutMs`                                                               |
+| `coordinationTimeoutMs`                   | Number   | `30000`                            | Maximum duration allowed for a coordinated collection operation                                                                                                                                        |
+| `retryAttempts`                           | Number   | `3`                                | Validated positive integer; lock acquisition is bounded by `collectionLockLeaseMs`                                                                                                                     |
+| `retryDelayMs`                            | Number   | `1000`                             | Base delay for acquisition backoff, floored at 500 ms and capped at 5000 ms                                                                                                                            |
+| `lockRetryBackoffBase`                    | Number   | `2`                                | Exponential growth base for the acquisition backoff; must be at least 1                                                                                                                                |
+| `cacheEnabled`                            | Boolean  | `true`                             | Enable file caching                                                                                                                                                                                    |
+| `logLevel`                                | String   | `DEFAULT_LOG_LEVEL` ('INFO')       | Log level constrained to the values declared in `LOG_LEVELS`                                                                                                                                           |
+| `fileRetryAttempts`                       | Number   | `3`                                | File operation retry attempts                                                                                                                                                                          |
+| `fileRetryDelayMs`                        | Number   | `1000`                             | Delay between file retries                                                                                                                                                                             |
+| `fileRetryBackoffBase`                    | Number   | `2`                                | Exponential backoff base for file retries                                                                                                                                                              |
+| `queryEngineMaxNestedDepth`               | Number   | `10`                               | Maximum allowed query nesting depth                                                                                                                                                                    |
+| `queryEngineSupportedOperators`           | String[] | `['$eq','$gt','$lt','$and','$or']` | Operators permitted by the QueryEngine                                                                                                                                                                 |
+| `queryEngineLogicalOperators`             | String[] | `['$and','$or']`                   | Logical operators recognised by the QueryEngine                                                                                                                                                        |
+| `backupOnInitialise`                      | Boolean  | `false`                            | Controls eager Drive index backup during `initialise()`; default `false`                                                                                                                               |
+| `stripDisallowedCollectionNameCharacters` | Boolean  | `false`                            | When enabled, invalid characters are stripped from collection names before validation so integrations that cannot guarantee clean inputs can still rely on strict reserved-name and empty-name checks. |
 
 ## Constructor
 
-```javascript
-class DatabaseConfig {
-  constructor(config = {}) {
-    // ...
-  }
-}
-```
-
-**Parameters:**
-
-- `config` (Object): Configuration options object
-
-**Behaviour:**
-
-- Delegates to grouped helpers (`_initialiseGeneralDefaults`, `_initialiseRetryConfig`, `_initialiseQueryEngineConfig`, `_initialiseBooleanFlags`) so each concern applies defaults consistently.
-- Uses nullish coalescing (`??`) to normalise nullish overrides while keeping explicit falsy values intact.
-- Sets default values for all properties
-- Validates all configuration parameters
-- Throws errors immediately for invalid settings
-- Automatically determines root folder if not provided
-
-**Example:**
-
-```javascript
-const config = new DatabaseConfig({
-  rootFolderId: 'your-folder-id',
-  autoCreateCollections: false,
-  logLevel: 'DEBUG'
-});
-```
-
-## API Reference
-
-### Public Methods
-
-#### `toJSON()`
-
-Converts configuration to a serialisable plain object with a `__type` tag.
-
-- **Returns:** `Object` - Plain object suitable for JSON serialisation
-- **Use Cases:**
-  - Serialisation
-  - Debugging and logging
-  - Configuration comparison
-
-#### `fromJSON(obj)`
-
-Creates a `DatabaseConfig` from an object produced by `toJSON()`.
-
-- **Parameters:** `obj` (`Object`) - A deserialised config object containing `__type: 'DatabaseConfig'`
-- **Returns:** `DatabaseConfig`
-- **Throws:** `InvalidArgumentError` if the object is not a valid `DatabaseConfig` serialisation
-
-### Private Methods
-
-#### `_initialiseGeneralDefaults(config)`
-
-Applies root folder, split coordination timing defaults, log level (via `DEFAULT_LOG_LEVEL`), and master index defaults.
-
-#### `_initialiseRetryConfig(config)`
-
-Normalises retry-related options (lock and file retries) with grouped defaults.
-
-#### `_initialiseQueryEngineConfig(config)`
-
-Clones provided operator arrays when supplied and records raw values for validation while restoring defaults when omitted.
-
-#### `_initialiseBooleanFlags(config)`
-
-Initialises boolean feature toggles such as `autoCreateCollections` and `backupOnInitialise`.
-
-#### `_getDefaultRootFolder()`
-
-Determines the default root folder ID.
-
-- **Returns:** `String` - Drive root folder ID
-- **Throws:** `ConfigurationError` (`CONFIGURATION_ERROR`) if unable to access Drive
-- **Error details:** message `Invalid configuration for rootFolderId: <original Drive error message>`; context `{ setting: 'rootFolderId', value: <original Drive error message>, reason: 'Failed to get default root folder' }`
-- **Behaviour:** Uses `DriveApp.getRootFolder().getId()`
-
-#### `_validateConfig()`
-
-Validates all configuration properties according to rules.
-
-- **Throws:** `Error` for any validation failure
-- **Validation Order:**
-  1. Type checking
-  2. Range validation
-  3. Format validation
-  4. Constraint checking
-
-#### `_validateQueryOperators()`
-
-Ensures logical operators are a subset of supported operators and raises `INVALID_ARGUMENT` when alignment fails.
-
-#### `_validateOperatorArray(configKey, operators, rawValue, wasProvided)`
-
-Validates optional operator arrays against type constraints and preserves the original error context.
+The constructor applies defaults through grouped helpers so each concern is handled consistently, and uses nullish coalescing (`??`) so explicit falsy overrides survive while nullish values fall back to defaults. Parameter types, defaults and error contracts are documented on the [`DatabaseConfig` class](../../src/04_core/DatabaseConfig.js).
 
 ## Validation Rules
 
@@ -199,16 +75,23 @@ Validates optional operator arrays against type constraints and preserves the or
 **collectionLockLeaseMs / coordinationTimeoutMs:**
 
 - Each value must be a number of at least 500ms
-- The legacy `lockTimeout` key in the constructor input object is accepted as a backward-compatible alias for `collectionLockLeaseMs`; new code should use `collectionLockLeaseMs` directly
+- Constructor input `lockTimeout` supplies both timing values when their specific keys are absent
 - `collectionLockLeaseMs` must be greater than or equal to `coordinationTimeoutMs`
 - `CollectionCoordinator` may renew a lease shortly before final metadata persistence, but the configured lease should still comfortably cover the main write callback
-- An operation that overruns `coordinationTimeoutMs` now finalises collection metadata best-effort **before** the `CoordinationTimeoutError` is thrown, so the metadata update may be observable even though the call failed; when the lease cannot be recovered, finalisation is skipped and the divergence is logged loudly. Renewal failure has two causes — lease expiry, or concurrent collection removal / lock-record loss — and both are handled identically (one re-acquisition attempt, then recover or throw). See [CollectionCoordinator](CollectionCoordinator.md)
+- Size `collectionLockLeaseMs` to cover the callback; an over-budget operation may still publish collection metadata before the timeout is reported. See [CollectionCoordinator](CollectionCoordinator.md) for the violation algorithm.
 - Recommended range: 5000-60000ms unless you have a measured need for longer operations
 - Zero is invalid because the minimum is enforced during validation
 
+```javascript
+const config = {
+  lockTimeout: 12000,
+  coordinationTimeoutMs: 10000
+};
+```
+
 **retryAttempts / retryDelayMs / lockRetryBackoffBase:**
 
-- `retryAttempts` must be a positive integer (default `3`); now legacy for lock acquisition — the wait window is `collectionLockLeaseMs`
+- `retryAttempts` must be a positive integer (default `3`); lock acquisition is bounded by `collectionLockLeaseMs`
 - `retryDelayMs` must be a non-negative number; it feeds the floored and capped acquisition backoff
 - `lockRetryBackoffBase` must be at least 1; it feeds the same acquisition backoff
 
@@ -263,100 +146,15 @@ Common validation errors and their meanings:
 | "Invalid configuration for rootFolderId: <message>"                             | Drive access issue; reason `Failed to get default root folder`  | Check permissions and authentication |
 | "Invalid argument: stripDisallowedCollectionNameCharacters - must be a boolean" | Non-boolean value for `stripDisallowedCollectionNameCharacters` | Use true or false explicitly         |
 
-## Usage Examples
-
-### Basic Configuration
-
-```javascript
-// Minimal configuration (uses defaults)
-const config = new DatabaseConfig();
-
-// Custom root folder
-const config = new DatabaseConfig({
-  rootFolderId: '1ABC123xyz789'
-});
-
-// Production-ready configuration
-const config = new DatabaseConfig({
-  rootFolderId: 'prod-folder-id',
-  autoCreateCollections: false,
-  collectionLockLeaseMs: 12000,
-  coordinationTimeoutMs: 10000,
-  logLevel: 'WARN',
-  // Avoid Drive file churn on start; backups occur lazily or explicitly
-  backupOnInitialise: false
-});
-```
-
-### Development vs Production
-
-```javascript
-// Development configuration
-const devConfig = new DatabaseConfig({
-  autoCreateCollections: true,
-  logLevel: 'DEBUG',
-  cacheEnabled: true,
-  // Enable eager backup if you want an index snapshot each initialise
-  backupOnInitialise: true,
-  // Looser query depth for exploratory work
-  queryEngineMaxNestedDepth: 12
-});
-
-// Production configuration
-const prodConfig = new DatabaseConfig({
-  rootFolderId: 'production-folder-id',
-  autoCreateCollections: false,
-  collectionLockLeaseMs: 8000,
-  coordinationTimeoutMs: 5000,
-  logLevel: 'ERROR',
-  cacheEnabled: true,
-  backupOnInitialise: false
-});
-```
-
-### Configuration Cloning
-
-```javascript
-const baseConfig = new DatabaseConfig({
-  rootFolderId: 'base-folder',
-  logLevel: 'INFO'
-});
-
-// Create variation by spreading serialised config into a new instance
-const modifiedConfig = new DatabaseConfig({
-  ...baseConfig.toJSON(),
-  logLevel: 'DEBUG'
-});
-```
-
-### Configuration Serialization
-
-```javascript
-const config = new DatabaseConfig({
-  autoCreateCollections: false,
-  collectionLockLeaseMs: 20000,
-  coordinationTimeoutMs: 15000
-});
-
-// Serialize for storage or logging
-const configData = config.toJSON();
-console.log('Config:', JSON.stringify(configData, null, 2));
-
-// Recreate from serialised data
-const restoredConfig = DatabaseConfig.fromJSON(configData);
-```
-
 ## Integration with Database
 
-The DatabaseConfig class integrates seamlessly with the Database class. For Apps Script consumers, prefer the public API factories:
+`Database` validates its configuration through `DatabaseConfig` at construction. For Apps Script consumers, prefer the public API factories:
 
 ```javascript
 // First-time setup
-const db1 = JsonDbApp.createAndInitialiseDatabase(
-  new DatabaseConfig({
-    masterIndexKey: 'myMasterIndex'
-  })
-);
+const db1 = JsonDbApp.createAndInitialiseDatabase({
+  masterIndexKey: 'myMasterIndex'
+});
 
 // Load existing database
 const db2 = JsonDbApp.loadDatabase({
@@ -380,32 +178,7 @@ While `DatabaseConfig` handles database-wide settings, individual components may
 
 ### QueryEngine Configuration
 
-The QueryEngine uses defaults sourced from `DatabaseConfig` and is instantiated through `DocumentOperations`. You can still override defaults by passing a custom config directly to `QueryEngine` when needed.
-
-```javascript
-// QueryEngine has its own configuration
-const queryEngine = new QueryEngine({
-  maxNestedDepth: 15 // Override default of 10
-});
-
-// DatabaseConfig supplies defaults for collections
-const dbConfig = new DatabaseConfig({
-  logLevel: 'DEBUG',
-  collectionLockLeaseMs: 25000,
-  coordinationTimeoutMs: 20000,
-  queryEngineMaxNestedDepth: 12,
-  queryEngineSupportedOperators: ['$eq', '$gt', '$lt', '$and', '$or']
-});
-
-const db = new Database(dbConfig);
-// Collections use the QueryEngine internally with DatabaseConfig defaults
-```
-
-**QueryEngine Options:**
-
-- `maxNestedDepth` (Number, default: 10): Maximum allowed query nesting depth for security
-- `supportedOperators` (String[], default: `['$eq', '$gt', '$lt', '$and', '$or']`): Operators permitted by the engine
-- `logicalOperators` (String[], default: `['$and', '$or']`): Logical operators permitted by the engine
+`DatabaseConfig` supplies the QueryEngine defaults through `DocumentOperations`. See the [`QueryEngine` constructor](../../src/02_components/QueryEngine/99_QueryEngine.js) for its option contract.
 
 ### FileOperations Configuration
 
@@ -425,16 +198,3 @@ File operations use retry settings from `DatabaseConfig` when the `Database` con
 - `true`: Initialise will create/find the index file in Drive and back up the current MasterIndex immediately. This is useful when you want a snapshot on every start at the cost of additional Drive operations.
 
 Independent of this flag, explicit calls to `database.backupIndexToDrive()` will always perform a backup if an index file exists.
-
-## Best Practices
-
-1. **Validate early:** Create DatabaseConfig instances explicitly to catch errors
-2. **Use appropriate timeouts:** `collectionLockLeaseMs` is both the acquisition wait window and the lease, so size it to cover the whole write and keep `coordinationTimeoutMs` within it; an over-budget operation finalises metadata best-effort before throwing, so the timeout is not a substitute for right-sized leases
-3. **Environment-specific configs:** Create different configurations for dev/test/prod
-4. **Immutable configurations:** Don't modify config properties after creation
-5. **Proper folder permissions:** Ensure root folder is accessible to the script
-6. **Sensible logging levels:** Use DEBUG for development, INFO/WARN for production
-7. **Document custom settings:** Comment why specific values were chosen
-8. **Test configuration validation:** Include config validation in your tests
-9. **Security-first design:** All components prioritise security over optional performance optimisations
-10. **Component separation:** Each component manages its own configuration appropriate to its responsibilities

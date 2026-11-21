@@ -17,17 +17,17 @@ These examples show end-to-end usage patterns, including configuration, CRUD, an
 
 ```javascript
 // Default configuration
-const defaultConfig = new DatabaseConfig();
+const defaultConfig = {};
 
 // Production-oriented configuration
-const config = new DatabaseConfig({
+const config = {
   rootFolderId: 'YOUR_DRIVE_FOLDER_ID',
   autoCreateCollections: false,
   collectionLockLeaseMs: 15000,
   retryAttempts: 5,
   logLevel: 'INFO',
   backupOnInitialise: true
-});
+};
 ```
 
 ## Collection Lifecycle

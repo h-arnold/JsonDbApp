@@ -4,9 +4,9 @@
   - [Overview](#overview)
   - [Internal Helper Components](#internal-helper-components)
     - [MasterIndexMetadataNormaliser](#masterindexmetadatanormaliser)
-    - [MasterIndexLockManager Helper Methods ⭐ NEW in v0.0.5](#masterindexlockmanager-helper-methods--new-in-v005)
+    - [Lock-manager persistence helpers](#lock-manager-persistence-helpers)
       - [`_setAndPersistLockStatus(collectionName, collection, lockStatus)`](#_setandpersistlockstatuscollectionname-collection-lockstatus)
-    - [MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5](#masterindexconflictresolver-helper-methods--new-in-v005)
+    - [Conflict-resolver metadata helpers](#conflict-resolver-metadata-helpers)
       - [`_applyMetadataUpdates(collectionMetadata, updates)`](#_applymetadataupdatescollectionmetadata-updates)
   - [Core Workflow](#core-workflow)
     - [Collection Access Protocol](#collection-access-protocol)
@@ -21,7 +21,6 @@
       - [`getCollection(name)` / `getCollections()`](#getcollectionname--getcollections)
       - [`updateCollectionMetadata(name, updates)`](#updatecollectionmetadataname-updates)
       - [`removeCollection(name)`](#removecollectionname)
-      - [`getCollections()`](#getcollections)
     - [Locking Methods](#locking-methods)
       - [`acquireCollectionLock(collectionName, operationId, timeout?)`](#acquirecollectionlockcollectionname-operationid-timeout)
       - [`renewCollectionLock(collectionName, operationId, timeout?)`](#renewcollectionlockcollectionname-operationid-timeout)
@@ -33,20 +32,15 @@
       - [`resolveConflict(collectionName, newData, strategy)`](#resolveconflictcollectionname-newdata-strategy)
       - [`generateModificationToken()`](#generatemodificationtoken)
       - [`validateModificationToken(token)`](#validatemodificationtokentoken)
-  - [Usage Examples](#usage-examples)
-    - [Basic Operations](#basic-operations)
-    - [Locking Pattern](#locking-pattern)
-    - [Conflict Resolution](#conflict-resolution)
   - [Integration with Database Class](#integration-with-database-class)
     - [Collection Lifecycle Integration](#collection-lifecycle-integration)
     - [Data Synchronisation](#data-synchronisation)
     - [Locking Coordination](#locking-coordination)
   - [Error Types](#error-types)
-  - [Best Practices](#best-practices)
 
 ## Overview
 
-The `MasterIndex` class manages cross-instance coordination for GAS DB using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. `MasterIndex` serves as the **primary source of truth** for collection metadata, with the `Database` class delegating all collection management operations to it.
+The `MasterIndex` class manages cross-instance coordination for JsonDbApp using ScriptProperties. It provides virtual locking, conflict detection, and collection metadata management. `MasterIndex` serves as the **primary source of truth** for collection metadata, with the `Database` class delegating all collection management operations to it.
 
 **Key Responsibilities:**
 
@@ -73,13 +67,13 @@ The `Database` class delegates collection operations to `MasterIndex`:
 
 Encapsulates the transformation of incoming metadata into `CollectionMetadata` instances. The normaliser clamps timestamps, clones lock status payloads, and ensures modification tokens are generated when missing. This keeps `_addCollectionInternal` and bulk operations lean while guaranteeing consistent metadata regardless of input type (plain object or existing `CollectionMetadata`).
 
-### MasterIndexLockManager Helper Methods ⭐ NEW in v0.0.5
+### Lock-manager persistence helpers
 
 **Location:** [src/04_core/MasterIndex/02_MasterIndexLockManager.js](../../src/04_core/MasterIndex/02_MasterIndexLockManager.js)
 
 #### `_setAndPersistLockStatus(collectionName, collection, lockStatus)`
 
-Centralized helper for setting and persisting lock status with guaranteed ordering.
+Centralised helper for setting and persisting lock status with guaranteed ordering.
 
 - **Parameters:**
   - `collectionName` (String): Name of collection to update
@@ -91,13 +85,13 @@ Centralized helper for setting and persisting lock status with guaranteed orderi
 - **Usage:** Used by `acquireCollectionLock()`, `renewCollectionLock()`, `releaseCollectionLock()`
 - **Benefits:** Single source of truth for lock persistence, guaranteed update ordering
 
-### MasterIndexConflictResolver Helper Methods ⭐ NEW in v0.0.5
+### Conflict-resolver metadata helpers
 
 **Location:** [src/04_core/MasterIndex/04_MasterIndexConflictResolver.js](../../src/04_core/MasterIndex/04_MasterIndexConflictResolver.js)
 
 #### `_applyMetadataUpdates(collectionMetadata, updates)`
 
-Centralized helper for applying metadata field updates during conflict resolution.
+Centralised helper for applying metadata field updates during conflict resolution.
 
 - **Parameters:**
   - `collectionMetadata` (CollectionMetadata): Metadata object to update
@@ -161,7 +155,7 @@ This closes the stale-instance window where one execution could acquire the Scri
 
 ### Save Persistence and Failure Resynchronisation
 
-`MasterIndex.save()` is the single persist point for all metadata writes (direct and indirect). Its ordering is unchanged: in-memory state is advanced first (including caller-side advances of collection entries and `lastUpdated`), then persisted to ScriptProperties.
+`MasterIndex.save()` is the single persist point for all metadata writes (direct and indirect). It advances in-memory state first (including caller-side advances of collection entries and `lastUpdated`), then persists to ScriptProperties.
 
 **On a persistence failure** (serialisation or the `setProperty` write throws), `save()` resynchronises in-memory state with the stored snapshot — via `_resyncAfterSaveFailure()` — **before** re-throwing the original `MasterIndexError('save', …)`. Three outcomes are possible, and each is recorded with a loud ERROR naming the outcome:
 
@@ -173,13 +167,13 @@ In all three outcomes the original `MasterIndexError('save', …)` is thrown; a 
 
 **Design notes:**
 
-- Resynchronisation always targets `this._data`. A `dataOverride` passed to `save()` is never adopted as master state (the override object may itself be mutated by the pre-persist `lastUpdated` assignment, but it is not re-read as master state).
+- Resynchronisation targets `this._data`. A `dataOverride` passed to `save()` stays local to that call (the pre-persist `lastUpdated` assignment may mutate the override object, but master state is not re-read from it).
 - Shape normalisation is **intentionally skipped** on the resync path. `_ensureStateShape()` performs a self-saving normalisation that would re-enter `save()`; a stored payload that still needs normalisation is re-normalised on the next lock-protected reload (`_withScriptLock()` → `_reloadLatestStateUnderLock()`).
 - After a successful resynchronisation the index's metadata objects are freshly deserialised — de-aliased from any live `Collection._metadata` instances. This is acceptable: the divergence self-heals on the next successful coordinated finalisation, and `CollectionCoordinator.hasConflict()` does not detect this divergence class (write-path modification tokens are not regenerated).
 
-**The raw reader.** `_readStoredSnapshot()` is the single read-and-deserialise implementation for ScriptProperties snapshots. It reads the configured key and deserialises the payload — and deliberately never assigns `this._data`, never runs `_ensureStateShape()`, and never calls `save()`. Those guarantees are what make save↔reload recursion impossible, even when the stored snapshot is a legacy payload and the persist path is broken. Key absence returns `null`; read or deserialisation failures propagate to the caller unchanged.
+**The raw reader.** `_readStoredSnapshot()` is the single read-and-deserialise implementation for ScriptProperties snapshots. It reads the configured key and deserialises the payload; `this._data` assignment, `_ensureStateShape()` and `save()` all happen in its callers. This separation makes save↔reload recursion impossible, even when the stored snapshot is a legacy payload and the persist path is broken. Key absence returns `null`; read or deserialisation failures propagate to the caller unchanged.
 
-**Loader composition.** `_loadFromScriptProperties()` composes the raw reader: it calls `_readStoredSnapshot()`, assigns the result to `this._data`, and runs `_ensureStateShape()` when data is present. Its single `MASTER_INDEX_ERROR('load', …)` wrap point and failure log are preserved, so every loader caller (the public `load()`, the constructor bootstrap, and the under-lock reload) keeps identical behaviour.
+**Loader composition.** `_loadFromScriptProperties()` composes the raw reader: it calls `_readStoredSnapshot()`, assigns the result to `this._data`, and runs `_ensureStateShape()` when data is present. Its single `MASTER_INDEX_ERROR('load', …)` wrap point and failure log apply to every loader caller: the public `load()`, the constructor bootstrap, and the under-lock reload.
 
 ### Data Structure
 
@@ -268,15 +262,6 @@ Retrieves collection metadata. Used by `Database.getCollection()` and `Database.
 
 - **Returns:** Collection object or collections map
 
-#### `acquireCollectionLock(collectionName, operationId, timeout)` / `renewCollectionLock(collectionName, operationId, timeout)` / `releaseCollectionLock(collectionName, operationId)`
-
-Coordinates collection-level virtual locks.
-
-- `acquireCollectionLock(...)`: claims a free or expired lock for an operation
-- `renewCollectionLock(...)`: refreshes an active lock owned by the same operation before it expires
-- `releaseCollectionLock(...)`: clears the lock for the owning operation
-- **Database Integration:** Called by Database class methods when coordinating writes to collections that are already registered in the master index
-
 #### `updateCollectionMetadata(name, updates)`
 
 Updates collection metadata with new modification token.
@@ -293,12 +278,6 @@ Removes a collection from the master index. Called by `Database.dropCollection()
 - **Returns:** Boolean - `true` if the collection was removed, `false` otherwise
 - **Database Integration:** Used by Database class to remove collections from the primary metadata store
 - **Concurrency behaviour:** Refreshes from ScriptProperties under ScriptLock first, so an older instance can still remove a collection added by a newer instance instead of missing it in stale memory
-
-#### `getCollections()`
-
-Retrieves all collections in the master index.
-
-- **Returns:** Object - map of collection metadata
 
 ### Locking Methods
 
@@ -338,7 +317,7 @@ Checks if collection is currently locked.
 
 Removes expired locks.
 
-- **Persistence:** Clears each expired lock in memory and saves the index once after the scan; when no lock has expired, no save is performed
+- **Persistence:** Clears each expired lock in memory and saves the index once after a scan that found expired locks
 - **Concurrency behaviour:** Reloads current collection metadata under ScriptLock before scanning, so cleanup removes genuinely expired locks without clearing newer active locks written by another instance
 
 ### Conflict Management
@@ -359,56 +338,6 @@ Creates unique modification token.
 
 Validates token format (timestamp-randomstring).
 
-## Usage Examples
-
-### Basic Operations
-
-```javascript
-// Typically called via Database class, not directly
-const masterIndex = new MasterIndex();
-
-// Database.createCollection() triggers this workflow:
-const collection = masterIndex.addCollection('users', {
-  fileId: 'abc123',
-  documentCount: 0
-});
-
-// Database.getCollection() and Database.listCollections() use:
-const users = masterIndex.getCollection('users');
-
-// Collection operations trigger metadata updates:
-masterIndex.updateCollectionMetadata('users', {
-  documentCount: 5
-});
-```
-
-### Locking Pattern
-
-```javascript
-const operationId = 'op_' + Date.now();
-
-if (masterIndex.acquireCollectionLock('users', operationId)) {
-  try {
-    // Perform operations
-    masterIndex.updateCollectionMetadata('users', updates);
-  } finally {
-    masterIndex.releaseCollectionLock('users', operationId);
-  }
-}
-```
-
-### Conflict Resolution
-
-```javascript
-const expectedToken = 'previously-read-token';
-
-if (masterIndex.hasConflict('users', expectedToken)) {
-  const resolution = masterIndex.resolveConflict('users', newData, 'LAST_WRITE_WINS');
-} else {
-  masterIndex.updateCollectionMetadata('users', newData);
-}
-```
-
 ## Integration with Database Class
 
 The `MasterIndex` serves as the primary source of truth for collection metadata, working closely with the `Database` class in the following ways:
@@ -427,8 +356,7 @@ The `MasterIndex` serves as the primary source of truth for collection metadata,
 
 1. `Database.getCollection()` checks in-memory cache first
 2. If not cached, Database calls `MasterIndex.getCollection()`
-3. If not in MasterIndex, Database falls back to Drive index file
-4. Auto-creation triggers if enabled and collection doesn't exist
+3. On a MasterIndex miss, auto-create when enabled, otherwise an error naming the original collection is raised (see [Database — Collection Access Protocol](Database.md#collection-access-protocol))
 
 **Deletion Flow:**
 
@@ -475,11 +403,3 @@ if (this._masterIndex.acquireCollectionLock(name, operationId)) {
 - **`COLLECTION_NOT_FOUND`**: Collection doesn't exist
 - **`LOCK_TIMEOUT`**: Failed to acquire ScriptLock
 - **`MASTER_INDEX_ERROR`**: General operation failures
-
-## Best Practices
-
-1. **Always release locks** in finally blocks
-2. **Use appropriate timeouts** for lock operations
-3. **Handle lock acquisition failures** with retry logic
-4. **Validate modification tokens** before updates
-5. **Clean up expired locks** periodically

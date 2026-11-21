@@ -53,6 +53,7 @@ markdown_extensions:
 
 nav:
   - Home: index.md
+  - Documentation Index: README.md
   - Getting Started:
       - Quick Start: Quick_Start.md
       - Examples: Examples.md

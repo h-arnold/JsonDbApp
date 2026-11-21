@@ -1,14 +1,10 @@
 # Developer Documentation
 
-This section contains detailed documentation for developers contributing to or working with the GAS DB project.
+This section contains detailed documentation for developers contributing to or working with JsonDbApp.
 
-⚠️ **HEALTH WARNING** ⚠️
+## Drive API prerequisite
 
-These documents have been created by various LLMs and I've only given them a cursory skim for accuracy so they may not be fully updated.
-
-### Important step to avoid weird issues
-
-Make sure you've enabled the DriveAPI in your Google Cloud project. This is crucial for the JsonDbApp to function correctly, especially for features like MasterIndex and file watching.
+Enable the Drive API in your Google Cloud project before using JsonDbApp.
 
 ## Core Documentation
 
@@ -22,17 +18,17 @@ Use the top-level library functions instead of constructing classes directly:
 - `JsonDbApp.createAndInitialiseDatabase(config)` – first-time setup
 - `JsonDbApp.loadDatabase(config)` – load existing DB
 
-Within this repo (`old_tests/`), you can still use `new Database(config)` then call `createDatabase()`/`initialise()` explicitly.
+## Developer Documentation Index
 
 - [**Collection Components**](./Collection_Components.md) - Detailed explanation of Collection, CollectionMetadata, and DocumentOperations classes for MongoDB-compatible document operations
 - [**Collection Coordinator**](./CollectionCoordinator.md) - Cross-instance coordination contract: locking, budget enforcement, violation policy, throw sites and logging
 - [**Database**](./Database.md) - Main database class for collection management and coordination with MasterIndex
 - [**DatabaseConfig**](./DatabaseConfig.md) - Database configuration management with validation and defaults
 - [**Documentation Style Guide**](./documentation-style-guide.md) - Writing rules, ownership, naming and review exclusions for contributors and agents
-- [**Infrastructure Components**](./Infrastructure_Components.md) - Complete reference for logging, error handling, and ID generation utilities
+- [**Infrastructure Components**](./Infrastructure_Components.md) - Logging, errors, IDs, validation, serialisation and backoff utilities
 - [**MasterIndex**](./MasterIndex.md) - Cross-instance coordination system using ScriptProperties for virtual locking and conflict detection
 - [**QueryEngine**](./QueryEngine.md) - Engine for parsing and executing MongoDB-style queries
-- [**Testing Framework**](./Testing_Framework.md) - Comprehensive guide to the GAS DB testing infrastructure, including AssertionUtilities and TestRunner classes
+- [**Testing Framework**](./Testing_Framework.md) - Vitest configuration, GAS mocks and shared test helpers
 - [**UpdateEngine**](./UpdateEngine.md) - Engine for applying MongoDB-style update operators to documents
 
 ## Coding Standards
